@@ -1,7 +1,20 @@
 @(message: String)
+@main("File Upload  in Play") {
 
-@main("Welcome to Play") {
+<h1>File Upload In Play</h1>
+@helper.form(action = routes.Application.uploadFile, 'enctype -> "multipart/form-data") {
 
-    @play20.welcome(message, style = "Java")
+<input type="file" name="fileUpload">
 
+<p>
+    <input type="submit" value="Upload">
+</p>
+
+}
+}
+
+@helper.form(action = routes.Application.FilesList) {
+    <p>
+        <input type="submit" value="Files List">
+    </p>
 }

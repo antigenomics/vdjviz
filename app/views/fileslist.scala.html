@@ -1,0 +1,8 @@
+@(files: Array[java.io.File])
+
+
+<ul>
+    @for(file <- files) {
+    <li>@file.getName</li>
+    }
+</ul>
