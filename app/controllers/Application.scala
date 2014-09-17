@@ -14,16 +14,14 @@ object Application extends Controller {
 
   def FilesList = Action {
     val k = new java.io.File("/home/bvdmitri/temp").listFiles
-    var s = ""
-    k.foreach((file:File) => s += file.getAbsolutePath)
     Ok(views.html.fileslist(k))
   }
 
   def uploadFile = Action(parse.multipartFormData) { request =>
-    request.body.file("fileUpload").map { video =>
-      val videoFilename = video.filename
-      val contentType = video.contentType.get
-      video.ref.moveTo(new File("/home/bvdmitri/temp/" + video.filename))
+    request.body.file("fileUpload").map { file =>
+      val Filename = file.filename
+      val contentType = file.contentType.get
+      file.ref.moveTo(new File("/home/bvdmitri/temp/" + file.filename))
     }.getOrElse {
       Redirect(routes.Application.index)
     }
