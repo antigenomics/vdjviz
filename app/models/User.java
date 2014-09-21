@@ -17,7 +17,8 @@ import javax.validation.Payload;
 
 import static play.data.validation.Constraints.*;
 
-import  javax.persistence.*;
+import javax.persistence.*;
+import play.db.ebean.Model;
 
 
 @Entity
@@ -25,7 +26,7 @@ public class User implements PathBindable<User> {
     // Custom Validator for UID
     // Need to refactor ?
     public static class UidValidator extends Constraints.Validator<String> implements ConstraintValidator<UID, String> {
-        final static public String message = "error.invalid.unique_identifier";
+        final static public String message = "error.invalid.login_name";
         public UidValidator() {}
         @Override
         public void initialize(UID constraintAnnotation) {}
@@ -33,105 +34,102 @@ public class User implements PathBindable<User> {
         public boolean isValid(String value) {
             //TODO paterrn
             //Pattern need to be refactor?
-            String pattern = "^[0-9]{3}$";
+            String pattern = "^[a-z]{8}$";
             return value != null && value.matches(pattern);
         }
         @Override
         public F.Tuple<String, Object[]> getErrorMessageKey() {
-            return new F.Tuple<String, Object[]>("error.invalid.unique_identifier", new Object[]{});
+            return new F.Tuple<String, Object[]>("error.invalid.login_name", new Object[]{});
         }
     }
     @Constraint(validatedBy = UidValidator.class)
     @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface UID {
-        String message() default "error.invalid.unique_identifier";
+        String message() default "error.invalid.login_name";
         Class<?>[] groups() default {};
         Class<? extends Payload>[] payload() default {};
     }
 
     @Id
-    public Long database_id;
+    public Long id;
     @UID
-    public String unique_identifier;
+    public String login_name;
     @Required
-    public String name;
+    public String user_name;
     public String description;
-    public byte[] file;
-
-
-    public class User {
-        public String UserName;
-        public List<User> users = new ArrayList<>();
-        public String toString() {
-            return UserName;
-        }
-    }
+    @OneToMany(mappedBy="user")
+    public List<UserFile> userfiles;
 
     //It is uses for binding in routes file
     @Override
     public models.User bind (String key, String value) {
-        return findByEan(value);
+        return findByLogin(value);
     }
     @Override
     public String unbind(String key) {
-        return this.unique_identifier;
+        return this.login_name;
     }
     @Override
     public String javascriptUnbind() {
-        return this.unique_identifier;
+        return this.login_name;
     }
 
     public User() {}
 
-    public User(String unique_identifier, String name, String description) {
-        this.unique_identifier = unique_identifier;
-        this.name = name;
+    public User(String login_name, String user_name, String description) {
+        this.login_name = login_name;
+        this.user_name = user_name;
         this.description = description;
     }
 
     public String toString() {
-        return String.format("%s - %s", unique_identifier, name);
+        return String.format("%s - %s", login_name, user_name);
     }
-    public String toTxt() { return String.format("%s.txt", name); }
+    public String toTxt() { return String.format("%s.txt", user_name); }
 
-    //TODO files store in memory of application
-    //TODO use database for it
-    private static List<models.User> files;
+    //TODO users store in memory of application -
+    //TODO use database for it -
+    //Database added
+    /*
+    private static List<User> users;
     static {
-        files = new ArrayList<models.User>();
-        //files.add(new UserFile("123", "name", "description"));
+        users = new ArrayList<>();
+        users.add(new User("bvdmitri", "Dmitri", "test_description"));
     }
 
-    public static List<models.User> findAll() {
-        return new ArrayList<models.User>(files);
-    }
-
-    public static models.User findByEan(String ean) {
-        for (models.User candidate : files) {
-            if (candidate.unique_identifier.equals(ean)) {
-                return candidate;
-            }
-        }
-        return null;
-    }
-
-    public static List<models.User> findByName(String term) {
-        final List<models.User> results = new ArrayList<models.User>();
-        for (models.User candidate : files) {
-            if (candidate.name.toLowerCase().contains(term.toLowerCase())) {
+    public static List<User> findByName(String term) {
+        final List<models.User> results = new ArrayList<User>();
+        for (models.User candidate : users) {
+            if (candidate.user_name.toLowerCase().contains(term.toLowerCase())) {
                 results.add(candidate);
             }
         }
         return results;
     }
 
-    public static boolean remove(models.User userfile) {
-        return files.remove(userfile);
+    public static boolean remove(User user) {
+        return users.remove(user);
     }
 
     public void save(){
-        files.remove(findByEan(this.unique_identifier));
-        files.add(this);
+        users.remove(findByLogin(this.login_name));
+        users.add(this);
+    }
+    */
+    public static List<User> findAll() {
+        return find().all();
+    }
+
+    public static User findByLogin(String login_name) {
+        return find().where().eq("login_name", login_name).findUnique();
+    }
+
+    public static User findById(Long database_id) {
+        return find().where().eq("id", database_id).findUnique();
+    }
+
+    public static Model.Finder<Long, User> find() {
+        return new Model.Finder<>(Long.class, User.class);
     }
 }

@@ -4,12 +4,14 @@
 @import helper.twitterBootstrap._
 @main("User File Form") {
     <h1>User File Form</h1>
-    @helper.form(action = routes.UserFiles.save(user.login_name)) {
+    @helper.form(action = routes.UserFiles.save(user),
+    'enctype -> "multipart/form-data") {
         <fieldset>
             <legend>File</legend>
             @helper.inputText(fileForm("test_string"), '_label -> "Test String")
+            @helper.inputFile(fileForm("file"), '_label -> "File")
         </fieldset>
         <input type="submit" class="btn btn-primary" value="Save">
-        <a class="btn" href="@routes.Users.account(user.login_name)">Cancel</a>
+        <a class="btn" href="@routes.Users.index()">Cancel</a>
     }
 }

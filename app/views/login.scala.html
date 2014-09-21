@@ -1,7 +1,7 @@
-@(files: List[User])
+@(users: List[User])
 
-@main("User files catalog") {
-    <h2>All files</h2>
+@main("Users") {
+    <h2>All users</h2>
 
     <script>
         function del(urlToDelete) {
@@ -19,30 +19,31 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>UID</th>
+                <th>Login</th>
                 <th>Name</th>
                 <th>Description</th>
             </tr>
         </thead>
         <tbody>
-            @if(files != null) {
-            @for(file <- files) {
+            @if(users != null) {
+            @for(user <- users) {
                 <tr>
-                    <td><a href="@routes.Users.details(file)">@file.unique_identifier</a></td>
-                    <td><a href="@routes.Users.get_file(file.unique_identifier)">@file.toTxt</a></td>
-                    <td><a href="@routes.Users.details(file)">@file.description</a></td>
-                    <td><a href="@routes.Users.details(file)"><i class="icon glyphicon-pencil"></i></a></td>
-                    <td><a onclick="del('@routes.Users.delete(file.unique_identifier)')"><i class="icon glyphicon-trash"></i></a></td>
+                    <td><a href="@routes.Users.details(user)">@user.login_name</a></td>
+                    <td><a href="@routes.Users.details(user)">@user.user_name</a></td>
+                    <td><a href="@routes.Users.details(user)">@user.description</a></td>
+                    <td><a href="@routes.Users.account(user)">Go to the account</a></td>
+                    <td><a href="@routes.Users.details(user)"><i class="icon glyphicon-pencil"></i></a></td>
+                    <td><a onclick="del('@routes.Users.delete(user.login_name)')"><i class="icon glyphicon-trash"></i></a></td>
                 </tr>
                 }
             }
-            @if(files.length == 0) {
+            @if(users.length == 0) {
                 <tr>
-                    <td>no files</td>
+                    <td>no users</td>
                 </tr>
             }
             <tr>
-                <td><a class="btn btn-primary" href="@routes.Users.newFile()">Add</a></td>
+                <td><a class="btn btn-primary" href="@routes.Users.newUser()">Add</a></td>
             </tr>
         </tbody>
     </table>

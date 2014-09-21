@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public static class AnnotationDateFormatter
+public class AnnotationDateFormatter
         extends Formatters.AnnotationFormatter<DateFormat, Date> {
     public Date parse(DateFormat annotation, String text, Locale locale)
             throws ParseException {

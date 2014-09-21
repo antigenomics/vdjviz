@@ -1,89 +1,91 @@
 package controllers;
 
 import com.avaje.ebean.Ebean;
-import com.google.common.io.Files;
+import models.User;
 import models.UserFile;
+import play.Play;
 import play.data.Form;
-import play.mvc.Http.MultipartFormData;
 import play.mvc.Result;
 import play.mvc.Controller;
 import play.mvc.Results;
 import views.html.details;
-import views.html.list;
+import views.html.login;
+import views.html.account;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 @Catch
 public class Users extends Controller {
 
     public static Result index() {
-        return Results.redirect(Users.list());
+        return Results.redirect(routes.Users.list());
     }
 
     public static Result list() {
-        List<UserFile> files = UserFile.findAll();
-        return ok(list.render(files));
+        List<User> users = User.findAll();
+        return ok(login.render(users));
     }
 
-    private static final Form<UserFile> fileForm = Form.form(UserFile.class);
+    private static final Form<User> userForm = Form.form(User.class);
 
-    public static Result newFile() {
-        return ok(details.render(fileForm));
+    public static Result newUser() {
+        return ok(details.render(userForm));
     }
 
-    public static Result details(UserFile file) {
-        if (file != null) {
-            Form<UserFile> filledForm = fileForm.fill(file);
+    public static Result details(User user) {
+        if (user != null) {
+            Form<User> filledForm = userForm.fill(user);
             return ok(details.render(filledForm));
         } else {
             flash("not found", String.format("Not found"));
-            return Results.redirect(Users.list());
+            return Results.redirect(routes.Users.list());
+        }
+    }
+
+    public static Result account(User user) {
+        if (user != null) {
+            return ok(account.render(user));
+        } else {
+            flash("not found", String.format("Not found"));
+            return Results.redirect(routes.Users.list());
         }
     }
 
     public static Result save() {
-        Form<UserFile> boundForm = fileForm.bindFromRequest();
+        Form<User> boundForm = userForm.bindFromRequest();
         if (boundForm.hasErrors()) {
             flash("error", "Please correct the form below.");
             return badRequest(details.render(boundForm));
         }
-        UserFile file = boundForm.get();
-
-        MultipartFormData body = request().body().asMultipartFormData();
-        MultipartFormData.FilePart part = body.getFile("input_file");
-        if (part != null) {
-            File input_file = part.getFile();
-            try {
-                file.file = Files.toByteArray(input_file);
-            } catch (IOException e) {
-                return internalServerError("Error reading file upload");
-            }
+        User user = boundForm.get();
+        //TODO fake?
+        User fake = User.findById(user.id);
+        if (fake == null) {
+            Ebean.save(user);
+            String upload_path = Play.application().configuration().getString("file_upload_path");
+            File temp_dir = new File(upload_path + user.login_name + "/");
+            temp_dir.mkdir();
+        } else {
+            Ebean.update(user);
         }
-        Ebean.save(file);
-        flash("success", String.format("Successfully added file %s", file));
-        return Results.redirect(Users.list());
+        flash("success", String.format("Successfully added user %s", user));
+        return Results.redirect(routes.Users.list());
     }
 
     public static Result delete(String ean) {
-        final UserFile file = UserFile.findByEan(ean);
-        if (file == null) {
-            return notFound(String.format("File %s does not exists", ean));
+        final User user = User.findByLogin(ean);
+        if (user == null) {
+            return notFound(String.format("User %s does not exists", ean));
         }
-        UserFile.remove(file);
-        flash("remove", String.format("Successful removed file %s", file));
-        return Results.redirect(Users.list());
-    }
-
-    public static Result get_file(String ean) {
-        final UserFile file = UserFile.findByEan(ean);
-        if (file == null) {
-            return notFound();
+        for (UserFile file: user.userfiles) {
+            UserFiles.delete(file.id, user);
+            Ebean.delete(file);
         }
-        return ok(file.file);
+        Ebean.delete(user);
+        flash("remove", String.format("Successful removed user %s", user));
+        return Results.redirect(routes.Users.list());
     }
-
 }
 
 
