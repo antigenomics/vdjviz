@@ -16,6 +16,10 @@
             @for(item <- user.userfiles) {
                 <tr>
                     <td>@item.test_string</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
                     <td><a class="btn btn-info" onclick="getJson('@routes.UserFiles.vdjtoolUsageMatrix(user, item)')">Render</a></td>
                     <td><a class="btn btn-info" onclick="getJson('@routes.UserFiles.vdjtoolUsageMatrix(user, item, false)')">Render without opt</a></td>
                     <td><a class="btn btn-default" href="@routes.UserFiles.delete(item.id, user)">Delete</td>
@@ -23,7 +27,13 @@
             }
             <tr class="reload-notifier">Reload page before new rendering</tr>
         </table>
-        <a class="btn btn-info" href="@routes.UserFiles.add(user)">Add file</a>
+        <table>
+            <tr>
+                <td>
+                <a class="btn btn-info" href="@routes.UserFiles.add(user)">Add file</a>
+                </td>
+            </tr>
+        </table>
     }
     </div>
     <div class="span8">
