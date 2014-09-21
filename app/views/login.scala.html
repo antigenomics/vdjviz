@@ -1,0 +1,49 @@
+@(files: List[User])
+
+@main("User files catalog") {
+    <h2>All files</h2>
+
+    <script>
+        function del(urlToDelete) {
+            $.ajax({
+                url : urlToDelete,
+                type : 'DELETE',
+                success : function ( results ) {
+                    //refresh the page
+                    location.reload ( ) ;
+                }
+            });
+        }
+    </script>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>UID</th>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(files != null) {
+            @for(file <- files) {
+                <tr>
+                    <td><a href="@routes.Users.details(file)">@file.unique_identifier</a></td>
+                    <td><a href="@routes.Users.get_file(file.unique_identifier)">@file.toTxt</a></td>
+                    <td><a href="@routes.Users.details(file)">@file.description</a></td>
+                    <td><a href="@routes.Users.details(file)"><i class="icon glyphicon-pencil"></i></a></td>
+                    <td><a onclick="del('@routes.Users.delete(file.unique_identifier)')"><i class="icon glyphicon-trash"></i></a></td>
+                </tr>
+                }
+            }
+            @if(files.length == 0) {
+                <tr>
+                    <td>no files</td>
+                </tr>
+            }
+            <tr>
+                <td><a class="btn btn-primary" href="@routes.Users.newFile()">Add</a></td>
+            </tr>
+        </tbody>
+    </table>
+}

@@ -1,0 +1,45 @@
+@(user: User, file: UserFile)
+@import views.html.defaultpages.todo
+@import helper._
+@import helper.twitterBootstrap._
+@main("User File Form") {
+
+    <script>
+    function del(urlToDelete) {
+    $.ajax({
+    url : urlToDelete,
+    type : 'DELETE',
+    success : function ( results ) {
+    //refresh the page
+    location.reload ( ) ;
+    }
+    });
+    }
+    </script>
+
+
+    <h1>@user.login_name account</h1>
+    @if(user.userfiles != null) {
+        <table class="table table-striped" style="width: 20%">
+
+        @for(item <- user.userfiles) {
+            <tr>
+                <td>@item.test_string</td>
+                <td><a class="btn btn-default" href="@routes.UserFiles.delete(item.id, user)">X</td>
+            </tr>
+        }
+
+        </table>
+    }
+    <a class="btn btn-info" href="@routes.UserFiles.add(user)">Add file</a>
+    <a class="btn btn-info" href="@routes.Users.list()">Exit</a>
+
+    @if(file != null) {
+        <table class="table" style="width: 70%; left: 25%; height: 200px;">
+            <tr>
+                <td>@file.test_string<td>
+            </tr>
+        </table>
+    }
+
+}

@@ -1,0 +1,15 @@
+@(fileForm: Form[UserFile], user: User)
+@import views.html.defaultpages.todo
+@import helper._
+@import helper.twitterBootstrap._
+@main("User File Form") {
+    <h1>User File Form</h1>
+    @helper.form(action = routes.UserFiles.save(user.login_name)) {
+        <fieldset>
+            <legend>File</legend>
+            @helper.inputText(fileForm("test_string"), '_label -> "Test String")
+        </fieldset>
+        <input type="submit" class="btn btn-primary" value="Save">
+        <a class="btn" href="@routes.Users.account(user.login_name)">Cancel</a>
+    }
+}
