@@ -44,7 +44,7 @@ public class UserFiles extends Controller {
         return TODO;
     }
 
-    public static Result vdjtoolUsageMatrix(User user, UserFile file) {
+    public static Result vdjtoolUsageMatrix(User user, UserFile file, boolean optimization) {
 
         /**
          * VdjTools usage
@@ -67,11 +67,27 @@ public class UserFiles extends Controller {
         List<Table> data = new ArrayList<>();
         String[] vUsage = segmentUsage.vUsageHeader();
         String[] jUsage = segmentUsage.jUsageHeader();
+        double summary = 0;
         for (int i = 0; i < jUsage.length; i++) {
             for (int j = 0; j < vUsage.length; j++) {
                 vjMatrix[i][j] = Math.round(vjMatrix[i][j] * 100000);
+                summary += vjMatrix[i][j];
                 data.add(new Table(vUsage[j], jUsage[i], vjMatrix[i][j]));
             }
+        }
+
+        /**
+         * Optimization
+         */
+        if (optimization) {
+            List<Table> opt_data = new ArrayList<>();
+            double opt_constant = 0.007;
+            for (Table item : data) {
+                if (item.n / summary > opt_constant) {
+                    opt_data.add(item);
+                }
+            }
+            return ok(Json.toJson(opt_data));
         }
         return ok(Json.toJson(data));
     }

@@ -15,7 +15,7 @@ GET           /login/edit/:user                         controllers.Users.detail
 GET           /account/:user/                           controllers.Users.account(user: models.User)
 GET           /account/:user/add_file                   controllers.UserFiles.add(user: models.User)
 GET           /account/:user/remove/:file_id            controllers.UserFiles.delete(file_id: Long, user: models.User)
-GET           /account/:user/visual/:file/render        controllers.UserFiles.vdjtoolUsageMatrix(user: models.User, file: models.UserFile)
+GET           /account/:user/visual/:file/render        controllers.UserFiles.vdjtoolUsageMatrix(user: models.User, file: models.UserFile, optimization: Boolean ?= true)
 POST          /login/                                   controllers.Users.save()
 POST          /account/:user/                           controllers.UserFiles.save(user: models.User)
 DELETE        /login/:ean                               controllers.Users.delete(ean: String)

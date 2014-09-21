@@ -24,7 +24,7 @@ function getJson(url) {
 }
 
 function renderTable() {
-    var width = 2000, height = 2000, margin = {b: 0, t: 40, l: 170, r: 50};
+    var width = 1600, height = 1000, margin = {b: 0, t: 40, l: 170, r: 50};
 
     var svg = d3.select("vis-body")
         .append("svg").attr('width', width).attr('height', (height + margin.b + margin.t))
@@ -39,9 +39,29 @@ function renderTable() {
 
 !function(){
     var bP={};
-    var b=50, bb=1000, height=1000, buffMargin=5, minHeight=5;
-    var c1=[-130, 40], c2=[-50, 100], c3=[-10, 140]; //Column positions of labels.
-    var colors =["#708090"];
+    var b=20, bb=1000, height=700, buffMargin=5, minHeight=5;
+    var c1=[-180, 30], c2=[-50, 140], c3=[0, 200]; //Column positions of labels.
+    var colors =["#708090",
+                 "#FAEBD7",
+                 "#E6E6FA",
+                 "#E6E6FA",
+                 "#7B68EE",
+                 "#B0C4DE",
+                 "#32CD32",
+                 "#F4A460",
+                 "#E9967A",
+                 "#DDA0DD",
+                 "#1C86EE",
+                 "#43CD80",
+                 "#9F79EE",
+                 "#9B30FF",
+                 "#8B5F65",
+                 "#FF6347",
+                 "#EE9572",
+                 "#FFE7BA",
+                 "#CD9B9B",
+                 "#CDCDB4"
+    ];
 
     bP.partData = function(data,p){
         var sData={};
