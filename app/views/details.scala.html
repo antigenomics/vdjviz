@@ -3,6 +3,8 @@
 @import helper._
 @import helper.twitterBootstrap._
 @main("User File Form") {
+    @navbar(null)
+    <div class="container-fluid">
     <h1>User File Form</h1>
     @helper.form(action = routes.Users.save()) {
         <fieldset>
@@ -15,5 +17,6 @@
         <input type="hidden" value="@userForm("id").valueOr("")" name="id"/>
         <input type="submit" class="btn btn-primary" value="Save">
         <a class="btn" href="@routes.Users.list()">Cancel</a>
+    </div>
     }
 }

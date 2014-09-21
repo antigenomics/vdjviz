@@ -1,8 +1,6 @@
 @(users: List[User])
-
+@navbar(null)
 @main("Users") {
-    <h2>All users</h2>
-
     <script>
         function del(urlToDelete) {
             $.ajax({
@@ -15,7 +13,7 @@
             });
         }
     </script>
-
+    <div class="container container-fluid">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -47,4 +45,7 @@
             </tr>
         </tbody>
     </table>
+
+
+    </div>
 }

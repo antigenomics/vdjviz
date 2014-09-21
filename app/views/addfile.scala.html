@@ -2,6 +2,7 @@
 @import views.html.defaultpages.todo
 @import helper._
 @import helper.twitterBootstrap._
+@navbar(user)
 @main("User File Form") {
     <h1>User File Form</h1>
     @helper.form(action = routes.UserFiles.save(user),

@@ -19,7 +19,6 @@ function getJson(url) {
             items.push(item);
 
         });
-
     renderTable();
     });
 }
