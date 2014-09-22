@@ -11,6 +11,7 @@
             <legend>File</legend>
             @helper.inputText(fileForm("test_string"), '_label -> "Test String")
             @helper.inputFile(fileForm("file"), '_label -> "File")
+            configure your Upload Path in application.conf before using this feature
         </fieldset>
         <input type="submit" class="btn btn-primary" value="Save">
         <a class="btn" href="@routes.Users.index()">Cancel</a>
