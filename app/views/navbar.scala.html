@@ -1,4 +1,4 @@
-@(user: User)
+@(username: String)
 <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
         <div class="container-fluid">
@@ -9,15 +9,24 @@
             </a>
             <a class="brand" href="#">Vdjviz</a>
             <div class="nav-collapse collapse">
-                @if(user != null) {
-                    <p class="navbar-text pull-right">
-                        Logged in as @user.login_name  | <a href="@routes.Users.list()" class="navbar-link"> Logout</a>
-                    </p>
-                }
                 <ul class="nav">
-                    <li class="active"><a href="#">Home</a></li>
+                    <li><a href="#">Home</a></li>
+                    @if(username != null) {
+                        <li><a href="@routes.Application.redirectToAccount()">Account</a></li>
+                    }
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
+                </ul>
+                <ul class="nav pull-right">
+                        @if(username != null) {
+
+                            <li><a href="@routes.Application.redirectToAccount()">Logged as @username</a></li>
+                            <li><a href="@routes.Application.logout()">Logout</a></li>
+                        }
+                        @if(username == null) {
+                            <li><a href="@routes.Application.login()">Signin</a></li>
+                        }
+                    </li>
                 </ul>
             </div>
         </div>

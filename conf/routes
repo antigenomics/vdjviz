@@ -3,19 +3,19 @@
 # ~~~~
 
 # Home page
-GET           /                                         controllers.Users.index()
+GET         /                                controllers.Application.index(username: String ?= null)
 
 # Map static resources from the /public folder to the /assets URL path
-GET           /assets/*file                             controllers.Assets.at(path="/public", file)
+GET         /assets/*file                    controllers.Assets.at(path="/public", file)
 
-# Files Upload
-GET           /login/                                   controllers.Users.list()
-GET           /login/new_user                           controllers.Users.newUser()
-GET           /login/edit/:user                         controllers.Users.details(user: models.User)
-GET           /account/:user/                           controllers.Users.account(user: models.User)
-GET           /account/:user/add_file                   controllers.UserFiles.add(user: models.User)
-GET           /account/:user/remove/:file_id            controllers.UserFiles.delete(file_id: Long, user: models.User)
-GET           /account/:user/visual/:file/render        controllers.UserFiles.vdjtoolUsageMatrix(user: models.User, file: models.UserFile, optimization: Boolean ?= true)
-POST          /login/                                   controllers.Users.save()
-POST          /account/:user/                           controllers.UserFiles.save(user: models.User)
-DELETE        /login/:ean                               controllers.Users.delete(ean: String)
+# Account routes
+GET         /account/                        controllers.Application.redirectToAccount()
+GET         /account/:account/               controllers.UserAccount.userpage(account: models.Account)
+GET         /account/:account/newfile        controllers.UserAccount.newFile(account: models.Account)
+POST        /account/:account/newfile        controllers.UserAccount.saveNewFile(account: models.Account)
+GET         /account/:account/:file/render   controllers.UserAccount.vdjtoolUsageMatrix(account: models.Account, file: models.UserFile, optimization: Boolean ?= true)
+GET         /newuser/                        controllers.Users.newUser()
+POST        /newuser/save                    controllers.Users.saveNewUser()
+GET         /login/                          controllers.Application.login()
+GET         /logout/                         controllers.Application.logout()
+POST        /autenthiticate                  controllers.Application.authenticate()

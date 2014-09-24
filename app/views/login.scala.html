@@ -1,51 +1,19 @@
-@(users: List[User])
-@navbar(null)
-@main("Users") {
-    <script>
-        function del(urlToDelete) {
-            $.ajax({
-                url : urlToDelete,
-                type : 'DELETE',
-                success : function ( results ) {
-                    //refresh the page
-                    location.reload ( ) ;
-                }
-            });
-        }
-    </script>
-    <div class="container container-fluid">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Login</th>
-                <th>Name</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if(users != null) {
-            @for(user <- users) {
-                <tr>
-                    <td><a href="@routes.Users.details(user)">@user.login_name</a></td>
-                    <td><a href="@routes.Users.details(user)">@user.user_name</a></td>
-                    <td><a href="@routes.Users.details(user)">@user.description</a></td>
-                    <td><a href="@routes.Users.account(user)">Go to the account</a></td>
-                    <td><a href="@routes.Users.details(user)"><i class="icon glyphicon-pencil"></i></a></td>
-                    <td><a onclick="del('@routes.Users.delete(user.login_name)')"><i class="icon glyphicon-trash"></i></a></td>
-                </tr>
-                }
-            }
-            @if(users.length == 0) {
-                <tr>
-                    <td>no users</td>
-                </tr>
-            }
-            <tr>
-                <td><a class="btn btn-primary" href="@routes.Users.newUser()">Add</a></td>
-            </tr>
-        </tbody>
-    </table>
+@(loginForm: Form[Application.Login])
+@import helper._
+@import helper.twitterBootstrap._
 
+@main("Please sign in to the warehouse application") {
 
-    </div>
+    @helper.form(action = helper.CSRF(routes.Application.authenticate)) {
+        <div class="container" style="width: 15%;">
+            <form class="form-signin">
+                <h2 class="form-signin-heading">Please sign in</h2>
+                <input type="email" class="input-block-level" placeholder="Email address" name="email" value="@loginForm("email").value">
+                <input type="password" class="input-block-level" placeholder="Password" name="password" value="@loginForm("password").value">
+                <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+                <a class="btn btn-large btn-primary pull-right" href="@routes.Users.newUser()">Create new</a>
+            </form>
+        </div>
+    }
+
 }

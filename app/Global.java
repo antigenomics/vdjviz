@@ -1,5 +1,7 @@
 import controllers.Application;
 import play.GlobalSettings;
+import play.api.mvc.EssentialFilter;
+import play.filters.csrf.CSRFFilter;
 import play.data.format.Formatters;
 import play.data.format.Formatters.*;
 import utils.AnnotationDateFormatter;
@@ -14,6 +16,7 @@ import java.util.Locale;
 public class Global extends GlobalSettings {
 
     public void onStart(Application app) {
+
         Formatters.register(Date.class,
             new SimpleFormatter<Date>() {
                 private final static String PATTERN = "dd-MM-yyyy";
@@ -38,5 +41,11 @@ public class Global extends GlobalSettings {
                 }
             });
         Formatters.register(Date.class, new AnnotationDateFormatter());
+    }
+
+    @Override
+    public <T extends EssentialFilter> Class<T>[] filters() {
+        Class[] filters = {CSRFFilter.class};
+        return filters;
     }
 }

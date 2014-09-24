@@ -1,0 +1,35 @@
+@(account: Account)
+@navbar(account.user_name)
+@main("User page") {
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="@routes.Assets.at("javascripts/render.js")"></script>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span3">
+                <div class="well sidebar-nav">
+                    <ul class="nav nav-list">
+                        @for(item <- account.userfiles) {
+                            <li class="nav-header">@item.file_name
+                            <li onclick="getJson('@routes.UserAccount.vdjtoolUsageMatrix(account, item)')"><a>Render</a></li>
+                            <li onclick="getJson('@routes.UserAccount.vdjtoolUsageMatrix(account, item, false)')"><a href="#">Render without optimization</a></li>
+                            <hr>
+                        }
+                        <li style="cursor: pointer"><a href="@routes.UserAccount.newFile(account)">Add new File</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="span9">
+                <div class="hero-unit">
+                    <vis-body>
+                    </vis-body>
+                </div>
+
+            </div>
+        </div>
+        <hr>
+        <footer>
+            <p>&copy; Company 2012</p>
+        </footer>
+    </div>
+}

@@ -2,17 +2,11 @@ package models;
 
 
 import play.mvc.PathBindable;
-import play.data.validation.Constraints;
 import play.db.ebean.Model;
 
-import play.data.validation.Constraints.Required;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.xml.soap.Text;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class UserFile extends Model implements PathBindable<UserFile> {
@@ -20,10 +14,9 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     @Id
     public Long id;
     @ManyToOne
-    public User user;
-    public String test_string;
+    public Account account;
+    public String file_name;
     public String file_path;
-    //TODO
 
     public static UserFile findById(Long id) {
         return find().where().eq("id", id).findUnique();

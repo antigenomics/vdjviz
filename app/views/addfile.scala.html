@@ -1,19 +1,16 @@
-@(fileForm: Form[UserFile], user: User)
-@import views.html.defaultpages.todo
-@import helper._
-@import helper.twitterBootstrap._
-@navbar(user)
-@main("User File Form") {
+@(fileForm: Form[UserFile], account: Account)
+@navbar(account.user_name)
+@main("Add new file") {
     <h1>User File Form</h1>
-    @helper.form(action = routes.UserFiles.save(user),
-    'enctype -> "multipart/form-data") {
+    @helper.form(action = helper.CSRF(routes.UserAccount.saveNewFile(account)),
+        'enctype -> "multipart/form-data") {
         <fieldset>
             <legend>File</legend>
-            @helper.inputText(fileForm("test_string"), '_label -> "Test String")
+            @helper.inputText(fileForm("file_name"), '_label -> "File Name")
             @helper.inputFile(fileForm("file"), '_label -> "File")
             configure your Upload Path in application.conf before using this feature
         </fieldset>
         <input type="submit" class="btn btn-primary" value="Save">
-        <a class="btn" href="@routes.Users.index()">Cancel</a>
+        <a class="btn" href="@routes.Application.redirectToAccount()">Cancel</a>
     }
 }

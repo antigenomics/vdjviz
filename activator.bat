@@ -85,8 +85,8 @@ if "%_JAVACMD%"=="" (
 if "%_JAVACMD%"=="" set _JAVACMD=java
 
 rem Detect if this java is ok to use.
-for /F %%j in ('"%_JAVACMD%" -version  2^>^&1') do (
-  if %%~j==Java set JAVAINSTALLED=1
+for /F %%jSegment in ('"%_JAVACMD%" -version  2^>^&1') do (
+  if %%~jSegment==Java set JAVAINSTALLED=1
 )
 
 rem Detect the same thing about javac
@@ -96,8 +96,8 @@ if "%_JAVACCMD%"=="" (
   )
 )
 if "%_JAVACCMD%"=="" set _JAVACCMD=javac
-for /F %%j in ('"%_JAVACCMD%" -version 2^>^&1') do (
-  if %%~j==javac set JAVACINSTALLED=1
+for /F %%jSegment in ('"%_JAVACCMD%" -version 2^>^&1') do (
+  if %%~jSegment==javac set JAVACINSTALLED=1
 )
 
 rem BAT has no logical or, so we do it OLD SCHOOL! Oppan Redmond Style
@@ -133,8 +133,8 @@ rem Strips away the " characters
 set JAVA_VERSION=%JAVA_VERSION:"=%
 
 rem TODO Check if there are existing mem settings in JAVA_OPTS/CFG_OPTS and use those instead of the below
-for /f "delims=. tokens=1-3" %%v in ("%JAVA_VERSION%") do (
-    set MAJOR=%%v
+for /f "delims=. tokens=1-3" %%vSegment in ("%JAVA_VERSION%") do (
+    set MAJOR=%%vSegment
     set MINOR=%%w
     set BUILD=%%x
 
@@ -185,7 +185,7 @@ if not "%~1"=="" (
     )
     shift
 
-    set DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=!JPDA_PORT!
+    set DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=relationNum,address=!JPDA_PORT!
     goto argsloop
   )
   rem else

@@ -15,7 +15,7 @@ function getJson(url) {
     $.getJSON(url, function(data){
 
         $.each(data, function(key, value){
-            var item = [value.v, value.j, value.n ];
+            var item = [value.vSegment, value.jSegment, value.relationNum ];
             items.push(item);
 
         });
@@ -39,7 +39,7 @@ function renderTable() {
 
 !function(){
     var bP={};
-    var b=20, bb=1000, height=700, buffMargin=5, minHeight=5;
+    var b=20, bb=800, height=700, buffMargin=5, minHeight=5;
     var c1=[-180, 30], c2=[-50, 140], c3=[0, 200]; //Column positions of labels.
     var colors =["#708090",
                  "#FAEBD7",
