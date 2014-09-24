@@ -64,7 +64,7 @@ public class Application extends Controller {
         if (user != null && user.sessionhash.equals(sessionhash)) {
             return redirect(routes.UserAccount.userpage(user.account));
         } else {
-            return redirect(routes.Application.index(user.account.user_name));
+            return redirect(routes.Application.index(null));
         }
     }
 
