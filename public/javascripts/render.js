@@ -24,7 +24,7 @@ function getJson(url) {
 }
 
 function renderTable() {
-    var width = 1600, height = 1000, margin = {b: 0, t: 40, l: 170, r: 50};
+    var width = 1200, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
 
     var svg = d3.select("vis-body")
         .append("svg").attr('width', width).attr('height', (height + margin.b + margin.t))
@@ -39,7 +39,7 @@ function renderTable() {
 
 !function(){
     var bP={};
-    var b=20, bb=800, height=700, buffMargin=5, minHeight=5;
+    var b=30, bb=800, height=700, buffMargin=5, minHeight=5;
     var c1=[-180, 30], c2=[-50, 140], c3=[0, 200]; //Column positions of labels.
     var colors =["#708090",
                  "#FAEBD7",

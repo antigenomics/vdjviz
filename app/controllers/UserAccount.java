@@ -11,6 +11,7 @@ import play.Play;
 import play.data.Form;
 import play.libs.Json;
 import play.mvc.*;
+import utils.CommonUtil;
 import views.html.userpage;
 import views.html.addfile;
 
@@ -45,22 +46,41 @@ public class UserAccount extends Controller {
         String upload_path = Play.application().configuration().getString("file_upload_path");
         if (account != null) {
             if (input_file != null) {
-                String fileName = input_file.getFilename();
-                File upload_file = input_file.getFile();
-                upload_file.renameTo(new File(upload_path + account.user_name + "/" + fileName));
-                UserFile file_information = boundForm.get();
-                file_information.account = account;
-                file_information.file_path = upload_path + account.user_name + "/" + fileName;
-                account.userfiles.add(file_information);
-                Ebean.update(account);
-                Ebean.save(file_information);
-                flash("success_file_added", String.format("Successfully added file %s to user %s", file_information, account));
+                try {
+                    File upload_file = input_file.getFile();
+                    String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
+                    upload_file.renameTo(new File(upload_path + account.user_name + "/" + unique_name + ".file"));
+                    UserFile file_information = boundForm.get();
+                    file_information.account = account;
+                    file_information.file_path = upload_path + account.user_name + "/" + unique_name + ".file";
+                    file_information.unique_name = unique_name;
+                    account.userfiles.add(file_information);
+                    Ebean.update(account);
+                    Ebean.save(file_information);
+                    flash("success", "Successfully added");
+                } catch (Exception e) {
+                    flash("error", "Error while adding file");
+                    return Results.redirect(routes.Application.redirectToAccount());
+                }
             } else {
                 flash("error", "Please correct the form below.");
                 return ok(addfile.render(fileForm, account));
             }
         }
-        return Results.redirect(routes.Application.redirectToAccount());
+        return redirect(routes.Application.redirectToAccount());
+    }
+
+    public static Result deleteFile(Account account, UserFile file) {
+        String upload_path = Play.application().configuration().getString("file_upload_path");
+        File f = new File(upload_path + account.user_name + "/" + file.unique_name + ".file");
+        if (f.delete()) {
+            account.userfiles.remove(file);
+            Ebean.delete(file);
+            return Results.redirect(routes.Application.redirectToAccount());
+        } else {
+            flash("error", "Error deleting file");
+            return Results.redirect(routes.Application.redirectToAccount());
+        }
     }
 
     public static Result vdjtoolUsageMatrix(Account account, UserFile file, boolean optimization) {

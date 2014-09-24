@@ -23,6 +23,7 @@ create table user_file (
   id                        bigint not null,
   account_id                bigint,
   file_name                 varchar(255),
+  unique_name               varchar(255),
   file_path                 varchar(255),
   constraint pk_user_file primary key (id))
 ;

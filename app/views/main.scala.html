@@ -13,22 +13,23 @@
 
     </head>
     <body>
-        @if(flash.containsKey("success")) {
-            <div class="alert alert-success">
-                @flash.get("success")
-            </div>
-        }
-        @if(flash.containsKey("error")) {
-            <div class="alert alert-warning">
-                @flash.get("error")
-            </div>
-        }
-        @if(flash.containsKey("not found")) {
-            <div class="alert alert-warning">
-                @flash.get("not found")
-            </div>
-        }
+
         <div class="content" style="top:50px;">
+            @if(flash.containsKey("success")) {
+                <div class="alert alert-success">
+                @flash.get("success")
+                </div>
+            }
+            @if(flash.containsKey("error")) {
+                <div class="alert alert-error">
+                @flash.get("error")
+                </div>
+            }
+            @if(flash.containsKey("not found")) {
+                <div class="alert alert-warning">
+                @flash.get("not found")
+                </div>
+            }
             @content
         </div>
         </body>

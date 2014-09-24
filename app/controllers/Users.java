@@ -46,9 +46,10 @@ public class Users extends Controller {
             File temp_dir = new File(upload_path + account.user_name + "/");
             temp_dir.mkdir();
         } else {
-            return ok("user is already exist");
+            flash("error", "User is already exist");
+            return ok(newuser.render(userboundForm, accountboundForm));
         }
-        flash("success", String.format("Successfully added user %s", user));
+        flash("success", String.format("Successfully added user %s", user.account.user_name));
         return Results.redirect(routes.Application.index(null));
     }
 

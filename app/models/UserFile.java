@@ -16,6 +16,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     @ManyToOne
     public Account account;
     public String file_name;
+    public String unique_name;
     public String file_path;
 
     public static UserFile findById(Long id) {

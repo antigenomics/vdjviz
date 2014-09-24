@@ -40,7 +40,8 @@ public class Application extends Controller {
         String password = loginForm.get().password;
         User user = User.authenticate(email, password);
         if (user == null) {
-            return forbidden("invalid password");
+            flash("error", "Invalid Password or Email");
+            return ok(login.render(loginForm));
         }
         try {
             String sessionhash = CommonUtil.RandomStringGenerator.generateRandomString(20, CommonUtil.RandomStringGenerator.Mode.ALPHANUMERIC);
