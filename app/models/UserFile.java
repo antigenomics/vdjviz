@@ -1,12 +1,15 @@
 package models;
 
 
+import com.antigenomics.vdjtools.Software;
+import play.data.validation.Constraints;
 import play.mvc.PathBindable;
 import play.db.ebean.Model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.validation.Constraint;
 
 @Entity
 public class UserFile extends Model implements PathBindable<UserFile> {
@@ -15,8 +18,12 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public Long id;
     @ManyToOne
     public Account account;
+    @Constraints.Required
     public String file_name;
     public String unique_name;
+    public Software software_type;
+    @Constraints.Required
+    public String software_type_name;
     public String file_path;
 
     public static UserFile findById(Long id) {

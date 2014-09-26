@@ -1,7 +1,10 @@
 package controllers;
 
+import com.antigenomics.vdjtools.Clonotype;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.SegmentUsage;
+import com.antigenomics.vdjtools.basic.Spectratype;
+import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import models.Account;
@@ -51,6 +54,9 @@ public class UserAccount extends Controller {
                     String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
                     upload_file.renameTo(new File(upload_path + account.user_name + "/" + unique_name + ".file"));
                     UserFile file_information = boundForm.get();
+                    file_information.software_type_name = boundForm.get().software_type_name;
+                    //TODO software type
+                    file_information.software_type = Software.byName(boundForm.get().software_type_name);
                     file_information.account = account;
                     file_information.file_path = upload_path + account.user_name + "/" + unique_name + ".file";
                     file_information.unique_name = unique_name;
@@ -88,7 +94,7 @@ public class UserAccount extends Controller {
          /**
          * VdjTools usage
          **/
-         Software software = Software.MiTcr;
+         Software software = file.software_type;
          List<String> sampleFileNames = new ArrayList<String>();
          sampleFileNames.add(file.file_path);
          SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
@@ -132,7 +138,7 @@ public class UserAccount extends Controller {
 
          if (optimization) {
             List<Table> opt_data = new ArrayList<>();
-            double opt_constant = 0.007;
+            double opt_constant = 0.005;
                 for (Table item : data) {
                     if (item.relationNum / summary > opt_constant) {
                         opt_data.add(item);
@@ -141,5 +147,26 @@ public class UserAccount extends Controller {
             return ok(Json.toJson(opt_data));
         }
         return ok(Json.toJson(data));
+    }
+
+    //TODO spectr histrogram
+    public static Result spectr() {
+        Sample sample = null; //sample colleaction get at (0)
+        sample.sort();
+        for (Clonotype c: sample) {
+            c.getCdr3nt().length(); // sequences string
+            // sort by length
+            // top 10
+
+        }
+        Spectratype sp = new Spectratype(false, false);
+        List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
+        sp.getLengths(); // coordinates x int
+        sp.getHistogram();// coordinates y double
+        for (Clonotype topclone: topclones ) {
+            topclone.getCdr3nt().length(); // +=x
+            topclone.getFreq(); // += y
+        }
+        return null;
     }
 }

@@ -24,7 +24,10 @@ create table user_file (
   account_id                bigint,
   file_name                 varchar(255),
   unique_name               varchar(255),
+  software_type             integer,
+  software_type_name        varchar(255),
   file_path                 varchar(255),
+  constraint ck_user_file_software_type check (software_type in (0,1,2,3,4)),
   constraint pk_user_file primary key (id))
 ;
 

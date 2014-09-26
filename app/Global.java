@@ -6,6 +6,8 @@ import play.data.format.Formatters;
 import play.data.format.Formatters.*;
 import utils.AnnotationDateFormatter;
 
+import controllers.Application.*;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,7 +18,7 @@ import java.util.Locale;
 public class Global extends GlobalSettings {
 
     public void onStart(Application app) {
-
+        controllers.Application.sessionclear();
         Formatters.register(Date.class,
             new SimpleFormatter<Date>() {
                 private final static String PATTERN = "dd-MM-yyyy";

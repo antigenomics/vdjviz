@@ -69,4 +69,9 @@ public class Application extends Controller {
         }
     }
 
+    public static Result sessionclear() {
+        session().clear();
+        return ok(index.render(null));
+    }
+
 }

@@ -8,6 +8,7 @@
             <legend>File</legend>
             @helper.inputText(fileForm("file_name"), '_label -> "File Name")
             @helper.inputFile(fileForm("file"), '_label -> "File")
+            @helper.select(fileForm("software_type_name"), options = Seq("MiTcr" -> "MiTcr", "MiGec" -> "MiGec", "Simple" -> "Simple"), '_label -> "Type")
             configure your Upload Path in application.conf before using this feature
         </fieldset>
         <input type="submit" class="btn btn-primary" value="Save">
