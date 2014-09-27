@@ -41,7 +41,8 @@ function getJson(url) {
 function renderHistogram() {
     var width = 1000,
         barHeight = 20,
-        maxHeight = 0;
+        maxHeight = 0,
+        heightMultiplier = 1500;
 
     var colors = d3.scale.category20().range();
 
@@ -51,7 +52,7 @@ function renderHistogram() {
 
     $.each(histogramData, function(index, value) {
         if (value.clonotype && value.yCoordinate > maxHeight) {
-            maxHeight = value.yCoordinate * 1500 + 500;
+            maxHeight = value.yCoordinate * heightMultiplier + 500;
         }
         if (!value.clonotype) {
             spectratype.push(value);
@@ -72,10 +73,10 @@ function renderHistogram() {
     var bar = chart.selectAll("g")
         .data(spectratype)
         .enter().append("g")
-        .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - d.yCoordinate * 1500)  +")"; });
+        .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - d.yCoordinate * heightMultiplier)  +")"; });
 
     bar.append("rect")
-        .attr("height", function(d) {return d.yCoordinate * 1500;})
+        .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
         .attr("width", barHeight - 1)
         .style("fill", "#DCDCDC");
 
@@ -88,26 +89,61 @@ function renderHistogram() {
         .attr("transform", "translate(10, 10)")
         .attr("class", "tip")
         .attr("id", function(d, i) {return i;})
-        .append("rect")
-        .attr("height", 100)
-        .attr("width", 400)
+        .style("opacity", 0);
+
+
+    tip.append("rect")
+        .attr("height", "4em")
+        .attr("width", function(d) {
+            //"clonotype".length +=
+            return (d.clonotypeName.length + 6) * 13;
+        })
         .style("fill", function(d, i) {
             return colors[i];
         })
-        .style("opacity", "0.3")
-        .style("visibility", "hidden")
+        .style("opacity", "0.5")
+
+    var tipText = tip
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 25)
+        .style("fill", "#FFF")
+        .attr("font-size", 16);
+
+    tipText.append("tspan")
+        .attr("x", 10)
+        .attr("y", "1.4em")
+        .html(function(d) {
+            return "Clonotype: " + d.clonotypeName;
+        });
+
+    tipText.append("tspan")
+        .data(clonotypes)
+        .attr("x", 10)
+        .attr("y", "2.8em")
+        .html(function(d) {
+            return "Length: " + d.clonotypeName.length;
+        });
 
 
-    var clonotypeBar = chart.selectAll("div")
+    var clonotypeBar = chart.selectAll("clonotype")
         .data(clonotypes)
         .enter().append("g")
         .attr("class", "clonotype")
         .on("mouseover", function(d,i) {
-            $("#" + i).find("rect").css("visibility", "visible");
+            $("#" + i).animate({
+                opacity: 1
+            }, 150, function() {
+                // Animation complete.
+            });
 
         })
         .on("mouseout", function(d,i) {
-            $("#" + i).find("rect").css("visibility", "hidden");
+            $("#" + i).animate({
+                opacity: 0
+            }, 150, function() {
+                // Animation complete.
+            });
 
         })
         .attr("id", function(d, i) {
@@ -117,14 +153,14 @@ function renderHistogram() {
         .attr("transform", function(d, i) {
             var bar = findBarHeight(d.xCoordinate);
             bar.h += d.yCoordinate;
-            return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - bar.h * 1500)  +")";
+            return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - bar.h * heightMultiplier)  +")";
         });
 
 
     clonotypeBar.append("rect")
-        .attr("height", function(d) {return d.yCoordinate * 1500;})
+        .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
         .attr("width", barHeight - 1)
-        .style("fill", function(d, i) { return colors[i] })
+        .style("fill", function(d, i) { return colors[i] });
 
 
     function findBarHeight(x) {
