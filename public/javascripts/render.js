@@ -1,4 +1,5 @@
 var items = [];
+var histogramData = [];
 
 function del(urlToDelete) {
     $.ajax({
@@ -11,6 +12,18 @@ function del(urlToDelete) {
     });
 }
 
+function getHistogramData(url) {
+    $.getJSON(url, function(data){
+        $.each(data, function(key, value){
+            var item = {"xCoordinate" : value.xCoordinate ,"yCoordinate" : value.yCoordinate,
+                        "clonotype" : value.clonotype, "clonotypeName": value.clonotypeName};
+            histogramData.push(item);
+        });
+    renderHistogram();
+    });
+}
+
+//TODO
 function getJson(url) {
     $.getJSON(url, function(data){
 
@@ -22,6 +35,108 @@ function getJson(url) {
     renderTable();
     });
 }
+
+
+
+function renderHistogram() {
+    var width = 1000,
+        barHeight = 20,
+        maxHeight = 0;
+
+    var colors = d3.scale.category20().range();
+
+    var spectratype = [];
+    var clonotypes = [];
+    var barsHeight = [];
+
+    $.each(histogramData, function(index, value) {
+        if (value.clonotype && value.yCoordinate > maxHeight) {
+            maxHeight = value.yCoordinate * 1500 + 500;
+        }
+        if (!value.clonotype) {
+            spectratype.push(value);
+            barsHeight.push({x : value.xCoordinate, h : value.yCoordinate});
+        } else {
+            clonotypes.push(value);
+        }
+    });
+
+    var svg = d3.select("vis-body")
+        .append("svg")
+        .attr("class", "chart");
+
+    var chart = d3.select("svg")
+        .attr("width", width)
+        .attr("height", maxHeight);
+
+    var bar = chart.selectAll("g")
+        .data(spectratype)
+        .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - d.yCoordinate * 1500)  +")"; });
+
+    bar.append("rect")
+        .attr("height", function(d) {return d.yCoordinate * 1500;})
+        .attr("width", barHeight - 1)
+        .style("fill", "#DCDCDC");
+
+    bar.append("text")
+        .attr("type", "spectratype");
+
+    var tip = chart.selectAll("tip")
+        .data(clonotypes)
+        .enter().append("g")
+        .attr("transform", "translate(10, 10)")
+        .attr("class", "tip")
+        .attr("id", function(d, i) {return i;})
+        .append("rect")
+        .attr("height", 100)
+        .attr("width", 400)
+        .style("fill", function(d, i) {
+            return colors[i];
+        })
+        .style("opacity", "0.3")
+        .style("visibility", "hidden")
+
+
+    var clonotypeBar = chart.selectAll("div")
+        .data(clonotypes)
+        .enter().append("g")
+        .attr("class", "clonotype")
+        .on("mouseover", function(d,i) {
+            $("#" + i).find("rect").css("visibility", "visible");
+
+        })
+        .on("mouseout", function(d,i) {
+            $("#" + i).find("rect").css("visibility", "hidden");
+
+        })
+        .attr("id", function(d, i) {
+            return i;
+        })
+        .style("cursor", "pointer")
+        .attr("transform", function(d, i) {
+            var bar = findBarHeight(d.xCoordinate);
+            bar.h += d.yCoordinate;
+            return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - bar.h * 1500)  +")";
+        });
+
+
+    clonotypeBar.append("rect")
+        .attr("height", function(d) {return d.yCoordinate * 1500;})
+        .attr("width", barHeight - 1)
+        .style("fill", function(d, i) { return colors[i] })
+
+
+    function findBarHeight(x) {
+        for (var i = 0; i < barsHeight.length; i++) {
+            if (barsHeight[i].x == x) {
+                return barsHeight[i];
+            }
+        }
+        return null;
+    }
+}
+
 
 function renderTable() {
     var width = 1200, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
@@ -41,27 +156,7 @@ function renderTable() {
     var bP={};
     var b=30, bb=800, height=700, buffMargin=5, minHeight=5;
     var c1=[-180, 30], c2=[-50, 140], c3=[0, 200]; //Column positions of labels.
-    var colors =["#708090",
-                 "#FAEBD7",
-                 "#E6E6FA",
-                 "#E6E6FA",
-                 "#7B68EE",
-                 "#B0C4DE",
-                 "#32CD32",
-                 "#F4A460",
-                 "#E9967A",
-                 "#DDA0DD",
-                 "#1C86EE",
-                 "#43CD80",
-                 "#9F79EE",
-                 "#9B30FF",
-                 "#8B5F65",
-                 "#FF6347",
-                 "#EE9572",
-                 "#FFE7BA",
-                 "#CD9B9B",
-                 "#CDCDB4"
-    ];
+    var colors = d3.scale.category20().range();
 
     bP.partData = function(data,p){
         var sData={};
@@ -332,6 +427,5 @@ function renderTable() {
             selectedBar.select(".barpercent").style('font-weight','normal');
         });
     }
-
     this.bP = bP;
 }();

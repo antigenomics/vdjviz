@@ -1,7 +1,7 @@
 @(account: Account)
 @navbar(account.user_name)
 @main("User page") {
-    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="@routes.Assets.at("javascripts/d3/d3.min.js")"></script>
     <script src="@routes.Assets.at("javascripts/render.js")"></script>
     <div class="container-fluid">
         <div class="row-fluid">
@@ -10,8 +10,9 @@
                     <ul class="nav nav-list">
                         @for(item <- account.userfiles) {
                             <li class="nav-header">@item.file_name
-                            <li onclick="getJson('@routes.UserAccount.vdjtoolUsageMatrix(account, item)')"><a href="#">Render</a></li>
-                            <li onclick="getJson('@routes.UserAccount.vdjtoolUsageMatrix(account, item, false)')"><a href="#">Render without optimization</a></li>
+                            <li onclick="getJson('@routes.Computation.vdjUsageData(account, item)')"><a href="#">Render</a></li>
+                            <li onclick="getHistogramData('@routes.Computation.spectrotypeHistogram(account, item)')"><a>Hist</a></li>
+                            <li onclick="getJson('@routes.Computation.vdjUsageData(account, item, false)')"><a href="#">Render without optimization</a></li>
                             <li><a href="@routes.UserAccount.deleteFile(account, item)">Delete this file</a></li>
                             <hr>
                         }
@@ -22,9 +23,7 @@
 
             <div class="span10">
                 <div class="hero-unit">
-                    <vis-body>
-
-                    </vis-body>
+                    <vis-body class="viz-body"></vis-body>
                 </div>
 
             </div>

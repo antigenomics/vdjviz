@@ -45,7 +45,7 @@ set ACTIVATOR_LAUNCH_JAR=activator-launch-%APP_VERSION%.jar
 
 rem Detect if we were double clicked, although theoretically A user could
 rem manually run cmd /c
-for %%x in (%cmdcmdline%) do if %%~x==/c set DOUBLECLICKED=1
+for %%xCoordinate in (%cmdcmdline%) do if %%~xCoordinate==/c set DOUBLECLICKED=1
 
 rem FIRST we load a config file of extra options (if there is one)
 set "CFG_FILE_HOME=%UserProfile%\.activator\activatorconfig.txt"
@@ -136,7 +136,7 @@ rem TODO Check if there are existing mem settings in JAVA_OPTS/CFG_OPTS and use 
 for /f "delims=. tokens=1-3" %%vSegment in ("%JAVA_VERSION%") do (
     set MAJOR=%%vSegment
     set MINOR=%%w
-    set BUILD=%%x
+    set BUILD=%%xCoordinate
 
     set META_SIZE=-XX:MetaspaceSize=64M -XX:MaxMetaspaceSize=256M
     if "!MINOR!" LSS "8" (
@@ -185,7 +185,7 @@ if not "%~1"=="" (
     )
     shift
 
-    set DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=relationNum,address=!JPDA_PORT!
+    set DEBUG_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,server=yCoordinate,suspend=relationNum,address=!JPDA_PORT!
     goto argsloop
   )
   rem else

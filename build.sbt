@@ -14,6 +14,7 @@ resolvers += (
 
 libraryDependencies ++= Seq(
   "com.antigenomics" % "vdjtools" % "1.0-SNAPSHOT",
+  //"com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3",
   //"securesocial" %% "securesocial" % "2.1.2",
   filters,
   javaJdbc,
