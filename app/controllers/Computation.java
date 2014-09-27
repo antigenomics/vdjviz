@@ -21,8 +21,7 @@ public class Computation extends Controller{
 
     public static Result vdjUsageData(Account account, UserFile file, Boolean optimization) {
         if (!account.userfiles.contains(file)) {
-            //TODO
-            return ok("restricted");
+            return ok("You have no access to this operation");
         }
         Software software = file.software_type;
         List<String> sampleFileNames = new ArrayList<>();
@@ -77,8 +76,7 @@ public class Computation extends Controller{
 
     public static Result spectrotypeHistogram(Account account, UserFile file) throws JsonProcessingException {
         if (!account.userfiles.contains(file)) {
-            //TODO
-            return ok("restricted");
+            return ok("You have no access to this operation");
         }
         Software software = file.software_type;
         List<String> sampleFileNames = new ArrayList<>();
@@ -99,7 +97,6 @@ public class Computation extends Controller{
                 this.clonotypeName = clonotypeName;
             }
         }
-
         ArrayList<HistogramData> histogramData = new ArrayList<>();
         int[] x_coordinates = sp.getLengths();
         double[] y_coordinates = sp.getHistogram();

@@ -85,35 +85,6 @@ public class Account implements PathBindable<Account> {
         return String.format("%s", user_name);
     }
 
-    //TODO users store in memory of application -
-    //TODO use database for it -
-    //Database added
-    /*
-    private static List<User> users;
-    static {
-        users = new ArrayList<>();
-        users.add(new User("bvdmitri", "Dmitri", "test_description"));
-    }
-
-    public static List<User> findByName(String term) {
-        final List<models.User> results = new ArrayList<User>();
-        for (models.User candidate : users) {
-            if (candidate.user_name.toLowerCase().contains(term.toLowerCase())) {
-                results.add(candidate);
-            }
-        }
-        return results;
-    }
-
-    public static boolean remove(User user) {
-        return users.remove(user);
-    }
-
-    public void save(){
-        users.remove(findByLogin(this.login_name));
-        users.add(this);
-    }
-    */
     public static List<Account> findAll() {
         return find().all();
     }

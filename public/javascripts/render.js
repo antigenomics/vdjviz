@@ -12,7 +12,7 @@ function del(urlToDelete) {
     });
 }
 
-function getHistogramData(url) {
+function renderHistogramData(url) {
     $.getJSON(url, function(data){
         $.each(data, function(key, value){
             var item = {"xCoordinate" : value.xCoordinate ,"yCoordinate" : value.yCoordinate,
@@ -23,8 +23,7 @@ function getHistogramData(url) {
     });
 }
 
-//TODO
-function getJson(url) {
+function renderTableData(url) {
     $.getJSON(url, function(data){
 
         $.each(data, function(key, value){
@@ -40,7 +39,7 @@ function getJson(url) {
 
 function renderHistogram() {
     var width = 1000,
-        barHeight = 20,
+        barWidth = 20,
         maxHeight = 0,
         heightMultiplier = 1500;
 
@@ -77,7 +76,7 @@ function renderHistogram() {
 
     bar.append("rect")
         .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
-        .attr("width", barHeight - 1)
+        .attr("width", barWidth - 1)
         .style("fill", "#DCDCDC");
 
     bar.append("text")
@@ -159,7 +158,7 @@ function renderHistogram() {
 
     clonotypeBar.append("rect")
         .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
-        .attr("width", barHeight - 1)
+        .attr("width", barWidth - 1)
         .style("fill", function(d, i) { return colors[i] });
 
 

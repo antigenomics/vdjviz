@@ -29,12 +29,11 @@ public class Users extends Controller {
         Form<User> userboundForm = userForm.bindFromRequest();
         Form<Account> accountboundForm = accountForm.bindFromRequest();
         if (userboundForm.hasErrors() || accountboundForm.hasErrors()) {
-            //TODO
-            return badRequest();
+            flash("error", "Correct the form below");
+            return ok(newuser.render(userboundForm, accountboundForm));
         }
         Account account = accountboundForm.get();
         User user = userboundForm.get();
-        //TODO fake?
         User isUserExist = User.findByEmail(user.email);
         Account isAccountExist = Account.findByUserName(account.user_name);
         if (isUserExist == null && isAccountExist == null) {
