@@ -53,6 +53,7 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(histogramData);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
+            file.histogramData = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
