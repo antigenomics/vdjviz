@@ -11,7 +11,7 @@
                         @for(item <- account.userfiles) {
                             <li class="nav-header">@item.file_name
                             <li onclick="renderTableData('@routes.Computation.vdjUsageData(account, item)')"><a href="#">Render</a></li>
-                            <li onclick="renderHistogramData('@routes.Computation.spectrotypeHistogram(account, item)')"><a>Hist</a></li>
+                            <li onclick="renderHistogramData('@routes.Computation.returnSpectrotypeHistogram(account, item)')"><a>Hist</a></li>
                             <li onclick="renderTableData('@routes.Computation.vdjUsageData(account, item, false)')"><a href="#">Render without optimization</a></li>
                             <li><a href="@routes.UserAccount.deleteFile(account, item)">Delete this file</a></li>
                             <hr>

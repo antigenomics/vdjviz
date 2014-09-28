@@ -1,26 +1,18 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Clonotype;
 import com.antigenomics.vdjtools.Software;
-import com.antigenomics.vdjtools.basic.SegmentUsage;
-import com.antigenomics.vdjtools.basic.Spectratype;
-import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import models.Account;
-import models.User;
 import models.UserFile;
 import play.Play;
 import play.data.Form;
-import play.libs.Json;
 import play.mvc.*;
 import utils.CommonUtil;
+import utils.ComputationUtil;
 import views.html.userpage;
 import views.html.addfile;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 
 @Security.Authenticated(Secured.class)
@@ -52,16 +44,17 @@ public class UserAccount extends Controller {
                 try {
                     File upload_file = file.getFile();
                     String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
-                    upload_file.renameTo(new File(upload_path + account.user_name + "/" + unique_name + ".file"));
-                    UserFile file_information = boundForm.get();
-                    file_information.software_type_name = boundForm.get().software_type_name;
-                    file_information.software_type = Software.byName(boundForm.get().software_type_name);
-                    file_information.account = account;
-                    file_information.file_path = upload_path + account.user_name + "/" + unique_name + ".file";
-                    file_information.unique_name = unique_name;
-                    account.userfiles.add(file_information);
+                    File file_dir = (new File(upload_path + account.user_name + "/" + unique_name + "/"));
+                    file_dir.mkdir();
+                    upload_file.renameTo(new File(upload_path + account.user_name + "/" + unique_name + "/" + unique_name+ ".file"));
+                    UserFile newFile = new UserFile(account, boundForm.get().file_name,
+                                                    unique_name, boundForm.get().software_type_name,
+                                                    upload_path + account.user_name + "/" + unique_name + "/" + unique_name + ".file",
+                                                    file_dir.getAbsolutePath());
+                    account.userfiles.add(newFile);
                     Ebean.update(account);
-                    Ebean.save(file_information);
+                    Ebean.save(newFile);
+                    ComputationUtil.spectrotypeHistogram(account, newFile);
                     flash("success", "Successfully added");
                 } catch (Exception e) {
                     flash("error", "Error while adding file");

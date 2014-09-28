@@ -7,13 +7,16 @@ import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
 import models.UserFile;
 import play.libs.Json;
+import play.libs.Json.*;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 
+import java.io.*;
 import java.util.*;
 
 @Security.Authenticated(Secured.class)
@@ -74,38 +77,13 @@ public class Computation extends Controller{
     }
 
 
-    public static Result spectrotypeHistogram(Account account, UserFile file) throws JsonProcessingException {
+    public static Result returnSpectrotypeHistogram(Account account, UserFile file) throws JsonProcessingException, FileNotFoundException {
         if (!account.userfiles.contains(file)) {
             return ok("You have no access to this operation");
         }
-        Software software = file.software_type;
-        List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(file.file_path);
-        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-        Sample sample = sampleCollection.getAt(0); //sample collection get at (0)
-        Spectratype sp = new Spectratype(false, false);
-        List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
-        class HistogramData {
-            public Integer xCoordinate;
-            public Double yCoordinate;
-            public Boolean clonotype;
-            public String clonotypeName;
-            public HistogramData(Integer xCoordinate, Double yCoordinate, Boolean clonotype, String clonotypeName) {
-                this.xCoordinate = xCoordinate;
-                this.yCoordinate = yCoordinate;
-                this.clonotype = clonotype;
-                this.clonotypeName = clonotypeName;
-            }
-        }
-        ArrayList<HistogramData> histogramData = new ArrayList<>();
-        int[] x_coordinates = sp.getLengths();
-        double[] y_coordinates = sp.getHistogram();
-        for (int i = 0; i < x_coordinates.length; i++) {
-            histogramData.add(new HistogramData(x_coordinates[i], y_coordinates[i], false, ""));
-        }
-        for (Clonotype topclone: topclones) {
-            histogramData.add(new HistogramData(topclone.getCdr3nt().length(), topclone.getFreq(), true, topclone.getCdr3nt()));
-        }
-        return ok(Json.toJson(histogramData));
+        File jsonFile = new File(file.file_dir_path + "/" + "histogram.json");
+        FileInputStream fis = new FileInputStream(jsonFile);
+        JsonNode jsonData = Json.parse(fis);
+        return ok(jsonData);
     }
 }
