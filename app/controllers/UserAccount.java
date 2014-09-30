@@ -6,6 +6,7 @@ import models.Account;
 import models.UserFile;
 import play.Play;
 import play.data.Form;
+import play.libs.F;
 import play.mvc.*;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -13,6 +14,7 @@ import views.html.userpage;
 import views.html.addfile;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 
 
 @Security.Authenticated(Secured.class)
@@ -54,7 +56,9 @@ public class UserAccount extends Controller {
                     account.userfiles.add(newFile);
                     Ebean.update(account);
                     Ebean.save(newFile);
-                    ComputationUtil.spectrotypeHistogram(account, newFile);
+                    //TODO asynchronous
+                    ComputationUtil.spectrotypeHistogram(newFile);
+                    ComputationUtil.vdjUsageData(newFile);
                     flash("success", "Successfully added");
                 } catch (Exception e) {
                     flash("error", "Error while adding file");

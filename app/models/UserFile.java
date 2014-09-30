@@ -21,12 +21,14 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     @Constraints.Required
     public String file_name;
     public String unique_name;
+    //TODO
     public Software software_type;
     @Constraints.Required
     public String software_type_name;
     public String file_path;
     public String file_dir_path;
     public Boolean histogramData;
+    public Boolean vdjUsageData;
 
     public UserFile() {}
 
@@ -41,6 +43,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.file_path = file_path;
         this.file_dir_path = file_dir_path;
         this.histogramData = false;
+        this.vdjUsageData = false;
 
     }
 

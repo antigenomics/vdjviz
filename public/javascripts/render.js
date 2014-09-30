@@ -1,4 +1,4 @@
-var items = [];
+
 var histogramData = [];
 
 function del(urlToDelete) {
@@ -13,31 +13,35 @@ function del(urlToDelete) {
 }
 
 function renderHistogramData(url) {
+    d3.select("svg").remove();
+    var histogramData = [];
     $.getJSON(url, function(data){
         $.each(data, function(key, value){
             var item = {"xCoordinate" : value.xCoordinate ,"yCoordinate" : value.yCoordinate,
                         "clonotype" : value.clonotype, "clonotypeName": value.clonotypeName};
             histogramData.push(item);
         });
-    renderHistogram();
+    renderHistogram(histogramData);
     });
 }
 
 function renderTableData(url) {
+    d3.select("svg").remove();
+    var vdjUsageData = []
     $.getJSON(url, function(data){
 
         $.each(data, function(key, value){
             var item = [value.vSegment, value.jSegment, value.relationNum ];
-            items.push(item);
+            vdjUsageData.push(item);
 
         });
-    renderTable();
+    renderTable(vdjUsageData);
     });
 }
 
 
 
-function renderHistogram() {
+function renderHistogram(histogramData) {
     var width = 1000,
         barWidth = 20,
         maxHeight = 0,
@@ -173,7 +177,7 @@ function renderHistogram() {
 }
 
 
-function renderTable() {
+function renderTable(vdjUsageData) {
     var width = 1200, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
 
     var svg = d3.select("vis-body")
@@ -181,7 +185,7 @@ function renderTable() {
         .append("g").attr("transform", "translate(" + margin.l + "," + margin.t + ")");
 
     var data = [
-        {data: bP.partData(items, 2), id: 'Table', header: ["V", "J", "Table"]}
+        {data: bP.partData(vdjUsageData, 2), id: 'Table', header: ["V", "J", "Table"]}
     ];
 
     bP.draw(data, svg);
