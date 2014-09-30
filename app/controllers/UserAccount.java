@@ -74,8 +74,21 @@ public class UserAccount extends Controller {
 
     public static Result deleteFile(Account account, UserFile file) {
         String upload_path = Play.application().configuration().getString("file_upload_path");
-        File f = new File(upload_path + account.user_name + "/" + file.unique_name + ".file");
-        if (f.delete()) {
+        File f = new File(upload_path + account.user_name + "/" + file.unique_name + "/" + file.unique_name + ".file");
+        File histogram = new File(upload_path + account.user_name + "/" + file.unique_name + "/histogram.json");
+        File vdjUdage = new File(upload_path + account.user_name + "/" + file.unique_name + "/vdjUsage.json");
+        File file_dir = new File(upload_path + account.user_name + "/" + file.unique_name + "/");
+        Boolean deleted = false;
+        try {
+            f.delete();
+            histogram.delete();
+            vdjUdage.delete();
+            file_dir.delete();
+            deleted = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (deleted) {
             account.userfiles.remove(file);
             Ebean.delete(file);
             return Results.redirect(routes.Application.redirectToAccount());
