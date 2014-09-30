@@ -1,6 +1,4 @@
 
-var histogramData = [];
-
 function del(urlToDelete) {
     $.ajax({
         url : urlToDelete,
