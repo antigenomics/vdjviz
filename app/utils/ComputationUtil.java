@@ -24,9 +24,9 @@ import java.util.List;
 public class ComputationUtil {
 
     public static void vdjUsageData(UserFile file) {
-        Software software = file.software_type;
+        Software software = file.softwareType;
         List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(file.file_path);
+        sampleFileNames.add(file.filePath);
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         SegmentUsage segmentUsage = new SegmentUsage(sampleCollection, false);
         segmentUsage.vUsageHeader();
@@ -69,7 +69,7 @@ public class ComputationUtil {
         for (int i = 0; i < optimization_value; i++) {
             opt_data.add(data.get(i));
         }
-        File histogramJsonFile = new File(file.file_dir_path + "/" + "vdjUsage.json");
+        File histogramJsonFile = new File(file.fileDirPath + "/" + "vdjUsage.json");
         try {
             PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
             JsonNode jsonData = Json.toJson(opt_data);
@@ -85,9 +85,9 @@ public class ComputationUtil {
 
 
     public static void spectrotypeHistogram(UserFile file) {
-        Software software = file.software_type;
+        Software software = file.softwareType;
         List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(file.file_path);
+        sampleFileNames.add(file.filePath);
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         Sample sample = sampleCollection.getAt(0); //sample collection get at (0)
         Spectratype sp = new Spectratype(false, false);
@@ -113,7 +113,14 @@ public class ComputationUtil {
         for (Clonotype topclone: topclones) {
             histogramData.add(new HistogramData(topclone.getCdr3nt().length(), topclone.getFreq(), true, topclone.getCdr3nt()));
         }
-        File histogramJsonFile = new File(file.file_dir_path + "/" + "histogram.json");
+        Collections.sort(histogramData, new Comparator<HistogramData>() {
+            public int compare(HistogramData c1, HistogramData c2) {
+                if (c1.yCoordinate > c2.yCoordinate) return 1;
+                if (c1.yCoordinate < c2.yCoordinate) return -1;
+                return 0;
+            }
+        });
+        File histogramJsonFile = new File(file.fileDirPath + "/" + "histogram.json");
         try {
             PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
             JsonNode jsonData = Json.toJson(histogramData);

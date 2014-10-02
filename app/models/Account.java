@@ -54,9 +54,9 @@ public class Account implements PathBindable<Account> {
     @Id
     public Long id;
     @Required
-    public String user_name;
+    public String userName;
     @OneToOne
-    public User user;
+    public LocalUser user;
     @OneToMany(mappedBy="account")
     public List<UserFile> userfiles;
 
@@ -67,30 +67,30 @@ public class Account implements PathBindable<Account> {
     }
     @Override
     public String unbind(String key) {
-        return this.user_name;
+        return this.userName;
     }
     @Override
     public String javascriptUnbind() {
-        return this.user_name;
+        return this.userName;
     }
 
     public Account() {}
 
-    public Account(User user, String user_name) {
+    public Account(LocalUser user, String userName) {
         this.user = user;
-        this.user_name = user_name;
+        this.userName = userName;
     }
 
     public String toString() {
-        return String.format("%s", user_name);
+        return String.format("%s", userName);
     }
 
     public static List<Account> findAll() {
         return find().all();
     }
 
-    public static Account findByUserName(String user_name) {
-        return find().where().eq("user_name", user_name).findUnique();
+    public static Account findByUserName(String userName) {
+        return find().where().eq("userName", userName).findUnique();
     }
 
     public static Account findById(Long database_id) {

@@ -9,7 +9,6 @@ import play.db.ebean.Model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.validation.Constraint;
 
 @Entity
 public class UserFile extends Model implements PathBindable<UserFile> {
@@ -19,29 +18,29 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     @ManyToOne
     public Account account;
     @Constraints.Required
-    public String file_name;
-    public String unique_name;
+    public String fileName;
+    public String uniqueName;
     //TODO
-    public Software software_type;
+    public Software softwareType;
     @Constraints.Required
-    public String software_type_name;
-    public String file_path;
-    public String file_dir_path;
+    public String softwareTypeName;
+    public String filePath;
+    public String fileDirPath;
     public Boolean histogramData;
     public Boolean vdjUsageData;
 
     public UserFile() {}
 
-    public UserFile(Account account, String file_name,
-                    String unique_name, String software_type_name,
-                    String file_path, String file_dir_path) {
+    public UserFile(Account account, String fileName,
+                    String uniqueName, String softwareTypeName,
+                    String filePath, String fileDirPath) {
         this.account = account;
-        this.file_name = file_name;
-        this.unique_name = unique_name;
-        this.software_type = Software.byName(software_type_name);
-        this.software_type_name = software_type_name;
-        this.file_path = file_path;
-        this.file_dir_path = file_dir_path;
+        this.fileName = fileName;
+        this.uniqueName = uniqueName;
+        this.softwareType = Software.byName(softwareTypeName);
+        this.softwareTypeName = softwareTypeName;
+        this.filePath = filePath;
+        this.fileDirPath = fileDirPath;
         this.histogramData = false;
         this.vdjUsageData = false;
 
@@ -50,6 +49,10 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public static UserFile findById(Long id) {
         return find().where().eq("id", id).findUnique();
     }
+
+    public static UserFile findByUniqueName(String s) { return find().where().eq("uniqueName", s).findUnique(); }
+
+    public static UserFile findbyFileName(String s) {return find().where().eq("fileName", s).findUnique(); }
 
     public static Model.Finder<Long, UserFile> find() {
         return new Model.Finder<>(Long.class, UserFile.class);

@@ -1,0 +1,50 @@
+@(account: Account, file: UserFile)
+@navbar(account.userName)
+@main("Account") {
+    <script src="@routes.Assets.at("javascripts/d3/d3.min.js")"></script>
+    <script src="@routes.Assets.at("javascripts/render.js")"></script>
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span2">
+                <div class="well sidebar-nav">
+                    <ul class="nav nav-list">
+                    <li class="nav nav-header">Your Files</li>
+                        @for(item <- account.userfiles) {
+                            <li @if(item.id == file.id) {class="active"}>
+                                <p>
+                                    <a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a>
+                                    <a href="@routes.AccountPage.deleteFile(item)" class="text-right">(delete)</a>
+                                </p>
+                            </li>
+                        }
+                        <hr>
+                        <li><a href="@routes.AccountPage.newFile()">Add</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="span10">
+                <div class="span3" style="cursor: pointer">
+                    <p class="text-center" onclick="renderTableData('@routes.Computation.returnVdjUsageData(file)')">Table</p>
+                </div>
+                <div class="span3" style="cursor: pointer">
+                    <p class="text-center" onclick="renderHistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</p>
+                </div>
+                <div class="span3">
+                    <p class="text-center">Under construction</p>
+                </div>
+                <div class="span3">
+                    <p class="text-center">Under construction</p>
+                </div>
+
+                <div class="hero-unit">
+                    <vis-body class="viz-body"></vis-body>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <footer>
+            <p>&copy; Company 2012</p>
+        </footer>
+    </div>
+}

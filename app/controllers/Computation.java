@@ -9,51 +9,62 @@ import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
+import models.LocalUser;
 import models.UserFile;
 import play.libs.Json;
 import play.libs.Json.*;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import securesocial.core.Identity;
+import securesocial.core.java.SecureSocial;
 import utils.ComputationUtil;
-import views.html.userpage;
+import views.html.account;
 
 import java.io.*;
 import java.util.*;
 
-@Security.Authenticated(Secured.class)
+
 public class Computation extends Controller{
 
-    public static Result returnVdjUsageData(Account account, UserFile file) throws FileNotFoundException {
-        if (!account.userfiles.contains(file)) {
+
+    @SecureSocial.SecuredAction
+    public static Result returnVdjUsageData(UserFile file) throws FileNotFoundException {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+        if (!localAccount.userfiles.contains(file)) {
             return ok("You have no access to this operation");
         }
         if (file.histogramData) {
-            File jsonFile = new File(file.file_dir_path + "/" + "vdjUsage.json");
+            File jsonFile = new File(file.fileDirPath + "/" + "vdjUsage.json");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
         } else {
             ComputationUtil.vdjUsageData(file);
             flash("error", "Error");
-            return ok(userpage.render(account));
+            return ok(account.render(localAccount));
         }
     }
 
-
-    public static Result returnSpectrotypeHistogram(Account account, UserFile file) throws JsonProcessingException, FileNotFoundException {
-        if (!account.userfiles.contains(file)) {
+    @SecureSocial.SecuredAction
+    public static Result returnSpectrotypeHistogram(UserFile file) throws JsonProcessingException, FileNotFoundException {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+        if (!localAccount.userfiles.contains(file)) {
             return ok("You have no access to this operation");
         }
         if (file.histogramData) {
-            File jsonFile = new File(file.file_dir_path + "/" + "histogram.json");
+            File jsonFile = new File(file.fileDirPath + "/" + "histogram.json");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
         } else {
             ComputationUtil.spectrotypeHistogram(file);
             flash("error", "Error");
-            return ok(userpage.render(account));
+            return ok(account.render(localAccount));
         }
     }
 }

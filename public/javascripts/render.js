@@ -41,7 +41,7 @@ function renderTableData(url) {
 
 function renderHistogram(histogramData) {
     var width = 1000,
-        barWidth = 20,
+        barWidth = 15,
         maxHeight = 0,
         heightMultiplier = 1500;
 
@@ -74,7 +74,7 @@ function renderHistogram(histogramData) {
     var bar = chart.selectAll("g")
         .data(spectratype)
         .enter().append("g")
-        .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - d.yCoordinate * heightMultiplier)  +")"; });
+        .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 15 + "," + (maxHeight - d.yCoordinate * heightMultiplier)  +")"; });
 
     bar.append("rect")
         .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
@@ -154,7 +154,7 @@ function renderHistogram(histogramData) {
         .attr("transform", function(d, i) {
             var bar = findBarHeight(d.xCoordinate);
             bar.h += d.yCoordinate;
-            return "translate(" + d.xCoordinate * 10 + "," + (maxHeight - bar.h * heightMultiplier)  +")";
+            return "translate(" + d.xCoordinate * 15 + "," + (maxHeight - bar.h * heightMultiplier)  +")";
         });
 
 
