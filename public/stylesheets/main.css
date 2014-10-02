@@ -1,5 +1,9 @@
 .content {
-    position: absolute;
-    left:2%;
-    width: 96%;
+    min-width: 1000px;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
 }

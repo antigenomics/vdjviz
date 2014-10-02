@@ -40,7 +40,7 @@ function renderTableData(url) {
 
 
 function renderHistogram(histogramData) {
-    var width = 1000,
+    var width = $(window).width() - 500,
         barWidth = 15,
         maxHeight = 0,
         heightMultiplier = 1500;
@@ -67,6 +67,13 @@ function renderHistogram(histogramData) {
         .append("svg")
         .attr("class", "chart");
 
+    var x = d3.scale.linear()
+        .domain([0, 10])
+        .range([0, width]);
+
+    var xAxis = d3.svg.axis().scale(x)
+        .orient("top").ticks(10);
+
     var chart = d3.select("svg")
         .attr("width", width)
         .attr("height", maxHeight);
@@ -75,6 +82,7 @@ function renderHistogram(histogramData) {
         .data(spectratype)
         .enter().append("g")
         .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 15 + "," + (maxHeight - d.yCoordinate * heightMultiplier)  +")"; });
+
 
     bar.append("rect")
         .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
@@ -163,6 +171,12 @@ function renderHistogram(histogramData) {
         .attr("width", barWidth - 1)
         .style("fill", function(d, i) { return colors[i] });
 
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + maxHeight + ")")
+        .call(xAxis);
+
+
 
     function findBarHeight(x) {
         for (var i = 0; i < barsHeight.length; i++) {
@@ -176,7 +190,7 @@ function renderHistogram(histogramData) {
 
 
 function renderTable(vdjUsageData) {
-    var width = 1200, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
+    var width = $(window).width() - 500, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
 
     var svg = d3.select("vis-body")
         .append("svg").attr('width', width).attr('height', (height + margin.b + margin.t))
@@ -191,8 +205,8 @@ function renderTable(vdjUsageData) {
 
 !function(){
     var bP={};
-    var b=30, bb=800, height=700, buffMargin=5, minHeight=5;
-    var c1=[-180, 30], c2=[-50, 140], c3=[0, 200]; //Column positions of labels.
+    var b=30, bb=$(window).width() - 1000, height=700, buffMargin=5, minHeight=5;
+    var c1=[-165, 50], c2=[-50, 160], c3=[-10, 250]; //Column positions of labels.
     var colors = d3.scale.category20().range();
 
     bP.partData = function(data,p){

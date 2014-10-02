@@ -6,28 +6,35 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2">
-                <div class="well sidebar-nav">
-                    <ul class="nav nav-list">
-                    <li class="nav nav-header">Your Files</li>
-                        @for(item <- account.userfiles) {
-                            <li><p><a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a> <a href="@routes.AccountPage.deleteFile(item)" class="text-right">(delete)</a></p></li>
-                        }
-                    <hr>
+                <ul class="nav nav-pills nav-stacked">
+                    <li class="active"><a>Your Files</a></li>
+                    @for(item <- account.userfiles) {
+                        <li><a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a></li>
+                    }
                     <li><a href="@routes.AccountPage.newFile()">Add</a></li>
-                    </ul>
-                </div>
+                </ul>
             </div>
 
             <div class="span10">
                 <div class="hero-unit">
-                    <vis-body class="viz-body"></vis-body>
+                    Account information
+                    <table class="table table-responsive">
+                        <tr>
+                            <td>Your email: </td>
+                            <td>@account.userName<td>
+                        </tr>
+                        <tr>
+                            <td>Fisrt Name: </td>
+                            <td>@account.user.firstName</td>
+                        </tr>
+                        <tr>
+                            <td>Last Name: </td>
+                            <td>@account.user.lastName</td>
+                        </tr>
+                    </table>
                 </div>
 
             </div>
         </div>
-        <hr>
-        <footer>
-            <p>&copy; Company 2012</p>
-        </footer>
     </div>
 }

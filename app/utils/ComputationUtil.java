@@ -54,7 +54,7 @@ public class ComputationUtil {
                 data.add(new Table(vVector[j], jVector[i], vjMatrix[i][j]));
             }
         }
-        Integer optimization_value = 40;
+        Integer optimization_value = 35;
         List<Table> opt_data = new ArrayList<>();
         Collections.sort(data, new Comparator<Table>() {
             public int compare(Table c1, Table c2) {

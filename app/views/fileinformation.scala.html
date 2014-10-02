@@ -6,45 +6,36 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2">
-                <div class="well sidebar-nav">
-                    <ul class="nav nav-list">
-                    <li class="nav nav-header">Your Files</li>
-                        @for(item <- account.userfiles) {
-                            <li @if(item.id == file.id) {class="active"}>
-                                <p>
-                                    <a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a>
-                                    <a href="@routes.AccountPage.deleteFile(item)" class="text-right">(delete)</a>
-                                </p>
-                            </li>
-                        }
-                        <hr>
-                        <li><a href="@routes.AccountPage.newFile()">Add</a></li>
-                    </ul>
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Your Files</h3>
+                    </div>
                 </div>
+                <ul class="nav nav-pills nav-stacked">
+                    @for(item <- account.userfiles) {
+                        <li @if(file.id == item.id) {class="active"}>
+                            <a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a>
+                        </li>
+                    }
+                    <li class="disabled" style="cursor: pointer"></li>
+                    <hr>
+                    <li><a href="@routes.AccountPage.newFile()">Add</a></li>
+                </ul>
             </div>
 
             <div class="span10">
-                <div class="span3" style="cursor: pointer">
-                    <p class="text-center" onclick="renderTableData('@routes.Computation.returnVdjUsageData(file)')">Table</p>
-                </div>
-                <div class="span3" style="cursor: pointer">
-                    <p class="text-center" onclick="renderHistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</p>
-                </div>
-                <div class="span3">
-                    <p class="text-center">Under construction</p>
-                </div>
-                <div class="span3">
-                    <p class="text-center">Under construction</p>
+                <div class="btn-group btn-group-justified">
+                    <a class="btn btn-default" onclick="renderTableData('@routes.Computation.returnVdjUsageData(file)')">Table</a>
+                    <a class="btn btn-default" onclick="renderHistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</a>
+                    <a href="#" class="btn btn-default">Under Construction</a>
+                    <a href="#" class="btn btn-default">Under Construction</a>
                 </div>
 
                 <div class="hero-unit">
+                    <div class="panel">
                     <vis-body class="viz-body"></vis-body>
                 </div>
             </div>
         </div>
-        <hr>
-        <footer>
-            <p>&copy; Company 2012</p>
-        </footer>
     </div>
 }
