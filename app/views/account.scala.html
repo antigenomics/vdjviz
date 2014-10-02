@@ -6,11 +6,16 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Your Files</h3>
+                    </div>
+                </div>
                 <ul class="nav nav-pills nav-stacked">
-                    <li class="active"><a>Your Files</a></li>
                     @for(item <- account.userfiles) {
                         <li><a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a></li>
                     }
+                    <hr>
                     <li><a href="@routes.AccountPage.newFile()">Add</a></li>
                 </ul>
             </div>

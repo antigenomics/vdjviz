@@ -12,12 +12,14 @@
                     </div>
                 </div>
                 <ul class="nav nav-pills nav-stacked">
+                    @if(account.userfiles.size() == 0) {
+                        <li>You have no files</li>
+                    }
                     @for(item <- account.userfiles) {
                         <li @if(file.id == item.id) {class="active"}>
-                            <a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a>
+                            <a href="@routes.AccountPage.fileInformation(item)">@item.fileName </a>
                         </li>
                     }
-                    <li class="disabled" style="cursor: pointer"></li>
                     <hr>
                     <li><a href="@routes.AccountPage.newFile()">Add</a></li>
                 </ul>
