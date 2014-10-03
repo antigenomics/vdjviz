@@ -15,16 +15,25 @@ import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.CommonUtil;
 import utils.ComputationUtil;
+import utils.LogUtil;
 import views.html.account;
 import views.html.addfile;
 import views.html.fileinformation;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 
 @SecureSocial.SecuredAction
 public class AccountPage extends Controller {
 
+
     public static Result index() {
+
+        /**
+         * Identifying User using the SecureSocial API
+         * and render the account page
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         return ok(account.render(localUser.account));
@@ -34,9 +43,19 @@ public class AccountPage extends Controller {
 
 
     public static Result newFile() {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        /**
+         * Render addfile.scala.html file
+         */
+
         if (account != null) {
             return ok(addfile.render(fileForm, account));
         }
@@ -45,34 +64,89 @@ public class AccountPage extends Controller {
 
 
     public static Result saveNewFile() {
+
+        /**
+         * Identifying user using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
         Form<UserFile> boundForm = fileForm.bindFromRequest();
-        Logger.debug(String.valueOf(boundForm.errors()));
         if (boundForm.hasErrors()) {
             flash("error", "Please correct the form below.");
             return ok(addfile.render(fileForm, account));
         }
+
+        /**
+         * Getting the file from request body
+         */
+
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart file = body.getFile("file");
+
+        /**
+         * Getting fileName
+         * If User do not enter the name of file
+         * it will be fills automatically using current file name
+         */
+
+        String fileName = null;
+        if (boundForm.get().fileName.equals("")) {
+            fileName = FilenameUtils.removeExtension(file.getFilename());
+        } else {
+            fileName = boundForm.get().fileName;
+        }
+        /**
+         *  Getting uploadPath
+         *  Configure uploadPath in /conf/application.conf
+         *  ---
+         *  Debug only : uploadPath = /tmp/
+         */
+
         String uploadPath = Play.application().configuration().getString("uploadPath");
+
+        /**
+         * Verification of the existence the account and the file
+         */
+
         if (account != null) {
             if (file != null) {
                 try {
+
+                    /**
+                     * Creation the UserFile class
+                     */
+
                     File uploadedFile = file.getFile();
                     String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
                     File fileDir = (new File(uploadPath + account.userName + "/" + unique_name + "/"));
                     fileDir.mkdir();
                     uploadedFile.renameTo(new File(uploadPath + account.userName + "/" + unique_name + "/file"));
-                    UserFile newFile = new UserFile(account, boundForm.get().fileName,
+                    UserFile newFile = new UserFile(account, fileName,
                             unique_name, boundForm.get().softwareTypeName,
                             uploadPath + account.userName + "/" + unique_name + "/file",
                             fileDir.getAbsolutePath());
+
+                    /**
+                     * Database updating with relationships
+                     * UserFile <-> Account
+                     */
+
                     account.userfiles.add(newFile);
                     Ebean.update(account);
                     Ebean.save(newFile);
-                    //TODO asynchronous
+
+                    /**
+                     * Creating Sample cache files
+                     *  - Vdj relationships
+                     *  - Histogram
+                     *  - Annotation table
+                     *
+                     *  On success redirect to account page
+                     *  On error cause exception
+                     */
+
                     ComputationUtil.createSampleCache(newFile);
                     flash("success", "Successfully added");
                 } catch (Exception e) {
@@ -89,21 +163,35 @@ public class AccountPage extends Controller {
 
 
     public static Result deleteFile(UserFile file) {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        /**
+         *  Getting uploadPath
+         *  Configure uploadPath in /conf/application.conf
+         *  ---
+         *  Debug only : uploadPath = /tmp/
+         */
+
         String uploadPath = Play.application().configuration().getString("uploadPath");
-        File f = new File(uploadPath + account.userName + "/" + file.uniqueName + "/file");
-        File histogram = new File(uploadPath + account.userName + "/" + file.uniqueName + "/histogram.json");
-        File vdjUdage = new File(uploadPath + account.userName + "/" + file.uniqueName + "/vdjUsage.json");
+
+        /**
+         * Getting file directory
+         * and try to delete it
+         */
+
         File fileDir = new File(uploadPath + account.userName + "/" + file.uniqueName + "/");
         Boolean deleted = false;
         try {
-            f.delete();
-            histogram.delete();
-            vdjUdage.delete();
-            fileDir.delete();
-            deleted = true;
+            if (fileDir.delete()) {
+                deleted = true;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -119,9 +207,22 @@ public class AccountPage extends Controller {
 
 
     public static Result fileInformation(UserFile file) {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        /**
+         * Verifying access to the file
+         * if file belong to User redirect
+         * to file information page
+         * else redirect to the account page
+         */
+
         if (account.userfiles.contains(file)) {
             return ok(fileinformation.render(account, file));
         } else {
@@ -130,12 +231,26 @@ public class AccountPage extends Controller {
     }
 
     public static Result renderFileAgain(UserFile file) {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        /**
+         * Verifying access to the file
+         * if file belong to User render SampleCache again
+         * and update all cache files
+         * else
+         * redirect to the account page
+         */
+
         if (account.userfiles.contains(file)) {
             ComputationUtil.createSampleCache(file);
         }
-        return redirect(routes.AccountPage.fileInformation(file));
+        return redirect(routes.AccountPage.index());
     }
 }

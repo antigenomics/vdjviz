@@ -12,6 +12,9 @@
                     </div>
                 </div>
                 <ul class="nav nav-pills nav-stacked">
+                    @if(account.userfiles.size() == 0) {
+                        <li><a>You have no files</a></li>
+                    }
                     @for(item <- account.userfiles) {
                         <li class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item)">

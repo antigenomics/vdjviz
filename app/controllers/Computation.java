@@ -30,13 +30,31 @@ public class Computation extends Controller{
 
     @SecureSocial.SecuredAction
     public static Result returnVdjUsageData(UserFile file) throws FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
+
+        /**
+         * Verifying access to the file
+         */
+
         if (!localAccount.userfiles.contains(file)) {
             return ok("You have no access to this operation");
         }
-        if (file.histogramData) {
+
+        /**
+         * Verification of the existence
+         * vdjUsage data cache file
+         * if exists return jsonData
+         * else render SampleCache files again
+         */
+
+        if (file.vdjUsageData) {
             File jsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
@@ -50,12 +68,30 @@ public class Computation extends Controller{
 
     @SecureSocial.SecuredAction
     public static Result returnSpectrotypeHistogram(UserFile file) throws JsonProcessingException, FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
+
+        /**
+         * Verifying access to the file
+         */
+
         if (!localAccount.userfiles.contains(file)) {
             return ok("You have no access to this operation");
         }
+
+        /**
+         * Verification of the existence
+         * Histogram data cache file
+         * if exists return jsonData
+         * else render SampleCache files again
+         */
+
         if (file.histogramData) {
             File jsonFile = new File(file.fileDirPath + "/histogram.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
@@ -70,17 +106,38 @@ public class Computation extends Controller{
 
     @SecureSocial.SecuredAction
     public static Result returnAnnotationData(UserFile file) throws FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
+
+        /**
+         * Verifying access to the file
+         */
+
         if (!localAccount.userfiles.contains(file)) {
             return ok("You have no access to this operation");
         }
+
+        /**
+         * Verification of the existence
+         * Histogram data cache file
+         * if exists return jsonData
+         * else render SampleCache files again
+         */
+
         if (file.annotationData) {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
             FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
             return ok(Json.parse(jsonFile));
+        } else {
+            ComputationUtil.createSampleCache(file);
+            flash("error", "Error");
+            return ok(account.render(localAccount));
         }
-        return ok();
     }
 }

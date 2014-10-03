@@ -6,6 +6,8 @@ import javax.persistence.OneToOne;
 
 import play.db.ebean.Model;
 
+import java.util.logging.Logger;
+
 
 @Entity
 public class LocalUser extends Model  {

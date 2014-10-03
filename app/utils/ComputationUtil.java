@@ -27,11 +27,21 @@ import java.util.*;
 public class ComputationUtil {
 
     public static void vdjUsageData(SampleCollection sampleCollection, UserFile file) {
+
+        /**
+         * SegmentUsage creating
+         */
+
         SegmentUsage segmentUsage = new SegmentUsage(sampleCollection, false);
         segmentUsage.vUsageHeader();
         segmentUsage.jUsageHeader();
         String sampleId = sampleCollection.getAt(0).getSampleMetadata().getSampleId();
         double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
+
+        /**
+         * Table class contains information about one relationship
+         */
+
         class Table {
             public String vSegment;
             public String jSegment;
@@ -44,6 +54,10 @@ public class ComputationUtil {
             }
         }
 
+        /**
+         * Initializing Table list
+         */
+
         List<Table> data = new ArrayList<>();
         String[] vVector = segmentUsage.vUsageHeader();
         String[] jVector = segmentUsage.jUsageHeader();
@@ -53,6 +67,13 @@ public class ComputationUtil {
                 data.add(new Table(vVector[j], jVector[i], vjMatrix[i][j]));
             }
         }
+
+        /**
+         * Optimization data
+         * sort descending
+         * and take first "optimization value" elements
+         */
+
         Integer optimization_value = 35;
         List<Table> opt_data = new ArrayList<>();
         Collections.sort(data, new Comparator<Table>() {
@@ -68,9 +89,14 @@ public class ComputationUtil {
         for (int i = 0; i < optimization_value; i++) {
             opt_data.add(data.get(i));
         }
-        File histogramJsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
+
+        /**
+         * Creating cache files
+         */
+
+        File vdjJsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
         try {
-            PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
+            PrintWriter jsonWriter = new PrintWriter(vdjJsonFile.getAbsoluteFile());
             JsonNode jsonData = Json.toJson(opt_data);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
@@ -83,8 +109,24 @@ public class ComputationUtil {
 
 
     public static void spectrotypeHistogram(Sample sample, UserFile file) {
+
+        /**
+         * Getting the spectratype
+         */
         Spectratype sp = new Spectratype(false, false);
+
+        /**
+         * Getting the list of clonotypes
+         * Default top 10
+         */
+
         List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
+
+        /**
+         * HistogramData class contains the coordinates
+         * of histogram's columns
+         */
+
         class HistogramData {
             public Integer xCoordinate;
             public Double yCoordinate;
@@ -97,6 +139,11 @@ public class ComputationUtil {
                 this.clonotypeName = clonotypeName;
             }
         }
+
+        /**
+         * Initializing HistogramData list
+         */
+
         ArrayList<HistogramData> histogramData = new ArrayList<>();
         int[] x_coordinates = sp.getLengths();
         double[] y_coordinates = sp.getHistogram();
@@ -106,6 +153,12 @@ public class ComputationUtil {
         for (Clonotype topclone: topclones) {
             histogramData.add(new HistogramData(topclone.getCdr3nt().length(), topclone.getFreq(), true, topclone.getCdr3nt()));
         }
+
+        /**
+         * Sort ascending
+         * The greatest clonotypes will be higher
+         */
+
         Collections.sort(histogramData, new Comparator<HistogramData>() {
             public int compare(HistogramData c1, HistogramData c2) {
                 if (c1.yCoordinate > c2.yCoordinate) return 1;
@@ -113,6 +166,11 @@ public class ComputationUtil {
                 return 0;
             }
         });
+
+        /**
+         * Creating cache files
+         */
+
         File histogramJsonFile = new File(file.fileDirPath + "/histogram.cache");
         try {
             PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
@@ -126,10 +184,20 @@ public class ComputationUtil {
     }
 
     public static void AnnotationData(Sample sample, UserFile file) {
+
+        /**
+         * Getting CdrDatabase
+         */
+
         CdrDatabase cdrDatabase = new CdrDatabase("trdb");
         SampleAnnotation sampleAnnotation = new SampleAnnotation(sample);
         HashMap<String, Double> cdrToFrequency = sampleAnnotation.getEntryFrequencies(cdrDatabase);
         // cdrToFrequency = (CDR3 amino acid sequence) : (frequency in a given sample)
+
+        /**
+         * AnnotationData class contains information
+         * about all entries in CdrDatabase
+         */
 
         class AnnotationData {
             public String key;
@@ -141,6 +209,12 @@ public class ComputationUtil {
                 this.entries = entries;
             }
         }
+
+        /**
+         * Initializing AnnotationData list
+         * and creating cache file
+         */
+
         List<AnnotationData> data = new ArrayList<>();
         try {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
@@ -159,11 +233,21 @@ public class ComputationUtil {
     }
 
     public static void createSampleCache(UserFile file) {
+
+        /**
+         * Getting Sample from text file
+         */
+
         Software software = file.softwareType;
         List<String> sampleFileNames = new ArrayList<>();
         sampleFileNames.add(file.filePath);
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         Sample sample = sampleCollection.getAt(0); //sample collection get at (0)
+
+        /**
+         * Creating all cache files
+         */
+
         try {
             AnnotationData(sample, file);
             spectrotypeHistogram(sample, file);

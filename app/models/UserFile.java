@@ -17,7 +17,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public Long id;
     @ManyToOne
     public Account account;
-    @Constraints.Required
     public String fileName;
     public String uniqueName;
     //TODO
@@ -52,13 +51,15 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         return find().where().eq("id", id).findUnique();
     }
 
-    public static UserFile findByUniqueName(String s) { return find().where().eq("uniqueName", s).findUnique(); }
-
-    public static UserFile findbyFileName(String s) {return find().where().eq("fileName", s).findUnique(); }
-
     public static Model.Finder<Long, UserFile> find() {
         return new Model.Finder<>(Long.class, UserFile.class);
     }
+
+    /**
+     * Overriding PathBindable functions
+     * //TODO
+     * UseFile class using in routes with its id value
+     */
 
     @Override
     public UserFile bind(String key, String value) {

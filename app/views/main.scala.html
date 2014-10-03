@@ -20,12 +20,12 @@
                 </div>
             }
             @if(flash.containsKey("error")) {
-                <div class="alert alert-error">
+                <div class="alert alert-warning">
                 @flash.get("error")
                 </div>
             }
             @if(flash.containsKey("not found")) {
-                <div class="alert alert-warning">
+                <div class="alert alert-info">
                 @flash.get("not found")
                 </div>
             }

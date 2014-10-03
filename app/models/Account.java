@@ -23,33 +23,6 @@ import play.db.ebean.Model;
 
 @Entity
 public class Account implements PathBindable<Account> {
-    // Custom Validator for UID
-    // Need to refactor ?
-    public static class UidValidator extends Constraints.Validator<String> implements ConstraintValidator<UID, String> {
-        final static public String message = "error.invalid.login_name";
-        public UidValidator() {}
-        @Override
-        public void initialize(UID constraintAnnotation) {}
-        @Override
-        public boolean isValid(String value) {
-            //TODO paterrn
-            //Pattern need to be refactor?
-            String pattern = "^[a-z]{8}$";
-            return value != null && value.matches(pattern);
-        }
-        @Override
-        public F.Tuple<String, Object[]> getErrorMessageKey() {
-            return new F.Tuple<String, Object[]>("error.invalid.login_name", new Object[]{});
-        }
-    }
-    @Constraint(validatedBy = UidValidator.class)
-    @Target({ElementType.FIELD})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface UID {
-        String message() default "error.invalid.login_name";
-        Class<?>[] groups() default {};
-        Class<? extends Payload>[] payload() default {};
-    }
 
     @Id
     public Long id;
@@ -60,7 +33,11 @@ public class Account implements PathBindable<Account> {
     @OneToMany(mappedBy="account")
     public List<UserFile> userfiles;
 
-    //It is uses for binding in routes file
+    /**
+     * Overriding PathBindable functions
+     * Account class using in routes with its userName value
+     */
+
     @Override
     public Account bind (String key, String value) {
         return findByUserName(value);

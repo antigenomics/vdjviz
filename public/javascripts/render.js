@@ -79,9 +79,9 @@ function renderAnnotationTable(data) {
     var tr = tbody.selectAll("tr").data(data)
         .enter().append("tr");
 
-    tr.append("th").html(function(d) {return d.name});
-    tr.append("th").html(function(d) {return d.frequency});
-    tr.append("th").html(function(d) {return d.entries});
+    tr.append("td").html(function(d) {return d.name});
+    tr.append("td").html(function(d) {return d.frequency});
+    tr.append("td").html(function(d) {return d.entries});
 
 }
 
@@ -164,7 +164,7 @@ function renderHistogram(histogramData) {
         .append("text")
         .attr("x", 10)
         .attr("y", 25)
-        .style("fill", "#FFF")
+        .style("fill", "#000")
         .attr("font-size", 16);
 
     tipText.append("tspan")
