@@ -4,7 +4,6 @@ import com.avaje.ebean.Ebean;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
-import play.Logger;
 import play.Play;
 import play.data.Form;
 import play.mvc.Controller;
@@ -15,7 +14,6 @@ import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.CommonUtil;
 import utils.ComputationUtil;
-import utils.LogUtil;
 import views.html.account;
 import views.html.addfile;
 import views.html.fileinformation;
@@ -186,10 +184,19 @@ public class AccountPage extends Controller {
          * and try to delete it
          */
 
-        File fileDir = new File(uploadPath + account.userName + "/" + file.uniqueName + "/");
+        String fileDirectoryName =  uploadPath + account.userName + "/" + file.uniqueName;
+
+        File f = new File(fileDirectoryName + "/file");
+        File histogram = new File(fileDirectoryName + "/histogram.cache");
+        File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
+        File annotation = new File(fileDirectoryName + "/annotation.cache");
+        File fileDir = new File(fileDirectoryName + "/");
         Boolean deleted = false;
         try {
-            if (fileDir.delete()) {
+            if (f.delete() && annotation.delete()
+                           && histogram.delete()
+                           && vdjUsage.delete()
+                           && fileDir.delete() ) {
                 deleted = true;
             }
         } catch (Exception e) {
