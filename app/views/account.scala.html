@@ -13,7 +13,17 @@
                 </div>
                 <ul class="nav nav-pills nav-stacked">
                     @for(item <- account.userfiles) {
-                        <li><a href="@routes.AccountPage.fileInformation(item)">@item.fileName</a></li>
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item)">
+                            @item.fileName
+                        </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="@routes.AccountPage.fileInformation(item)">Information</a></li>
+                                <li><a href="@routes.AccountPage.renderFileAgain(item)">Rerender</a></li>
+                                <li class="divider"></li>
+                                <li><a href="@routes.AccountPage.deleteFile(item)">Delete</a></li>
+                            </ul>
+                        </li>
                     }
                     <hr>
                     <li><a href="@routes.AccountPage.newFile()">Add</a></li>

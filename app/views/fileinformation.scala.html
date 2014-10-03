@@ -16,8 +16,16 @@
                         <li>You have no files</li>
                     }
                     @for(item <- account.userfiles) {
-                        <li @if(file.id == item.id) {class="active"}>
-                            <a href="@routes.AccountPage.fileInformation(item)">@item.fileName </a>
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item)">
+                            @item.fileName
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="@routes.AccountPage.fileInformation(item)">Information</a></li>
+                                <li><a href="@routes.AccountPage.renderFileAgain(item)">Rerender</a></li>
+                                <li class="divider"></li>
+                                <li><a href="@routes.AccountPage.deleteFile(item)">Delete</a></li>
+                            </ul>
                         </li>
                     }
                     <hr>
@@ -27,9 +35,9 @@
 
             <div class="span10">
                 <div class="btn-group btn-group-justified">
-                    <a class="btn btn-default" onclick="renderTableData('@routes.Computation.returnVdjUsageData(file)')">Table</a>
-                    <a class="btn btn-default" onclick="renderHistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</a>
-                    <a href="#" class="btn btn-default">Under Construction</a>
+                    <a class="btn btn-default" onclick="TableData('@routes.Computation.returnVdjUsageData(file)')">Table</a>
+                    <a class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</a>
+                    <a class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file)')">Annotations</a>
                     <a href="#" class="btn btn-default">Under Construction</a>
                 </div>
 

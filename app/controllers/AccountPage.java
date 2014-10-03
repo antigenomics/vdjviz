@@ -21,8 +21,9 @@ import views.html.fileinformation;
 
 import java.io.File;
 
+@SecureSocial.SecuredAction
 public class AccountPage extends Controller {
-    @SecureSocial.SecuredAction
+
     public static Result index() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -31,7 +32,7 @@ public class AccountPage extends Controller {
 
     private static Form<UserFile> fileForm = Form.form(UserFile.class);
 
-    @SecureSocial.SecuredAction
+
     public static Result newFile() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -42,7 +43,7 @@ public class AccountPage extends Controller {
         return redirect(routes.AccountPage.index());
     }
 
-    @SecureSocial.SecuredAction
+
     public static Result saveNewFile() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -72,8 +73,7 @@ public class AccountPage extends Controller {
                     Ebean.update(account);
                     Ebean.save(newFile);
                     //TODO asynchronous
-                    ComputationUtil.spectrotypeHistogram(newFile);
-                    ComputationUtil.vdjUsageData(newFile);
+                    ComputationUtil.createSampleCache(newFile);
                     flash("success", "Successfully added");
                 } catch (Exception e) {
                     flash("error", "Error while adding file");
@@ -87,7 +87,7 @@ public class AccountPage extends Controller {
         return Results.redirect(routes.AccountPage.index());
     }
 
-    @SecureSocial.SecuredAction
+
     public static Result deleteFile(UserFile file) {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -117,7 +117,7 @@ public class AccountPage extends Controller {
         }
     }
 
-    @SecureSocial.SecuredAction
+
     public static Result fileInformation(UserFile file) {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -129,4 +129,13 @@ public class AccountPage extends Controller {
         }
     }
 
+    public static Result renderFileAgain(UserFile file) {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+        if (account.userfiles.contains(file)) {
+            ComputationUtil.createSampleCache(file);
+        }
+        return redirect(routes.AccountPage.fileInformation(file));
+    }
 }

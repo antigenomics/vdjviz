@@ -1,3 +1,12 @@
+$(document).ready(function() {
+    $(".dropdown").hover(function() {
+            $(this).addClass("open");
+        },
+        function() {
+            $(this).removeClass("open");
+        })
+});
+
 
 function del(urlToDelete) {
     $.ajax({
@@ -10,8 +19,9 @@ function del(urlToDelete) {
     });
 }
 
-function renderHistogramData(url) {
+function HistogramData(url) {
     d3.select("svg").remove();
+    d3.select(".svg").remove();
     var histogramData = [];
     $.getJSON(url, function(data){
         $.each(data, function(key, value){
@@ -23,9 +33,10 @@ function renderHistogramData(url) {
     });
 }
 
-function renderTableData(url) {
+function TableData(url) {
     d3.select("svg").remove();
-    var vdjUsageData = []
+    d3.select(".svg").remove();
+    var vdjUsageData = [];
     $.getJSON(url, function(data){
 
         $.each(data, function(key, value){
@@ -35,6 +46,43 @@ function renderTableData(url) {
         });
     renderTable(vdjUsageData);
     });
+}
+
+function AnnotationTable(url) {
+    d3.select("svg").remove();
+    d3.select(".svg").remove();
+    var annotationData = [];
+    $.getJSON(url, function(data) {
+        $.each(data, function(key, value) {
+            var item = {"name" : value.key, "frequency" : value.value, "entries" :  value.entries};
+            annotationData.push(item);
+        });
+    renderAnnotationTable(annotationData);
+    });
+}
+
+function renderAnnotationTable(data) {
+    var width = $(window).width() - 500;
+
+    var svg = d3.select("vis-body");
+
+    var table = svg
+            .append("table")
+            .attr("class", "table table-striped table-hover svg"),
+        thead = table.append("thead").append("tr"),
+        tbody = table.append("tbody");
+
+    thead.append("th").html("Name");
+    thead.append("th").html("Frequency");
+    thead.append("th").html("Entries");
+
+    var tr = tbody.selectAll("tr").data(data)
+        .enter().append("tr");
+
+    tr.append("th").html(function(d) {return d.name});
+    tr.append("th").html(function(d) {return d.frequency});
+    tr.append("th").html(function(d) {return d.entries});
+
 }
 
 

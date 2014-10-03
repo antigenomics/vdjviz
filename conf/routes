@@ -3,36 +3,42 @@
 # ~~~~
 
 # Home page
-GET         /                               controllers.Application.index()
+GET         /                                controllers.Application.index()
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                   controllers.Assets.at(path="/public", file)
+GET         /assets/*file                    controllers.Assets.at(path="/public", file)
 
 
 
 # Account routes
-GET         /account                        controllers.AccountPage.index()
-GET         /account/:file/                 controllers.AccountPage.fileInformation(file: models.UserFile)
-GET         /account/newFile                controllers.AccountPage.newFile()
-POST        /account/newFile                controllers.AccountPage.saveNewFile()
-GET         /account/:file/table            controllers.Computation.returnVdjUsageData(file: models.UserFile)
-GET         /account/:file/histogram        controllers.Computation.returnSpectrotypeHistogram(file: models.UserFile)
-GET         /account/:file/delete           controllers.AccountPage.deleteFile(file: models.UserFile)
+GET         /account                         controllers.AccountPage.index()
+GET         /account/:file/                  controllers.AccountPage.fileInformation(file: models.UserFile)
+GET         /account/newFile                 controllers.AccountPage.newFile()
+POST        /account/newFile                 controllers.AccountPage.saveNewFile()
+GET         /account/:file/delete            controllers.AccountPage.deleteFile(file: models.UserFile)
+
+#Computation
+GET         /account/:file/table             controllers.Computation.returnVdjUsageData(file: models.UserFile)
+GET         /account/:file/histogram         controllers.Computation.returnSpectrotypeHistogram(file: models.UserFile)
+GET         /account/:file/annotation        controllers.Computation.returnAnnotationData(file: models.UserFile)
+GET         /account/:file/render            controllers.AccountPage.renderFileAgain(file: models.UserFile)
+
+
 # Auth routes
-GET         /signin                         securesocial.controllers.LoginPage.login
-GET         /logout                         securesocial.controllers.LoginPage.logout
-GET         /authenticate/:provider         securesocial.controllers.ProviderController.authenticate(provider)
-POST        /authenticate/:provider         securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET         /signin                          securesocial.controllers.LoginPage.login
+GET         /logout                          securesocial.controllers.LoginPage.logout
+GET         /authenticate/:provider          securesocial.controllers.ProviderController.authenticate(provider)
+POST        /authenticate/:provider          securesocial.controllers.ProviderController.authenticateByPost(provider)
 # User Registration and password handling
 # (only needed if you are using UsernamePasswordProvider)
-GET         /signup                         securesocial.controllers.Registration.startSignUp
-POST        /signup                         securesocial.controllers.Registration.handleStartSignUp
-GET         /signup/:token                  securesocial.controllers.Registration.signUp(token)
-POST        /signup/:token                  securesocial.controllers.Registration.handleSignUp(token)
-GET         /password                       securesocial.controllers.PasswordChange.page
-POST        /password                       securesocial.controllers.PasswordChange.handlePasswordChange
+GET         /signup                          securesocial.controllers.Registration.startSignUp
+POST        /signup                          securesocial.controllers.Registration.handleStartSignUp
+GET         /signup/:token                   securesocial.controllers.Registration.signUp(token)
+POST        /signup/:token                   securesocial.controllers.Registration.handleSignUp(token)
+GET         /password                        securesocial.controllers.PasswordChange.page
+POST        /password                        securesocial.controllers.PasswordChange.handlePasswordChange
 
-GET         /reset                          securesocial.controllers.Registration.startResetPassword
-POST        /reset                          securesocial.controllers.Registration.handleStartResetPassword
-GET         /reset/:token                   securesocial.controllers.Registration.resetPassword(token)
-POST        /reset/:token                   securesocial.controllers.Registration.handleResetPassword(token)
+GET         /reset                           securesocial.controllers.Registration.startResetPassword
+POST        /reset                           securesocial.controllers.Registration.handleStartResetPassword
+GET         /reset/:token                    securesocial.controllers.Registration.resetPassword(token)
+POST        /reset/:token                    securesocial.controllers.Registration.handleResetPassword(token)

@@ -37,12 +37,12 @@ public class Computation extends Controller{
             return ok("You have no access to this operation");
         }
         if (file.histogramData) {
-            File jsonFile = new File(file.fileDirPath + "/" + "vdjUsage.json");
+            File jsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
         } else {
-            ComputationUtil.vdjUsageData(file);
+            ComputationUtil.createSampleCache(file);
             flash("error", "Error");
             return ok(account.render(localAccount));
         }
@@ -57,14 +57,30 @@ public class Computation extends Controller{
             return ok("You have no access to this operation");
         }
         if (file.histogramData) {
-            File jsonFile = new File(file.fileDirPath + "/" + "histogram.json");
+            File jsonFile = new File(file.fileDirPath + "/histogram.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
         } else {
-            ComputationUtil.spectrotypeHistogram(file);
+            ComputationUtil.createSampleCache(file);
             flash("error", "Error");
             return ok(account.render(localAccount));
         }
+    }
+
+    @SecureSocial.SecuredAction
+    public static Result returnAnnotationData(UserFile file) throws FileNotFoundException {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+        if (!localAccount.userfiles.contains(file)) {
+            return ok("You have no access to this operation");
+        }
+        if (file.annotationData) {
+            File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
+            FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
+            return ok(Json.parse(jsonFile));
+        }
+        return ok();
     }
 }

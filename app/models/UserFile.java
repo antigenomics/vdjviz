@@ -28,6 +28,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public String fileDirPath;
     public Boolean histogramData;
     public Boolean vdjUsageData;
+    public Boolean annotationData;
 
     public UserFile() {}
 
@@ -43,6 +44,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.fileDirPath = fileDirPath;
         this.histogramData = false;
         this.vdjUsageData = false;
+        this.annotationData = false;
 
     }
 
