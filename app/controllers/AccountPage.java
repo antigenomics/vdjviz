@@ -71,6 +71,25 @@ public class AccountPage extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        if (account == null) {
+            flash("error", "Account does not exist");
+            return redirect(routes.Application.index());
+        }
+
+        /**
+         * Checking files count
+         */
+
+        if (account.filesCount >= 10) {
+            flash("info", "You have exceeded the limit of the number of files");
+            return Results.redirect(routes.AccountPage.index());
+        }
+
+        /**
+         * Getting boundForm from request
+         */
+
         Form<UserFile> boundForm = fileForm.bindFromRequest();
         if (boundForm.hasErrors()) {
             flash("error", "Please correct the form below.");
@@ -96,66 +115,87 @@ public class AccountPage extends Controller {
         } else {
             fileName = boundForm.get().fileName;
         }
-        /**
-         *  Getting uploadPath
-         *  Configure uploadPath in /conf/application.conf
-         *  ---
-         *  Debug only : uploadPath = /tmp/
-         */
-
-        String uploadPath = Play.application().configuration().getString("uploadPath");
 
         /**
          * Verification of the existence the account and the file
          */
 
-        if (account != null) {
-            if (file != null) {
-                try {
+        if (file != null) {
+            try {
 
-                    /**
-                     * Creation the UserFile class
-                     */
+                /**
+                 * Creation the UserFile class
+                 */
 
-                    File uploadedFile = file.getFile();
-                    String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
-                    File fileDir = (new File(uploadPath + account.userName + "/" + unique_name + "/"));
-                    fileDir.mkdir();
-                    uploadedFile.renameTo(new File(uploadPath + account.userName + "/" + unique_name + "/file"));
-                    UserFile newFile = new UserFile(account, fileName,
-                            unique_name, boundForm.get().softwareTypeName,
-                            uploadPath + account.userName + "/" + unique_name + "/file",
-                            fileDir.getAbsolutePath());
+                File uploadedFile = file.getFile();
+                String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
+                File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
 
-                    /**
-                     * Database updating with relationships
-                     * UserFile <-> Account
-                     */
+                /**
+                 * Trying to create file's directory
+                 * if failed redirect to the account
+                 */
 
-                    account.userfiles.add(newFile);
-                    Ebean.update(account);
-                    Ebean.save(newFile);
+                if (!fileDir.exists()) {
+                    Boolean created = fileDir.mkdir();
+                    if (!created) {
+                        LogUtil.GlobalLog("Error while creating file directory for user:" + account.userName);
+                        flash("error","Error while adding file");
+                        return Results.redirect(routes.AccountPage.index());
+                    }
+                }
 
-                    /**
-                     * Creating Sample cache files
-                     *  - Vdj relationships
-                     *  - Histogram
-                     *  - Annotation table
-                     *
-                     *  On success redirect to account page
-                     *  On error cause exception
-                     */
+                /**
+                 * Checking
+                 */
 
-                    ComputationUtil.createSampleCache(newFile);
-                    flash("success", "Successfully added");
-                } catch (Exception e) {
+                Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/file"));
+                if (!uploaded) {
+                    LogUtil.GlobalLog("Error while creating file in directory for user:" + account.userName);
                     flash("error", "Error while adding file");
                     return Results.redirect(routes.AccountPage.index());
                 }
-            } else {
-                flash("error", "Please correct the form below.");
-                return ok(addfile.render(fileForm, account));
+
+                UserFile newFile = new UserFile(account, fileName,
+                        unique_name, boundForm.get().softwareTypeName,
+                        account.userDirPath + "/" + unique_name + "/file",
+                        fileDir.getAbsolutePath());
+
+                /**
+                 * Database updating with relationships
+                 * UserFile <-> Account
+                 */
+
+                account.userfiles.add(newFile);
+                Ebean.update(account);
+                Ebean.save(newFile);
+
+                /**
+                 * Creating Sample cache files
+                 *  - Vdj relationships
+                 *  - Histogram
+                 *  - Annotation table
+                 *
+                 *  On success redirect to account page
+                 *  On error cause exception
+                 */
+
+                account.filesCount++;
+                Ebean.update(account);
+                try {
+                    ComputationUtil.createSampleCache(newFile);
+                } catch (Exception e) {
+                    flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
+                    return Results.redirect(routes.AccountPage.index());
+                }
+                flash("success", "Successfully added");
+            } catch (Exception e) {
+                flash("error", "Error while adding file");
+                return Results.redirect(routes.AccountPage.index());
             }
+        } else {
+            flash("error", "Please correct the form below.");
+            return ok(addfile.render(fileForm, account));
         }
         return Results.redirect(routes.AccountPage.index());
     }
@@ -172,20 +212,11 @@ public class AccountPage extends Controller {
         Account account = localUser.account;
 
         /**
-         *  Getting uploadPath
-         *  Configure uploadPath in /conf/application.conf
-         *  ---
-         *  Debug only : uploadPath = /tmp/
-         */
-
-        String uploadPath = Play.application().configuration().getString("uploadPath");
-
-        /**
          * Getting file directory
          * and try to delete it
          */
 
-        String fileDirectoryName =  uploadPath + account.userName + "/" + file.uniqueName;
+        String fileDirectoryName =  account.userDirPath + "/" + file.uniqueName;
 
         File f = new File(fileDirectoryName + "/file");
         File histogram = new File(fileDirectoryName + "/histogram.cache");
@@ -206,6 +237,8 @@ public class AccountPage extends Controller {
         if (deleted) {
             account.userfiles.remove(file);
             Ebean.delete(file);
+            account.filesCount--;
+            Ebean.update(account);
             return Results.redirect(routes.AccountPage.index());
         } else {
             flash("error", "Error deleting file");
@@ -236,6 +269,35 @@ public class AccountPage extends Controller {
         } else {
             return redirect(routes.AccountPage.index());
         }
+    }
+
+    //TODO
+    public static Result fileUpdate(UserFile file) {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        if (account == null) {
+            flash("error", "Account does not exist");
+            return redirect(routes.Application.index());
+        }
+
+        if (account.userfiles.contains(file)) {
+            Form<UserFile> boundForm = fileForm.bindFromRequest();
+            if (boundForm.hasErrors()) {
+                flash("error", "Please correct the form below.");
+                return ok(addfile.render(fileForm, account));
+            }
+
+        } else {
+            return ok("access restricted");
+        }
+        return TODO;
     }
 
     public static Result renderFileAgain(UserFile file) {

@@ -28,6 +28,17 @@ public class LocalUser extends Model  {
             String.class, LocalUser.class
     );
 
+    public LocalUser(String id, String provider,
+                     String firstName, String lastName,
+                     String email, String password) {
+        this.id = id;
+        this.provider = provider;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+    }
+
     public static List<LocalUser> findAll() {
         return find.all();
     }

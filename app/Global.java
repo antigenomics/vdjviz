@@ -51,6 +51,22 @@ public class Global extends GlobalSettings {
             }
         }
 
+
+        /**
+         * Create the app directory in appPath (application.conf)
+         */
+
+        String usersFilesDir = Play.application().configuration().getString("usersFilesDir");
+        File applicationDir = new File(usersFilesDir);
+        if (!applicationDir.exists()) {
+            Boolean createAppDir = applicationDir.mkdir();
+            if (!createAppDir) {
+                LogUtil.GlobalLog("Error while creating app Directory");
+            } else {
+                LogUtil.GlobalLog("App directory created");
+            }
+        }
+
     }
 
     public void onStop(Application app) {

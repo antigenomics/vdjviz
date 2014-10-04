@@ -192,7 +192,6 @@ public class ComputationUtil {
         CdrDatabase cdrDatabase = new CdrDatabase("trdb");
         SampleAnnotation sampleAnnotation = new SampleAnnotation(sample);
         HashMap<String, Double> cdrToFrequency = sampleAnnotation.getEntryFrequencies(cdrDatabase);
-        // cdrToFrequency = (CDR3 amino acid sequence) : (frequency in a given sample)
 
         /**
          * AnnotationData class contains information
@@ -242,7 +241,7 @@ public class ComputationUtil {
         List<String> sampleFileNames = new ArrayList<>();
         sampleFileNames.add(file.filePath);
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-        Sample sample = sampleCollection.getAt(0); //sample collection get at (0)
+        Sample sample = sampleCollection.getAt(0);
 
         /**
          * Creating all cache files

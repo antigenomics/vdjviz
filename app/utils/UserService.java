@@ -128,23 +128,53 @@ public class UserService extends BaseUserService {
         }
         LocalUser localUser = null;
         localUser = LocalUser.find.byId(user.identityId().userId());
+
+        /**
+         * Save new User
+         * or update existing
+         */
+
         if (localUser == null) {
-            localUser = new LocalUser();
-            localUser.id = user.identityId().userId();
-            localUser.provider = user.identityId().providerId();
-            localUser.firstName = user.firstName();
-            localUser.lastName = user.lastName();
-            localUser.email = user.email().get();
-            localUser.password = user.passwordInfo().get().password();
-            Account localUserAccount = new Account(localUser, localUser.email);
-            String uploadPath = Play.application().configuration().getString("uploadPath");
-            File userDir = new File(uploadPath + "/" + localUser.email + "/");
-            userDir.mkdir();
+
+            /**
+             * Getting user's dir path from configuration file
+             */
+
+            String usersDirPath = Play.application().configuration().getString("usersFilesDir");
+
+            /**
+             * Trying to create a user's directory
+             * if failed log error
+             */
+
+            File userDir = new File(usersDirPath + "/" + user.email().get() + "/");
+            if (!userDir.exists()) {
+                Boolean created = userDir.mkdir();
+                if (!created) {
+                    LogUtil.GlobalLog("Error while creating user's directory");
+                    return user;
+                }
+            }
+            localUser = new LocalUser(user.identityId().userId(), user.identityId().providerId(),
+                                      user.firstName(), user.lastName(), user.email().get(),
+                                      user.passwordInfo().get().password());
+
+            /**
+             * Creating user's account class
+             * and updating ebean database
+             */
+
+            Account localUserAccount = new Account(localUser, localUser.email, usersDirPath + "/" + user.email().get() + "/");
             localUser.save();
             Ebean.save(localUserAccount);
             localUser.account = localUserAccount;
             localUser.update();
         } else {
+
+            /**
+             * Updating information if user already exists
+             */
+
             localUser.id = user.identityId().userId();
             localUser.provider = user.identityId().providerId();
             localUser.firstName = user.firstName();

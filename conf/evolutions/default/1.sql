@@ -7,6 +7,8 @@ create table account (
   id                        bigint not null,
   user_name                 varchar(255),
   user_id                   varchar(255),
+  user_dir_path             varchar(255),
+  files_count               integer,
   constraint pk_account primary key (id))
 ;
 

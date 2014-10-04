@@ -29,6 +29,11 @@
                 @flash.get("not found")
                 </div>
             }
+            @if(flash.containsKey("info")) {
+                <div class="alert alert-info">
+                @flash.get("info")
+                </div>
+            }
             @content
         </div>
     </body>

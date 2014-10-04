@@ -30,8 +30,10 @@ public class Account implements PathBindable<Account> {
     public String userName;
     @OneToOne
     public LocalUser user;
+    public String userDirPath;
     @OneToMany(mappedBy="account")
     public List<UserFile> userfiles;
+    public Integer filesCount;
 
     /**
      * Overriding PathBindable functions
@@ -53,9 +55,11 @@ public class Account implements PathBindable<Account> {
 
     public Account() {}
 
-    public Account(LocalUser user, String userName) {
+    public Account(LocalUser user, String userName, String userDirPath) {
         this.user = user;
         this.userName = userName;
+        this.userDirPath = userDirPath;
+        this.filesCount = 0;
     }
 
     public String toString() {
