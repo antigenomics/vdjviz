@@ -6,6 +6,7 @@ import javax.persistence.OneToOne;
 
 import play.db.ebean.Model;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 
@@ -26,6 +27,10 @@ public class LocalUser extends Model  {
     public static Finder<String, LocalUser> find = new Finder<String, LocalUser>(
             String.class, LocalUser.class
     );
+
+    public static List<LocalUser> findAll() {
+        return find.all();
+    }
 
     @Override
     public String toString() {

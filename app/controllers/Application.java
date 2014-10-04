@@ -7,12 +7,19 @@ import play.mvc.*;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ComputationUtil;
+import utils.LogUtil;
 import views.html.*;
 
 public class Application extends Controller {
 
     @SecureSocial.UserAwareAction
     public static Result index() {
+
+        /**
+         * Simple logging test
+         */
+
+        LogUtil.GlobalLog("index request");
 
         /**
          * Start page
