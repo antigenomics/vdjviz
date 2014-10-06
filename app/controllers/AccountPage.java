@@ -318,7 +318,7 @@ public class AccountPage extends Controller {
          * redirect to the account page
          */
 
-        if (account.userfiles.contains(file)) {
+        if (account !=null && account.userfiles.contains(file)) {
             ComputationUtil.createSampleCache(file);
         }
         return redirect(routes.AccountPage.index());
