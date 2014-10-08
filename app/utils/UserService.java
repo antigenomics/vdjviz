@@ -38,7 +38,6 @@ public class UserService extends BaseUserService {
     public void doDeleteExpiredTokens() {
         if (Logger.isDebugEnabled()) {
             Logger.debug("deleteExpiredTokens...");
-            LogUtil.GlobalLog("Delete Expired Tokens");
         }
         List<LocalToken> list = LocalToken.find.where().lt("expireAt", new DateTime().toString()).findList();
         for(LocalToken localToken : list) {
@@ -124,7 +123,6 @@ public class UserService extends BaseUserService {
         if (Logger.isDebugEnabled()) {
             Logger.debug("save...");
             Logger.debug(String.format("user = %s", user));
-            LogUtil.GlobalLog("Save new user: " +  user.email());
         }
         LocalUser localUser = null;
         localUser = LocalUser.find.byId(user.identityId().userId());
@@ -151,7 +149,6 @@ public class UserService extends BaseUserService {
             if (!userDir.exists()) {
                 Boolean created = userDir.mkdir();
                 if (!created) {
-                    LogUtil.GlobalLog("Error while creating user's directory");
                     return user;
                 }
             }
@@ -165,10 +162,10 @@ public class UserService extends BaseUserService {
              */
 
             Account localUserAccount = new Account(localUser, localUser.email, usersDirPath + "/" + user.email().get() + "/");
-            localUser.save();
+            Ebean.save(localUser);
             Ebean.save(localUserAccount);
             localUser.account = localUserAccount;
-            localUser.update();
+            Ebean.update(localUser);
         } else {
 
             /**

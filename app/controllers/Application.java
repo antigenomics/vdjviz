@@ -16,17 +16,13 @@ public class Application extends Controller {
     public static Result index() {
 
         /**
-         * Simple logging test
-         */
-
-        LogUtil.GlobalLog("index request");
-
-        /**
          * Start page
          * Identifying User using the SecureSocial API
          * if user does not exist render navbar without user information
          * else render navbar with account button and user information
          */
+
+        //Logger.of(Application.class).info("Index request");
 
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = null;

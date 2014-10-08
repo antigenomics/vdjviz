@@ -22,7 +22,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a href="@routes.AccountPage.fileInformation(item)">Information</a></li>
-                                <li><a href="@routes.AccountPage.renderFileAgain(item)">Rerender</a></li>
+                                <li><a href="@routes.AccountPage.renderFileAgain(item)">Rerend</a></li>
                                 <li class="divider"></li>
                                 <li><a href="@routes.AccountPage.deleteFile(item)">Delete</a></li>
                             </ul>
@@ -35,7 +35,7 @@
 
             <div class="span10">
                 <div class="btn-group btn-group-justified">
-                    <a class="btn btn-default" onclick="TableData('@routes.Computation.returnVdjUsageData(file)')">Table</a>
+                    <a class="btn btn-default" onclick="TableData('@routes.Computation.returnVdjUsageData(file)')">V-J Usage</a>
                     <a class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</a>
                     <a class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file)')">Annotations</a>
                     <a href="#" class="btn btn-default">Under Construction</a>

@@ -4,6 +4,7 @@ import com.avaje.ebean.Ebean;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
+import play.Logger;
 import play.Play;
 import play.data.Form;
 import play.mvc.Controller;
@@ -35,6 +36,12 @@ public class AccountPage extends Controller {
 
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+
+        /**
+         * Use this to log
+         */
+        Logger.of("user."+localUser.email).info("user bla bla");
+
         return ok(account.render(localUser.account));
     }
 
@@ -139,7 +146,6 @@ public class AccountPage extends Controller {
                 if (!fileDir.exists()) {
                     Boolean created = fileDir.mkdir();
                     if (!created) {
-                        LogUtil.GlobalLog("Error while creating file directory for user:" + account.userName);
                         flash("error","Error while adding file");
                         return Results.redirect(routes.AccountPage.index());
                     }
@@ -151,7 +157,6 @@ public class AccountPage extends Controller {
 
                 Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/file"));
                 if (!uploaded) {
-                    LogUtil.GlobalLog("Error while creating file in directory for user:" + account.userName);
                     flash("error", "Error while adding file");
                     return Results.redirect(routes.AccountPage.index());
                 }
@@ -225,10 +230,11 @@ public class AccountPage extends Controller {
         File fileDir = new File(fileDirectoryName + "/");
         Boolean deleted = false;
         try {
-            if (f.delete() && annotation.delete()
-                           && histogram.delete()
-                           && vdjUsage.delete()
-                           && fileDir.delete() ) {
+            f.delete();
+            annotation.delete();
+            histogram.delete();
+            vdjUsage.delete();
+            if (fileDir.delete()) {
                 deleted = true;
             }
         } catch (Exception e) {
@@ -255,7 +261,7 @@ public class AccountPage extends Controller {
 
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
+        Account account = localUser.account;;
 
         /**
          * Verifying access to the file
