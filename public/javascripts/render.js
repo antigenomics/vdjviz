@@ -62,6 +62,45 @@ function AnnotationTable(url) {
     })
 }
 
+function BasicStatsTable(url) {
+    d3.select("svg").remove();
+    d3.select(".svg").remove();
+    $.getJSON(url, function(data) {
+        var header = Object.keys(data[0]);
+        renderBasicStatsTable(data, header);
+    })
+}
+
+function renderBasicStatsTable(data, header) {
+    var width = $(window).width() - 500;
+
+    var svg = d3.select("vis-body")
+        .append("div")
+        .attr("class", "svg");
+
+    var table = svg
+            .append("table")
+            .attr("id", "annotation_table")
+            .attr("class", "table table-striped table-hover"),
+        thead = table.append("thead").append("tr");
+    //tbody = table.append("tbody");
+
+    thead.selectAll("th").data(header).enter()
+        .append("th").html(function(d) {return d});
+
+    var column = [];
+
+    for (var i = 0; i < header.length; i++) {
+        column.push({"data": header[i]});
+    }
+
+
+    var ann_table = $('#annotation_table').dataTable({
+        data: data,
+        "columns": column
+    });
+}
+
 function renderAnnotationTable(data, header) {
     var width = $(window).width() - 500;
 
@@ -90,20 +129,8 @@ function renderAnnotationTable(data, header) {
         data: data,
         "columns": column
     });
-
-
-    /*
-    var tr = tbody.selectAll("tr").data(data)
-        .enter().append("tr");
-
-
-    tr.append("td").html(function(d) {return d.frequency.toPrecision(1)});
-    tr.append("td").html(function(d) {return d.name});
-    tr.append("td").html(function(d) {return d.entries});
-
-    */
-
 }
+
 
 
 

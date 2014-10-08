@@ -2,6 +2,7 @@ package utils;
 
 import com.antigenomics.vdjtools.Clonotype;
 import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.basic.BasicStats;
 import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.db.CdrDatabase;
@@ -194,30 +195,6 @@ public class ComputationUtil {
         HashMap<String, Double> cdrToFrequency = sampleAnnotation.getEntryFrequencies(cdrDatabase);
 
         /**
-         * AnnotationData class contains information
-         * about all entries in CdrDatabase
-         */
-
-
-
-        class AnnotationData {
-            public String key;
-            public Double value;
-            public String[] entries;
-            public String[] header;
-            public AnnotationData(String key, Double value ,String[] entries, String[] header) {
-                this.key = key;
-                this.value = value;
-                this.entries = entries;
-                this.header = header;
-            }
-        }
-
-
-
-
-
-        /**
          * Initializing AnnotationData list
          * and creating cache file
          */
@@ -248,13 +225,34 @@ public class ComputationUtil {
                 }
                 data.add(dataNode);
             }
-            Logger.info(String.valueOf(data));
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
             file.annotationData = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void BasicStats(Sample sample, UserFile file) {
+        BasicStats basicStats = new BasicStats(sample);
+        String[] header =  BasicStats.getHEADER().split("\t");
+        List<HashMap<String, String>> basicStatsList = new ArrayList<>();
+        HashMap<String, String> basicStatsNode = new HashMap<>();
+        String[] basicStatsValues = basicStats.toString().split("\t");
+        for (int i = 0; i < header.length; i++) {
+            basicStatsNode.put(header[i], basicStatsValues[i]);
+        }
+
+        basicStatsList.add(basicStatsNode);
+        try {
+            File annotationCacheFile = new File(file.fileDirPath + "/basicStats.cache");
+            PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
+            fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
+            fileWriter.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static void createSampleCache(UserFile file) {
@@ -277,6 +275,7 @@ public class ComputationUtil {
             AnnotationData(sample, file);
             spectrotypeHistogram(sample, file);
             vdjUsageData(sampleCollection, file);
+            BasicStats(sample, file);
             Ebean.update(file);
         } catch (Exception e) {
             e.printStackTrace();

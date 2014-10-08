@@ -140,4 +140,22 @@ public class Computation extends Controller{
             return ok(account.render(localAccount));
         }
     }
+
+    @SecureSocial.SecuredAction
+    public static Result returnBasicStats() throws FileNotFoundException {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+
+        List<JsonNode> basicStatsAll = new ArrayList<>();
+
+        for (UserFile file: localAccount.userfiles) {
+            File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
+            FileInputStream jsonFile = new FileInputStream(basicStatsCache);
+            JsonNode basicStatsNode = Json.parse(jsonFile);
+            basicStatsAll.add(basicStatsNode.get(0));
+        }
+        return ok(Json.toJson(basicStatsAll));
+
+    }
 }

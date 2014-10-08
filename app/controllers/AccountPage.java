@@ -40,7 +40,8 @@ public class AccountPage extends Controller {
         /**
          * Use this to log
          */
-        Logger.of("user."+localUser.email).info("user bla bla");
+        //TODO
+        Logger.of("user."+localUser.email).info("user page request");
 
         return ok(account.render(localUser.account));
     }
