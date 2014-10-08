@@ -198,31 +198,57 @@ public class ComputationUtil {
          * about all entries in CdrDatabase
          */
 
+
+
         class AnnotationData {
             public String key;
             public Double value;
             public String[] entries;
-            public AnnotationData(String key, Double value ,String[] entries) {
+            public String[] header;
+            public AnnotationData(String key, Double value ,String[] entries, String[] header) {
                 this.key = key;
                 this.value = value;
                 this.entries = entries;
+                this.header = header;
             }
         }
+
+
+
+
 
         /**
          * Initializing AnnotationData list
          * and creating cache file
          */
 
-        List<AnnotationData> data = new ArrayList<>();
+        String[] header = cdrDatabase.header;
+        HashMap<String, String> headerNode = new HashMap<>();
+        headerNode.put("1", "Frequency");
+        headerNode.put("2", "Name");
+        for (int i = 1; i < header.length; i++) {
+            headerNode.put(String.valueOf(i + 2), header[i]);
+        }
+
+        List<HashMap<String, String>> data = new ArrayList<>();
+        data.add(headerNode);
         try {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
             for (Map.Entry<String, Double> entry : cdrToFrequency.entrySet()) {
-                data.add(new AnnotationData(entry.getKey(),
-                                            entry.getValue(),
-                                            cdrDatabase.getAnnotationEntries(entry.getKey()).get(0)));
+                if (entry.getValue() == 0) {
+                    continue;
+                }
+
+                HashMap<String, String> dataNode = new HashMap<>();
+                dataNode.put("Frequency", entry.getValue().toString());
+                dataNode.put("Name", entry.getKey());
+                for (int i = 0; i < header.length - 1; i++) {
+                    dataNode.put(header[i + 1], cdrDatabase.getAnnotationEntries(entry.getKey()).get(0)[i]);
+                }
+                data.add(dataNode);
             }
+            Logger.info(String.valueOf(data));
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
             file.annotationData = true;

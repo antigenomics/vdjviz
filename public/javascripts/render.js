@@ -51,37 +51,57 @@ function TableData(url) {
 function AnnotationTable(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
-    var annotationData = [];
     $.getJSON(url, function(data) {
-        $.each(data, function(key, value) {
-            var item = {"name" : value.key, "frequency" : value.value, "entries" :  value.entries};
-            annotationData.push(item);
-        });
-    renderAnnotationTable(annotationData);
-    });
+        var header = [];
+        var headerLength = (Object.keys(data[0])).length;
+        for (var i = 1; i < headerLength; i++) {
+            header.push(data[0][i.toString()]);
+        }
+        data.splice(0,1);
+        renderAnnotationTable(data, header);
+    })
 }
 
-function renderAnnotationTable(data) {
+function renderAnnotationTable(data, header) {
     var width = $(window).width() - 500;
 
-    var svg = d3.select("vis-body");
+    var svg = d3.select("vis-body")
+        .append("div")
+        .attr("class", "svg");
 
     var table = svg
             .append("table")
-            .attr("class", "table table-striped table-hover svg"),
-        thead = table.append("thead").append("tr"),
-        tbody = table.append("tbody");
+            .attr("id", "annotation_table")
+            .attr("class", "table table-striped table-hover"),
+        thead = table.append("thead").append("tr");
+        //tbody = table.append("tbody");
 
-    thead.append("th").html("Name");
-    thead.append("th").html("Frequency");
-    thead.append("th").html("Entries");
+    thead.selectAll("th").data(header).enter()
+        .append("th").html(function(d) {return d});
 
+    var column = [];
+
+    for (var i = 0; i < header.length; i++) {
+        column.push({"data": header[i]});
+    }
+
+
+    var ann_table = $('#annotation_table').dataTable({
+        data: data,
+        "columns": column
+    });
+
+
+    /*
     var tr = tbody.selectAll("tr").data(data)
         .enter().append("tr");
 
+
+    tr.append("td").html(function(d) {return d.frequency.toPrecision(1)});
     tr.append("td").html(function(d) {return d.name});
-    tr.append("td").html(function(d) {return d.frequency});
     tr.append("td").html(function(d) {return d.entries});
+
+    */
 
 }
 
