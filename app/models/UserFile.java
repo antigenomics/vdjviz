@@ -9,6 +9,10 @@ import play.db.ebean.Model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Entity
 public class UserFile extends Model implements PathBindable<UserFile> {
@@ -49,6 +53,14 @@ public class UserFile extends Model implements PathBindable<UserFile> {
 
     public static UserFile findById(Long id) {
         return find().where().eq("id", id).findUnique();
+    }
+
+    public static List<UserFile> findByAccount(Account account) {
+        return find().where().eq("account", account).findList();
+    }
+
+    public static UserFile fyndByNameAndAccount(Account account, String fileName) {
+        return find().where().eq("account", account).eq("fileName", fileName).findUnique();
     }
 
     public static Model.Finder<Long, UserFile> find() {

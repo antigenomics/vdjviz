@@ -239,6 +239,7 @@ public class ComputationUtil {
         List<HashMap<String, String>> basicStatsList = new ArrayList<>();
         HashMap<String, String> basicStatsNode = new HashMap<>();
         String[] basicStatsValues = basicStats.toString().split("\t");
+        basicStatsNode.put("Name", file.fileName);
         for (int i = 0; i < header.length; i++) {
             basicStatsNode.put(header[i], basicStatsValues[i]);
         }

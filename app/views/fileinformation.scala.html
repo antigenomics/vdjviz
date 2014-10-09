@@ -20,14 +20,14 @@
                     }
                     @for(item <- account.userfiles) {
                         <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item)">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
                             @item.fileName
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="@routes.AccountPage.fileInformation(item)">Information</a></li>
-                                <li><a href="@routes.AccountPage.renderFileAgain(item)">Rerender</a></li>
+                                <li><a href="@routes.AccountPage.fileInformation(item.fileName)">Information</a></li>
+                                <li><a href="@routes.AccountPage.renderFileAgain(item.fileName)">Rerender</a></li>
                                 <li class="divider"></li>
-                                <li><a href="@routes.AccountPage.deleteFile(item)">Delete</a></li>
+                                <li><a href="@routes.AccountPage.deleteFile(item.fileName)">Delete</a></li>
                             </ul>
                         </li>
                     }
@@ -38,10 +38,10 @@
 
             <div class="span10">
                 <div class="btn-group btn-group-justified">
-                    <a class="btn btn-default" onclick="TableData('@routes.Computation.returnVdjUsageData(file)')">V-J Usage</a>
-                    <a class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file)')">Histogram</a>
-                    <a class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file)')">Annotations</a>
-                    <a href="#" class="btn btn-default" onclick="BasicStatsTable('@routes.Computation.returnBasicStats()')">BasicStats</a>
+                    <a href="#vdjusage" class="btn btn-default" onclick="TableData('@routes.Computation.returnVdjUsageData(file.fileName)')">V-J Usage</a>
+                    <a href="#spectrotype" class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file.fileName)')">Histogram</a>
+                    <a href="#annotation" class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file.fileName)')">Annotations</a>
+                    <a href="#basicStats" class="btn btn-default" onclick="BasicStatsTable('@routes.Computation.returnBasicStats()')">BasicStats</a>
                 </div>
 
                 <div class="hero-unit">

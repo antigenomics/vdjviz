@@ -29,7 +29,7 @@ public class Computation extends Controller{
 
 
     @SecureSocial.SecuredAction
-    public static Result returnVdjUsageData(UserFile file) throws FileNotFoundException {
+    public static Result returnVdjUsageData(String fileName) throws FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API
@@ -38,6 +38,8 @@ public class Computation extends Controller{
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
 
         /**
          * Verifying access to the file
@@ -67,7 +69,7 @@ public class Computation extends Controller{
     }
 
     @SecureSocial.SecuredAction
-    public static Result returnSpectrotypeHistogram(UserFile file) throws JsonProcessingException, FileNotFoundException {
+    public static Result returnSpectrotypeHistogram(String fileName) throws JsonProcessingException, FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API
@@ -76,6 +78,8 @@ public class Computation extends Controller{
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
 
         /**
          * Verifying access to the file
@@ -105,7 +109,7 @@ public class Computation extends Controller{
     }
 
     @SecureSocial.SecuredAction
-    public static Result returnAnnotationData(UserFile file) throws FileNotFoundException {
+    public static Result returnAnnotationData(String fileName) throws FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API
@@ -114,6 +118,8 @@ public class Computation extends Controller{
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
 
         /**
          * Verifying access to the file

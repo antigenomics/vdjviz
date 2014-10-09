@@ -22,6 +22,7 @@ import views.html.fileinformation;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.List;
 
 @SecureSocial.SecuredAction
 public class AccountPage extends Controller {
@@ -124,6 +125,14 @@ public class AccountPage extends Controller {
             fileName = boundForm.get().fileName;
         }
 
+        List<UserFile> allFiles = UserFile.findByAccount(account);
+        for (UserFile userFile: allFiles) {
+            if (userFile.fileName.equals(fileName)) {
+                flash("error", "You should use unique names for your files");
+                return ok(addfile.render(fileForm, account));
+            }
+        }
+
         /**
          * Verification of the existence the account and the file
          */
@@ -207,7 +216,7 @@ public class AccountPage extends Controller {
     }
 
 
-    public static Result deleteFile(UserFile file) {
+    public static Result deleteFile(String fileName) {
 
         /**
          * Identifying User using the SecureSocial API
@@ -216,6 +225,8 @@ public class AccountPage extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
         /**
          * Getting file directory
@@ -228,11 +239,13 @@ public class AccountPage extends Controller {
         File histogram = new File(fileDirectoryName + "/histogram.cache");
         File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
         File annotation = new File(fileDirectoryName + "/annotation.cache");
+        File basicStats = new File(fileDirectoryName + "/basicStats.cache");
         File fileDir = new File(fileDirectoryName + "/");
         Boolean deleted = false;
         try {
             f.delete();
             annotation.delete();
+            basicStats.delete();
             histogram.delete();
             vdjUsage.delete();
             if (fileDir.delete()) {
@@ -254,7 +267,7 @@ public class AccountPage extends Controller {
     }
 
 
-    public static Result fileInformation(UserFile file) {
+    public static Result fileInformation(String fileName) {
 
         /**
          * Identifying User using the SecureSocial API
@@ -262,7 +275,10 @@ public class AccountPage extends Controller {
 
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;;
+        Account account = localUser.account;
+
+
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
         /**
          * Verifying access to the file
@@ -307,7 +323,7 @@ public class AccountPage extends Controller {
         return TODO;
     }
 
-    public static Result renderFileAgain(UserFile file) {
+    public static Result renderFileAgain(String fileName) {
 
         /**
          * Identifying User using the SecureSocial API
@@ -316,6 +332,8 @@ public class AccountPage extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
         /**
          * Verifying access to the file
@@ -329,5 +347,13 @@ public class AccountPage extends Controller {
             ComputationUtil.createSampleCache(file);
         }
         return redirect(routes.AccountPage.index());
+    }
+
+    public static Result test() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+        List<UserFile> all = UserFile.findByAccount(account);
+        return ok(String.valueOf(all));
     }
 }
