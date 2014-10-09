@@ -44,6 +44,7 @@ create table user_file (
   histogram_data            boolean,
   vdj_usage_data            boolean,
   annotation_data           boolean,
+  basic_stats               boolean,
   constraint ck_user_file_software_type check (software_type in (0,1,2,3,4)),
   constraint pk_user_file primary key (id))
 ;

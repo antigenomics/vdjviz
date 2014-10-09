@@ -23,7 +23,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public Account account;
     public String fileName;
     public String uniqueName;
-    //TODO
     public Software softwareType;
     @Constraints.Required
     public String softwareTypeName;
@@ -32,6 +31,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public Boolean histogramData;
     public Boolean vdjUsageData;
     public Boolean annotationData;
+    public Boolean BasicStats;
 
     public UserFile() {}
 
@@ -48,6 +48,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.histogramData = false;
         this.vdjUsageData = false;
         this.annotationData = false;
+        this.BasicStats = false;
 
     }
 

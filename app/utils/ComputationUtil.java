@@ -249,6 +249,7 @@ public class ComputationUtil {
             File annotationCacheFile = new File(file.fileDirPath + "/basicStats.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
             fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
+            file.BasicStats = true;
             fileWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
