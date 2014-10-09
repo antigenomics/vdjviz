@@ -190,15 +190,15 @@ public class UserService extends BaseUserService {
             Logger.debug(String.format("token = %s", token.uuid));
         }
         LocalToken localToken = new LocalToken();
-        localToken.uuid = token.uuid;
-        localToken.email = token.email;
-        //try {
+        localToken.uuid = token.getUuid();
+        localToken.email = token.getEmail();
+        try {
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            //localToken.createdAt = df.parse(token.creationTime.toString("yyyy-MM-dd HH:mm:ss"));
-            //localToken.expireAt = df.parse(token.expirationTime.toString("yyyy-MM-dd HH:mm:ss"));
-        //} catch (ParseException e) {
-        //    Logger.error("SqlUserService.doSave(): ", e);
-        //}
+            localToken.createdAt = df.parse(token.getCreationTime().toString("yyyy-MM-dd HH:mm:ss"));
+            localToken.expireAt = df.parse(token.getExpirationTime().toString("yyyy-MM-dd HH:mm:ss"));
+        } catch (ParseException e) {
+            Logger.error("SqlUserService.doSave(): ", e);
+        }
         localToken.isSignUp = token.isSignUp;
         localToken.save();
     }
