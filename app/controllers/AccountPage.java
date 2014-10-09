@@ -1,5 +1,6 @@
 package controllers;
 
+import com.antigenomics.vdjtools.Software;
 import com.avaje.ebean.Ebean;
 import models.Account;
 import models.LocalUser;
@@ -20,6 +21,7 @@ import views.html.account;
 import views.html.addfile;
 import views.html.fileinformation;
 import org.apache.commons.io.FilenameUtils;
+import views.html.fileupdate;
 
 import java.io.File;
 import java.util.List;
@@ -294,8 +296,19 @@ public class AccountPage extends Controller {
         }
     }
 
+    public static Result fileUpdatePage(String fileName) {
+        /**
+         * Identifying User using the SecureSocial API
+         */
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+        return ok(fileupdate.render(Form.form(UserFile.class).fill(file), account, fileName));
+    }
+
     //TODO
-    public static Result fileUpdate(UserFile file) {
+    public static Result fileUpdate(String fileName) {
 
         /**
          * Identifying User using the SecureSocial API
@@ -304,6 +317,8 @@ public class AccountPage extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
         if (account == null) {
             flash("error", "Account does not exist");
@@ -320,7 +335,28 @@ public class AccountPage extends Controller {
         } else {
             return ok("access restricted");
         }
-        return TODO;
+
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+        Http.MultipartFormData.FilePart newFile = body.getFile("file");
+        Form<UserFile> boundForm = fileForm.bindFromRequest();
+        file.fileName = boundForm.get().fileName;
+        String oldSoftwareType = file.softwareTypeName;
+        file.softwareTypeName = boundForm.get().softwareTypeName;
+        file.softwareType = Software.byName(boundForm.get().softwareTypeName);
+        Ebean.update(file);
+        if (newFile != null) {
+            File nf = new File(file.fileDirPath + "/file");
+            nf.delete();
+            Boolean uploaded = newFile.getFile().renameTo(new File(account.userDirPath + "/" + file.uniqueName + "/file"));
+            if (!uploaded) {
+                flash("error", "Error while adding file");
+                return Results.redirect(routes.AccountPage.index());
+            }
+            ComputationUtil.createSampleCache(file);
+        } else if (!file.softwareTypeName.equals(oldSoftwareType)) {
+            ComputationUtil.createSampleCache(file);
+        }
+        return redirect(routes.AccountPage.fileInformation(file.fileName));
     }
 
     public static Result renderFileAgain(String fileName) {

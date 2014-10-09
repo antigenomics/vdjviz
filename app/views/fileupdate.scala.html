@@ -1,0 +1,25 @@
+@(fileForm: Form[UserFile], account: Account, fileName: String)
+@navbar(account.userName)
+@main("File update") {
+    <style>
+    .content {
+    left:50px;
+    position:absolute;
+    }
+    </style>
+    <h1>User File Form</h1>
+    @helper.form(action = routes.AccountPage.fileUpdate(fileName),
+        'enctype -> "multipart/form-data") {
+        <fieldset>
+            <legend>File</legend>
+            @helper.inputText(fileForm("fileName"), '_label -> "File Name")
+            @helper.inputFile(fileForm("file"), '_label -> "File")
+            @helper.select(fileForm("softwareTypeName"), options =
+                    Seq("mitcr" -> "MiTcr", "migec" -> "MiGec",
+                        "simple" -> "Simple", "igblast" -> "IgBlast",
+                        "cdrblast" -> "CdrBlast"), '_label -> "Type")
+        </fieldset>
+        <input type="submit" class="btn btn-primary" value="Save">
+        <a class="btn" href="@routes.AccountPage.index()">Cancel</a>
+    }
+}
