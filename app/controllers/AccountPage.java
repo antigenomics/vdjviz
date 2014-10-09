@@ -114,6 +114,11 @@ public class AccountPage extends Controller {
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart file = body.getFile("file");
 
+        if (file == null) {
+            flash("error", "You should upload file");
+            return ok(addfile.render(fileForm, account));
+        }
+
         /**
          * Getting fileName
          * If User do not enter the name of file
@@ -339,6 +344,7 @@ public class AccountPage extends Controller {
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart newFile = body.getFile("file");
         Form<UserFile> boundForm = fileForm.bindFromRequest();
+        String oldFileName = file.fileName;
         file.fileName = boundForm.get().fileName;
         String oldSoftwareType = file.softwareTypeName;
         file.softwareTypeName = boundForm.get().softwareTypeName;
@@ -353,7 +359,7 @@ public class AccountPage extends Controller {
                 return Results.redirect(routes.AccountPage.index());
             }
             ComputationUtil.createSampleCache(file);
-        } else if (!file.softwareTypeName.equals(oldSoftwareType)) {
+        } else if (!file.softwareTypeName.equals(oldSoftwareType) || !file.fileName.equals(oldFileName)) {
             ComputationUtil.createSampleCache(file);
         }
         return redirect(routes.AccountPage.fileInformation(file.fileName));

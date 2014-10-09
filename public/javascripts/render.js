@@ -160,7 +160,8 @@ function renderHistogram(histogramData) {
 
     var svg = d3.select("vis-body")
         .append("svg")
-        .attr("class", "chart");
+        .attr("class", "chart")
+        .style("overflow", "visible");
 
     var x = d3.scale.linear()
         .domain([0, 10])
@@ -292,7 +293,7 @@ function renderTable(vdjUsageData) {
         .append("g").attr("transform", "translate(" + margin.l + "," + margin.t + ")");
 
     var data = [
-        {data: bP.partData(vdjUsageData, 2), id: 'Table', header: ["V", "J", "Table"]}
+        {data: bP.partData(vdjUsageData, 2), id: 'V-J-Usage', header: ["V", "J", "V-J Usage"]}
     ];
 
     bP.draw(data, svg);
