@@ -13,17 +13,11 @@ import play.Logger;
 public class Global extends GlobalSettings {
 
     public void onStart(Application app) {
-        /*
-        try {
-            LogUtil.createLogs();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
-
         /**
          * Create the app directory in appPath (application.conf)
         **/
+
+        Logger.of(Global.class).info("Application started");
 
         String usersFilesDir = Play.application().configuration().getString("usersFilesDir");
         File applicationDir = new File(usersFilesDir);
@@ -37,27 +31,10 @@ public class Global extends GlobalSettings {
         } else {
             Logger.of(Global.class).info("App directory already exists");
         }
-
-        /*
-        List<Account> accounts = Account.findAll();
-
-        for (Account account: accounts) {
-            try {
-                LogUtil.createUserLog(account);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        */
-
-
     }
 
     public void onStop(Application app) {
-        /*
-        LogUtil.GlobalLog("Application stopped");
-        LogUtil.closeLogs();
-        */
+        Logger.of(Global.class).info("Application stopped");
     }
 
 

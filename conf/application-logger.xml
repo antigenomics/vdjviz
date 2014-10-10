@@ -16,6 +16,13 @@
         </encoder>
     </appender>
 
+    <appender name="USERSERVICE" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/userservice.log</file>
+        <encoder>
+            <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%coloredLevel %logger{15} - %message%n%xException{5}</pattern>
@@ -28,6 +35,10 @@
     <logger name="user" level="INFO">
         <appender-ref ref="USERLOG"/>
     </logger>
+    <logger name="UserService" level="INFO">
+        <appender-ref ref="USERSERVICE"/>
+    </logger>
+
 
     <root level="ERROR">
         <appender-ref ref="STDOUT" />

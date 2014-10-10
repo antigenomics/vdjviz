@@ -124,7 +124,7 @@ public class UserService extends BaseUserService {
             Logger.debug("save...");
             Logger.debug(String.format("user = %s", user));
         }
-        LocalUser localUser = null;
+        LocalUser localUser;
         localUser = LocalUser.find.byId(user.identityId().userId());
 
         /**
@@ -149,6 +149,7 @@ public class UserService extends BaseUserService {
             if (!userDir.exists()) {
                 Boolean created = userDir.mkdir();
                 if (!created) {
+                    Logger.of(UserService.class).error("Error while creating directory for user " + user.email().get());
                     return user;
                 }
             }
@@ -166,6 +167,7 @@ public class UserService extends BaseUserService {
             Ebean.save(localUserAccount);
             localUser.account = localUserAccount;
             Ebean.update(localUser);
+            Logger.of("UserService").info("New user " + localUser.email + " created");
         } else {
 
             /**
@@ -179,6 +181,7 @@ public class UserService extends BaseUserService {
             localUser.email = user.email().get();
             localUser.password = user.passwordInfo().get().password();
             localUser.update();
+            Logger.of("UserService").info("User " + localUser.email + "  signed up");
         }
         return user;
     }
