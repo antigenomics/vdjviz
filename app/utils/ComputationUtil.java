@@ -132,6 +132,15 @@ public class ComputationUtil {
 
         int[] x_coordinates = sp.getLengths();
         double[] y_coordinates = sp.getHistogram();
+
+        List<HashMap<String, String>> xAxis = new ArrayList<>();
+        HashMap<String, String> xAxisNode = new HashMap<>();
+        xAxisNode.put("start", String.valueOf(x_coordinates[0]));
+        xAxisNode.put("end", String.valueOf(x_coordinates[x_coordinates.length - 1]));
+        xAxis.add(xAxisNode);
+        data.put("xAxis", xAxis);
+
+
         for (int i = 0; i < x_coordinates.length; i++) {
             HashMap<String, String> histogramCommonDataNode = new HashMap<>();
 

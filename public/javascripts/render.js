@@ -123,11 +123,11 @@ function renderHistogram(histogramData) {
         .style("overflow", "visible");
 
     var x = d3.scale.linear()
-        .domain([0, 10])
-        .range([0, width]);
+        .domain([histogramData["xAxis"][0]["start"], histogramData["xAxis"][0]["end"]])
+        .range([histogramData['xAxis'][0]["start"] * barWidth, histogramData["xAxis"][0]["end"] * barWidth]);
 
     var xAxis = d3.svg.axis().scale(x)
-        .orient("top").ticks(10);
+        .orient("bottom").ticks(20);
 
     var chart = d3.select("svg")
         .attr("width", width)
