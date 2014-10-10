@@ -357,9 +357,21 @@ public class AccountPage extends Controller {
                 flash("error", "Error while adding file");
                 return Results.redirect(routes.AccountPage.index());
             }
-            ComputationUtil.createSampleCache(file);
+            try {
+                ComputationUtil.createSampleCache(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+                flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
+                return Results.redirect(routes.AccountPage.index());
+            }
         } else if (!file.softwareTypeName.equals(oldSoftwareType) || !file.fileName.equals(oldFileName)) {
-            ComputationUtil.createSampleCache(file);
+            try {
+                ComputationUtil.createSampleCache(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+                flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
+                return Results.redirect(routes.AccountPage.index());
+            }
         }
         return redirect(routes.AccountPage.fileInformation(file.fileName));
     }

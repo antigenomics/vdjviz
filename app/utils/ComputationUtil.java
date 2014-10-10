@@ -209,16 +209,19 @@ public class ComputationUtil {
          */
 
         String[] header = cdrDatabase.header;
-        HashMap<String, String> headerNode = new HashMap<>();
-        headerNode.put("1", "Frequency");
-        headerNode.put("2", "Name");
-        for (int i = 1; i < header.length; i++) {
-            headerNode.put(String.valueOf(i + 2), header[i]);
-        }
-
-        HashMap<String, List<HashMap<String, String>>> data = new HashMap<>();
+        HashMap<String, String> header1 = new HashMap<>();
+        HashMap<String, String> header2 = new HashMap<>();
         List<HashMap<String , String>> headerJsonData = new ArrayList<>();
-        headerJsonData.add(headerNode);
+        header1.put("data", "Frequency");
+        header2.put("data", "Name");
+        headerJsonData.add(header1);
+        headerJsonData.add(header2);
+        for (int i = 1; i < header.length; i++) {
+            HashMap<String, String> header_i = new HashMap<>();
+            header_i.put("data", header[i]);
+            headerJsonData.add(header_i);
+        }
+        HashMap<String, List<HashMap<String, String>>> data = new HashMap<>();
         data.put("header", headerJsonData);
 
 

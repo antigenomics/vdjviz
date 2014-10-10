@@ -1,11 +1,8 @@
 function HistogramData(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
-    var histogramData = [];
     $.getJSON(url, function(data){
-        $.each(data, function(key, value){
-            renderHistogram(data);
-        });
+        renderHistogram(data);
     });
 }
 
@@ -14,7 +11,6 @@ function TableData(url) {
     d3.select(".svg").remove();
     var vdjUsageData = [];
     $.getJSON(url, function(data){
-
         $.each(data, function(key, value){
             var item = [value.vSegment, value.jSegment, value.relationNum ];
             vdjUsageData.push(item);
@@ -28,7 +24,7 @@ function AnnotationTable(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
     $.getJSON(url, function(data) {
-        renderAnnotationTable(data.data, data.header[0]);
+        renderAnnotationTable(data.data, data.header);
 
     })
 }
@@ -43,30 +39,21 @@ function BasicStatsTable(url) {
 }
 
 function renderBasicStatsTable(data, header) {
-    var width = $(window).width() - 500;
-
     var svg = d3.select("vis-body")
         .append("div")
         .attr("class", "svg");
-
     var table = svg
             .append("table")
             .attr("id", "annotation_table")
             .attr("class", "table table-striped table-hover"),
         thead = table.append("thead").append("tr");
-    //tbody = table.append("tbody");
-
-
     thead.selectAll("th").data(header).enter()
         .append("th").html(function(d) {return d});
-
     var column = [];
-
     for (var i = 0; i < header.length; i++) {
         column.push({"data": header[i.toString()]});
     }
-
-    var ann_table = $('#annotation_table').dataTable({
+    $('#annotation_table').dataTable({
         data: data,
         "columns": column
     });
@@ -82,19 +69,11 @@ function renderAnnotationTable(data, header) {
             .attr("id", "annotation_table")
             .attr("class", "table table-striped table-hover"),
         thead = table.append("thead").append("tr");
-
-    var column = [];
-    var headerLength = Object.keys(header).length;
-    for (var i = 0; i < headerLength; i++) {
-        column.push({"data": header[(i + 1).toString()]});
-    }
-
-    thead.selectAll("th").data(column).enter()
+    thead.selectAll("th").data(header).enter()
         .append("th").html(function(d) {return d.data;});
-
     $('#annotation_table').dataTable({
         "data": data,
-        "columns": column
+        "columns": header
     });
 }
 
@@ -159,7 +138,7 @@ function renderHistogram(histogramData) {
     bar.append("rect")
         .attr("height", function(d) {return d["yCoordinate"] * heightMultiplier;})
         .attr("width", barWidth - 1)
-        .style("fill", "#DCDCDC");
+        .style("fill", "#CFCFCF");
 
     bar.append("text")
         .attr("type", "spectratype");
@@ -244,7 +223,7 @@ function renderHistogram(histogramData) {
     commonTip.append("rect")
         .attr("height", "5em")
         .attr("width", 500)
-        .style("fill", "#DCDCDC")
+        .style("fill", "#CFCFCF")
         .style("opacity", "0.5");
 
 
