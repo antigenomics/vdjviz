@@ -1,35 +1,11 @@
-$(document).ready(function() {
-    $(".dropdown").hover(function() {
-            $(this).addClass("open");
-        },
-        function() {
-            $(this).removeClass("open");
-        })
-});
-
-
-function del(urlToDelete) {
-    $.ajax({
-        url : urlToDelete,
-        type : 'DELETE',
-        success : function ( results ) {
-            //refresh the page
-            location.reload ( ) ;
-        }
-    });
-}
-
 function HistogramData(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
     var histogramData = [];
     $.getJSON(url, function(data){
         $.each(data, function(key, value){
-            var item = {"xCoordinate" : value.xCoordinate ,"yCoordinate" : value.yCoordinate,
-                        "clonotype" : value.clonotype, "clonotypeName": value.clonotypeName};
-            histogramData.push(item);
+            renderHistogram(data);
         });
-    renderHistogram(histogramData);
     });
 }
 
@@ -52,13 +28,8 @@ function AnnotationTable(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
     $.getJSON(url, function(data) {
-        var header = [];
-        var headerLength = (Object.keys(data[0])).length;
-        for (var i = 1; i < headerLength; i++) {
-            header.push(data[0][i.toString()]);
-        }
-        data.splice(0,1);
-        renderAnnotationTable(data, header);
+        renderAnnotationTable(data.data, data.header[0]);
+
     })
 }
 
@@ -85,15 +56,15 @@ function renderBasicStatsTable(data, header) {
         thead = table.append("thead").append("tr");
     //tbody = table.append("tbody");
 
+
     thead.selectAll("th").data(header).enter()
         .append("th").html(function(d) {return d});
 
     var column = [];
 
     for (var i = 0; i < header.length; i++) {
-        column.push({"data": header[i]});
+        column.push({"data": header[i.toString()]});
     }
-
 
     var ann_table = $('#annotation_table').dataTable({
         data: data,
@@ -102,8 +73,6 @@ function renderBasicStatsTable(data, header) {
 }
 
 function renderAnnotationTable(data, header) {
-    var width = $(window).width() - 500;
-
     var svg = d3.select("vis-body")
         .append("div")
         .attr("class", "svg");
@@ -113,20 +82,18 @@ function renderAnnotationTable(data, header) {
             .attr("id", "annotation_table")
             .attr("class", "table table-striped table-hover"),
         thead = table.append("thead").append("tr");
-        //tbody = table.append("tbody");
-
-    thead.selectAll("th").data(header).enter()
-        .append("th").html(function(d) {return d});
 
     var column = [];
-
-    for (var i = 0; i < header.length; i++) {
-        column.push({"data": header[i]});
+    var headerLength = Object.keys(header).length;
+    for (var i = 0; i < headerLength; i++) {
+        column.push({"data": header[(i + 1).toString()]});
     }
 
+    thead.selectAll("th").data(column).enter()
+        .append("th").html(function(d) {return d.data;});
 
-    var ann_table = $('#annotation_table').dataTable({
-        data: data,
+    $('#annotation_table').dataTable({
+        "data": data,
         "columns": column
     });
 }
@@ -137,30 +104,22 @@ function renderAnnotationTable(data, header) {
 function renderHistogram(histogramData) {
     var width = $(window).width() - 500,
         barWidth = 15,
-        maxHeight = 0,
+        maxHeight = 600,
         heightMultiplier = 1500;
 
     var colors = d3.scale.category20().range();
 
-    var spectratype = [];
-    var clonotypes = [];
+    var spectratype = histogramData["common"];
+    var clonotypes = histogramData["clonotypes"];
     var barsHeight = [];
 
-    $.each(histogramData, function(index, value) {
-        if (value.clonotype && value.yCoordinate > maxHeight) {
-            maxHeight = value.yCoordinate * heightMultiplier + 500;
-        }
-        if (!value.clonotype) {
-            spectratype.push(value);
-            barsHeight.push({x : value.xCoordinate, h : value.yCoordinate});
-        } else {
-            clonotypes.push(value);
-        }
-    });
+    for (var i = 0; i < spectratype.length; i++) {
+        barsHeight[spectratype[i]["xCoordinate"]] = parseFloat(spectratype[i]["yCoordinate"]);
+    }
 
     var svg = d3.select("vis-body")
         .append("svg")
-        .attr("class", "chart")
+        .attr("class", "svg")
         .style("overflow", "visible");
 
     var x = d3.scale.linear()
@@ -177,57 +136,138 @@ function renderHistogram(histogramData) {
     var bar = chart.selectAll("g")
         .data(spectratype)
         .enter().append("g")
-        .attr("transform", function(d, i) { return "translate(" + d.xCoordinate * 15 + "," + (maxHeight - d.yCoordinate * heightMultiplier)  +")"; });
+        .style("cursor", "pointer")
+        .on("mouseover", function(d,i) {
+            $("#commonTip" + d["xCoordinate"]).animate({
+                opacity: 1
+            }, 150, function() {
+                // Animation complete.
+            });
+
+        })
+        .on("mouseout", function(d,i) {
+            $("#commonTip" + d["xCoordinate"]).animate({
+                opacity: 0
+            }, 150, function() {
+                // Animation complete.
+            });
+
+        })
+        .attr("transform", function(d, i) { return "translate(" + d["xCoordinate"] * barWidth + "," + (maxHeight - d["yCoordinate"] * heightMultiplier)  +")"; });
 
 
     bar.append("rect")
-        .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
+        .attr("height", function(d) {return d["yCoordinate"] * heightMultiplier;})
         .attr("width", barWidth - 1)
         .style("fill", "#DCDCDC");
 
     bar.append("text")
         .attr("type", "spectratype");
 
+
+
     var tip = chart.selectAll("tip")
         .data(clonotypes)
         .enter().append("g")
         .attr("transform", "translate(10, 10)")
-        .attr("class", "tip")
-        .attr("id", function(d, i) {return i;})
+        .attr("id", function(d, i) {return "tip" + i;})
         .style("opacity", 0);
 
 
     tip.append("rect")
-        .attr("height", "4em")
+        .attr("height", "9em")
         .attr("width", function(d) {
-            //"clonotype".length +=
-            return (d.clonotypeName.length + 6) * 13;
+            return (d["Cdr3nt"].length + 6) * 13;
         })
         .style("fill", function(d, i) {
             return colors[i];
         })
         .style("opacity", "0.5")
 
+
+
     var tipText = tip
         .append("text")
         .attr("x", 10)
-        .attr("y", 25)
+        .attr("y", 7)
         .style("fill", "#000")
         .attr("font-size", 16);
 
+    //TODO ? tiptext
     tipText.append("tspan")
         .attr("x", 10)
         .attr("y", "1.4em")
         .html(function(d) {
-            return "Clonotype: " + d.clonotypeName;
+            return "Clonotype: " + d["Cdr3nt"];
+        });
+
+    tipText.append("tspan")
+        .attr("x", 10)
+        .attr("y", "2.8em")
+        .html(function(d) {
+            return "Cdr3aa: " + d["Cdr3aa"];
         });
 
     tipText.append("tspan")
         .data(clonotypes)
         .attr("x", 10)
+        .attr("y", "4.2em")
+        .html(function(d) {
+            return "Length: " + d["Cdr3nt"].length;
+        });
+
+    tipText.append("tspan")
+        .data(clonotypes)
+        .attr("x", 10)
+        .attr("y", "5.6em")
+        .html(function(d) {
+            return "V  : " + d["v"];
+        });
+
+    tipText.append("tspan")
+        .data(clonotypes)
+        .attr("x", 10)
+        .attr("y", "7em")
+        .html(function(d) {
+            return "J  : " + d["j"];
+        });
+
+
+    var commonTip = chart.selectAll("commonTip")
+        .data(spectratype)
+        .enter().append("g")
+        .attr("transform", "translate(10, 10)")
+        .attr("id", function(d, i) {return "commonTip" + d["xCoordinate"];})
+        .style("opacity", 0);
+
+
+    commonTip.append("rect")
+        .attr("height", "5em")
+        .attr("width", 500)
+        .style("fill", "#DCDCDC")
+        .style("opacity", "0.5");
+
+
+
+    var commonTipText = commonTip
+        .append("text")
+        .attr("x", 10)
+        .attr("y", 7)
+        .style("fill", "#000")
+        .attr("font-size", 16);
+
+    //TODO ? tiptext
+    commonTipText.append("tspan")
+        .attr("x", 10)
+        .attr("y", "1.4em")
+        .html(function(d) {
+            return "Length:  " + d["xCoordinate"];
+        });
+    commonTipText.append("tspan")
+        .attr("x", 10)
         .attr("y", "2.8em")
         .html(function(d) {
-            return "Length: " + d.clonotypeName.length;
+            return "Freq:  " + d["yCoordinate"];
         });
 
 
@@ -236,7 +276,7 @@ function renderHistogram(histogramData) {
         .enter().append("g")
         .attr("class", "clonotype")
         .on("mouseover", function(d,i) {
-            $("#" + i).animate({
+            $("#tip" + i).animate({
                 opacity: 1
             }, 150, function() {
                 // Animation complete.
@@ -244,7 +284,7 @@ function renderHistogram(histogramData) {
 
         })
         .on("mouseout", function(d,i) {
-            $("#" + i).animate({
+            $("#tip" + i).animate({
                 opacity: 0
             }, 150, function() {
                 // Animation complete.
@@ -256,14 +296,13 @@ function renderHistogram(histogramData) {
         })
         .style("cursor", "pointer")
         .attr("transform", function(d, i) {
-            var bar = findBarHeight(d.xCoordinate);
-            bar.h += d.yCoordinate;
-            return "translate(" + d.xCoordinate * 15 + "," + (maxHeight - bar.h * heightMultiplier)  +")";
+            barsHeight[d["xCoordinate"]] += parseFloat(d["yCoordinate"]);
+            return "translate(" + d["xCoordinate"] * barWidth + "," + (maxHeight - barsHeight[d["xCoordinate"]] * heightMultiplier)  +")";
         });
 
 
     clonotypeBar.append("rect")
-        .attr("height", function(d) {return d.yCoordinate * heightMultiplier;})
+        .attr("height", function(d) {return d["yCoordinate"] * heightMultiplier;})
         .attr("width", barWidth - 1)
         .style("fill", function(d, i) { return colors[i] });
 
@@ -271,17 +310,6 @@ function renderHistogram(histogramData) {
         .attr("class", "x axis")
         .attr("transform", "translate(0," + maxHeight + ")")
         .call(xAxis);
-
-
-
-    function findBarHeight(x) {
-        for (var i = 0; i < barsHeight.length; i++) {
-            if (barsHeight[i].x == x) {
-                return barsHeight[i];
-            }
-        }
-        return null;
-    }
 }
 
 

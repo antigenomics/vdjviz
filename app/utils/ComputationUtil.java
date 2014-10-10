@@ -122,37 +122,33 @@ public class ComputationUtil {
          */
 
         List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
-
-        /**
-         * HistogramData class contains the coordinates
-         * of histogram's columns
-         */
-
-        class HistogramData {
-            public Integer xCoordinate;
-            public Double yCoordinate;
-            public Boolean clonotype;
-            public String clonotypeName;
-            public HistogramData(Integer xCoordinate, Double yCoordinate, Boolean clonotype, String clonotypeName) {
-                this.xCoordinate = xCoordinate;
-                this.yCoordinate = yCoordinate;
-                this.clonotype = clonotype;
-                this.clonotypeName = clonotypeName;
-            }
-        }
+        HashMap<String, List<HashMap<String, String>>> data = new HashMap<>();
+        List<HashMap<String, String>> histogramCommonData = new ArrayList<>();
+        List<HashMap<String, String>> clonotypesData = new ArrayList<>();
 
         /**
          * Initializing HistogramData list
          */
 
-        ArrayList<HistogramData> histogramData = new ArrayList<>();
         int[] x_coordinates = sp.getLengths();
         double[] y_coordinates = sp.getHistogram();
         for (int i = 0; i < x_coordinates.length; i++) {
-            histogramData.add(new HistogramData(x_coordinates[i], y_coordinates[i], false, ""));
+            HashMap<String, String> histogramCommonDataNode = new HashMap<>();
+
+            histogramCommonDataNode.put("xCoordinate", String.valueOf(x_coordinates[i]));
+            histogramCommonDataNode.put("yCoordinate", String.valueOf(y_coordinates[i]));
+            histogramCommonData.add(histogramCommonDataNode);
+
         }
         for (Clonotype topclone: topclones) {
-            histogramData.add(new HistogramData(topclone.getCdr3nt().length(), topclone.getFreq(), true, topclone.getCdr3nt()));
+            HashMap<String, String> histogramClonotypeDataNode = new HashMap<>();
+            histogramClonotypeDataNode.put("xCoordinate", String.valueOf(topclone.getCdr3nt().length()));
+            histogramClonotypeDataNode.put("yCoordinate", String.valueOf(topclone.getFreq()));
+            histogramClonotypeDataNode.put("Cdr3nt", topclone.getCdr3nt());
+            histogramClonotypeDataNode.put("Cdr3aa", topclone.getCdr3aa());
+            histogramClonotypeDataNode.put("v", topclone.getV());
+            histogramClonotypeDataNode.put("j", topclone.getJ());
+            clonotypesData.add(histogramClonotypeDataNode);
         }
 
         /**
@@ -160,10 +156,11 @@ public class ComputationUtil {
          * The greatest clonotypes will be higher
          */
 
-        Collections.sort(histogramData, new Comparator<HistogramData>() {
-            public int compare(HistogramData c1, HistogramData c2) {
-                if (c1.yCoordinate > c2.yCoordinate) return 1;
-                if (c1.yCoordinate < c2.yCoordinate) return -1;
+
+        Collections.sort(clonotypesData, new Comparator<HashMap<String, String>>() {
+            public int compare(HashMap<String, String> c1, HashMap<String, String> c2) {
+                if (Double.parseDouble(c1.get("yCoordinate")) < Double.parseDouble(c2.get("yCoordinate"))) return -1;
+                if (Double.parseDouble(c1.get("yCoordinate")) > Double.parseDouble(c2.get("yCoordinate"))) return 1;
                 return 0;
             }
         });
@@ -172,10 +169,13 @@ public class ComputationUtil {
          * Creating cache files
          */
 
+        data.put("common", histogramCommonData);
+        data.put("clonotypes", clonotypesData);
+
         File histogramJsonFile = new File(file.fileDirPath + "/histogram.cache");
         try {
             PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
-            JsonNode jsonData = Json.toJson(histogramData);
+            JsonNode jsonData = Json.toJson(data);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
             file.histogramData = true;
@@ -207,8 +207,13 @@ public class ComputationUtil {
             headerNode.put(String.valueOf(i + 2), header[i]);
         }
 
-        List<HashMap<String, String>> data = new ArrayList<>();
-        data.add(headerNode);
+        HashMap<String, List<HashMap<String, String>>> data = new HashMap<>();
+        List<HashMap<String , String>> headerJsonData = new ArrayList<>();
+        headerJsonData.add(headerNode);
+        data.put("header", headerJsonData);
+
+
+        List<HashMap<String, String>> annotationData = new ArrayList<>();
         try {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
@@ -216,21 +221,22 @@ public class ComputationUtil {
                 if (entry.getValue() == 0) {
                     continue;
                 }
-
                 HashMap<String, String> dataNode = new HashMap<>();
                 dataNode.put("Frequency", entry.getValue().toString());
                 dataNode.put("Name", entry.getKey());
                 for (int i = 0; i < header.length - 1; i++) {
                     dataNode.put(header[i + 1], cdrDatabase.getAnnotationEntries(entry.getKey()).get(0)[i]);
                 }
-                data.add(dataNode);
+                annotationData.add(dataNode);
             }
+            data.put("data", annotationData);
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
             file.annotationData = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public static void BasicStats(Sample sample, UserFile file) {

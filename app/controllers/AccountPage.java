@@ -312,7 +312,6 @@ public class AccountPage extends Controller {
         return ok(fileupdate.render(Form.form(UserFile.class).fill(file), account, fileName));
     }
 
-    //TODO
     public static Result fileUpdate(String fileName) {
 
         /**
@@ -391,11 +390,4 @@ public class AccountPage extends Controller {
         return redirect(routes.AccountPage.index());
     }
 
-    public static Result test() {
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-        List<UserFile> all = UserFile.findByAccount(account);
-        return ok(String.valueOf(all));
-    }
 }
