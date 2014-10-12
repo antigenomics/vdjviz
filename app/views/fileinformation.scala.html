@@ -3,9 +3,9 @@
 @main("Account") {
     <script src="@routes.Assets.at("javascripts/d3/d3.min.js")"></script>
     <script src="@routes.Assets.at("javascripts/render.js")"></script>
-    <script src="@routes.Assets.at("javascripts/dataTable/jquery.dataTables.js")"></script>
-    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/jquery.dataTables.css")" rel="stylesheet" media="screen">
-    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/jquery.dataTables_themeroller.css")" rel="stylesheet" media="screen">
+    <script src="@routes.Assets.at("javascripts/dataTable/jquery.dataTables.min.js")"></script>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/jquery.dataTables.min.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/jquery.dataTables_themeroller.css")" >
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2">
@@ -39,7 +39,7 @@
 
             <div class="span10">
                 <div class="btn-group btn-group-justified">
-                    <a href="#vdjusage" class="btn btn-default" onclick="TableData('@routes.Computation.returnVdjUsageData(file.fileName)')">V-J Usage</a>
+                    <a href="#vdjusage" class="btn btn-default" onclick="VJUsage('@routes.Computation.returnVdjUsageData(file.fileName)')">V-J Usage</a>
                     <a href="#spectrotype" class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file.fileName)')">Spectrotype</a>
                     <a href="#annotation" class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file.fileName)')">Annotations</a>
                     <a href="#basicStats" class="btn btn-default" onclick="BasicStatsTable('@routes.Computation.returnBasicStats()')">BasicStats</a>

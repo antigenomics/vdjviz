@@ -10,16 +10,9 @@ import com.antigenomics.vdjtools.db.SampleAnnotation;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
-import com.avaje.ebeaninternal.server.lib.util.NotFoundException;
 import com.fasterxml.jackson.databind.JsonNode;
-import models.Account;
-import models.LocalUser;
 import models.UserFile;
-import play.Logger;
 import play.libs.Json;
-import play.mvc.Result;
-import securesocial.core.Identity;
-import securesocial.core.java.SecureSocial;
 
 import java.io.File;
 import java.io.PrintWriter;

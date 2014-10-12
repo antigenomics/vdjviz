@@ -10,7 +10,7 @@ public class CommonUtil {
 
         public static String generateRandomString(int length, Mode mode) throws Exception {
 
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             String characters = "";
 
             switch (mode) {

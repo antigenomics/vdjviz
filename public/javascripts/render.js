@@ -6,7 +6,7 @@ function HistogramData(url) {
     });
 }
 
-function TableData(url) {
+function VJUsage(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
     var vdjUsageData = [];
@@ -16,7 +16,7 @@ function TableData(url) {
             vdjUsageData.push(item);
 
         });
-    renderTable(vdjUsageData);
+    renderVJUsage(vdjUsageData);
     });
 }
 
@@ -82,7 +82,7 @@ function renderAnnotationTable(data, header) {
 
 function renderHistogram(histogramData) {
     var width = $(window).width() - 500,
-        barWidth = 15,
+        barWidth = 20,
         maxHeight = 600,
         heightMultiplier = 1500;
 
@@ -101,9 +101,12 @@ function renderHistogram(histogramData) {
         .attr("class", "svg")
         .style("overflow", "visible");
 
+    var xStart = histogramData["xAxis"][0]["start"];
+    var xEnd = histogramData["xAxis"][0]["end"];
+
     var x = d3.scale.linear()
-        .domain([histogramData["xAxis"][0]["start"], histogramData["xAxis"][0]["end"]])
-        .range([histogramData['xAxis'][0]["start"] * barWidth, histogramData["xAxis"][0]["end"] * barWidth]);
+        .domain([xStart, xEnd])
+        .range([0, (xEnd - xStart) * barWidth]);
 
     var xAxis = d3.svg.axis().scale(x)
         .orient("bottom").ticks(20);
@@ -119,20 +122,14 @@ function renderHistogram(histogramData) {
         .on("mouseover", function(d,i) {
             $("#commonTip" + d["xCoordinate"]).animate({
                 opacity: 1
-            }, 150, function() {
-                // Animation complete.
-            });
-
+            }, 150);
         })
         .on("mouseout", function(d,i) {
             $("#commonTip" + d["xCoordinate"]).animate({
                 opacity: 0
-            }, 150, function() {
-                // Animation complete.
-            });
-
+            }, 150);
         })
-        .attr("transform", function(d, i) { return "translate(" + d["xCoordinate"] * barWidth + "," + (maxHeight - d["yCoordinate"] * heightMultiplier)  +")"; });
+        .attr("transform", function(d, i) { return "translate(" + (d["xCoordinate"] - xStart) * barWidth + "," + (maxHeight - d["yCoordinate"] * heightMultiplier)  +")"; });
 
 
     bar.append("rect")
@@ -257,18 +254,12 @@ function renderHistogram(histogramData) {
         .on("mouseover", function(d,i) {
             $("#tip" + i).animate({
                 opacity: 1
-            }, 150, function() {
-                // Animation complete.
             });
-
         })
         .on("mouseout", function(d,i) {
             $("#tip" + i).animate({
                 opacity: 0
-            }, 150, function() {
-                // Animation complete.
             });
-
         })
         .attr("id", function(d, i) {
             return i;
@@ -276,7 +267,7 @@ function renderHistogram(histogramData) {
         .style("cursor", "pointer")
         .attr("transform", function(d, i) {
             barsHeight[d["xCoordinate"]] += parseFloat(d["yCoordinate"]);
-            return "translate(" + d["xCoordinate"] * barWidth + "," + (maxHeight - barsHeight[d["xCoordinate"]] * heightMultiplier)  +")";
+            return "translate(" + (d["xCoordinate"] - xStart) * barWidth + "," + (maxHeight - barsHeight[d["xCoordinate"]] * heightMultiplier)  +")";
         });
 
 
@@ -292,7 +283,7 @@ function renderHistogram(histogramData) {
 }
 
 
-function renderTable(vdjUsageData) {
+function renderVJUsage(vdjUsageData) {
     var width = $(window).width() - 500, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
 
     var svg = d3.select("vis-body")
