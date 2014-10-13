@@ -7,3 +7,46 @@
     stroke: #000;
     shape-rendering: crispEdges;
 }
+
+.fileNameInput .regex-error {
+    visibility: hidden;
+}
+
+.error-label {
+    height: auto;
+    width: auto;
+    left: 20px;
+    position: relative;
+}
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+    width: 100px;
+    height: auto;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+
+.softwareTypeNameInput {
+    top:20px;
+    position: relative;
+}
+
+.buttonsInput {
+    top:20px;
+    position: relative;
+}

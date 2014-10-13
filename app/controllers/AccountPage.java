@@ -123,6 +123,13 @@ public class AccountPage extends Controller {
             fileName = boundForm.get().fileName;
         }
 
+        String pattern = "^[a-zA-z0-9]{1,20}$";
+        if (!fileName.matches(pattern)) {
+            flash("error","Invalid name, you should use only letters and numbers");
+            return ok(addfile.render(fileForm, account));
+        }
+
+
         List<UserFile> allFiles = UserFile.findByAccount(account);
         for (UserFile userFile: allFiles) {
             if (userFile.fileName.equals(fileName)) {

@@ -1,4 +1,5 @@
 @(fileForm: Form[UserFile], account: Account)
+@import helper.twitterBootstrap._
 @navbar(account.userName)
 @main("Add new file") {
     <style>
@@ -7,19 +8,51 @@
             position:absolute;
         }
     </style>
-    <h1>User File Form</h1>
+    <h1>Upload new file</h1>
+
     @helper.form(action = routes.AccountPage.saveNewFile(),
         'enctype -> "multipart/form-data") {
         <fieldset>
             <legend>File</legend>
-            @helper.inputText(fileForm("fileName"), '_label -> "File Name")
-            @helper.inputFile(fileForm("file"), '_label -> "File")
-            @helper.select(fileForm("softwareTypeName"), options =
-                    Seq("mitcr" -> "MiTcr", "migec" -> "MiGec",
-                        "simple" -> "Simple", "igblast" -> "IgBlast",
-                        "cdrblast" -> "CdrBlast"), '_label -> "Type")
+            <div class="fileNameInput">
+                <div class="container">
+                    <div class="span2">
+                        @helper.inputText(fileForm("fileName"), '_label -> "File Name", '_class -> "fileName")
+                    </div>
+                    <div class="span2">
+                        <div class="regex-error">
+                            <div class="alert alert-info error-label">
+                                You should use only letters and numbers
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fileInput">
+                <div class="container">
+                    <div class="span2">
+                        @helper.inputFile(fileForm("file"), '_label -> "Browse")
+                    </div>
+                </div>
+            </div>
+            <div class="softwareTypeNameInput">
+                <div class="container">
+                    <div class="span2">
+                        @helper.select(fileForm("softwareTypeName"), options =
+                            Seq("mitcr" -> "MiTcr", "migec" -> "MiGec",
+                                "simple" -> "Simple", "igblast" -> "IgBlast",
+                                "cdrblast" -> "CdrBlast"), '_label -> "Type", '_showConstraints -> false)
+                    </div>
+                </div>
+            </div>
         </fieldset>
-        <input type="submit" class="btn btn-primary" value="Save">
-        <a class="btn" href="@routes.AccountPage.index()">Cancel</a>
+            <div class="buttonsInput">
+                <div class="container">
+                    <div class="span2">
+                        <input type="submit" class="btn btn-primary" value="Save">
+                        <a class="btn" href="@routes.AccountPage.index()">Cancel</a>
+                    </div>
+                </div>
+            </div>
     }
 }

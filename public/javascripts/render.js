@@ -39,7 +39,7 @@ function BasicStatsTable(url) {
 }
 
 function renderBasicStatsTable(data, header) {
-    var svg = d3.select("vis-body")
+    var svg = d3.select(".visualisation")
         .append("div")
         .attr("class", "svg");
     var table = svg
@@ -60,7 +60,7 @@ function renderBasicStatsTable(data, header) {
 }
 
 function renderAnnotationTable(data, header) {
-    var svg = d3.select("vis-body")
+    var svg = d3.select(".visualisation")
         .append("div")
         .attr("class", "svg");
 
@@ -82,7 +82,7 @@ function renderAnnotationTable(data, header) {
 
 function renderHistogram(histogramData) {
     var width = $(window).width() - 500,
-        barWidth = 20,
+        barWidth = 18,
         maxHeight = 600,
         heightMultiplier = 1500;
 
@@ -96,10 +96,13 @@ function renderHistogram(histogramData) {
         barsHeight[spectratype[i]["xCoordinate"]] = parseFloat(spectratype[i]["yCoordinate"]);
     }
 
-    var svg = d3.select("vis-body")
+    var svg = d3.select(".visualisation")
         .append("svg")
         .attr("class", "svg")
-        .style("overflow", "visible");
+        .style("overflow", "visible")
+        .style("display", "block")
+        .style("margin-left", "auto")
+        .style("margin-right", "auto");
 
     var xStart = histogramData["xAxis"][0]["start"];
     var xEnd = histogramData["xAxis"][0]["end"];
@@ -112,7 +115,7 @@ function renderHistogram(histogramData) {
         .orient("bottom").ticks(20);
 
     var chart = d3.select("svg")
-        .attr("width", width)
+        .attr("width", (xEnd - xStart) * barWidth)
         .attr("height", maxHeight);
 
     var bar = chart.selectAll("g")
@@ -286,7 +289,7 @@ function renderHistogram(histogramData) {
 function renderVJUsage(vdjUsageData) {
     var width = $(window).width() - 500, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};
 
-    var svg = d3.select("vis-body")
+    var svg = d3.select(".visualisation")
         .append("svg").attr('width', width).attr('height', (height + margin.b + margin.t))
         .append("g").attr("transform", "translate(" + margin.l + "," + margin.t + ")");
 
