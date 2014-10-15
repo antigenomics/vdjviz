@@ -1,0 +1,60 @@
+@(account: Account, file: UserFile)
+@navbar(account.userName)
+@main("Account") {
+    <script src="@routes.Assets.at("javascripts/d3/d3.min.js")"></script>
+    <script src="@routes.Assets.at("javascripts/render.js")"></script>
+    <script src="@routes.Assets.at("javascripts/dataTable/jquery.dataTables.min.js")"></script>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/jquery.dataTables.min.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/jquery.dataTables_themeroller.css")" >
+    <div class="account-page-main">
+        <div class="account-files-list">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Your Files</h3>
+                </div>
+            </div>
+            <ul class="nav nav-pills nav-stacked">
+                @if(account.userfiles.size() == 0) {
+                    <li>You have no files</li>
+                }
+                @for(item <- account.userfiles) {
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
+                        @item.fileName
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@routes.AccountPage.fileInformation(item.fileName)">Information</a></li>
+                            <li><a href="@routes.AccountPage.fileUpdatePage(item.fileName)">Update</a></li>
+                            <li><a href="@routes.AccountPage.renderFileAgain(item.fileName)">Rerender</a></li>
+                            <li class="divider"></li>
+                            <li><a href="@routes.AccountPage.deleteFile(item.fileName)">Delete</a></li>
+                        </ul>
+                    </li>
+                }
+                <hr>
+                <li><a href="@routes.AccountPage.newFile()">Add</a></li>
+            </ul>
+        </div>
+        <script>
+        AnnotationTable('@routes.Computation.returnAnnotationData(file.fileName)');
+        HistogramData('@routes.Computation.returnSpectrotypeHistogram(file.fileName)');
+        VJUsage('@routes.Computation.returnVdjUsageData(file.fileName)');
+
+        </script>
+        <div class="account-page-visualisation">
+            <div class="row-fluid">
+                <div class="span6 vdjusage">
+
+                </div>
+                <div class="span6 histogram">
+
+                </div>
+            </div>
+            <div class="row-fluid">
+                <div class="span12 annotation-table">
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
