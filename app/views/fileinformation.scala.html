@@ -1,0 +1,58 @@
+@(account: Account, file: UserFile)
+@navbar(account.userName)
+@main("Account") {
+    <script src="@routes.Assets.at("javascripts/d3/d3.min.js")"></script>
+    <script src="@routes.Assets.at("javascripts/render.js")"></script>
+    <script src="@routes.Assets.at("javascripts/dataTable/media/js/jquery.dataTables.min.js")"></script>
+    <script src="@routes.Assets.at("javascripts/dataTable/media/js/dataTables.bootstrap.js")"></script>
+    <script src="@routes.Assets.at("javascripts/dataTable/extensions/TableTools/js/dataTables.tableTools.min.js")"></script>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("javascripts/dataTable/extensions/TableTools/css/dataTables.tableTools.min.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("javascripts/dataTable/media/css/jquery.dataTables.min.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("javascripts/dataTable/media/css/jquery.dataTables_themeroller.css")" >
+    <div class="container-fluid">
+        <div class="row-fluid">
+            <div class="span2">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Your Files</h3>
+                    </div>
+                </div>
+                <ul class="nav nav-pills nav-stacked">
+                    @if(account.userfiles.size() == 0) {
+                        <li>You have no files</li>
+                    }
+                    @for(item <- account.userfiles) {
+                        <li class="dropdown">
+                            <a class="dropdown-toggle disabled" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
+                            @item.fileName
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="@routes.AccountPage.fileInformation(item.fileName)">Information</a></li>
+                                <li><a href="@routes.AccountPage.fileUpdatePage(item.fileName)">Update</a></li>
+                                <li><a href="@routes.AccountPage.renderFileAgain(item.fileName)">Rerender</a></li>
+                                <li class="divider"></li>
+                                <li><a href="@routes.AccountPage.deleteFile(item.fileName)">Delete</a></li>
+                            </ul>
+                        </li>
+                    }
+                    <hr>
+                    <li><a href="@routes.AccountPage.basicStats()">Summary</li>
+                    <hr>
+                    <li><a href="@routes.AccountPage.newFile()">Add</a></li>
+                </ul>
+            </div>
+
+            <div class="span10">
+                <div class="btn-group btn-group-justified">
+                    <a href="#vdjusage" class="btn btn-default" onclick="VJUsage('@routes.Computation.returnVdjUsageData(file.fileName)')">V-J Usage</a>
+                    <a href="#spectrotype" class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file.fileName)')">Spectrotype</a>
+                    <a href="#annotation" class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file.fileName)')">Annotations</a>
+                </div>
+
+                <div class="hero-unit">
+                    <div class="visualisation" style="top:50px; position: relative; width:100%"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+}
