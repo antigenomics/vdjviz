@@ -44,7 +44,7 @@ function renderBasicStatsTable(data, header) {
         .attr("class", "svg");
     var table = svg
             .append("table")
-            .attr("id", "annotation_table")
+            .attr("id", "basicStatsTable")
             .attr("class", "table table-striped table-hover"),
         thead = table.append("thead").append("tr");
     thead.selectAll("th").data(header).enter()
@@ -53,9 +53,54 @@ function renderBasicStatsTable(data, header) {
     for (var i = 0; i < header.length; i++) {
         column.push({"data": header[i.toString()]});
     }
-    $('#annotation_table').dataTable({
+
+
+    $('#basicStatsTable').dataTable({
+        dom: 'T<"clear">lfrtip',
+        tableTools : {
+            "sSwfPath": "../assets/javascripts/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
+        },
         data: data,
-        "columns": column
+        "columnDefs": [
+            {
+                "width" : "10%",
+                "targets" : 0
+            },
+            {
+                "render": function (data, type, row) {
+                    return parseFloat(data).toExponential(2);
+                },
+                "targets": 4
+            },
+            {
+                "render": function (data, type, row) {
+                    return parseFloat(data).toExponential(2);
+                },
+                "targets": 5
+            },
+            {
+                "render": function (data, type, row) {
+                    return parseFloat(data).toFixed(2);
+                },
+                "targets": 6
+            },
+            {
+                "render": function (data, type, row) {
+                    return parseFloat(data).toFixed(2);
+                },
+                "targets": 7
+            },
+            {
+                "render": function (data, type, row) {
+                    return parseFloat(data).toExponential(2);
+                },
+                "targets": 8
+            }
+        ],
+        "columns": column,
+        'iDisplayLength': 100,
+        'order' : [[ 0, "asc" ]],
+        responsive: true
     });
 }
 
@@ -73,7 +118,20 @@ function renderAnnotationTable(data, header) {
         .append("th").html(function(d) {return d.data;});
     $('#annotation_table').dataTable({
         "data": data,
-        "columns": header
+        "columns": header,
+        'iDisplayLength': 100,
+        'order': [[ 0 , "decs"]],
+        dom: 'T<"clear">lfrtip',
+        responsive: true,
+        tableTools : {
+            "sSwfPath": "../../assets/javascripts/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
+        },
+        "columnDefs" : [
+            {
+                "width" : "10%",
+                "targets" : 0
+            }
+        ]
     });
 }
 
@@ -257,12 +315,12 @@ function renderHistogram(histogramData) {
         .on("mouseover", function(d,i) {
             $("#tip" + i).animate({
                 opacity: 1
-            });
+            }, 150);
         })
         .on("mouseout", function(d,i) {
             $("#tip" + i).animate({
                 opacity: 0
-            });
+            }, 150);
         })
         .attr("id", function(d, i) {
             return i;

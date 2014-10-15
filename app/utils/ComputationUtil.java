@@ -16,6 +16,7 @@ import play.libs.Json;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.util.*;
 
 public class ComputationUtil {
@@ -193,7 +194,7 @@ public class ComputationUtil {
          */
 
         CdrDatabase cdrDatabase = new CdrDatabase("trdb");
-        SampleAnnotation sampleAnnotation = new SampleAnnotation(sample);
+        SampleAnnotation sampleAnnotation = new SampleAnnotation(sample, false);
         HashMap<String, Double> cdrToFrequency = sampleAnnotation.getEntryFrequencies(cdrDatabase);
 
         /**
@@ -227,7 +228,8 @@ public class ComputationUtil {
                     continue;
                 }
                 HashMap<String, String> dataNode = new HashMap<>();
-                dataNode.put("Frequency", entry.getValue().toString());
+                //dataNode.put("Frequency", entry.getValue().toString());
+                dataNode.put("Frequency", String.format(Locale.US, "%.2e", entry.getValue()));
                 dataNode.put("Name", entry.getKey());
                 for (int i = 0; i < header.length - 1; i++) {
                     dataNode.put(header[i + 1], cdrDatabase.getAnnotationEntries(entry.getKey()).get(0)[i]);

@@ -50,3 +50,7 @@
     top:20px;
     position: relative;
 }
+
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+    display: block;
+}

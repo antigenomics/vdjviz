@@ -18,7 +18,7 @@
                     @if(account.userfiles != null) {
                         @for(item <- account.userfiles) {
                             <li class="dropdown">
-                                <a class="dropdown-toggle" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
+                                <a class="dropdown-toggle disabled" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
                                 @item.fileName
                                 </a>
                                 <ul class="dropdown-menu">
@@ -31,6 +31,8 @@
                             </li>
                         }
                     }
+                    <hr>
+                    <li><a href="@routes.AccountPage.basicStats()">Summary</li>
                     <hr>
                     <li><a href="@routes.AccountPage.newFile()">Add</a></li>
                 </ul>

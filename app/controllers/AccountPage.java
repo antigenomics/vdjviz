@@ -15,11 +15,8 @@ import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.CommonUtil;
 import utils.ComputationUtil;
-import views.html.account;
-import views.html.addfile;
-import views.html.fileinformation;
+import views.html.*;
 import org.apache.commons.io.FilenameUtils;
-import views.html.fileupdate;
 
 import java.io.File;
 import java.util.List;
@@ -123,7 +120,7 @@ public class AccountPage extends Controller {
             fileName = boundForm.get().fileName;
         }
 
-        String pattern = "^[a-zA-z0-9]{1,20}$";
+        String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
         if (!fileName.matches(pattern)) {
             flash("error","Invalid name, you should use only letters and numbers");
             return ok(addfile.render(fileForm, account));
@@ -412,10 +409,23 @@ public class AccountPage extends Controller {
          * redirect to the account page
          */
 
-        if (account !=null && account.userfiles.contains(file)) {
+        if (account !=null && file!=null && account.userfiles.contains(file)) {
             ComputationUtil.createSampleCache(file);
+        } else {
+            flash("error", "You have no file named " + fileName);
         }
         return redirect(routes.AccountPage.index());
     }
 
+    public static Result basicStats() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        if (account!=null) {
+            return ok(basicStats.render(account));
+        } else {
+            return redirect(routes.Application.index());
+        }
+    }
 }

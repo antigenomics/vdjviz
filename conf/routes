@@ -27,7 +27,8 @@ GET         /account/:fileName/table             controllers.Computation.returnV
 GET         /account/:fileName/histogram         controllers.Computation.returnSpectrotypeHistogram(fileName: String)
 GET         /account/:fileName/annotation        controllers.Computation.returnAnnotationData(fileName: String)
 GET         /account/:fileName/render            controllers.AccountPage.renderFileAgain(fileName: String)
-GET         /account/basicStats                  controllers.Computation.returnBasicStats()
+GET         /account/getBasicStats               controllers.Computation.returnBasicStats()
+GET         /account/basicStats                  controllers.AccountPage.basicStats()
 
 
 
