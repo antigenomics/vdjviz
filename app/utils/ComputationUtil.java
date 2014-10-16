@@ -7,6 +7,9 @@ import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.db.CdrDatabase;
 import com.antigenomics.vdjtools.db.SampleAnnotation;
+import com.antigenomics.vdjtools.diversity.Diversity;
+import com.antigenomics.vdjtools.diversity.DiversityEstimator;
+import com.antigenomics.vdjtools.diversity.DownSampler;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
@@ -21,7 +24,7 @@ import java.util.*;
 
 public class ComputationUtil {
 
-    public static void vdjUsageData(SampleCollection sampleCollection, UserFile file) {
+    public static Boolean vdjUsageData(SampleCollection sampleCollection, UserFile file) {
 
         /**
          * SegmentUsage creating
@@ -95,15 +98,16 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(opt_data);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
-            file.vdjUsageData = true;
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
 
 
-    public static void spectrotypeHistogram(Sample sample, UserFile file) {
+    public static Boolean spectrotypeHistogramOld(Sample sample, UserFile file) {
 
         /**
          * Getting the spectratype
@@ -181,13 +185,90 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(data);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
-            file.histogramData = true;
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
-    public static void AnnotationData(Sample sample, UserFile file) {
+
+    public static Boolean spectrotypeHistogram(Sample sample, UserFile file) {
+
+        /**
+         * Getting the spectratype
+         */
+        Spectratype sp = new Spectratype(false, false);
+
+        /**
+         * Getting the list of clonotypes
+         * Default top 10
+         */
+
+        List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
+
+        /**
+         * Initializing HistogramData list
+         */
+
+        int[] x_coordinates = sp.getLengths();
+        double[] y_coordinates = sp.getHistogram();
+        int x_min = x_coordinates[0];
+        int x_max = x_coordinates[x_coordinates.length - 1];
+
+        List<HashMap<String, Object>> histogramData = new ArrayList<>();
+        List<HashMap<String, Object>> commonData = new ArrayList<>();
+        for (int i = 0; i < x_coordinates.length; i++) {
+            HashMap<String, Object> commonDataItem = new HashMap<>();
+            commonDataItem.put("x", x_coordinates[i]);
+            commonDataItem.put("y", y_coordinates[i]);
+            commonData.add(commonDataItem);
+        }
+        HashMap<String, Object> commonDataNode = new HashMap<>();
+        commonDataNode.put("values", commonData);
+        commonDataNode.put("key", "Common");
+        histogramData.add(commonDataNode);
+
+        int count = 1;
+        for (Clonotype topclone: topclones) {
+            HashMap<String, Object> topCloneNode = new HashMap<>();
+            List<HashMap<String, Object>> topCloneData = new ArrayList<>();
+            int top_clone_x = topclone.getCdr3nt().length();
+            for (int i = x_min; i <= x_max; i++) {
+                HashMap<String, Object> simpleNode = new HashMap<>();
+                if (i != top_clone_x) {
+                    simpleNode.put("x", i);
+                    simpleNode.put("y", 0);
+                } else {
+                    simpleNode.put("x", top_clone_x);
+                    simpleNode.put("y", topclone.getFreq());
+                }
+                topCloneData.add(simpleNode);
+            }
+            topCloneNode.put("values", topCloneData);
+            topCloneNode.put("key", count++);
+            topCloneNode.put("name", topclone.getCdr3nt());
+            topCloneNode.put("v", topclone.getV());
+            topCloneNode.put("j", topclone.getJ());
+            topCloneNode.put("cdr3aa", topclone.getCdr3aa());
+            histogramData.add(topCloneNode);
+
+        }
+
+        File histogramJsonFile = new File(file.fileDirPath + "/histogram.cache");
+        try {
+            PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
+            JsonNode jsonData = Json.toJson(histogramData);
+            jsonWriter.write(Json.stringify(jsonData));
+            jsonWriter.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static Boolean AnnotationData(Sample sample, UserFile file) {
 
         /**
          * Getting CdrDatabase
@@ -239,14 +320,15 @@ public class ComputationUtil {
             data.put("data", annotationData);
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
-            file.annotationData = true;
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
 
     }
 
-    public static void BasicStats(Sample sample, UserFile file) {
+    public static Boolean BasicStats(Sample sample, UserFile file) {
         BasicStats basicStats = new BasicStats(sample);
         String[] header =  BasicStats.getHEADER().split("\t");
         List<HashMap<String, String>> basicStatsList = new ArrayList<>();
@@ -262,12 +344,45 @@ public class ComputationUtil {
             File annotationCacheFile = new File(file.fileDirPath + "/basicStats.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
             fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
-            file.BasicStats = true;
             fileWriter.close();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
 
+    }
+
+    public static Boolean diversityCache(Sample sample, UserFile file) {
+        DiversityEstimator diversityEstimator = new DiversityEstimator(sample);
+        DownSampler downSampler = diversityEstimator.getDownSampler();
+        HashMap<String, Object> diversity = new HashMap<>();
+        List<HashMap<String, Integer>> values = new ArrayList<>();
+
+        Integer step = Math.round(sample.getCount() / 100);
+
+        for (Integer i = 0; i < sample.getCount(); i += step) {
+            HashMap<String, Integer> coordinates = new HashMap<>();
+            coordinates.put("x", i);
+            coordinates.put("y", downSampler.reSample(i).getDiversityCDR3AA());
+            values.add(coordinates);
+        }
+        HashMap<String, Integer> coorCount = new HashMap<>();
+        coorCount.put("x", (int) sample.getCount());
+        coorCount.put("y", downSampler.reSample((int) sample.getCount()).getDiversityCDR3AA());
+        values.add(coorCount);
+        diversity.put("values", values);
+        diversity.put("key", file.fileName);
+        try {
+            File annotationCacheFile = new File(file.fileDirPath + "/diversity.cache");
+            PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
+            fileWriter.write(Json.stringify(Json.toJson(diversity)));
+            fileWriter.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static void createSampleCache(UserFile file) {
@@ -287,10 +402,15 @@ public class ComputationUtil {
          */
 
         try {
-            AnnotationData(sample, file);
-            spectrotypeHistogram(sample, file);
-            vdjUsageData(sampleCollection, file);
-            BasicStats(sample, file);
+            if (
+            AnnotationData(sample, file)
+                && spectrotypeHistogram(sample, file)
+                && vdjUsageData(sampleCollection, file)
+                && BasicStats(sample, file)
+                && diversityCache(sample, file)
+            ) {
+                file.rendered = true;
+            }
             Ebean.update(file);
         } catch (Exception e) {
             e.printStackTrace();

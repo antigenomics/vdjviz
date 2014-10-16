@@ -8,13 +8,17 @@
             </div>
 
             <div class="span10">
-                <script>
-                BasicStatsTable('@routes.Computation.returnBasicStats()');
-                </script>
                 <div class="hero-unit">
-                    <div class="visualisation" style="top:50px; position: relative; width:100%"></div>
+                    <div class="visualisation" style="top:50px; position: relative; width:100%">
+                        <div id="chart">
+                            <svg height="400px" width="100%"></svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+    renderDiversityData('@routes.Computation.returnDiversity()');
+    </script>
 }

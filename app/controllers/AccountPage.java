@@ -248,6 +248,7 @@ public class AccountPage extends Controller {
         File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
         File annotation = new File(fileDirectoryName + "/annotation.cache");
         File basicStats = new File(fileDirectoryName + "/basicStats.cache");
+        File diversity = new File(fileDirectoryName + "/diversity.cache");
         File fileDir = new File(fileDirectoryName + "/");
         Boolean deleted = false;
         try {
@@ -256,6 +257,7 @@ public class AccountPage extends Controller {
             basicStats.delete();
             histogram.delete();
             vdjUsage.delete();
+            diversity.delete();
             if (fileDir.delete()) {
                 deleted = true;
             }
@@ -424,6 +426,18 @@ public class AccountPage extends Controller {
 
         if (account!=null) {
             return ok(basicStats.render(account));
+        } else {
+            return redirect(routes.Application.index());
+        }
+    }
+
+    public static Result diversityPage() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        if (account!=null) {
+            return ok(diversity.render(account));
         } else {
             return redirect(routes.Application.index());
         }

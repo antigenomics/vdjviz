@@ -1,8 +1,82 @@
+function renderDiversityData(url) {
+    $.getJSON(url, function(data) {
+        nv.addGraph(function() {
+            var chart = nv.models.lineChart()
+                    .margin({left: 100})
+                    .useInteractiveGuideline(true)
+                    .transitionDuration(350)
+                    .showLegend(true)
+                    .showYAxis(true)
+                    .showXAxis(true)
+                    .height(700)
+                ;
+
+            chart.xAxis
+                .axisLabel('Count')
+                .tickFormat(d3.format(',r'));
+
+            chart.yAxis
+                .axisLabel('CDR3AA')
+                .tickFormat(d3.format('.02f'));
+
+            d3.select('#chart svg')
+                .datum(data)
+                .call(chart);
+
+            nv.utils.windowResize(function() { chart.update() });
+            return chart;
+        });
+    });
+}
+
 function HistogramData(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
     $.getJSON(url, function(data){
-        renderHistogram(data);
+        nv.addGraph(function() {
+            var svg = d3.select(".visualisation")
+                .append("div")
+                .attr("id", "chart")
+                .append("svg");
+
+            var chart = nv.models.multiBarChart()
+                    .transitionDuration(350)
+                    .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+                    .rotateLabels(0)      //Angle to rotate x-axis labels.
+                    .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .showLegend(true)
+                    .groupSpacing(0.1)    //Distance between each group of bars.
+                    .height(700)
+                    .tooltip(function(key, x, y, e, graph) {
+                        if (key != "Common") {
+                            return '<h3>' + e.series.name + '</h3>' +
+                                '<p>Length : ' + x + '</p>' +
+                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
+                                '<p>CDR3AA : ' + e.series.cdr3aa + '</p>' +
+                                '<p>V : ' + e.series.v + '</p>' +
+                                '<p>J : ' + e.series.j + '</p>';
+                        } else {
+                            return '<h3>Common</h3>' +
+                                '<p>Length : ' + x + '</p>' +
+                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
+                        }
+                })
+                ;
+
+            chart.xAxis
+                .tickFormat(d3.format(',f'));
+
+            chart.yAxis
+                .tickFormat(d3.format(',.2e'));
+
+            d3.select('#chart svg')
+                .datum(data)
+                .call(chart);
+
+            nv.utils.windowResize(chart.update);
+
+            return chart;
+        });
     });
 }
 
@@ -134,215 +208,6 @@ function renderAnnotationTable(data, header) {
         ]
     });
 }
-
-
-
-
-function renderHistogram(histogramData) {
-    var width = $(window).width() - 500,
-        barWidth = 18,
-        maxHeight = 600,
-        heightMultiplier = 1500;
-
-    var colors = d3.scale.category20().range();
-
-    var spectratype = histogramData["common"];
-    var clonotypes = histogramData["clonotypes"];
-    var barsHeight = [];
-
-    for (var i = 0; i < spectratype.length; i++) {
-        barsHeight[spectratype[i]["xCoordinate"]] = parseFloat(spectratype[i]["yCoordinate"]);
-    }
-
-    var svg = d3.select(".visualisation")
-        .append("svg")
-        .attr("class", "svg")
-        .style("overflow", "visible")
-        .style("display", "block")
-        .style("margin-left", "auto")
-        .style("margin-right", "auto");
-
-    var xStart = histogramData["xAxis"][0]["start"];
-    var xEnd = histogramData["xAxis"][0]["end"];
-
-    var x = d3.scale.linear()
-        .domain([xStart, xEnd])
-        .range([0, (xEnd - xStart) * barWidth]);
-
-    var xAxis = d3.svg.axis().scale(x)
-        .orient("bottom").ticks(20);
-
-    var chart = d3.select("svg")
-        .attr("width", (xEnd - xStart) * barWidth)
-        .attr("height", maxHeight);
-
-    var bar = chart.selectAll("g")
-        .data(spectratype)
-        .enter().append("g")
-        .style("cursor", "pointer")
-        .on("mouseover", function(d,i) {
-            $("#commonTip" + d["xCoordinate"]).animate({
-                opacity: 1
-            }, 150);
-        })
-        .on("mouseout", function(d,i) {
-            $("#commonTip" + d["xCoordinate"]).animate({
-                opacity: 0
-            }, 150);
-        })
-        .attr("transform", function(d, i) { return "translate(" + (d["xCoordinate"] - xStart) * barWidth + "," + (maxHeight - d["yCoordinate"] * heightMultiplier)  +")"; });
-
-
-    bar.append("rect")
-        .attr("height", function(d) {return d["yCoordinate"] * heightMultiplier;})
-        .attr("width", barWidth - 1)
-        .style("fill", "#CFCFCF");
-
-    bar.append("text")
-        .attr("type", "spectratype");
-
-
-
-    var tip = chart.selectAll("tip")
-        .data(clonotypes)
-        .enter().append("g")
-        .attr("transform", "translate(10, 10)")
-        .attr("id", function(d, i) {return "tip" + i;})
-        .style("opacity", 0);
-
-
-    tip.append("rect")
-        .attr("height", "9em")
-        .attr("width", function(d) {
-            return (d["Cdr3nt"].length + 6) * 13;
-        })
-        .style("fill", function(d, i) {
-            return colors[i];
-        })
-        .style("opacity", "0.5")
-
-
-
-    var tipText = tip
-        .append("text")
-        .attr("x", 10)
-        .attr("y", 7)
-        .style("fill", "#000")
-        .attr("font-size", 16);
-
-    //TODO ? tiptext
-    tipText.append("tspan")
-        .attr("x", 10)
-        .attr("y", "1.4em")
-        .html(function(d) {
-            return "Clonotype: " + d["Cdr3nt"];
-        });
-
-    tipText.append("tspan")
-        .attr("x", 10)
-        .attr("y", "2.8em")
-        .html(function(d) {
-            return "Cdr3aa: " + d["Cdr3aa"];
-        });
-
-    tipText.append("tspan")
-        .data(clonotypes)
-        .attr("x", 10)
-        .attr("y", "4.2em")
-        .html(function(d) {
-            return "Length: " + d["Cdr3nt"].length;
-        });
-
-    tipText.append("tspan")
-        .data(clonotypes)
-        .attr("x", 10)
-        .attr("y", "5.6em")
-        .html(function(d) {
-            return "V  : " + d["v"];
-        });
-
-    tipText.append("tspan")
-        .data(clonotypes)
-        .attr("x", 10)
-        .attr("y", "7em")
-        .html(function(d) {
-            return "J  : " + d["j"];
-        });
-
-
-    var commonTip = chart.selectAll("commonTip")
-        .data(spectratype)
-        .enter().append("g")
-        .attr("transform", "translate(10, 10)")
-        .attr("id", function(d, i) {return "commonTip" + d["xCoordinate"];})
-        .style("opacity", 0);
-
-
-    commonTip.append("rect")
-        .attr("height", "5em")
-        .attr("width", 500)
-        .style("fill", "#CFCFCF")
-        .style("opacity", "0.5");
-
-
-
-    var commonTipText = commonTip
-        .append("text")
-        .attr("x", 10)
-        .attr("y", 7)
-        .style("fill", "#000")
-        .attr("font-size", 16);
-
-    //TODO ? tiptext
-    commonTipText.append("tspan")
-        .attr("x", 10)
-        .attr("y", "1.4em")
-        .html(function(d) {
-            return "Length:  " + d["xCoordinate"];
-        });
-    commonTipText.append("tspan")
-        .attr("x", 10)
-        .attr("y", "2.8em")
-        .html(function(d) {
-            return "Freq:  " + d["yCoordinate"];
-        });
-
-
-    var clonotypeBar = chart.selectAll("clonotype")
-        .data(clonotypes)
-        .enter().append("g")
-        .attr("class", "clonotype")
-        .on("mouseover", function(d,i) {
-            $("#tip" + i).animate({
-                opacity: 1
-            }, 150);
-        })
-        .on("mouseout", function(d,i) {
-            $("#tip" + i).animate({
-                opacity: 0
-            }, 150);
-        })
-        .attr("id", function(d, i) {
-            return i;
-        })
-        .style("cursor", "pointer")
-        .attr("transform", function(d, i) {
-            barsHeight[d["xCoordinate"]] += parseFloat(d["yCoordinate"]);
-            return "translate(" + (d["xCoordinate"] - xStart) * barWidth + "," + (maxHeight - barsHeight[d["xCoordinate"]] * heightMultiplier)  +")";
-        });
-
-
-    clonotypeBar.append("rect")
-        .attr("height", function(d) {return d["yCoordinate"] * heightMultiplier;})
-        .attr("width", barWidth - 1)
-        .style("fill", function(d, i) { return colors[i] });
-
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + maxHeight + ")")
-        .call(xAxis);
-}
-
 
 function renderVJUsage(vdjUsageData) {
     var width = $(window).width() - 500, height = 800, margin = {b: 0, t: 40, l: 170, r: 50};

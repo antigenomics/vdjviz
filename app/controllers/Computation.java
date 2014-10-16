@@ -56,7 +56,7 @@ public class Computation extends Controller{
          * else render SampleCache files again
          */
 
-        if (file.vdjUsageData) {
+        if (file.rendered) {
             File jsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
@@ -96,7 +96,7 @@ public class Computation extends Controller{
          * else render SampleCache files again
          */
 
-        if (file.histogramData) {
+        if (file.rendered) {
             File jsonFile = new File(file.fileDirPath + "/histogram.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
@@ -136,7 +136,7 @@ public class Computation extends Controller{
          * else render SampleCache files again
          */
 
-        if (file.annotationData) {
+        if (file.rendered) {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
             FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
             return ok(Json.parse(jsonFile));
@@ -156,12 +156,34 @@ public class Computation extends Controller{
         List<JsonNode> basicStatsAll = new ArrayList<>();
 
         for (UserFile file: localAccount.userfiles) {
-            File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
-            FileInputStream jsonFile = new FileInputStream(basicStatsCache);
-            JsonNode basicStatsNode = Json.parse(jsonFile);
-            basicStatsAll.add(basicStatsNode.get(0));
+            if (file.rendered) {
+                File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
+                FileInputStream jsonFile = new FileInputStream(basicStatsCache);
+                JsonNode basicStatsNode = Json.parse(jsonFile);
+                basicStatsAll.add(basicStatsNode.get(0));
+            }
         }
         return ok(Json.toJson(basicStatsAll));
+
+    }
+
+    @SecureSocial.SecuredAction
+    public static Result returnDiversity() throws FileNotFoundException {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+
+        List<JsonNode> diversityAll = new ArrayList<>();
+
+        for (UserFile file: localAccount.userfiles) {
+            if (file.rendered) {
+                File diversityCache = new File(file.fileDirPath + "/diversity.cache");
+                FileInputStream jsonFile = new FileInputStream(diversityCache);
+                JsonNode basicStatsNode = Json.parse(jsonFile);
+                diversityAll.add(basicStatsNode);
+            }
+        }
+        return ok(Json.toJson(diversityAll));
 
     }
 }

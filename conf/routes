@@ -29,6 +29,8 @@ GET         /account/:fileName/annotation        controllers.Computation.returnA
 GET         /account/:fileName/render            controllers.AccountPage.renderFileAgain(fileName: String)
 GET         /account/getBasicStats               controllers.Computation.returnBasicStats()
 GET         /account/basicStats                  controllers.AccountPage.basicStats()
+GET         /account/getDiversity                controllers.Computation.returnDiversity()
+GET         /account/diversity                   controllers.AccountPage.diversityPage()
 
 
 

@@ -28,10 +28,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public String softwareTypeName;
     public String filePath;
     public String fileDirPath;
-    public Boolean histogramData;
-    public Boolean vdjUsageData;
-    public Boolean annotationData;
-    public Boolean BasicStats;
+    public Boolean rendered;
 
     public UserFile() {}
 
@@ -45,10 +42,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.softwareTypeName = softwareTypeName;
         this.filePath = filePath;
         this.fileDirPath = fileDirPath;
-        this.histogramData = false;
-        this.vdjUsageData = false;
-        this.annotationData = false;
-        this.BasicStats = false;
+        this.rendered = false;
 
     }
 
