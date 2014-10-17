@@ -6,9 +6,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
+import play.Logger;
+import play.libs.Comet;
+import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Results;
+import play.mvc.WebSocket;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ComputationUtil;
@@ -17,8 +22,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Computation extends Controller{
-
+public class Computation extends Controller {
 
     @SecureSocial.SecuredAction
     public static Result returnVdjUsageData(String fileName) throws FileNotFoundException {
@@ -54,7 +58,6 @@ public class Computation extends Controller{
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
         } else {
-            ComputationUtil.createSampleCache(file);
             flash("error", "Error");
             return ok(views.html.account.accountMainPage.render(localAccount));
         }
@@ -94,7 +97,6 @@ public class Computation extends Controller{
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
         } else {
-            ComputationUtil.createSampleCache(file);
             flash("error", "Error");
             return ok(views.html.account.accountMainPage.render(localAccount));
         }
@@ -133,7 +135,6 @@ public class Computation extends Controller{
             FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
             return ok(Json.parse(jsonFile));
         } else {
-            ComputationUtil.createSampleCache(file);
             flash("error", "Error");
             return ok(views.html.account.accountMainPage.render(localAccount));
         }
@@ -147,7 +148,7 @@ public class Computation extends Controller{
 
         List<JsonNode> basicStatsAll = new ArrayList<>();
 
-        for (UserFile file: localAccount.userfiles) {
+        for (UserFile file : localAccount.userfiles) {
             if (file.rendered) {
                 File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
                 FileInputStream jsonFile = new FileInputStream(basicStatsCache);
@@ -167,7 +168,7 @@ public class Computation extends Controller{
 
         List<JsonNode> diversityAll = new ArrayList<>();
 
-        for (UserFile file: localAccount.userfiles) {
+        for (UserFile file : localAccount.userfiles) {
             if (file.rendered) {
                 File diversityCache = new File(file.fileDirPath + "/diversity.cache");
                 FileInputStream jsonFile = new FileInputStream(diversityCache);
@@ -177,5 +178,35 @@ public class Computation extends Controller{
         }
         return ok(Json.toJson(diversityAll));
 
+    }
+
+    public static WebSocket<String> computationProgressBar(String fileName) {
+        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
+        Account localAccount = localUser.account;
+        final UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
+        return new WebSocket<String>() {
+            public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
+                out.write("0%");
+                try {
+                    ComputationUtil.createSampleCache(file, out);
+                } catch (Exception e) {
+                    out.write("ComputationDone");
+                }
+                out.write("ComputationDone");
+                out.close();
+            }
+        };
+    }
+
+    @SecureSocial.SecuredAction
+    public static Result computationPage(String fileName) {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
+        if (file.rendering) {
+            return Results.redirect(routes.AccountPage.index());
+        }
+        return ok(views.html.computation.computationProgressPage.render(localAccount, fileName));
     }
 }

@@ -31,7 +31,8 @@ GET         /account/getBasicStats               controllers.Computation.returnB
 GET         /account/basicStats                  controllers.AccountPage.basicStats()
 GET         /account/getDiversity                controllers.Computation.returnDiversity()
 GET         /account/diversity                   controllers.AccountPage.diversityPage()
-
+GET         /account/:fileName/compute           controllers.Computation.computationProgressBar(fileName: String)
+GET         /account/:fileName/progress          controllers.Computation.computationPage(fileName: String)
 
 
 # Auth routes

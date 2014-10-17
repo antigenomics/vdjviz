@@ -12,7 +12,10 @@
     @for(item <- account.userfiles) {
         <li class="dropdown" @if(!item.rendered) {style="background-color: #DCDCDC"}>
             <a class="dropdown-toggle disabled" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
-            @item.fileName @if(!item.rendered) {| File did not rendered}
+            @item.fileName @if(!item.rendered) {
+                @if(item.rendering) {| File is rendering }
+                @if(!item.rendering) {| Error while rendering}
+            }
             </a>
             <ul class="dropdown-menu">
                 <li><a href="@routes.AccountPage.fileInformation(item.fileName)">Information</a></li>

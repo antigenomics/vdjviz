@@ -200,20 +200,12 @@ public class AccountPage extends Controller {
 
             account.filesCount++;
             Ebean.update(account);
-            try {
-                ComputationUtil.createSampleCache(newFile);
-            } catch (Exception e) {
-                flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
-                return Results.redirect(routes.AccountPage.index());
-            }
-            flash("success", "Successfully added");
-            Logger.of("user." + account.userName).info("User " + account.userName + " successfully uploaded new file");
+            return Results.redirect(routes.Computation.computationPage(fileName));
         } catch (Exception e) {
             flash("error", "Error while adding file");
             Logger.of("user." + account.userName).error("Error while uploading new file for user : " + account.userName);
             return Results.redirect(routes.AccountPage.index());
         }
-        return Results.redirect(routes.AccountPage.index());
     }
 
 
@@ -372,7 +364,7 @@ public class AccountPage extends Controller {
                 return Results.redirect(routes.AccountPage.index());
             }
             try {
-                ComputationUtil.createSampleCache(file);
+                return redirect(routes.Computation.computationPage(fileName));
             } catch (Exception e) {
                 e.printStackTrace();
                 flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
@@ -380,7 +372,7 @@ public class AccountPage extends Controller {
             }
         } else if (!file.softwareTypeName.equals(oldSoftwareType) || !file.fileName.equals(oldFileName)) {
             try {
-                ComputationUtil.createSampleCache(file);
+                return redirect(routes.Computation.computationPage(fileName));
             } catch (Exception e) {
                 e.printStackTrace();
                 flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
@@ -412,7 +404,7 @@ public class AccountPage extends Controller {
          */
 
         if (account !=null && file!=null && account.userfiles.contains(file)) {
-            ComputationUtil.createSampleCache(file);
+            return redirect(routes.Computation.computationPage(fileName));
         } else {
             flash("error", "You have no file named " + fileName);
         }

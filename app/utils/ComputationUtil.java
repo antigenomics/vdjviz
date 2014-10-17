@@ -14,6 +14,7 @@ import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
 
@@ -24,7 +25,7 @@ import java.util.*;
 
 public class ComputationUtil {
 
-    public static Boolean vdjUsageData(SampleCollection sampleCollection, UserFile file) {
+    public static Boolean vdjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out out) {
 
         /**
          * SegmentUsage creating
@@ -98,6 +99,7 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(opt_data);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
+            out.write("20%");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,7 +107,7 @@ public class ComputationUtil {
         }
     }
 
-    public static Boolean spectrotypeHistogram(Sample sample, UserFile file) {
+    public static Boolean spectrotypeHistogram(Sample sample, UserFile file, WebSocket.Out out) {
 
         /**
          * Getting the spectratype
@@ -173,6 +175,7 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(histogramData);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
+            out.write("40%");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -180,7 +183,7 @@ public class ComputationUtil {
         }
     }
 
-    public static Boolean AnnotationData(Sample sample, UserFile file) {
+    public static Boolean AnnotationData(Sample sample, UserFile file, WebSocket.Out out) {
 
         /**
          * Getting CdrDatabase
@@ -232,6 +235,7 @@ public class ComputationUtil {
             data.put("data", annotationData);
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
+            out.write("60%");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -240,7 +244,7 @@ public class ComputationUtil {
 
     }
 
-    public static Boolean BasicStats(Sample sample, UserFile file) {
+    public static Boolean BasicStats(Sample sample, UserFile file, WebSocket.Out out) {
         BasicStats basicStats = new BasicStats(sample);
         String[] header =  BasicStats.getHEADER().split("\t");
         List<HashMap<String, String>> basicStatsList = new ArrayList<>();
@@ -257,6 +261,7 @@ public class ComputationUtil {
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
             fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
             fileWriter.close();
+            out.write("80%");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -265,19 +270,22 @@ public class ComputationUtil {
 
     }
 
-    public static Boolean diversityCache(Sample sample, UserFile file) {
+    public static Boolean diversityCache(Sample sample, UserFile file, WebSocket.Out out) {
         DiversityEstimator diversityEstimator = new DiversityEstimator(sample);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
         List<HashMap<String, Integer>> values = new ArrayList<>();
 
         Integer step = Math.round(sample.getCount() / 100);
-
+        Double stepProgress = 0.2;
+        Double progress = 80.0;
         for (Integer i = 0; i < sample.getCount(); i += step) {
             HashMap<String, Integer> coordinates = new HashMap<>();
             coordinates.put("x", i);
             coordinates.put("y", downSampler.reSample(i).getDiversityCDR3AA());
             values.add(coordinates);
+            progress += stepProgress;
+            out.write(String.format(Locale.US, "%.2f", progress) + "%");
         }
         HashMap<String, Integer> coorCount = new HashMap<>();
         coorCount.put("x", (int) sample.getCount());
@@ -297,7 +305,7 @@ public class ComputationUtil {
         }
     }
 
-    public static void createSampleCache(UserFile file) {
+    public static void createSampleCache(UserFile file, play.mvc.WebSocket.Out out) {
 
         /**
          * Getting Sample from text file
@@ -312,19 +320,24 @@ public class ComputationUtil {
         /**
          * Creating all cache files
          */
-
+        file.rendered = false;
+        file.rendering = true;
+        Ebean.update(file);
         try {
-            if (
-            AnnotationData(sample, file)
-                && spectrotypeHistogram(sample, file)
-                && vdjUsageData(sampleCollection, file)
-                && BasicStats(sample, file)
-                && diversityCache(sample, file)
+            if (vdjUsageData(sampleCollection, file, out)
+                && AnnotationData(sample, file, out)
+                && spectrotypeHistogram(sample, file, out)
+                && BasicStats(sample, file, out)
+                && diversityCache(sample, file, out)
             ) {
+                file.rendering = false;
                 file.rendered = true;
             }
+            out.write("100%");
             Ebean.update(file);
         } catch (Exception e) {
+            file.rendering = false;
+            Ebean.update(file);
             e.printStackTrace();
         }
     }
