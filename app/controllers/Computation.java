@@ -1,25 +1,17 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Clonotype;
-import com.antigenomics.vdjtools.Software;
-import com.antigenomics.vdjtools.basic.SegmentUsage;
-import com.antigenomics.vdjtools.basic.Spectratype;
-import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
 import play.libs.Json;
-import play.libs.Json.*;
 import play.mvc.Controller;
 import play.mvc.Result;
-import play.mvc.Security;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ComputationUtil;
-import views.html.account;
 
 import java.io.*;
 import java.util.*;
@@ -64,7 +56,7 @@ public class Computation extends Controller{
         } else {
             ComputationUtil.createSampleCache(file);
             flash("error", "Error");
-            return ok(account.render(localAccount));
+            return ok(views.html.account.accountMainPage.render(localAccount));
         }
     }
 
@@ -104,7 +96,7 @@ public class Computation extends Controller{
         } else {
             ComputationUtil.createSampleCache(file);
             flash("error", "Error");
-            return ok(account.render(localAccount));
+            return ok(views.html.account.accountMainPage.render(localAccount));
         }
     }
 
@@ -143,7 +135,7 @@ public class Computation extends Controller{
         } else {
             ComputationUtil.createSampleCache(file);
             flash("error", "Error");
-            return ok(account.render(localAccount));
+            return ok(views.html.account.accountMainPage.render(localAccount));
         }
     }
 

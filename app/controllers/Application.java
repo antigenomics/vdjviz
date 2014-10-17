@@ -37,9 +37,9 @@ public class Application extends Controller {
             localUser = LocalUser.find.byId(user.identityId().userId());
         }
         if (localUser != null) {
-            return ok(contacts.render(localUser.account.userName));
+            return ok(views.html.commonPages.contacts.render(localUser.account.userName));
         } else {
-            return ok(contacts.render(null));
+            return ok(views.html.commonPages.contacts.render(null));
         }
     }
 
@@ -50,9 +50,9 @@ public class Application extends Controller {
             localUser = LocalUser.find.byId(user.identityId().userId());
         }
         if (localUser != null) {
-            return ok(about.render(localUser.account.userName));
+            return ok(views.html.commonPages.about.render(localUser.account.userName));
         } else {
-            return ok(about.render(null));
+            return ok(views.html.commonPages.about.render(null));
         }
     }
 

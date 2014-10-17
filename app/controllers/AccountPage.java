@@ -15,7 +15,6 @@ import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.CommonUtil;
 import utils.ComputationUtil;
-import views.html.*;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -33,7 +32,7 @@ public class AccountPage extends Controller {
          */
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        return ok(account.render(localUser.account));
+        return ok(views.html.account.accountMainPage.render(localUser.account));
     }
 
     private static Form<UserFile> fileForm = Form.form(UserFile.class);
@@ -54,10 +53,11 @@ public class AccountPage extends Controller {
          */
 
         if (account != null) {
-            return ok(addfile.render(fileForm, account));
+            return ok(views.html.account.addFile.render(fileForm, account));
         }
         return redirect(routes.AccountPage.index());
     }
+
 
 
     public static Result saveNewFile() {
@@ -92,7 +92,7 @@ public class AccountPage extends Controller {
         Form<UserFile> boundForm = fileForm.bindFromRequest();
         if (boundForm.hasErrors()) {
             flash("error", "Please correct the form below.");
-            return ok(addfile.render(fileForm, account));
+            return ok(views.html.account.addFile.render(fileForm, account));
         }
 
         /**
@@ -104,7 +104,7 @@ public class AccountPage extends Controller {
 
         if (file == null) {
             flash("error", "You should upload file");
-            return ok(addfile.render(fileForm, account));
+            return ok(views.html.account.addFile.render(fileForm, account));
         }
 
         /**
@@ -123,7 +123,7 @@ public class AccountPage extends Controller {
         String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
         if (!fileName.matches(pattern)) {
             flash("error","Invalid name, you should use only letters and numbers");
-            return ok(addfile.render(fileForm, account));
+            return ok(views.html.account.addFile.render(fileForm, account));
         }
 
 
@@ -131,7 +131,7 @@ public class AccountPage extends Controller {
         for (UserFile userFile: allFiles) {
             if (userFile.fileName.equals(fileName)) {
                 flash("error", "You should use unique names for your files");
-                return ok(addfile.render(fileForm, account));
+                return ok(views.html.account.addFile.render(fileForm, account));
             }
         }
 
@@ -233,7 +233,7 @@ public class AccountPage extends Controller {
         if (file == null) {
             flash("error", "You have no files named " + fileName);
             Logger.of("user." + account.userName).error("User " + account.userName +"have no file named " + fileName);
-            return ok(views.html.account.render(account));
+            return ok(views.html.account.accountMainPage.render(account));
         }
 
         /**
@@ -301,7 +301,7 @@ public class AccountPage extends Controller {
          */
 
         if (account.userfiles.contains(file)) {
-            return ok(fileinformation.render(account, file));
+            return ok(views.html.computation.fileComputationResults.render(account, file));
         } else {
             return redirect(routes.AccountPage.index());
         }
@@ -315,7 +315,7 @@ public class AccountPage extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-        return ok(fileupdate.render(Form.form(UserFile.class).fill(file), account, fileName));
+        return ok(views.html.account.fileUpdate.render(Form.form(UserFile.class).fill(file), account, fileName));
     }
 
     public static Result fileUpdate(String fileName) {
@@ -338,14 +338,14 @@ public class AccountPage extends Controller {
         if (file == null) {
             flash("error", "You have no file named " + fileName);
             Logger.of("user." + account.userName).error("Update error: User " + account.userName + " have no file named " + fileName);
-            return ok(views.html.account.render(account));
+            return ok(views.html.account.accountMainPage.render(account));
         }
 
         if (account.userfiles.contains(file)) {
             Form<UserFile> boundForm = fileForm.bindFromRequest();
             if (boundForm.hasErrors()) {
                 flash("error", "Please correct the form below.");
-                return ok(addfile.render(fileForm, account));
+                return ok(views.html.account.addFile.render(fileForm, account));
             }
 
         } else {
@@ -425,7 +425,7 @@ public class AccountPage extends Controller {
         Account account = localUser.account;
 
         if (account!=null) {
-            return ok(basicStats.render(account));
+            return ok(views.html.computation.basicStats.render(account));
         } else {
             return redirect(routes.Application.index());
         }
@@ -437,9 +437,10 @@ public class AccountPage extends Controller {
         Account account = localUser.account;
 
         if (account!=null) {
-            return ok(diversity.render(account));
+            return ok(views.html.computation.diversityStats.render(account));
         } else {
             return redirect(routes.Application.index());
         }
     }
+
 }
