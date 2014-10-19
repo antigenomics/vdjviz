@@ -1,20 +1,4 @@
 @(fileName: String)
 @main("test") {
-    <script type="text/javascript">
-    var socket = new WebSocket("ws://" + location.host + "@routes.Computation.computationProgressBar(fileName)");
-    socket.onmessage = function(event) {
-    console.log(event.data);
-    if (event.data != "ComputationDone") {
-    $ ( ".progress-bar" ).css ( "width", event.data ) ;
-    } else {
-        window.location.replace("@routes.AccountPage.index()");
-    }
-    }
-    </script>
-    <div class="test-comet">
-        <div class="progress progress-striped active">
-            <div class="progress-bar" style="width: 45%"></div>
-        </div>
-    </div>
 
 }

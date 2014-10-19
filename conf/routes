@@ -25,8 +25,8 @@ GET         /account/:fileName/delete            controllers.AccountPage.deleteF
 #Computation
 GET         /account/:fileName/table             controllers.Computation.returnVdjUsageData(fileName: String)
 GET         /account/:fileName/histogram         controllers.Computation.returnSpectrotypeHistogram(fileName: String)
+GET         /account/:fileName/histogramV         controllers.Computation.returnSpectrotypeVHistogram(fileName: String)
 GET         /account/:fileName/annotation        controllers.Computation.returnAnnotationData(fileName: String)
-GET         /account/:fileName/render            controllers.AccountPage.renderFileAgain(fileName: String)
 GET         /account/getBasicStats               controllers.Computation.returnBasicStats()
 GET         /account/basicStats                  controllers.AccountPage.basicStats()
 GET         /account/getDiversity                controllers.Computation.returnDiversity()

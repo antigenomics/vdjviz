@@ -1,6 +1,9 @@
 package controllers;
 
 
+import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.sample.Sample;
+import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
@@ -57,10 +60,8 @@ public class Computation extends Controller {
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
-        } else {
-            flash("error", "Error");
-            return ok(views.html.account.accountMainPage.render(localAccount));
         }
+        return ok();
     }
 
     @SecureSocial.SecuredAction
@@ -96,14 +97,12 @@ public class Computation extends Controller {
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);
-        } else {
-            flash("error", "Error");
-            return ok(views.html.account.accountMainPage.render(localAccount));
         }
+        return ok();
     }
 
     @SecureSocial.SecuredAction
-    public static Result returnAnnotationData(String fileName) throws FileNotFoundException {
+    public static Result returnSpectrotypeVHistogram(String fileName) throws JsonProcessingException, FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API
@@ -131,23 +130,60 @@ public class Computation extends Controller {
          */
 
         if (file.rendered) {
+            File jsonFile = new File(file.fileDirPath + "/histogramV.cache");
+            FileInputStream fis = new FileInputStream(jsonFile);
+            JsonNode jsonData = Json.parse(fis);
+            return ok(jsonData);
+        }
+        return ok();
+    }
+
+    @SecureSocial.SecuredAction
+    public static Result returnAnnotationData(String fileName) throws FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
+
+        /**
+         * Verifying access to the file
+         */
+
+        if (file != null && !localAccount.userfiles.contains(file)) {
+            return ok("You have no access to this operation");
+        }
+
+        /**
+         * Verification of the existence
+         * Histogram data cache file
+         * if exists return jsonData
+         * else render SampleCache files again
+         */
+
+        if (file != null && file.rendered) {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
             FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
             return ok(Json.parse(jsonFile));
-        } else {
-            flash("error", "Error");
-            return ok(views.html.account.accountMainPage.render(localAccount));
         }
+        return ok();
     }
 
     @SecureSocial.SecuredAction
     public static Result returnBasicStats() throws FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
-
         List<JsonNode> basicStatsAll = new ArrayList<>();
-
         for (UserFile file : localAccount.userfiles) {
             if (file.rendered) {
                 File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
@@ -165,9 +201,7 @@ public class Computation extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
-
         List<JsonNode> diversityAll = new ArrayList<>();
-
         for (UserFile file : localAccount.userfiles) {
             if (file.rendered) {
                 File diversityCache = new File(file.fileDirPath + "/diversity.cache");
@@ -190,9 +224,9 @@ public class Computation extends Controller {
                 try {
                     ComputationUtil.createSampleCache(file, out);
                 } catch (Exception e) {
-                    out.write("ComputationDone");
+                    out.write("ComputationError");
+                    e.printStackTrace();
                 }
-                out.write("ComputationDone");
                 out.close();
             }
         };

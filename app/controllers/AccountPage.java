@@ -348,11 +348,10 @@ public class AccountPage extends Controller {
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart newFile = body.getFile("file");
         Form<UserFile> boundForm = fileForm.bindFromRequest();
-        String oldFileName = file.fileName;
         file.fileName = boundForm.get().fileName;
-        String oldSoftwareType = file.softwareTypeName;
         file.softwareTypeName = boundForm.get().softwareTypeName;
         file.softwareType = Software.byName(boundForm.get().softwareTypeName);
+        file.rendered = false;
         Ebean.update(file);
         if (newFile != null) {
             File nf = new File(file.fileDirPath + "/file");
@@ -363,52 +362,10 @@ public class AccountPage extends Controller {
                 Logger.of("user." + account.userName).error("Update error: User " + account.userName + ": failed to upload new file");
                 return Results.redirect(routes.AccountPage.index());
             }
-            try {
-                return redirect(routes.Computation.computationPage(fileName));
-            } catch (Exception e) {
-                e.printStackTrace();
-                flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
-                return Results.redirect(routes.AccountPage.index());
-            }
-        } else if (!file.softwareTypeName.equals(oldSoftwareType) || !file.fileName.equals(oldFileName)) {
-            try {
-                return redirect(routes.Computation.computationPage(fileName));
-            } catch (Exception e) {
-                e.printStackTrace();
-                flash("error", "Error rendering file, maybe you had choose the wrong software type, update software type and try render again");
-                return Results.redirect(routes.AccountPage.index());
-            }
+
         }
         Logger.of("user." + account.userName).info("Update file: User " + account.userName + " succesfully updated file named " + fileName);
-        return Results.redirect(routes.AccountPage.index());
-    }
-
-    public static Result renderFileAgain(String fileName) {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-
-        /**
-         * Verifying access to the file
-         * if file belong to User render SampleCache again
-         * and update all cache files
-         * else
-         * redirect to the account page
-         */
-
-        if (account !=null && file!=null && account.userfiles.contains(file)) {
-            return redirect(routes.Computation.computationPage(fileName));
-        } else {
-            flash("error", "You have no file named " + fileName);
-        }
-        return redirect(routes.AccountPage.index());
+        return redirect(routes.Computation.computationPage(file.fileName));
     }
 
     public static Result basicStats() {
@@ -422,6 +379,7 @@ public class AccountPage extends Controller {
             return redirect(routes.Application.index());
         }
     }
+
 
     public static Result diversityPage() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);

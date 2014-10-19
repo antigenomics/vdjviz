@@ -80,6 +80,48 @@ function HistogramData(url) {
     });
 }
 
+function HistogramVData(url) {
+    d3.select("svg").remove();
+    d3.select(".svg").remove();
+    $.getJSON(url, function(data){
+        nv.addGraph(function() {
+            var svg = d3.select(".visualisation")
+                .append("div")
+                .attr("id", "chart")
+                .append("svg");
+
+            var chart = nv.models.multiBarChart()
+                    .transitionDuration(350)
+                    .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+                    .rotateLabels(0)      //Angle to rotate x-axis labels.
+                    .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .showLegend(true)
+                    .groupSpacing(0.1)    //Distance between each group of bars.
+                    .height(700)
+                    .tooltip(function(key, x, y, e, graph) {
+                            return '<h3>' + key + '</h3>' +
+                                '<p>Length : ' + x + '</p>' +
+                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
+                    })
+                ;
+
+            chart.xAxis
+                .tickFormat(d3.format(',f'));
+
+            chart.yAxis
+                .tickFormat(d3.format(',.2e'));
+
+            d3.select('#chart svg')
+                .datum(data)
+                .call(chart);
+
+            nv.utils.windowResize(chart.update);
+
+            return chart;
+        });
+    });
+}
+
 function VJUsage(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();

@@ -52,6 +52,7 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         return find().where().eq("id", id).findUnique();
     }
 
+
     public static List<UserFile> findByAccount(Account account) {
         return find().where().eq("account", account).findList();
     }

@@ -5,15 +5,19 @@ import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.BasicStats;
 import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
+import com.antigenomics.vdjtools.basic.SpectratypeV;
 import com.antigenomics.vdjtools.db.CdrDatabase;
 import com.antigenomics.vdjtools.db.SampleAnnotation;
 import com.antigenomics.vdjtools.diversity.Diversity;
 import com.antigenomics.vdjtools.diversity.DiversityEstimator;
 import com.antigenomics.vdjtools.diversity.DownSampler;
+import com.antigenomics.vdjtools.intersection.IntersectionType;
+import com.antigenomics.vdjtools.intersection.IntersectionUtil;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
@@ -175,6 +179,45 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(histogramData);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
+            out.write("30%");
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static Boolean spectrotypeVHistogram(Sample sample, UserFile file, WebSocket.Out out) {
+        //TODO
+        SpectratypeV spectratypeV = new SpectratypeV(false, false);
+        spectratypeV.addAll(sample);
+        int default_top = 12;
+        Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(default_top);
+
+        List<Object> histogramV = new ArrayList<>();
+
+        for (String key: new HashSet<String>(collapsedSpectratypes.keySet())) {
+            Spectratype spectratype = collapsedSpectratypes.get(key);
+            List<HashMap<String, Object>> valuesList = new ArrayList<>();
+            HashMap<String, Object> histogramVNode = new HashMap<>();
+            int x_coordinates[] = spectratype.getLengths();
+            double y_coordinates[] = spectratype.getHistogram();
+            for (int i = 0; i < x_coordinates.length; i++) {
+                HashMap<String, Object> valuesNode = new HashMap<>();
+                valuesNode.put("x", x_coordinates[i]);
+                valuesNode.put("y", y_coordinates[i]);
+                valuesList.add(valuesNode);
+            }
+            histogramVNode.put("values", valuesList);
+            histogramVNode.put("key", key);
+            histogramV.add(histogramVNode);
+        }
+        File histogramJsonFile = new File(file.fileDirPath + "/histogramV.cache");
+        try {
+            PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
+            JsonNode jsonData = Json.toJson(histogramV);
+            jsonWriter.write(Json.stringify(jsonData));
+            jsonWriter.close();
             out.write("40%");
             return true;
         } catch (Exception e) {
@@ -271,7 +314,7 @@ public class ComputationUtil {
     }
 
     public static Boolean diversityCache(Sample sample, UserFile file, WebSocket.Out out) {
-        DiversityEstimator diversityEstimator = new DiversityEstimator(sample);
+        DiversityEstimator diversityEstimator = new DiversityEstimator(sample, new IntersectionUtil(IntersectionType.AminoAcid));
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
         List<HashMap<String, Integer>> values = new ArrayList<>();
@@ -282,14 +325,16 @@ public class ComputationUtil {
         for (Integer i = 0; i < sample.getCount(); i += step) {
             HashMap<String, Integer> coordinates = new HashMap<>();
             coordinates.put("x", i);
-            coordinates.put("y", downSampler.reSample(i).getDiversityCDR3AA());
+            //TODO
+            coordinates.put("y", (int) downSampler.reSample(i).getDiversity());
             values.add(coordinates);
             progress += stepProgress;
             out.write(String.format(Locale.US, "%.2f", progress) + "%");
         }
         HashMap<String, Integer> coorCount = new HashMap<>();
         coorCount.put("x", (int) sample.getCount());
-        coorCount.put("y", downSampler.reSample((int) sample.getCount()).getDiversityCDR3AA());
+        //TODO
+        coorCount.put("y", (int) downSampler.reSample((int) sample.getCount()).getDiversity());
         values.add(coorCount);
         diversity.put("values", values);
         diversity.put("key", file.fileName);
@@ -327,16 +372,20 @@ public class ComputationUtil {
             if (vdjUsageData(sampleCollection, file, out)
                 && AnnotationData(sample, file, out)
                 && spectrotypeHistogram(sample, file, out)
+                && spectrotypeVHistogram(sample, file, out)
                 && BasicStats(sample, file, out)
-                && diversityCache(sample, file, out)
-            ) {
-                file.rendering = false;
-                file.rendered = true;
+                && diversityCache(sample, file, out)) {
+                    file.rendering = false;
+                    file.rendered = true;
+            } else {
+                file.rendered = false;
             }
-            out.write("100%");
+            out.write("ComputationDone");
             Ebean.update(file);
         } catch (Exception e) {
             file.rendering = false;
+            file.rendered = false;
+            out.write("ComputationError");
             Ebean.update(file);
             e.printStackTrace();
         }

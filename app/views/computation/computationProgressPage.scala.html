@@ -1,14 +1,14 @@
-@(account: Account,fileName: String)
+@(account: Account, fileName: String)
 @navbar(account.userName)
 @main("Computation") {
     <script type="text/javascript">
     var socket = new WebSocket("ws://" + location.host + "@routes.Computation.computationProgressBar(fileName)");
     socket.onmessage = function(event) {
         $ ( ".progressMessage" ).html(event.data);
-        if (event.data != "ComputationDone") {
+        if (event.data != "ComputationDone" && event.data != "ComputationError") {
             $ ( ".progress-bar" ).css ( "width", event.data ) ;
         } else {
-            setTimeout(function() {window.location.replace("@routes.AccountPage.index()");}, 200);
+            setTimeout(function() {window.location.replace("@routes.AccountPage.index()");}, 300);
         }
     }
     </script>
@@ -22,7 +22,7 @@
     <div class="row-fluid">
     <div class="computationProgress">
         <div class="progress progress-striped active">
-            <div class="progress-bar" style="width: 45%"></div>
+            <div class="progress-bar" style="width: 0%"></div>
         </div>
     </div>
     </div>
