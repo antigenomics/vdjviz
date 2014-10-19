@@ -321,7 +321,7 @@ public class ComputationUtil {
 
         Integer step = Math.round(sample.getCount() / 100);
         Double stepProgress = 0.2;
-        Double progress = 80.0;
+        Double progress = 79.8;
         for (Integer i = 0; i < sample.getCount(); i += step) {
             HashMap<String, Integer> coordinates = new HashMap<>();
             coordinates.put("x", i);
@@ -365,6 +365,7 @@ public class ComputationUtil {
         /**
          * Creating all cache files
          */
+
         file.rendered = false;
         file.rendering = true;
         Ebean.update(file);
@@ -377,10 +378,12 @@ public class ComputationUtil {
                 && diversityCache(sample, file, out)) {
                     file.rendering = false;
                     file.rendered = true;
+                    out.write("ComputationDone");
             } else {
                 file.rendered = false;
+                file.rendering = false;
+                out.write("ComputationError");
             }
-            out.write("ComputationDone");
             Ebean.update(file);
         } catch (Exception e) {
             file.rendering = false;

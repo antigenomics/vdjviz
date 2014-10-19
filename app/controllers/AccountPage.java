@@ -6,6 +6,7 @@ import models.Account;
 import models.LocalUser;
 import models.UserFile;
 import play.Logger;
+import play.Play;
 import play.data.Form;
 import play.mvc.Controller;
 import play.mvc.Http;
@@ -74,6 +75,7 @@ public class AccountPage extends Controller {
             return redirect(routes.Application.index());
         }
         Logger.of("user." + account.userName).info("User" + account.userName + " is uploading new file");
+
         /**
          * Checking files count
          */
@@ -82,7 +84,6 @@ public class AccountPage extends Controller {
             flash("info", "You have exceeded the limit of the number of files");
             Logger.of("user." + account.userName).info("User" + account.userName + " exceeded  the limit of the number of files");
             return Results.redirect(routes.AccountPage.index());
-
         }
 
         /**
@@ -237,6 +238,7 @@ public class AccountPage extends Controller {
 
         File f = new File(fileDirectoryName + "/file");
         File histogram = new File(fileDirectoryName + "/histogram.cache");
+        File histogramV = new File(fileDirectoryName + "/histogramV.cache");
         File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
         File annotation = new File(fileDirectoryName + "/annotation.cache");
         File basicStats = new File(fileDirectoryName + "/basicStats.cache");
@@ -248,6 +250,7 @@ public class AccountPage extends Controller {
             annotation.delete();
             basicStats.delete();
             histogram.delete();
+            histogramV.delete();
             vdjUsage.delete();
             diversity.delete();
             if (fileDir.delete()) {
@@ -307,7 +310,11 @@ public class AccountPage extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-        return ok(views.html.account.fileUpdate.render(Form.form(UserFile.class).fill(file), account, fileName));
+        if (!file.rendering) {
+            return ok(views.html.account.fileUpdate.render(Form.form(UserFile.class).fill(file), account, fileName));
+        } else {
+            return redirect(routes.AccountPage.index());
+        }
     }
 
     public static Result fileUpdate(String fileName) {
@@ -345,27 +352,31 @@ public class AccountPage extends Controller {
             return ok("access restricted");
         }
 
-        Http.MultipartFormData body = request().body().asMultipartFormData();
-        Http.MultipartFormData.FilePart newFile = body.getFile("file");
-        Form<UserFile> boundForm = fileForm.bindFromRequest();
-        file.fileName = boundForm.get().fileName;
-        file.softwareTypeName = boundForm.get().softwareTypeName;
-        file.softwareType = Software.byName(boundForm.get().softwareTypeName);
-        file.rendered = false;
-        Ebean.update(file);
-        if (newFile != null) {
-            File nf = new File(file.fileDirPath + "/file");
-            nf.delete();
-            Boolean uploaded = newFile.getFile().renameTo(new File(account.userDirPath + "/" + file.uniqueName + "/file"));
-            if (!uploaded) {
-                flash("error", "Error while adding file");
-                Logger.of("user." + account.userName).error("Update error: User " + account.userName + ": failed to upload new file");
-                return Results.redirect(routes.AccountPage.index());
-            }
+        if (!file.rendering) {
+            Http.MultipartFormData body = request().body().asMultipartFormData();
+            Http.MultipartFormData.FilePart newFile = body.getFile("file");
+            Form<UserFile> boundForm = fileForm.bindFromRequest();
+            file.fileName = boundForm.get().fileName;
+            file.softwareTypeName = boundForm.get().softwareTypeName;
+            file.softwareType = Software.byName(boundForm.get().softwareTypeName);
+            file.rendered = false;
+            Ebean.update(file);
+            if (newFile != null) {
+                File nf = new File(file.fileDirPath + "/file");
+                nf.delete();
+                Boolean uploaded = newFile.getFile().renameTo(new File(account.userDirPath + "/" + file.uniqueName + "/file"));
+                if (!uploaded) {
+                    flash("error", "Error while adding file");
+                    Logger.of("user." + account.userName).error("Update error: User " + account.userName + ": failed to upload new file");
+                    return Results.redirect(routes.AccountPage.index());
+                }
 
+            }
+            Logger.of("user." + account.userName).info("Update file: User " + account.userName + " succesfully updated file named " + fileName);
+            return redirect(routes.Computation.computationPage(file.fileName));
+        } else {
+            return redirect(routes.AccountPage.index());
         }
-        Logger.of("user." + account.userName).info("Update file: User " + account.userName + " succesfully updated file named " + fileName);
-        return redirect(routes.Computation.computationPage(file.fileName));
     }
 
     public static Result basicStats() {
@@ -385,7 +396,6 @@ public class AccountPage extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-
         if (account!=null) {
             return ok(views.html.computation.diversityStats.render(account));
         } else {

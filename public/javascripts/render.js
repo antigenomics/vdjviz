@@ -43,10 +43,11 @@ function HistogramData(url) {
                     .transitionDuration(350)
                     .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
                     .rotateLabels(0)      //Angle to rotate x-axis labels.
-                    .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                     .showLegend(true)
                     .groupSpacing(0.1)    //Distance between each group of bars.
                     .height(700)
+                    .stacked(true)
                     .tooltip(function(key, x, y, e, graph) {
                         if (key != "Common") {
                             return '<h3>' + e.series.name + '</h3>' +
@@ -94,10 +95,11 @@ function HistogramVData(url) {
                     .transitionDuration(350)
                     .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
                     .rotateLabels(0)      //Angle to rotate x-axis labels.
-                    .showControls(true)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                     .showLegend(true)
                     .groupSpacing(0.1)    //Distance between each group of bars.
                     .height(700)
+                    .stacked(true)
                     .tooltip(function(key, x, y, e, graph) {
                             return '<h3>' + key + '</h3>' +
                                 '<p>Length : ' + x + '</p>' +

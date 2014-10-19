@@ -2,7 +2,7 @@
 @navbar(account.userName)
 @main("Computation") {
     <script type="text/javascript">
-    var socket = new WebSocket("ws://" + location.host + "@routes.Computation.computationProgressBar(fileName)");
+    var socket = new WebSocket("@routes.Computation.computationProgressBar(fileName).webSocketURL()");
     socket.onmessage = function(event) {
         $ ( ".progressMessage" ).html(event.data);
         if (event.data != "ComputationDone" && event.data != "ComputationError") {

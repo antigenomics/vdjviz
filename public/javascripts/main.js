@@ -9,4 +9,9 @@ $(document).ready(function() {
            $(".buttonsInput input").removeClass("disabled");
        }
    })
+
+   $(".fileInput input").change(function() {
+       var fileName = $(".fileInput input").val().split(/(\\|\/)/g).pop();
+       $(".fileNameInput input").attr("value", fileName.substr(0, fileName.lastIndexOf('.')) || fileName);
+   })
 });

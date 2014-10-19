@@ -67,7 +67,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
 
     /**
      * Overriding PathBindable functions
-     * //TODO
      * UseFile class using in routes with its id value
      */
 

@@ -25,13 +25,13 @@ GET         /account/:fileName/delete            controllers.AccountPage.deleteF
 #Computation
 GET         /account/:fileName/table             controllers.Computation.returnVdjUsageData(fileName: String)
 GET         /account/:fileName/histogram         controllers.Computation.returnSpectrotypeHistogram(fileName: String)
-GET         /account/:fileName/histogramV         controllers.Computation.returnSpectrotypeVHistogram(fileName: String)
+GET         /account/:fileName/histogramV        controllers.Computation.returnSpectrotypeVHistogram(fileName: String)
 GET         /account/:fileName/annotation        controllers.Computation.returnAnnotationData(fileName: String)
 GET         /account/getBasicStats               controllers.Computation.returnBasicStats()
 GET         /account/basicStats                  controllers.AccountPage.basicStats()
 GET         /account/getDiversity                controllers.Computation.returnDiversity()
 GET         /account/diversity                   controllers.AccountPage.diversityPage()
-GET         /account/:fileName/compute           controllers.Computation.computationProgressBar(fileName: String)
+GET         /account/:fileName/render            controllers.Computation.computationProgressBar(fileName: String)
 GET         /account/:fileName/progress          controllers.Computation.computationPage(fileName: String)
 
 
@@ -40,15 +40,12 @@ GET         /signin                              securesocial.controllers.LoginP
 GET         /logout                              securesocial.controllers.LoginPage.logout
 GET         /authenticate/:provider              securesocial.controllers.ProviderController.authenticate(provider)
 POST        /authenticate/:provider              securesocial.controllers.ProviderController.authenticateByPost(provider)
-# User Registration and password handling
-# (only needed if you are using UsernamePasswordProvider)
 GET         /signup                              securesocial.controllers.Registration.startSignUp
 POST        /signup                              securesocial.controllers.Registration.handleStartSignUp
 GET         /signup/:token                       securesocial.controllers.Registration.signUp(token)
 POST        /signup/:token                       securesocial.controllers.Registration.handleSignUp(token)
 GET         /password                            securesocial.controllers.PasswordChange.page
 POST        /password                            securesocial.controllers.PasswordChange.handlePasswordChange
-
 GET         /reset                               securesocial.controllers.Registration.startResetPassword
 POST        /reset                               securesocial.controllers.Registration.handleStartResetPassword
 GET         /reset/:token                        securesocial.controllers.Registration.resetPassword(token)

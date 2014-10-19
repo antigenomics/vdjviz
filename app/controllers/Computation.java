@@ -184,12 +184,20 @@ public class Computation extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
         List<JsonNode> basicStatsAll = new ArrayList<>();
+
+        /**
+         * Getting jsonNode of BasicStats for each file
+         * is belonging to user
+         */
+
         for (UserFile file : localAccount.userfiles) {
-            if (file.rendered) {
+            if (file.rendered && !file.rendering) {
                 File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
-                FileInputStream jsonFile = new FileInputStream(basicStatsCache);
-                JsonNode basicStatsNode = Json.parse(jsonFile);
-                basicStatsAll.add(basicStatsNode.get(0));
+                if (basicStatsCache.exists()) {
+                    FileInputStream jsonFile = new FileInputStream(basicStatsCache);
+                    JsonNode basicStatsNode = Json.parse(jsonFile);
+                    basicStatsAll.add(basicStatsNode.get(0));
+                }
             }
         }
         return ok(Json.toJson(basicStatsAll));
@@ -198,16 +206,29 @@ public class Computation extends Controller {
 
     @SecureSocial.SecuredAction
     public static Result returnDiversity() throws FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
         List<JsonNode> diversityAll = new ArrayList<>();
+
+        /**
+         * Getting jsonNode of diversity for each file
+         * is belonging to user
+         */
+
         for (UserFile file : localAccount.userfiles) {
-            if (file.rendered) {
+            if (file.rendered && !file.rendering) {
                 File diversityCache = new File(file.fileDirPath + "/diversity.cache");
-                FileInputStream jsonFile = new FileInputStream(diversityCache);
-                JsonNode basicStatsNode = Json.parse(jsonFile);
-                diversityAll.add(basicStatsNode);
+                if (diversityCache.exists()) {
+                    FileInputStream jsonFile = new FileInputStream(diversityCache);
+                    JsonNode basicStatsNode = Json.parse(jsonFile);
+                    diversityAll.add(basicStatsNode);
+                }
             }
         }
         return ok(Json.toJson(diversityAll));
@@ -215,9 +236,20 @@ public class Computation extends Controller {
     }
 
     public static WebSocket<String> computationProgressBar(String fileName) {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
-        Account localAccount = localUser.account;
+        final Account localAccount = localUser.account;
         final UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
+
+        /**
+         * Creating websocket between server and user
+         * which initiates rendering file and informs user about progress
+         */
+
         return new WebSocket<String>() {
             public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
                 out.write("0%");
@@ -225,20 +257,30 @@ public class Computation extends Controller {
                     ComputationUtil.createSampleCache(file, out);
                 } catch (Exception e) {
                     out.write("ComputationError");
+                    Logger.of("user." + localAccount.userName).info("Error render file: User " + localAccount.userName +
+                            " can not render file named " + file.fileName);
                     e.printStackTrace();
                 }
                 out.close();
+                Logger.of("user." + localAccount.userName).info("Render file: User " + localAccount.userName +
+                                                                " successfully rendered file named " + file.fileName);
             }
         };
     }
 
     @SecureSocial.SecuredAction
     public static Result computationPage(String fileName) {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account localAccount = localUser.account;
         UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-        if (file.rendering) {
+        if (file == null || file.rendering) {
+            flash("error", "You have no file named " + fileName);
             return Results.redirect(routes.AccountPage.index());
         }
         return ok(views.html.computation.computationProgressPage.render(localAccount, fileName));
