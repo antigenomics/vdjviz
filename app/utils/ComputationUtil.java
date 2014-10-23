@@ -103,7 +103,7 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(opt_data);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
-            out.write("20%");
+            out.write("20");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -179,7 +179,7 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(histogramData);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
-            out.write("30%");
+            out.write("30");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -218,7 +218,7 @@ public class ComputationUtil {
             JsonNode jsonData = Json.toJson(histogramV);
             jsonWriter.write(Json.stringify(jsonData));
             jsonWriter.close();
-            out.write("40%");
+            out.write("40");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -232,6 +232,7 @@ public class ComputationUtil {
          * Getting CdrDatabase
          */
 
+        /*
         CdrDatabase cdrDatabase = new CdrDatabase("trdb");
         SampleAnnotation sampleAnnotation = new SampleAnnotation(sample, false);
         HashMap<String, Double> cdrToFrequency = sampleAnnotation.getEntryFrequencies(cdrDatabase);
@@ -240,7 +241,7 @@ public class ComputationUtil {
          * Initializing AnnotationData list
          * and creating cache file
          */
-
+        /*
         String[] header = cdrDatabase.header;
         HashMap<String, String> header1 = new HashMap<>();
         HashMap<String, String> header2 = new HashMap<>();
@@ -278,13 +279,14 @@ public class ComputationUtil {
             data.put("data", annotationData);
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
-            out.write("60%");
+            out.write("60");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-
+        */
+        return true;
     }
 
     public static Boolean BasicStats(Sample sample, UserFile file, WebSocket.Out out) {
@@ -304,7 +306,7 @@ public class ComputationUtil {
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
             fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
             fileWriter.close();
-            out.write("80%");
+            out.write("80");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -329,7 +331,7 @@ public class ComputationUtil {
             coordinates.put("y", (int) downSampler.reSample(i).getDiversity());
             values.add(coordinates);
             progress += stepProgress;
-            out.write(String.format(Locale.US, "%.2f", progress) + "%");
+            out.write(String.format(Locale.US, "%.2f", progress));
         }
         HashMap<String, Integer> coorCount = new HashMap<>();
         coorCount.put("x", (int) sample.getCount());
@@ -356,6 +358,7 @@ public class ComputationUtil {
          * Getting Sample from text file
          */
 
+
         Software software = file.softwareType;
         List<String> sampleFileNames = new ArrayList<>();
         sampleFileNames.add(file.filePath);
@@ -369,6 +372,7 @@ public class ComputationUtil {
         file.rendered = false;
         file.rendering = true;
         Ebean.update(file);
+        out.write("start");
         try {
             if (vdjUsageData(sampleCollection, file, out)
                 && AnnotationData(sample, file, out)

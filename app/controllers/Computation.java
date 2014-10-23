@@ -4,6 +4,7 @@ package controllers;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
+import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
@@ -254,9 +255,15 @@ public class Computation extends Controller {
             public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
                 out.write("0%");
                 try {
+                    file.renderCount++;
+                    file.rendering = true;
+                    Ebean.update(file);
                     ComputationUtil.createSampleCache(file, out);
                 } catch (Exception e) {
                     out.write("ComputationError");
+                    file.rendering = false;
+                    file.rendered = false;
+                    Ebean.update(file);
                     Logger.of("user." + localAccount.userName).info("Error render file: User " + localAccount.userName +
                             " can not render file named " + file.fileName);
                     e.printStackTrace();

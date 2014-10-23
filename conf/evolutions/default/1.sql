@@ -8,7 +8,6 @@ create table account (
   user_name                 varchar(255),
   user_id                   varchar(255),
   user_dir_path             varchar(255),
-  files_count               integer,
   constraint pk_account primary key (id))
 ;
 
@@ -41,6 +40,7 @@ create table user_file (
   software_type_name        varchar(255),
   file_path                 varchar(255),
   file_dir_path             varchar(255),
+  render_count              integer,
   rendered                  boolean,
   rendering                 boolean,
   constraint ck_user_file_software_type check (software_type in (0,1,2,3,4)),

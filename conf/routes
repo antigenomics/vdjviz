@@ -21,6 +21,7 @@ GET         /account/:fileName/update            controllers.AccountPage.fileUpd
 POST        /account/:fileName/update            controllers.AccountPage.fileUpdate(fileName: String)
 POST        /account/newFile                     controllers.AccountPage.saveNewFile()
 GET         /account/:fileName/delete            controllers.AccountPage.deleteFile(fileName: String)
+GET         /account/allFiles                    controllers.AccountPage.getAccountAllFilesInformation()
 
 #Computation
 GET         /account/:fileName/table             controllers.Computation.returnVdjUsageData(fileName: String)
@@ -33,7 +34,8 @@ GET         /account/getDiversity                controllers.Computation.returnD
 GET         /account/diversity                   controllers.AccountPage.diversityPage()
 GET         /account/:fileName/render            controllers.Computation.computationProgressBar(fileName: String)
 GET         /account/:fileName/progress          controllers.Computation.computationPage(fileName: String)
-
+GET         /account/deleteAll                   controllers.AccountPage.deleteAll()
+POST        /account/asyncUpload                 controllers.AccountPage.asyncUploadFiles()
 
 # Auth routes
 GET         /signin                              securesocial.controllers.LoginPage.login

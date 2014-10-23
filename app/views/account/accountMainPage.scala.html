@@ -1,12 +1,10 @@
-@(account: Account)
+@(fileForm: Form[UserFile], account: Account)
 @navbar(account.userName)
 @main("Account") {
-    <script src="@routes.Assets.at("../../../public/javascripts/d3/d3.min.js")"></script>
-    <script src="@routes.Assets.at("../../../public/javascripts/render.js")"></script>
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="span2">
-                @filePanel(account)
+            @views.html.account.filePanel(account)
             </div>
 
             <div class="span10">

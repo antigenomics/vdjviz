@@ -6,6 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.sql.Timestamp;
 import java.util.*;
 
 import play.libs.F;
@@ -33,7 +34,6 @@ public class Account implements PathBindable<Account> {
     public String userDirPath;
     @OneToMany(mappedBy="account")
     public List<UserFile> userfiles;
-    public Integer filesCount;
 
     /**
      * Overriding PathBindable functions
@@ -59,7 +59,6 @@ public class Account implements PathBindable<Account> {
         this.user = user;
         this.userName = userName;
         this.userDirPath = userDirPath;
-        this.filesCount = 0;
     }
 
     public String toString() {

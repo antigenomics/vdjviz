@@ -4,7 +4,7 @@
         <h3 class="panel-title">Your Files</h3>
     </div>
 </div>
-<ul class="nav nav-pills nav-stacked">
+<ul class="nav nav-pills nav-stacked userFilesList">
     @if(account.userfiles.size() == 0) {
         <li><a>You have no files</a></li>
     } else {
@@ -29,5 +29,48 @@
     <li><a href="@routes.AccountPage.basicStats()">Summary</a></li>
     }
 <hr>
-<li><a href="@routes.AccountPage.newFile()">Add</a></li>
+<li><a class="addNewFilesButton">Add</a></li>
+<li><a href="@routes.AccountPage.deleteAll()">Delete all</a></li>
 </ul>
+
+<div class="newFilesContainer">
+    <div class="background"></div>
+    <div class="filesTable">
+        <div class="header">
+            <div class="headerButtons">
+                <div class="chooseFilesButton btn btn-primary">Add</div>
+                <div class="uploadAllButton btn btn-primary">Upload All</div>
+                <div class="closeButton pull-right btn btn-default">Close</div>
+            </div>
+        </div>
+        <table class="table" style="visibility: hidden; left: 1%; width: 98%; position: relative">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Software Type</th>
+                    <th>Progress</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody class="main-tbody-files">
+                <tr>
+                    <td></td>
+                    <td>
+                        <select class="commonSoftwareType">
+                            <option value="mitcr" >MiTcr</option>
+                            <option value="migec" >MiGec</option>
+                            <option value="simple" >Simple</option>
+                            <option value="igblast" >IgBlast</option>
+                            <option value="cdrblast" >CdrBlast</option>
+                        </select>
+                    </td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <form id="fileupload" method="POST" action="" enctype="multipart/form-data" hidden>
+            <input type="file" name="files[]" multiple />
+        </form>
+    </div>
+</div>
