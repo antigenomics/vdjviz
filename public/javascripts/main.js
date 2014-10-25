@@ -1,6 +1,112 @@
 $(document).ready(function() {
-    //updateFilesList();
+
+    if ($(".userFilesList") != null) {
+        updateFilesList();
+    }
+
+    function updateFilesList() {
+        $.getJSON("/account/allFilesInformation", function(data) {
+            var fileTable = d3.select(".userFilesList");
+            var count = 0;
+            fileTable.html("");
+            data.forEach(function(elem) {
+                var liMain = fileTable.append("li")
+                    .attr("class", function() {
+                        var cls = "dropdown";
+                        if (elem["rendering"]) {
+                            cls += " disabled";
+                        }
+                        if (elem["renderCount"] == 0) {
+                            cls += " waitForRender";
+                        }
+                        if (!elem["rendered"]) {
+                            cls += " error";
+                        }
+                        return cls;
+                    });
+                var a = liMain.append("a").style("cursor", "pointer");
+
+                a.style("background-color", function() {
+                        if (elem["rendering"] || !elem["rendered"]) {
+                            return "#DCDCDC";
+                        }
+                        return "#FFFFFF";
+                    }).on("mouseover", function() {
+                        $(this).css("background-color", "#DCDCDC");
+                        if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
+                            $(this).find(".fa-trash").css("visibility", "visible");
+                        }
+                    }).on("mouseout", function() {
+                        if (liMain.classed("disabled") || liMain.classed("waitForRender") || liMain.classed("error")) {
+                            $(this).css("background-color", "#DCDCDC");
+                            $(this).find(".fa-trash").css("visibility", "hidden");
+                        } else {
+                            $(this).css("background-color", "#FFFFFF");
+                            $(this).find(".fa-trash").css("visibility", "hidden");
+                        }
+                    })
+                    .on("click", function() {
+                        window.location.replace("/account/" + elem["fileName"] + "/")
+                    }).text(function() {
+                        var text = elem["fileName"];
+                        if (elem["rendering"]) {
+                            text += " | File is rendering";
+                        } else if (elem["renderCount"] == 0) {
+                            text += " | Waiting for computation";
+                        } else if (!elem["rendered"]) {
+                            text += " | Error while rendering";
+                        }
+                        return text;
+                    });
+
+                a.append("i").attr("class", "fa fa-trash fa-1x pull-right")
+                    .style("visibility", "hidden")
+                    .style("cursor", "pointer")
+                    .on("click", function() {
+                        if (window.location.pathname != "/account/" + elem["fileName"] + "/") {
+                            d3.event.stopPropagation();
+                        } else {
+                            d3.event.stopPropagation();
+                            window.location.replace("/account")
+                        }
+                        $.ajax({
+                            url : "/api/deleteFile",
+                            type : "post",
+                            contentType: 'application/json; charset=utf-8',
+                            data : JSON.stringify({
+                                "action" : "delete",
+                                "fileName" : elem["fileName"]
+                            }),
+                            success: function() {
+                                updateFilesList();
+                            }
+                        })
+                    });
+                count++;
+            });
+            if (count == 0) {
+                fileTable.append("li").append("a").text("You have no files");
+            } else {
+                fileTable.append("hr");
+                fileTable.append("li").append("a").attr("href", "/account/diversity").text("Diversity");
+                fileTable.append("li").append("a").attr("href", "/account/basicStats").text("Summary");
+            }
+            if (count != 0) {
+                fileTable.append("hr");
+                fileTable.append("li").append("a").attr("href", "/account/deleteAll").text("Delete all");
+            }
+            if (progressCount != 0) {
+                d3.select(".addNewFilesButton").classed("fa-plus", false);
+                d3.select(".addNewFilesButton").classed("fa-refresh", true);
+            } else {
+                d3.select(".addNewFilesButton").classed("fa-plus", true);
+                d3.select(".addNewFilesButton").classed("fa-refresh", false);
+            }
+        });
+    }
     var progressCount = 0;
+    var filesCount = 0;
+
     $(".fileNameInput #fileName").keyup(function() {
        var pattern = "^[a-zA-Z0-9_.-]{0,20}$";
        if (!$(this).val().match(pattern)) {
@@ -12,13 +118,13 @@ $(document).ready(function() {
        }
    });
 
-   $(".fileInput input").change(function() {
+    $(".fileInput input").change(function() {
        var fileName = $(".fileInput input").val().split(/(\\|\/)/g).pop();
        $(".fileNameInput input").attr("value", fileName.substr(0, fileName.lastIndexOf('.')) || fileName);
    });
 
     $('#fileupload').fileupload({
-        url: '/account/asyncUpload',
+        url: '/api/uploadFile',
         dataType: 'json',
         add: function (e, data) {
             var fileName = data.files[0].name;
@@ -82,7 +188,7 @@ $(document).ready(function() {
                     } else if (event.data != "ComputationDone" && event.data != "ComputationError") {
                         data.context.select(".progress-bar").style("width", 50 + (event.data / 2) + "%");
                     } else if (event.data == "ComputationDone") {
-                        data.context.select(".tdUploadButton").html("Computation success");
+                        data.context.select(".tdUploadButton").html("").append("i").attr("class", "fa  fa-check fa-2x pull-right").style("color", "green");
                         data.context.select(".progress-bar").attr("class", "progress-bar progress-bar-success");
                         data.context.select(".progress").attr("class", "progress progress-striped")
                         data.context.attr("class","success");
@@ -90,7 +196,7 @@ $(document).ready(function() {
                         updateFilesList();
                         socket.close();
                     } else {
-                        data.context.select(".tdUploadButton").html("");
+                        data.context.select(".tdUploadButton").html("").append("i").attr("class", "fa  fa-remove fa-2x pull-right").style("color", "red");
                         data.context.select(".progress-bar").attr("class", "progress-bar progress-bar-danger");
                         data.context.attr("class", "danger computation-fail");
                         data.context.select(".progress-td").html("Computation error");
@@ -100,7 +206,7 @@ $(document).ready(function() {
                     }
                 };
             } else if (data.result["error"] != undefined) {
-                data.context.select(".tdUploadButton").html("");
+                data.context.select(".tdUploadButton").html("").append("i").attr("class", "fa  fa-remove fa-2x pull-right").style("color", "red");;
                 data.context.select(".progress-bar").attr("class", "progress-bar progress-bar-danger");
                 data.context.attr("class", "danger upload-fail");
                 data.context.select(".progress-td").html(data.result["error"]);
@@ -110,9 +216,7 @@ $(document).ready(function() {
         }
     });
 
-
-   var filesCount = 0;
-   $(".addNewFilesButton").click(function() {
+    $(".addNewFilesButton").click(function() {
        $(".newFilesContainer").css("visibility", "visible");
        $(".newFilesContainer").animate({
            opacity: "1"
@@ -122,7 +226,7 @@ $(document).ready(function() {
        },400)
    });
 
-   $(".closeButton").click(function() {
+    $(".closeButton").click(function() {
        updateFilesList();
        $("tr.success").remove();
        $("tr.danger").remove();
@@ -136,108 +240,32 @@ $(document).ready(function() {
         }, 0)
     });
 
-   $(".uploadAllButton").click(function() {
+    $(".uploadAllButton").click(function() {
        $(".unitFileUpload").click();
    });
 
-  $(".chooseFilesButton").click(function() {
+    $(".chooseFilesButton").click(function() {
       $("form input[type=file]").click();
   });
 
-  function updateFilesList() {
-      $.getJSON("/account/allFiles", function(data) {
-          var fileTable = d3.select(".userFilesList");
-          var count = 0;
-          fileTable.html("");
-          data.forEach(function(elem) {
-               var liMain = fileTable.append("li")
-                    .attr("class", function() {
-                        var cls = "dropdown";
-                        if (elem["rendering"]) {
-                            cls += " disabled";
-                        }
-                        if (elem["renderCount"] == 0) {
-                           cls += " waitForRender";
-                        }
-                       if (!elem["rendered"]) {
-                           cls += " error";
-                       }
-                        return cls;
-                    });
-                   liMain.append("a").attr("href", "/account/" + elem + "/")
-                   .attr("class", "dropdown-toggle disabled")
-                   .attr("data-toggle", "dropdown")
-                   .attr("href", function() {
-                           if (!elem["rendering"]) {
-                               return "/account/" + elem["fileName"] + "/";
-                           } else {
-                               return null;
-                           }
-                   })
-                   .text(function() {
-                        var text = elem["fileName"];
-                        if (elem["rendering"]) {
-                            text += " | File is rendering";
-                        } else if (elem["renderCount"] == 0) {
-                            text += " | Waiting for computation";
-                        } else if (!elem["rendered"]) {
-                            text += " | Error while rendering";
-                        }
-                    return text;
-                   }).style("background-color", function() {
-                        if (elem["rendering"] || !elem["rendered"]) {
-                            return "#DCDCDC";
-                        }
-                        return "#FFFFFF";
-                   }).on("mouseover", function() {
-                           $(this).css("background-color", "#DCDCDC")
-                   }).on("mouseout", function() {
-                        if (liMain.classed("disabled") || liMain.classed("waitForRender") || liMain.classed("error")) {
-                            $(this).css("background-color", "#DCDCDC")
-                        } else {
-                            $(this).css("background-color", "#FFFFFF")
-                        }
-                   });
-              if (!elem["rendering"]) {
-                  var ul = liMain.append("ul").attr("class", "dropdown-menu");
-                  ul.append("li").append("a").attr("href", "/account/" + elem["fileName"] + "/").text("Information");
-                  ul.append("li").append("a").attr("href", "/account/" + elem["fileName"] + "/update").text("Update");
-                  ul.append("li").attr("class", "divider");
-                  ul.append("li").append("a").attr("href", "/account/" + elem["fileName"] + "/delete").text("Delete");
-              }
-              count++;
-          });
-          if (count == 0) {
-              fileTable.append("li").append("a").text("You have no files");
-          } else {
-              fileTable.append("hr");
-              fileTable.append("li").append("a").attr("href", "/account/diversity").text("Diversity");
-              fileTable.append("li").append("a").attr("href", "/account/basicStats").text("Summary");
-          }
-          fileTable.append("hr");
-          fileTable.append("li").style("cursor", "pointer").append("a").attr("class", "addNewFilesButton").text(function () {
-              var text = "Add";
-              if (progressCount != 0) {
-                  text += " | in progress";
-              }
-              return text;
-          })
-              .on("click",function() {
-                    $(".newFilesContainer").css("visibility", "visible");
-                    $(".newFilesContainer").animate({
-                        opacity: "1"
-                    },250)
-                    $(".filesTable").animate({
-                        top : "20%"
-                    },400)});
-          fileTable.append("li").append("a").attr("href", "/account/deleteAll").text("Delete all");
-      });
-      }
-
-
-  $(".commonSoftwareType").change(function() {
+    $(".commonSoftwareType").change(function() {
       var softwareType = d3.select(".commonSoftwareType").node().value;
       d3.selectAll("#softwareTypeName").selectAll("option").attr("selected", null);
       d3.selectAll("#softwareTypeName").select("option[value="+softwareType+"]").attr("selected", "selected");
   })
+
+    $(".fileDeleteButton").click(function() {
+        $.ajax({
+            url : "/api/deleteFile",
+            type : "post",
+            contentType: 'application/json; charset=utf-8',
+            data : JSON.stringify({
+                "action" : "delete",
+                "fileName" : $(this).attr("id")
+            }),
+            success: function() {
+                updateFilesList();
+            }
+        })
+    })
 });

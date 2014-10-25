@@ -142,8 +142,8 @@ function AnnotationTable(url) {
     d3.select("svg").remove();
     d3.select(".svg").remove();
     $.getJSON(url, function(data) {
-        renderAnnotationTable(data.data, data.header);
-
+        var header = Object.keys(data[0]);
+        renderAnnotationTable(data, header)
     })
 }
 
@@ -233,10 +233,16 @@ function renderAnnotationTable(data, header) {
             .attr("class", "table table-striped table-hover"),
         thead = table.append("thead").append("tr");
     thead.selectAll("th").data(header).enter()
-        .append("th").html(function(d) {return d.data;});
+        .append("th").html(function(d) {return d;});
+
+    var column = [];
+    for (var i = 0; i < header.length; i++) {
+        column.push({"data": header[i.toString()]});
+    }
+
     $('#annotation_table').dataTable({
         "data": data,
-        "columns": header,
+        "columns": column,
         'iDisplayLength': 100,
         'order': [[ 0 , "decs"]],
         dom: 'T<"clear">lfrtip',

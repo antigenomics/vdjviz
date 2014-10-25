@@ -36,13 +36,13 @@ public class AccountPage extends Controller {
          * Identifying User using the SecureSocial API
          * and render the account page
          */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        return ok(views.html.account.accountMainPage.render(fileForm, localUser.account));
+        return ok(views.html.account.accountMainPage.render(localUser.account));
     }
 
     private static Form<UserFile> fileForm = Form.form(UserFile.class);
-
 
     public static Result newFile() {
 
@@ -64,13 +64,12 @@ public class AccountPage extends Controller {
         return redirect(routes.AccountPage.index());
     }
 
-
-
     public static Result saveNewFile() {
 
         /**
          * Identifying user using the SecureSocial API
          */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
@@ -202,7 +201,6 @@ public class AccountPage extends Controller {
         }
     }
 
-
     public static Result deleteFile(String fileName) {
 
         /**
@@ -219,7 +217,7 @@ public class AccountPage extends Controller {
         if (file == null) {
             flash("error", "You have no files named " + fileName);
             Logger.of("user." + account.userName).error("User " + account.userName +"have no file named " + fileName);
-            return ok(views.html.account.accountMainPage.render(fileForm, account));
+            return ok(views.html.account.accountMainPage.render(account));
         }
 
         /**
@@ -275,7 +273,6 @@ public class AccountPage extends Controller {
         }
         return Results.redirect(routes.AccountPage.index());
     }
-
 
     public static Result fileInformation(String fileName) {
 
@@ -339,7 +336,7 @@ public class AccountPage extends Controller {
         if (file == null) {
             flash("error", "You have no file named " + fileName);
             Logger.of("user." + account.userName).error("Update error: User " + account.userName + " have no file named " + fileName);
-            return ok(views.html.account.accountMainPage.render(fileForm, account));
+            return ok(views.html.account.accountMainPage.render(account));
         }
 
         if (account.userfiles.contains(file)) {
@@ -393,7 +390,6 @@ public class AccountPage extends Controller {
         }
     }
 
-
     public static Result diversityPage() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -405,140 +401,10 @@ public class AccountPage extends Controller {
         }
     }
 
-    public static Result asyncUploadFiles() {
-        /**
-         * Identifying user using the SecureSocial API
-         */
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-
-        HashMap<String, String> resultJson = new HashMap<>();
-
-        if (account == null) {
-            resultJson.put("error", "Unknow Error");
-            return ok(Json.toJson(resultJson));
-        }
-        Logger.of("user." + account.userName).info("User " + account.userName + " is uploading new file");
-
-        /**
-         * Checking files count
-         */
-
-        if (account.userfiles.size() >= 10) {
-            resultJson.put("error", "You have exceeded the limit of the number of files");
-            Logger.of("user." + account.userName).info("User" + account.userName + " exceeded  the limit of the number of files");
-            return ok(Json.toJson(resultJson));
-        }
-
-        /**
-         * Getting the file from request body
-         */
-
-        Http.MultipartFormData body = request().body().asMultipartFormData();
-        Http.MultipartFormData.FilePart file = body.getFile("files[]");
-
-        if (file == null) {
-            resultJson.put("error", "You should upload file");
-            return ok(Json.toJson(resultJson));
-        }
-
-        /**
-         * Getting fileName
-         * If User do not enter the name of file
-         * it will be fills automatically using current file name
-         */
-
-        String fileName = null;
-        //TODO
-        if (file.getFilename().equals("")) {
-            fileName = FilenameUtils.removeExtension(file.getFilename());
-        } else {
-            fileName = body.asFormUrlEncoded().get("fileName")[0];
-        }
-
-        String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
-        if (!fileName.matches(pattern)) {
-            resultJson.put("error", "Invalid name");
-            return ok(Json.toJson(resultJson));
-        }
-
-
-        List<UserFile> allFiles = UserFile.findByAccount(account);
-        for (UserFile userFile: allFiles) {
-            if (userFile.fileName.equals(fileName)) {
-                resultJson.put("error", "You should use unique names for your files");
-                return ok(Json.toJson(resultJson));
-            }
-        }
-
-        /**
-         * Verification of the existence the account and the file
-         */
-
-        try {
-
-            /**
-             * Creation the UserFile class
-             */
-
-            File uploadedFile = file.getFile();
-            String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
-            File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
-
-            /**
-             * Trying to create file's directory
-             * if failed redirect to the account
-             */
-
-            if (!fileDir.exists()) {
-                Boolean created = fileDir.mkdir();
-                if (!created) {
-                    resultJson.put("error", "Server currently unavailable");
-                    Logger.of("user." + account.userName).error("Error creating file directory for user " + account.userName);
-                    return ok(Json.toJson(resultJson));
-                }
-            }
-
-            /**
-             * Checking
-             */
-
-            Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/file"));
-            if (!uploaded) {
-                resultJson.put("error", "Server currently unavailable");
-                Logger.of("user." + account.userName).error("Error upload file for user " + account.userName);
-                return ok(Json.toJson(resultJson));
-            }
-
-            UserFile newFile = new UserFile(account, fileName,
-                    unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
-                    account.userDirPath + "/" + unique_name + "/file",
-                    fileDir.getAbsolutePath());
-
-            /**
-             * Database updating with relationships
-             * UserFile <-> Account
-             */
-
-            Ebean.save(newFile);
-            account.userfiles.add(newFile);
-            Ebean.update(account);
-            resultJson.put("success", "success");
-            return ok(Json.toJson(resultJson));
-        } catch (Exception e) {
-            resultJson.put("error", "Unknown error");
-            e.printStackTrace();
-            Logger.of("user." + account.userName).error("Error while uploading new file for user : " + account.userName);
-            return ok(Json.toJson(resultJson));
-        }
-    }
-
     public static Result getAccountAllFilesInformation() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-
         List<HashMap<String, Object>> fileNames = new ArrayList<>();
         for (UserFile file: account.userfiles) {
             HashMap<String, Object> fileInformation = new HashMap<>();

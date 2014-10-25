@@ -9,10 +9,10 @@
             @if(file != null && file.rendered) {
             <div class="span10">
                 <div class="btn-group btn-group-justified">
-                    <a href="#vdjusage" class="btn btn-default" onclick="VJUsage('@routes.Computation.returnVdjUsageData(file.fileName)')">V-J Usage</a>
-                    <a href="#spectrotype" class="btn btn-default" onclick="HistogramData('@routes.Computation.returnSpectrotypeHistogram(file.fileName)')">Spectrotype</a>
-                    <a href="#spectrotypeV" class="btn btn-default" onclick="HistogramVData('@routes.Computation.returnSpectrotypeVHistogram(file.fileName)')">SpectrotypeV</a>
-                    <a href="#annotation" class="btn btn-default" onclick="AnnotationTable('@routes.Computation.returnAnnotationData(file.fileName)')">Annotations</a>
+                    <a href="#vdjusage" class="btn btn-default" onclick="VJUsage('@routes.API.returnVdjUsageData(file.fileName)')">V-J Usage</a>
+                    <a href="#spectrotype" class="btn btn-default" onclick="HistogramData('@routes.API.returnSpectrotypeHistogram(file.fileName)')">Spectrotype</a>
+                    <a href="#spectrotypeV" class="btn btn-default" onclick="HistogramVData('@routes.API.returnSpectrotypeVHistogram(file.fileName)')">SpectrotypeV</a>
+                    <a href="#annotation" class="btn btn-default" onclick="AnnotationTable('@routes.API.returnAnnotationData(file.fileName)')">Annotations</a>
                 </div>
 
                 <div class="hero-unit">

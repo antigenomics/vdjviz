@@ -6,8 +6,7 @@ import com.antigenomics.vdjtools.basic.BasicStats;
 import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.basic.SpectratypeV;
-import com.antigenomics.vdjtools.db.CdrDatabase;
-import com.antigenomics.vdjtools.db.SampleAnnotation;
+import com.antigenomics.vdjtools.db.*;
 import com.antigenomics.vdjtools.diversity.Diversity;
 import com.antigenomics.vdjtools.diversity.DiversityEstimator;
 import com.antigenomics.vdjtools.diversity.DownSampler;
@@ -29,6 +28,7 @@ import java.util.*;
 
 public class ComputationUtil {
 
+    //TODO
     public static Boolean vdjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out out) {
 
         /**
@@ -230,54 +230,36 @@ public class ComputationUtil {
 
         /**
          * Getting CdrDatabase
-         */
 
-        /*
-        CdrDatabase cdrDatabase = new CdrDatabase("trdb");
-        SampleAnnotation sampleAnnotation = new SampleAnnotation(sample, false);
-        HashMap<String, Double> cdrToFrequency = sampleAnnotation.getEntryFrequencies(cdrDatabase);
 
         /**
          * Initializing AnnotationData list
          * and creating cache file
          */
-        /*
-        String[] header = cdrDatabase.header;
-        HashMap<String, String> header1 = new HashMap<>();
-        HashMap<String, String> header2 = new HashMap<>();
-        List<HashMap<String , String>> headerJsonData = new ArrayList<>();
-        header1.put("data", "Frequency");
-        header2.put("data", "Name");
-        headerJsonData.add(header1);
-        headerJsonData.add(header2);
-        for (int i = 1; i < header.length; i++) {
-            HashMap<String, String> header_i = new HashMap<>();
-            header_i.put("data", header[i]);
-            headerJsonData.add(header_i);
-        }
-        HashMap<String, List<HashMap<String, String>>> data = new HashMap<>();
-        data.put("header", headerJsonData);
 
-
-        List<HashMap<String, String>> annotationData = new ArrayList<>();
+        CdrDatabase cdrDatabase = new CdrDatabase("trdb");
         try {
             File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
-            for (Map.Entry<String, Double> entry : cdrToFrequency.entrySet()) {
-                if (entry.getValue() == 0) {
-                    continue;
-                }
-                HashMap<String, String> dataNode = new HashMap<>();
-                //dataNode.put("Frequency", entry.getValue().toString());
-                dataNode.put("Frequency", String.format(Locale.US, "%.2e", entry.getValue()));
-                dataNode.put("Name", entry.getKey());
-                for (int i = 0; i < header.length - 1; i++) {
-                    dataNode.put(header[i + 1], cdrDatabase.getAnnotationEntries(entry.getKey()).get(0)[i]);
-                }
-                annotationData.add(dataNode);
+            DatabaseBrowser databaseBrowser= new DatabaseBrowser(false, false, true);
+
+            BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
+            List<HashMap<String, Object>> annotationData = new ArrayList<>();
+            for (CdrDatabaseMatch cdrDatabaseMatch: browserResult) {
+                HashMap<String, Object> annotationDataNode = new HashMap<>();
+                annotationDataNode.put("query_cdr3aa", cdrDatabaseMatch.query.getCdr3aa());
+                annotationDataNode.put("query_V", cdrDatabaseMatch.query.getV());
+                annotationDataNode.put("query_J", cdrDatabaseMatch.query.getJ());
+                annotationDataNode.put("subject_cdr3aa", cdrDatabaseMatch.subject.cdr3aa);
+                annotationDataNode.put("subject_V", cdrDatabaseMatch.subject.v);
+                annotationDataNode.put("subject_J", cdrDatabaseMatch.subject.j);
+                annotationDataNode.put("V_match", cdrDatabaseMatch.vMatch);
+                annotationDataNode.put("J_match", cdrDatabaseMatch.jMatch);
+                annotationDataNode.put("substitutions", Arrays.toString(cdrDatabaseMatch.getSubstitutions().toArray()));
+                annotationDataNode.put("annotations", cdrDatabaseMatch.subject.getAnnotation());
+                annotationData.add(annotationDataNode);
             }
-            data.put("data", annotationData);
-            fileWriter.write(Json.stringify(Json.toJson(data)));
+            fileWriter.write(Json.stringify(Json.toJson(annotationData)));
             fileWriter.close();
             out.write("60");
             return true;
@@ -285,8 +267,6 @@ public class ComputationUtil {
             e.printStackTrace();
             return false;
         }
-        */
-        return true;
     }
 
     public static Boolean BasicStats(Sample sample, UserFile file, WebSocket.Out out) {
@@ -375,6 +355,7 @@ public class ComputationUtil {
         out.write("start");
         try {
             if (vdjUsageData(sampleCollection, file, out)
+                //todo for testing
                 && AnnotationData(sample, file, out)
                 && spectrotypeHistogram(sample, file, out)
                 && spectrotypeVHistogram(sample, file, out)

@@ -1,36 +1,11 @@
 @(account: Account)
 <div class="panel panel-success">
     <div class="panel-heading">
-        <h3 class="panel-title">Your Files</h3>
+        <h3 class="panel-title">Your Files<i class="fa fa-plus fa-1x addNewFilesButton pull-right"></i></h3>
     </div>
 </div>
 <ul class="nav nav-pills nav-stacked userFilesList">
-    @if(account.userfiles.size() == 0) {
-        <li><a>You have no files</a></li>
-    } else {
-    @for(item <- account.userfiles) {
-        <li class="dropdown" @if(!item.rendered) {style="background-color: #DCDCDC"}>
-            <a class="dropdown-toggle disabled" data-toggle="dropdown" href="@routes.AccountPage.fileInformation(item.fileName)">
-            @item.fileName @if(!item.rendered) {
-                @if(item.rendering) {| File is rendering } else {| Error while rendering}
-            }
-            </a>
-            <ul class="dropdown-menu">
-                <li><a href="@routes.AccountPage.fileInformation(item.fileName)">Information</a></li>
-                <li><a href="@routes.AccountPage.fileUpdatePage(item.fileName)">Update</a></li>
-                <li class="divider"></li>
-                <li><a href="@routes.AccountPage.deleteFile(item.fileName)">Delete</a></li>
-            </ul>
-        </li>
-    }
 
-    <hr>
-    <li><a href="@routes.AccountPage.diversityPage()">Diversity</a></li>
-    <li><a href="@routes.AccountPage.basicStats()">Summary</a></li>
-    }
-<hr>
-<li><a class="addNewFilesButton">Add</a></li>
-<li><a href="@routes.AccountPage.deleteAll()">Delete all</a></li>
 </ul>
 
 <div class="newFilesContainer">
