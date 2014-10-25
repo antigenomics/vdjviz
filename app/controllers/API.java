@@ -237,6 +237,84 @@ public class API extends Controller {
         }
     }
 
+    public static Result getAccountAllFilesInformation() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+        List<HashMap<String, Object>> fileNames = new ArrayList<>();
+        for (UserFile file: account.userfiles) {
+            HashMap<String, Object> fileInformation = new HashMap<>();
+            fileInformation.put("fileName", file.fileName);
+            fileInformation.put("softwareTypeName", file.softwareTypeName);
+            fileInformation.put("rendered", file.rendered);
+            fileInformation.put("rendering", file.rendering);
+            fileInformation.put("renderCount", file.renderCount);
+            fileNames.add(fileInformation);
+        }
+        return ok(Json.toJson(fileNames));
+    }
+
+    public static Result getFileInformation() {
+        /**
+         * Identifying user using the SecureSocial API
+         */
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        HashMap<String, Object> jsonResults = new HashMap<>();
+        JsonNode jsonData = request().body().asJson();
+
+        if (!jsonData.findValue("action").asText().equals("fileInformation")) {
+            jsonResults.put("result", "error");
+            jsonResults.put("message", "Invalid action");
+            return badRequest(Json.toJson(jsonResults));
+        }
+
+        String fileName = jsonData.findValue("fileName").asText();
+
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+
+        if (file == null) {
+            jsonResults.put("result", "error");
+            return forbidden(Json.toJson(jsonResults));
+        }
+
+        jsonResults.put("result", "ok");
+        HashMap<String, Object> fileInformationNode = new HashMap<>();
+        fileInformationNode.put("fileName", file.fileName);
+        fileInformationNode.put("softwareTypeName", file.softwareTypeName);
+        fileInformationNode.put("renderCount", file.renderCount);
+        fileInformationNode.put("rendered", file.rendered);
+        fileInformationNode.put("rendering", file.rendering);
+        jsonResults.put("data", fileInformationNode);
+        return ok(Json.toJson(jsonResults));
+    }
+
+    public static Result getAccountInformation() {
+
+        /**
+         * Identifying user using the SecureSocial API
+         */
+
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        HashMap<String, Object> jsonResults = new HashMap<>();
+
+        jsonResults.put("result", "ok");
+        HashMap<String, Object> accountInformation = new HashMap<>();
+
+        accountInformation.put("email", localUser.email);
+        accountInformation.put("firstName", localUser.firstName);
+        accountInformation.put("lastName", localUser.lastName);
+        accountInformation.put("userName", account.userName);
+        accountInformation.put("filesCount", account.userfiles.size());
+        jsonResults.put("data", accountInformation);
+        return ok(Json.toJson(jsonResults));
+    }
+
     public static Result returnVdjUsageData(String fileName) throws FileNotFoundException {
 
         /**

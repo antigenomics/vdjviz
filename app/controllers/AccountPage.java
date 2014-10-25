@@ -44,6 +44,7 @@ public class AccountPage extends Controller {
 
     private static Form<UserFile> fileForm = Form.form(UserFile.class);
 
+    //todo
     public static Result newFile() {
 
         /**
@@ -63,7 +64,7 @@ public class AccountPage extends Controller {
         }
         return redirect(routes.AccountPage.index());
     }
-
+    //todo
     public static Result saveNewFile() {
 
         /**
@@ -200,7 +201,7 @@ public class AccountPage extends Controller {
             return Results.redirect(routes.AccountPage.index());
         }
     }
-
+    //todo
     public static Result deleteFile(String fileName) {
 
         /**
@@ -263,7 +264,7 @@ public class AccountPage extends Controller {
             return Results.redirect(routes.AccountPage.index());
         }
     }
-
+    //todo
     public static Result deleteAll() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -272,33 +273,6 @@ public class AccountPage extends Controller {
             deleteFile(file.fileName);
         }
         return Results.redirect(routes.AccountPage.index());
-    }
-
-    public static Result fileInformation(String fileName) {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-
-
-        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-
-        /**
-         * Verifying access to the file
-         * if file belong to User redirect
-         * to file information page
-         * else redirect to the account page
-         */
-
-        if (account.userfiles.contains(file)) {
-            return ok(views.html.computation.fileComputationResults.render(account, file));
-        } else {
-            return redirect(routes.AccountPage.index());
-        }
     }
 
     public static Result fileUpdatePage(String fileName) {
@@ -376,46 +350,6 @@ public class AccountPage extends Controller {
         } else {
             return redirect(routes.AccountPage.index());
         }
-    }
-
-    public static Result basicStats() {
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-
-        if (account!=null) {
-            return ok(views.html.computation.basicStats.render(account));
-        } else {
-            return redirect(routes.Application.index());
-        }
-    }
-
-    public static Result diversityPage() {
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-        if (account!=null) {
-            return ok(views.html.computation.diversityStats.render(account));
-        } else {
-            return redirect(routes.Application.index());
-        }
-    }
-
-    public static Result getAccountAllFilesInformation() {
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-        List<HashMap<String, Object>> fileNames = new ArrayList<>();
-        for (UserFile file: account.userfiles) {
-            HashMap<String, Object> fileInformation = new HashMap<>();
-            fileInformation.put("fileName", file.fileName);
-            fileInformation.put("softwareTypeName", file.softwareTypeName);
-            fileInformation.put("rendered", file.rendered);
-            fileInformation.put("rendering", file.rendering);
-            fileInformation.put("renderCount", file.renderCount);
-            fileNames.add(fileInformation);
-        }
-        return ok(Json.toJson(fileNames));
     }
 
 }

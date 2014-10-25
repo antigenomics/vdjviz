@@ -37,7 +37,9 @@ function HistogramData(url) {
             var svg = d3.select(".visualisation")
                 .append("div")
                 .attr("id", "chart")
-                .append("svg");
+                .append("svg")
+                .style("height", "800px")
+                .style("overflow", "visible");
 
             var chart = nv.models.multiBarChart()
                     .transitionDuration(350)
@@ -89,7 +91,9 @@ function HistogramVData(url) {
             var svg = d3.select(".visualisation")
                 .append("div")
                 .attr("id", "chart")
-                .append("svg");
+                .append("svg")
+                .style("height", "800px")
+                .style("overflow", "visible");
 
             var chart = nv.models.multiBarChart()
                     .transitionDuration(350)

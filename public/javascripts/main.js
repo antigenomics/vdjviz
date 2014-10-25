@@ -1,11 +1,37 @@
 $(document).ready(function() {
 
-    if ($(".userFilesList") != null) {
+    if ($(".addNewFilesButton").length != 0) {
         updateFilesList();
     }
 
+    $.ajax({
+        url : "/api/accountInformation",
+        type : "post",
+        success: function(data) {
+            var accountInformationTable = d3.select(".mainContent")
+                .html("Account Information")
+                .append("table").attr("class", "table table-responsive").append("tbody");
+
+            var emailtr = accountInformationTable.append("tr");
+                emailtr.append("td").text("Email: ");
+                emailtr.append("td").text(data["data"]["email"]);
+
+            var firstNametr = accountInformationTable.append("tr");
+                firstNametr.append("td").text("First Name: ");
+                firstNametr.append("td").text(data["data"]["firstName"]);
+
+            var lastNametr = accountInformationTable.append("tr");
+                lastNametr.append("td").text("Last Name: ");
+                lastNametr.append("td").text(data["data"]["lastName"]);
+        }
+    });
+
+
     function updateFilesList() {
-        $.getJSON("/account/allFilesInformation", function(data) {
+        $.getJSON("/api/allFilesInformation", function(data) {
+            if (!data) {
+                window.location.replace("/account")
+            }
             var fileTable = d3.select(".userFilesList");
             var count = 0;
             fileTable.html("");
@@ -46,7 +72,7 @@ $(document).ready(function() {
                         }
                     })
                     .on("click", function() {
-                        window.location.replace("/account/" + elem["fileName"] + "/")
+                        fileComputationResults(elem["fileName"]);
                     }).text(function() {
                         var text = elem["fileName"];
                         if (elem["rendering"]) {
@@ -88,10 +114,15 @@ $(document).ready(function() {
                 fileTable.append("li").append("a").text("You have no files");
             } else {
                 fileTable.append("hr");
-                fileTable.append("li").append("a").attr("href", "/account/diversity").text("Diversity");
-                fileTable.append("li").append("a").attr("href", "/account/basicStats").text("Summary");
-            }
-            if (count != 0) {
+                fileTable.append("li").append("a")
+                    .on("click", function() {
+                        diversityStats();
+                    })
+                    .text("Diversity");
+                fileTable.append("li").append("a")
+                    .on("click", function() {
+                        basicStats();
+                    }).text("Summary");
                 fileTable.append("hr");
                 fileTable.append("li").append("a").attr("href", "/account/deleteAll").text("Delete all");
             }
@@ -102,8 +133,98 @@ $(document).ready(function() {
                 d3.select(".addNewFilesButton").classed("fa-plus", true);
                 d3.select(".addNewFilesButton").classed("fa-refresh", false);
             }
-        });
+        }).error( function() {
+            location.reload();
+        });;
     }
+
+    function fileComputationResults(fileName) {
+        d3.select(".mainContent").html("");
+        var header = d3.select(".mainContent").append("ul").attr("class", "nav nav-pills").style("cursor", "pointer");
+            header.append("li")
+                .style("width", "24%").attr("class", "computationResultsButton")
+                .append("a").attr("class", "text-center")
+                .on("click", function() {
+                    d3.select(".visualisation").style("opacity", "0");
+                    d3.selectAll(".computationResultsButton").classed("active", false);
+                    d3.select(this.parentNode).classed("active", true);
+                    VJUsage("/api/" + fileName + "/vjusage");
+                    d3.select(".visualisation").transition().style("opacity", "1");
+                })
+                .html("V-J Usage");
+            header.append("li")
+                .attr("class", "active computationResultsButton").style("width", "24%")
+                .append("a").attr("class", "text-center")
+                .on("click", function() {
+                    d3.select(".visualisation").style("opacity", "0");
+                    d3.selectAll(".computationResultsButton").classed("active", false);
+                    d3.select(this.parentNode).classed("active", true);
+                    HistogramData("/api/" + fileName + "/histogram");
+                    d3.select(".visualisation").transition().style("opacity", "1");
+                })
+                .html("Spectrotype");
+            header.append("li")
+                .style("width", "24%").attr("class", "computationResultsButton")
+                .append("a").attr("class", "text-center")
+                .on("click", function() {
+                    d3.select(".visualisation").style("opacity", "0");
+                    d3.selectAll(".computationResultsButton").classed("active", false);
+                    d3.select(this.parentNode).classed("active", true);
+                    HistogramVData("/api/" + fileName + "/histogramV");
+                    d3.select(".visualisation").transition().style("opacity", "1");
+                })
+                .html("SpectrotypeV");
+            header.append("li")
+                .style("width", "24%").attr("class", "computationResultsButton")
+                .append("a").attr("class", "text-center")
+                .on("click", function() {
+                    d3.select(".visualisation").style("opacity", "0");
+                    d3.selectAll(".computationResultsButton").classed("active", false);
+                    d3.select(this.parentNode).classed("active", true);
+                    AnnotationTable("/api/" + fileName + "/annotation")
+                    d3.select(".visualisation").transition().style("opacity", "1");
+                })
+                .html("Annotation");
+
+        d3.select(".mainContent").append("div")
+            .attr("class", "hero-unit")
+            .append("div").attr("class", "visualisation")
+            .style("opacity", "0")
+            .style("top", "50px").style("width", "100%")
+            .style("position", "relative").style("height", "50%");
+
+        HistogramData("/api/" + fileName + "/histogram");
+        d3.select(".visualisation").transition().style("opacity", "1");
+    }
+
+    function diversityStats() {
+        d3.select(".mainContent").html("");
+        d3.select(".mainContent").append("div")
+            .attr("class", "hero-unit")
+            .append("div").attr("class", "visualisation")
+            .style("top", "50px").style("width", "100%")
+            .style("position", "relative").style("height", "50%")
+            .style("opacity", "0")
+            .append("div").attr("id", "chart")
+            .append("svg").attr("height", "800px").attr("width", "100%")
+            .style("overflow", "visible");
+        renderDiversityData("/api/diversity");
+        d3.select(".visualisation").transition().style("opacity", "1");
+    }
+
+    function basicStats() {
+        d3.select(".mainContent").html("");
+        d3.select(".mainContent").append("div")
+            .attr("class", "hero-unit")
+            .append("div").attr("class", "visualisation")
+            .style("top", "50px").style("width", "100%")
+            .style("opacity", "0")
+            .style("position", "relative").style("height", "50%");
+
+        BasicStatsTable("/api/getBasicStats");
+        d3.select(".visualisation").transition().style("opacity", "1");
+    }
+
     var progressCount = 0;
     var filesCount = 0;
 

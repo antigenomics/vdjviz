@@ -3,56 +3,55 @@
 # ~~~~
 
 # Home page
-GET         /                                   controllers.Application.index()
-GET         /contacts                           controllers.Application.contacts()
-GET         /about                              controllers.Application.about()
+GET         /                                  controllers.Application.index()
+GET         /contacts                          controllers.Application.contacts()
+GET         /about                             controllers.Application.about()
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                       controllers.Assets.at(path="/public", file)
+GET         /assets/*file                      controllers.Assets.at(path="/public", file)
 
 
 
 # Account routes
-GET         /account                            controllers.AccountPage.index()
-GET         /account/                           controllers.AccountPage.index()
-GET         /account/:fileName/                 controllers.AccountPage.fileInformation(fileName: String)
-GET         /account/newFile                    controllers.AccountPage.newFile()
-GET         /account/:fileName/update           controllers.AccountPage.fileUpdatePage(fileName: String)
-POST        /account/:fileName/update           controllers.AccountPage.fileUpdate(fileName: String)
-POST        /account/newFile                    controllers.AccountPage.saveNewFile()
-GET         /account/:fileName/delete           controllers.AccountPage.deleteFile(fileName: String)
-GET         /account/allFilesInformation        controllers.AccountPage.getAccountAllFilesInformation()
+GET         /account                           controllers.AccountPage.index()
+GET         /account/                          controllers.AccountPage.index()
+GET         /account/newFile                   controllers.AccountPage.newFile()
+GET         /account/:fileName/update          controllers.AccountPage.fileUpdatePage(fileName: String)
+POST        /account/:fileName/update          controllers.AccountPage.fileUpdate(fileName: String)
+POST        /account/newFile                   controllers.AccountPage.saveNewFile()
+GET         /account/:fileName/delete          controllers.AccountPage.deleteFile(fileName: String)
 
 #Computation
-GET         /account/basicStats                 controllers.AccountPage.basicStats()
-GET         /account/diversity                  controllers.AccountPage.diversityPage()
-GET         /account/:fileName/render           controllers.Computation.computationProgressBar(fileName: String)
-GET         /account/:fileName/progress         controllers.Computation.computationPage(fileName: String)
-GET         /account/deleteAll                  controllers.AccountPage.deleteAll()
+GET         /account/:fileName/render          controllers.Computation.computationProgressBar(fileName: String)
+GET         /account/:fileName/progress        controllers.Computation.computationPage(fileName: String)
+GET         /account/deleteAll                 controllers.AccountPage.deleteAll()
 
 
 # API
-POST        /api/uploadFile                     controllers.API.uploadFile()
-POST        /api/deleteFile                     controllers.API.deleteFile()
-GET         /api/getBasicStats                  controllers.API.returnBasicStats()
-GET         /api/diversity                      controllers.API.returnDiversity()
-GET         /api/:fileName/table                controllers.API.returnVdjUsageData(fileName: String)
-GET         /api/:fileName/histogram            controllers.API.returnSpectrotypeHistogram(fileName: String)
-GET         /api/:fileName/histogramV           controllers.API.returnSpectrotypeVHistogram(fileName: String)
-GET         /api/:fileName/annotation           controllers.API.returnAnnotationData(fileName: String)
+POST        /api/uploadFile                    controllers.API.uploadFile()
+POST        /api/deleteFile                    controllers.API.deleteFile()
+POST        /api/fileInformation               controllers.API.getFileInformation()
+POST        /api/accountInformation            controllers.API.getAccountInformation()
+GET         /api/getBasicStats                 controllers.API.returnBasicStats()
+GET         /api/diversity                     controllers.API.returnDiversity()
+GET         /api/:fileName/vjusage             controllers.API.returnVdjUsageData(fileName: String)
+GET         /api/:fileName/histogram           controllers.API.returnSpectrotypeHistogram(fileName: String)
+GET         /api/:fileName/histogramV          controllers.API.returnSpectrotypeVHistogram(fileName: String)
+GET         /api/:fileName/annotation          controllers.API.returnAnnotationData(fileName: String)
+GET         /api/allFilesInformation           controllers.API.getAccountAllFilesInformation()
 
 # Auth routes
-GET         /signin                             securesocial.controllers.LoginPage.login
-GET         /logout                             securesocial.controllers.LoginPage.logout
-GET         /authenticate/:provider             securesocial.controllers.ProviderController.authenticate(provider)
-POST        /authenticate/:provider             securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET         /signup                             securesocial.controllers.Registration.startSignUp
-POST        /signup                             securesocial.controllers.Registration.handleStartSignUp
-GET         /signup/:token                      securesocial.controllers.Registration.signUp(token)
-POST        /signup/:token                      securesocial.controllers.Registration.handleSignUp(token)
-GET         /password                           securesocial.controllers.PasswordChange.page
-POST        /password                           securesocial.controllers.PasswordChange.handlePasswordChange
-GET         /reset                              securesocial.controllers.Registration.startResetPassword
-POST        /reset                              securesocial.controllers.Registration.handleStartResetPassword
-GET         /reset/:token                       securesocial.controllers.Registration.resetPassword(token)
-POST        /reset/:token                       securesocial.controllers.Registration.handleResetPassword(token)
+GET         /signin                            securesocial.controllers.LoginPage.login
+GET         /logout                            securesocial.controllers.LoginPage.logout
+GET         /authenticate/:provider            securesocial.controllers.ProviderController.authenticate(provider)
+POST        /authenticate/:provider            securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET         /signup                            securesocial.controllers.Registration.startSignUp
+POST        /signup                            securesocial.controllers.Registration.handleStartSignUp
+GET         /signup/:token                     securesocial.controllers.Registration.signUp(token)
+POST        /signup/:token                     securesocial.controllers.Registration.handleSignUp(token)
+GET         /password                          securesocial.controllers.PasswordChange.page
+POST        /password                          securesocial.controllers.PasswordChange.handlePasswordChange
+GET         /reset                             securesocial.controllers.Registration.startResetPassword
+POST        /reset                             securesocial.controllers.Registration.handleStartResetPassword
+GET         /reset/:token                      securesocial.controllers.Registration.resetPassword(token)
+POST        /reset/:token                      securesocial.controllers.Registration.handleResetPassword(token)
