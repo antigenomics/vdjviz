@@ -103,6 +103,58 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
     position: relative;
 }
 
+.updateFilesContainer {
+    visibility: hidden;
+    opacity: 0;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 10;
+}
+
+.updateFilesContainer .background {
+    background-color: #000;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0.5;
+    position: absolute;
+}
+
+.updateFilesContainer .filesTable {
+    top: -100%;
+    left: 10%;
+    width: 80%;
+    background-color: #FFFFFF;
+    height: 60%;
+    position: absolute;
+    overflow: scroll;
+}
+
+.updateFilesContainer .filesTable .header {
+    top : 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #DCDCDC;
+    position: relative;
+}
+
+.updateFilesContainer .filesTable .header .headerButtons {
+    top: 10%;
+    height: 80%;
+    left: 1%;
+    width: 98%;
+    position: relative;
+}
+
+.updateFilesButton {
+    cursor: pointer;
+}
+
 .addNewFilesButton {
     cursor: pointer;
 }

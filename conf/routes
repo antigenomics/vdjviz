@@ -31,7 +31,7 @@ GET         /account/deleteAll                 controllers.AccountPage.deleteAll
 POST        /api/uploadFile                    controllers.API.uploadFile()
 POST        /api/deleteFile                    controllers.API.deleteFile()
 POST        /api/fileInformation               controllers.API.getFileInformation()
-POST        /api/accountInformation            controllers.API.getAccountInformation()
+GET         /api/accountInformation            controllers.API.getAccountInformation()
 GET         /api/getBasicStats                 controllers.API.returnBasicStats()
 GET         /api/diversity                     controllers.API.returnDiversity()
 GET         /api/:fileName/vjusage             controllers.API.returnVdjUsageData(fileName: String)

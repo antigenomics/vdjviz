@@ -1,7 +1,10 @@
 @(account: Account)
 <div class="panel panel-success">
     <div class="panel-heading">
-        <h3 class="panel-title">Your Files<i class="fa fa-plus fa-1x addNewFilesButton pull-right"></i></h3>
+        <h3 class="panel-title">Your Files
+            <i class="fa fa-plus addNewFilesButton pull-right"></i>
+            <i class="fa fa-cogs updateFilesButton pull-right"></i>
+        </h3>
     </div>
 </div>
 <ul class="nav nav-pills nav-stacked userFilesList">
@@ -47,5 +50,44 @@
         <form id="fileupload" method="POST" action="" enctype="multipart/form-data" hidden>
             <input type="file" name="files[]" multiple />
         </form>
+    </div>
+</div>
+
+<div class="updateFilesContainer">
+    <div class="background">
+    </div>
+    <div class="filesTable">
+        <div class="header">
+            <div class="headerButtons">
+                <div class="uploadAllButton btn btn-primary">Update All</div>
+                <div class="closeButton pull-right btn btn-default">Close</div>
+            </div>
+        </div>
+        <table class="table" style="left: 1%; width: 98%; position: relative">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Software Type</th>
+                    <th>Progress</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody class="main-tbody-update-files">
+                <tr>
+                    <td></td>
+                    <td>
+                        <select class="commonSoftwareType">
+                            <option value="mitcr" >MiTcr</option>
+                            <option value="migec" >MiGec</option>
+                            <option value="simple" >Simple</option>
+                            <option value="igblast" >IgBlast</option>
+                            <option value="cdrblast" >CdrBlast</option>
+                        </select>
+                    </td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
