@@ -36,7 +36,6 @@ $(document).ready(function() {
         });
     }
 
-
     function updateFilesList() {
         $.getJSON("/api/allFilesInformation", function(data) {
             if (!data) {
@@ -136,7 +135,20 @@ $(document).ready(function() {
                     }).text("Summary")
                     .append("i").attr("class", "fa fa-th-list pull-right");
                 fileTable.append("hr");
-                fileTable.append("li").append("a").attr("href", "/account/deleteAll").text("Delete all");
+                fileTable.append("li").append("a").on("click", function() {
+                    $.ajax({
+                        url : "/api/deleteAll",
+                        type : "post",
+                        contentType: 'application/json; charset=utf-8',
+                        data : JSON.stringify({
+                            "action" : "deleteAll"
+                        }),
+                        success: function(data) {
+                            accountPageInitializing();
+                            updateFilesList();
+                        }
+                    })
+                }).text("Delete all");
             }
             if (progressCount != 0) {
                 d3.select(".addNewFilesButton").classed("fa-plus", false);
@@ -153,15 +165,18 @@ $(document).ready(function() {
     function fileComputationResults(fileName) {
         currentFile = fileName;
         d3.select(".mainContent").html("");
+        loading();
         var header = d3.select(".mainContent").append("ul").attr("class", "nav nav-pills").style("cursor", "pointer");
             header.append("li")
                 .style("width", "24%").attr("class", "computationResultsButton")
                 .append("a").attr("class", "text-center")
                 .on("click", function() {
                     d3.select(".visualisation").style("opacity", "0");
+                    loading();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     VJUsage("/api/" + fileName + "/vjusage");
+                    loaded();
                     d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("V-J Usage");
@@ -170,9 +185,11 @@ $(document).ready(function() {
                 .append("a").attr("class", "text-center")
                 .on("click", function() {
                     d3.select(".visualisation").style("opacity", "0");
+                    loading();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     HistogramData("/api/" + fileName + "/histogram");
+                    loaded();
                     d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("Spectrotype")
@@ -182,9 +199,11 @@ $(document).ready(function() {
                 .append("a").attr("class", "text-center")
                 .on("click", function() {
                     d3.select(".visualisation").style("opacity", "0");
+                    loading();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     HistogramVData("/api/" + fileName + "/histogramV");
+                    loaded();
                     d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("SpectrotypeV")
@@ -194,9 +213,11 @@ $(document).ready(function() {
                 .append("a").attr("class", "text-center")
                 .on("click", function() {
                     d3.select(".visualisation").style("opacity", "0");
+                    loading();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
-                    AnnotationTable("/api/" + fileName + "/annotation")
+                    AnnotationTable("/api/" + fileName + "/annotation");
+                    loaded();
                     d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("Annotation")
@@ -210,11 +231,13 @@ $(document).ready(function() {
             .style("position", "relative").style("height", "50%");
 
         HistogramData("/api/" + fileName + "/histogram");
+        loaded();
         d3.select(".visualisation").transition().style("opacity", "1");
     }
 
     function diversityStats() {
         d3.select(".mainContent").html("");
+        loading();
         d3.select(".mainContent").append("div")
             .attr("class", "hero-unit")
             .append("div").attr("class", "visualisation")
@@ -225,11 +248,13 @@ $(document).ready(function() {
             .append("svg").attr("height", "800px").attr("width", "100%")
             .style("overflow", "visible");
         renderDiversityData("/api/diversity");
+        loaded();
         d3.select(".visualisation").transition().style("opacity", "1");
     }
 
     function basicStats() {
         d3.select(".mainContent").html("");
+        loading();
         d3.select(".mainContent").append("div")
             .attr("class", "hero-unit")
             .append("div").attr("class", "visualisation")
@@ -238,7 +263,21 @@ $(document).ready(function() {
             .style("position", "relative").style("height", "50%");
 
         BasicStatsTable("/api/getBasicStats");
+        loaded();
         d3.select(".visualisation").transition().style("opacity", "1");
+    }
+
+    function loading() {
+        var loading = d3.select(".mainContent").append("div").attr("class", "loading");
+        loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
+        loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
+        loading.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");
+        loading.append("div").attr("class", "wBall").attr("id", "wBall_4").append("div").attr("class", "wInnerBall");
+        loading.append("div").attr("class", "wBall").attr("id", "wBall_5").append("div").attr("class", "wInnerBall");
+    }
+
+    function loaded() {
+        d3.select(".loading").remove();
     }
 
     var progressCount = 0;
@@ -264,9 +303,14 @@ $(document).ready(function() {
         url: '/api/uploadFile',
         dataType: 'json',
         add: function (e, data) {
-            var fileName = data.files[0].name;
+            var originalFileName = data.files[0].name;
             var create = true;
-            fileName = fileName.substr(0, fileName.lastIndexOf('.')) || fileName;
+            var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
+            var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
+            if (fileExtension != "txt" && fileExtension != "gz") {
+                fileName += fileExtension;
+                fileExtension = "txt";
+            }
             $(".fileName").each(function() {
                 if ($(this).html() == fileName) {
                     create = false;
@@ -301,7 +345,12 @@ $(document).ready(function() {
                         var inputFileName = data.context.select("td .fileNameInput").node().value;
                         data.context.select("td.fileName").html(inputFileName);
                         data.context.select("td.software-td").html(softwareTypeName);
-                        data.formData = {softwareTypeName: softwareTypeName, fileName: inputFileName};
+                        data.formData = {
+                            softwareTypeName: softwareTypeName,
+                            fileName: inputFileName,
+                            fileExtension: fileExtension
+                        };
+                        console.log()
                         progressCount++;
                         updateFilesList();
                         data.submit();
@@ -456,4 +505,6 @@ $(document).ready(function() {
             }
         })
     })
+
+
 });

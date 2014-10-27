@@ -15,21 +15,17 @@ GET         /assets/*file                      controllers.Assets.at(path="/publ
 # Account routes
 GET         /account                           controllers.AccountPage.index()
 GET         /account/                          controllers.AccountPage.index()
-GET         /account/newFile                   controllers.AccountPage.newFile()
-GET         /account/:fileName/update          controllers.AccountPage.fileUpdatePage(fileName: String)
-POST        /account/:fileName/update          controllers.AccountPage.fileUpdate(fileName: String)
-POST        /account/newFile                   controllers.AccountPage.saveNewFile()
-GET         /account/:fileName/delete          controllers.AccountPage.deleteFile(fileName: String)
+GET         /test/                             controllers.AccountPage.test()
 
 #Computation
 GET         /account/:fileName/render          controllers.Computation.computationProgressBar(fileName: String)
 GET         /account/:fileName/progress        controllers.Computation.computationPage(fileName: String)
-GET         /account/deleteAll                 controllers.AccountPage.deleteAll()
 
 
 # API
 POST        /api/uploadFile                    controllers.API.uploadFile()
 POST        /api/deleteFile                    controllers.API.deleteFile()
+POST        /api/deleteAll                     controllers.API.deleteAllFiles()
 POST        /api/fileInformation               controllers.API.getFileInformation()
 GET         /api/accountInformation            controllers.API.getAccountInformation()
 GET         /api/getBasicStats                 controllers.API.returnBasicStats()

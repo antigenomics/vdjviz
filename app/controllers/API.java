@@ -129,8 +129,8 @@ public class API extends Controller {
             /**
              * Checking
              */
-
-            Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/file"));
+            String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
+            Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension));
             if (!uploaded) {
                 resultJson.put("error", "Server currently unavailable");
                 Logger.of("user." + account.userName).error("Error upload file for user " + account.userName);
@@ -139,8 +139,8 @@ public class API extends Controller {
 
             UserFile newFile = new UserFile(account, fileName,
                     unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
-                    account.userDirPath + "/" + unique_name + "/file",
-                    fileDir.getAbsolutePath());
+                    account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension,
+                    fileDir.getAbsolutePath(), fileExtension);
 
             /**
              * Database updating with relationships
@@ -194,9 +194,9 @@ public class API extends Controller {
          * and try to delete it
          */
 
-        String fileDirectoryName =  account.userDirPath + "/" + file.uniqueName;
+        String fileDirectoryName =  file.fileDirPath;
 
-        File f = new File(fileDirectoryName + "/file");
+        File f = new File(file.filePath);
         File histogram = new File(fileDirectoryName + "/histogram.cache");
         File histogramV = new File(fileDirectoryName + "/histogramV.cache");
         File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
@@ -235,6 +235,69 @@ public class API extends Controller {
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
             return ok(Json.toJson(jsonResults));
         }
+    }
+
+    public static Result deleteAllFiles() {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        HashMap<String, Object> jsonResults = new HashMap<>();
+        JsonNode jsonData = request().body().asJson();
+
+        if (!jsonData.findValue("action").asText().equals("deleteAll")) {
+            jsonResults.put("result", "error");
+            jsonResults.put("message", "Invalid action");
+            return badRequest(Json.toJson(jsonResults));
+        }
+
+        for (UserFile file: UserFile.findByAccount(account)) {
+            String fileDirectoryName =  file.fileDirPath;
+
+            File f = new File(file.filePath);
+            File histogram = new File(fileDirectoryName + "/histogram.cache");
+            File histogramV = new File(fileDirectoryName + "/histogramV.cache");
+            File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
+            File annotation = new File(fileDirectoryName + "/annotation.cache");
+            File basicStats = new File(fileDirectoryName + "/basicStats.cache");
+            File diversity = new File(fileDirectoryName + "/diversity.cache");
+            File fileDir = new File(fileDirectoryName + "/");
+            Boolean deleted = false;
+            try {
+                f.delete();
+                annotation.delete();
+                basicStats.delete();
+                histogram.delete();
+                histogramV.delete();
+                vdjUsage.delete();
+                diversity.delete();
+                if (fileDir.delete()) {
+                    deleted = true;
+                }
+            } catch (Exception e) {
+                Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
+                e.printStackTrace();
+                jsonResults.put("result", "error");
+                jsonResults.put("message", "Error while deleting file " + file.fileName);
+                return ok(Json.toJson(jsonResults));
+            }
+            if (deleted) {
+                Ebean.delete(file);
+                Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + file.fileName);
+            } else {
+                jsonResults.put("result", "error");
+                jsonResults.put("message", "Error while deleting file " + file.fileName);
+                Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
+                return ok(Json.toJson(jsonResults));
+            }
+        }
+        jsonResults.put("result", "ok");
+        return ok(Json.toJson(jsonResults));
     }
 
     public static Result getAccountAllFilesInformation() {

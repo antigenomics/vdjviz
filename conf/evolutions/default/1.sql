@@ -40,6 +40,7 @@ create table user_file (
   software_type_name        varchar(255),
   file_path                 varchar(255),
   file_dir_path             varchar(255),
+  file_extension            varchar(255),
   render_count              integer,
   rendered                  boolean,
   rendering                 boolean,
