@@ -1,4 +1,4 @@
-function renderDiversityData(url) {
+function renderLineChart(url) {
     $.getJSON(url, function(data) {
         nv.addGraph(function() {
             var chart = nv.models.lineChart()
@@ -8,8 +8,7 @@ function renderDiversityData(url) {
                     .showLegend(true)
                     .showYAxis(true)
                     .showXAxis(true)
-                    .height(700)
-                ;
+                    .height(700);
 
             chart.xAxis
                 .axisLabel('Count')
@@ -18,6 +17,53 @@ function renderDiversityData(url) {
             chart.yAxis
                 .axisLabel('CDR3AA')
                 .tickFormat(d3.format('.02f'));
+
+
+            d3.select('#chart svg')
+                .datum(data)
+                .call(chart);
+
+            nv.utils.windowResize(function() { chart.update() });
+            return chart;
+        });
+    });
+}
+
+function renderKernelDensity(url) {
+    $.getJSON(url, function(data) {
+        nv.addGraph(function() {
+            var svg = d3.select(".visualisation")
+                .html("")
+                .append("div")
+                .attr("id", "chart")
+                .append("svg")
+                .style("height", "800px");
+
+            var chart = nv.models.lineChart()
+                    .margin({left: 100})
+                    .useInteractiveGuideline(true)
+                    .transitionDuration(350)
+                    .showLegend(true)
+                    .showYAxis(true)
+                    .showXAxis(true)
+                    .height(700)
+                    .xScale(d3.scale.log())
+                    .xDomain([1,1000])
+                    .forceX([1,1000])
+                    //todo
+                    .yDomain([0.0001, 0.16])
+                    .forceY([0.0001, 0.16])
+                    .yScale(d3.scale.log())
+                ;
+
+            chart.xAxis
+                .axisLabel('Clonotype size')
+                .tickFormat(d3.format(',r'));
+
+            chart.yAxis
+                .axisLabel('1-CDF')
+                .tickFormat(d3.format('.02e'));
+
 
             d3.select('#chart svg')
                 .datum(data)
@@ -30,8 +76,6 @@ function renderDiversityData(url) {
 }
 
 function HistogramData(url) {
-    d3.select("svg").remove();
-    d3.select(".svg").remove();
     $.getJSON(url, function(data){
         nv.addGraph(function() {
             var svg = d3.select(".visualisation")
@@ -84,8 +128,6 @@ function HistogramData(url) {
 }
 
 function HistogramVData(url) {
-    d3.select("svg").remove();
-    d3.select(".svg").remove();
     $.getJSON(url, function(data){
         nv.addGraph(function() {
             var svg = d3.select(".visualisation")
@@ -129,8 +171,6 @@ function HistogramVData(url) {
 }
 
 function VJUsage(url) {
-    d3.select("svg").remove();
-    d3.select(".svg").remove();
     var vdjUsageData = [];
     $.getJSON(url, function(data){
         $.each(data, function(key, value){
@@ -143,8 +183,6 @@ function VJUsage(url) {
 }
 
 function AnnotationTable(url) {
-    d3.select("svg").remove();
-    d3.select(".svg").remove();
     $.getJSON(url, function(data) {
         var header = Object.keys(data[0]);
         renderAnnotationTable(data, header)
@@ -152,8 +190,6 @@ function AnnotationTable(url) {
 }
 
 function BasicStatsTable(url) {
-    d3.select("svg").remove();
-    d3.select(".svg").remove();
     $.getJSON(url, function(data) {
         var header = Object.keys(data[0]);
         renderBasicStatsTable(data, header);
@@ -225,6 +261,7 @@ function renderBasicStatsTable(data, header) {
         responsive: true
     });
 }
+
 
 function renderAnnotationTable(data, header) {
     var svg = d3.select(".visualisation")
@@ -316,7 +353,7 @@ function createbP() {
             });
 
             return sData;
-        }
+        };
 
         function visualize(data) {
             var vis = {};

@@ -37,5 +37,4 @@ public class CommonUtil {
             return buffer.toString();
         }
     }
-
 }

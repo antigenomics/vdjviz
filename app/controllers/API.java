@@ -203,6 +203,7 @@ public class API extends Controller {
         File annotation = new File(fileDirectoryName + "/annotation.cache");
         File basicStats = new File(fileDirectoryName + "/basicStats.cache");
         File diversity = new File(fileDirectoryName + "/diversity.cache");
+        File kernelDensity = new File(fileDirectoryName + "/kernelDensity.cache");
         File fileDir = new File(fileDirectoryName + "/");
         Boolean deleted = false;
         try {
@@ -212,6 +213,7 @@ public class API extends Controller {
             histogram.delete();
             histogramV.delete();
             vdjUsage.delete();
+            kernelDensity.delete();
             diversity.delete();
             if (fileDir.delete()) {
                 deleted = true;
@@ -266,6 +268,7 @@ public class API extends Controller {
             File annotation = new File(fileDirectoryName + "/annotation.cache");
             File basicStats = new File(fileDirectoryName + "/basicStats.cache");
             File diversity = new File(fileDirectoryName + "/diversity.cache");
+            File kernelDensity = new File(fileDirectoryName + "/kernelDensity.cache");
             File fileDir = new File(fileDirectoryName + "/");
             Boolean deleted = false;
             try {
@@ -275,6 +278,7 @@ public class API extends Controller {
                 histogram.delete();
                 histogramV.delete();
                 vdjUsage.delete();
+                kernelDensity.delete();
                 diversity.delete();
                 if (fileDir.delete()) {
                     deleted = true;
@@ -479,6 +483,42 @@ public class API extends Controller {
 
         if (file.rendered) {
             File jsonFile = new File(file.fileDirPath + "/histogramV.cache");
+            FileInputStream fis = new FileInputStream(jsonFile);
+            JsonNode jsonData = Json.parse(fis);
+            return ok(jsonData);
+        }
+        return ok();
+    }
+
+    public static Result returnKernelDensity(String fileName) throws JsonProcessingException, FileNotFoundException {
+
+        /**
+         * Identifying User using the SecureSocial API
+         */
+
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account localAccount = localUser.account;
+
+        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
+
+        /**
+         * Verifying access to the file
+         */
+
+        if (!localAccount.userfiles.contains(file)) {
+            return ok("You have no access to this operation");
+        }
+
+        /**
+         * Verification of the existence
+         * Histogram data cache file
+         * if exists return jsonData
+         * else render SampleCache files again
+         */
+
+        if (file.rendered) {
+            File jsonFile = new File(file.fileDirPath + "/kernelDensity.cache");
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
             return ok(jsonData);

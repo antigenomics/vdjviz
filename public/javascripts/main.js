@@ -15,22 +15,31 @@ $(document).ready(function() {
             if (!data) {
                 window.location.replace("/account")
             }
-            d3.select(".mainContent").html("");
+            clearMainContent();
             var accountInformationTable = d3.select(".mainContent")
                 .html("Account Information")
-                .append("table").attr("class", "table table-responsive").append("tbody");
+                .append("table")
+                .attr("class", "table table-responsive")
+                .append("tbody");
 
             var emailtr = accountInformationTable.append("tr");
-            emailtr.append("td").text("Email: ");
-            emailtr.append("td").text(data["data"]["email"]);
+                emailtr.append("td")
+                    .text("Email: ");
+                emailtr.append("td")
+                    .text(data["data"]["email"]);
 
             var firstNametr = accountInformationTable.append("tr");
-            firstNametr.append("td").text("First Name: ");
-            firstNametr.append("td").text(data["data"]["firstName"]);
+                firstNametr.append("td")
+                    .text("First Name: ");
+                firstNametr.append("td")
+                    .text(data["data"]["firstName"]);
 
             var lastNametr = accountInformationTable.append("tr");
-            lastNametr.append("td").text("Last Name: ");
-            lastNametr.append("td").text(data["data"]["lastName"]);
+                lastNametr.append("td")
+                    .text("Last Name: ");
+                lastNametr.append("td")
+                    .text(data["data"]["lastName"]);
+
         }).error(function () {
             location.reload();
         });
@@ -162,82 +171,109 @@ $(document).ready(function() {
         });
     }
 
+    function clearVisualisation() {
+        d3.select(".visualisation").html("");
+    }
+
+    function clearMainContent() {
+        d3.select(".mainContent").html("");
+    }
+
     function fileComputationResults(fileName) {
         currentFile = fileName;
         d3.select(".mainContent").html("");
         loading();
-        var header = d3.select(".mainContent").append("ul").attr("class", "nav nav-pills").style("cursor", "pointer");
+        var header = d3.select(".mainContent")
+            .append("ul")
+            .attr("class", "nav nav-pills")
+            .style("cursor", "pointer");
+
             header.append("li")
-                .style("width", "24%").attr("class", "computationResultsButton")
-                .append("a").attr("class", "text-center")
+                .style("width", "19%")
+                .attr("class", "computationResultsButton")
+                .append("a")
+                .attr("class", "text-center")
                 .on("click", function() {
-                    d3.select(".visualisation").style("opacity", "0");
-                    loading();
+                    clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     VJUsage("/api/" + fileName + "/vjusage");
-                    loaded();
-                    d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("V-J Usage");
             header.append("li")
-                .attr("class", "active computationResultsButton").style("width", "24%")
-                .append("a").attr("class", "text-center")
+                .attr("class", "active computationResultsButton")
+                .style("width", "19%")
+                .append("a")
+                .attr("class", "text-center")
                 .on("click", function() {
-                    d3.select(".visualisation").style("opacity", "0");
-                    loading();
+                    clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     HistogramData("/api/" + fileName + "/histogram");
-                    loaded();
-                    d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("Spectrotype")
-                .append("i").attr("class", "fa fa-bar-chart-o pull-right");
+                .append("i")
+                .attr("class", "fa fa-bar-chart-o pull-right");
             header.append("li")
-                .style("width", "24%").attr("class", "computationResultsButton")
-                .append("a").attr("class", "text-center")
+                .style("width", "19%").
+                attr("class", "computationResultsButton")
+                .append("a")
+                .attr("class", "text-center")
                 .on("click", function() {
-                    d3.select(".visualisation").style("opacity", "0");
-                    loading();
+                    clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     HistogramVData("/api/" + fileName + "/histogramV");
-                    loaded();
-                    d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("SpectrotypeV")
-                .append("i").attr("class", "fa fa-bar-chart-o pull-right");
+                .append("i")
+                .attr("class", "fa fa-bar-chart-o pull-right");
             header.append("li")
-                .style("width", "24%").attr("class", "computationResultsButton")
-                .append("a").attr("class", "text-center")
+                .style("width", "19%")
+                .attr("class", "computationResultsButton")
+                .append("a")
+                .attr("class", "text-center")
                 .on("click", function() {
-                    d3.select(".visualisation").style("opacity", "0");
-                    loading();
+                    clearVisualisation();
+                    d3.selectAll(".computationResultsButton").classed("active", false);
+                    d3.select(this.parentNode).classed("active", true);
+                    renderKernelDensity("/api/" + fileName + "/kernelDensity");
+                })
+                .html("Kernel Density");
+            header.append("li")
+                .style("width", "19%")
+                .attr("class", "computationResultsButton")
+                .append("a")
+                .attr("class", "text-center")
+                .on("click", function() {
+                    clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
                     AnnotationTable("/api/" + fileName + "/annotation");
-                    loaded();
-                    d3.select(".visualisation").transition().style("opacity", "1");
                 })
                 .html("Annotation")
-                .append("i").attr("class", "fa fa-th-list pull-right");
+                .append("i")
+                .attr("class", "fa fa-th-list pull-right");
 
         d3.select(".mainContent").append("div")
             .attr("class", "hero-unit")
-            .append("div").attr("class", "visualisation")
+            .append("div")
+            .attr("class", "visualisation")
             .style("opacity", "0")
-            .style("top", "50px").style("width", "100%")
-            .style("position", "relative").style("height", "50%");
+            .style("top", "50px")
+            .style("width", "100%")
+            .style("position", "relative")
+            .style("height", "50%");
 
         HistogramData("/api/" + fileName + "/histogram");
         loaded();
-        d3.select(".visualisation").transition().style("opacity", "1");
+        d3.select(".visualisation")
+            .transition()
+            .style("opacity", "1");
     }
 
     function diversityStats() {
-        d3.select(".mainContent").html("");
-        loading();
+        clearMainContent();
         d3.select(".mainContent").append("div")
             .attr("class", "hero-unit")
             .append("div").attr("class", "visualisation")
@@ -247,14 +283,11 @@ $(document).ready(function() {
             .append("div").attr("id", "chart")
             .append("svg").attr("height", "800px").attr("width", "100%")
             .style("overflow", "visible");
-        renderDiversityData("/api/diversity");
-        loaded();
-        d3.select(".visualisation").transition().style("opacity", "1");
+        renderLineChart("/api/diversity");
     }
 
     function basicStats() {
-        d3.select(".mainContent").html("");
-        loading();
+        clearMainContent();
         d3.select(".mainContent").append("div")
             .attr("class", "hero-unit")
             .append("div").attr("class", "visualisation")
@@ -263,8 +296,6 @@ $(document).ready(function() {
             .style("position", "relative").style("height", "50%");
 
         BasicStatsTable("/api/getBasicStats");
-        loaded();
-        d3.select(".visualisation").transition().style("opacity", "1");
     }
 
     function loading() {
@@ -318,16 +349,25 @@ $(document).ready(function() {
             });
             if (create) {
                 filesCount++;
-                d3.select(".filesTable .table").style("visibility", "visible");
-                data.context = d3.select(".filesTable .table tbody.main-tbody-files").append("tr");
-                data.context.append("td").attr("class", "fileName")
-                    .append("input").attr("type", "text")
+                d3.select(".filesTable .table")
+                    .style("visibility", "visible");
+
+                data.context = d3.select(".filesTable .table tbody.main-tbody-files")
+                    .append("tr");
+
+                data.context.append("td")
+                    .attr("class", "fileName")
+                    .append("input")
+                    .attr("type", "text")
                     .attr("class", "fileNameInput")
                     .attr("name", "fileNameInput")
                     .attr("value", fileName);
 
-                var optionValues = data.context.append("td").attr("class", "software-td").append("select")
-                    .attr("id", "softwareTypeName").attr("name", "softwareTypeName");
+                var optionValues = data.context.append("td")
+                    .attr("class", "software-td")
+                    .append("select")
+                    .attr("id", "softwareTypeName")
+                    .attr("name", "softwareTypeName");
 
                 optionValues.append("option").attr("value", "mitcr").text("MiTcr");
                 optionValues.append("option").attr("value", "migec").text("MiGec");
@@ -335,12 +375,22 @@ $(document).ready(function() {
                 optionValues.append("option").attr("value", "igblast").text("IgBlast");
                 optionValues.append("option").attr("value", "cdrblast").text("CdrBlast");
 
-                data.context.append("td").style("width", "40%").attr("class", "progress-td").append("div")
+                data.context.append("td")
+                    .style("width", "40%")
+                    .attr("class", "progress-td")
+                    .append("div")
                     .attr("class", "progress progress-striped active")
-                    .append("div").attr("class", "progress-bar").style("width", "0%");
-                data.context.append("td").attr("class", "tdUploadButton").style("width", "10%")
+                    .append("div")
+                    .attr("class", "progress-bar")
+                    .style("width", "0%");
+
+                data.context.append("td")
+                    .attr("class", "tdUploadButton")
+                    .style("width", "10%")
                     .append("button")
-                    .attr("class", "unitFileUpload btn btn-default").text("Upload").on("click", function () {
+                    .attr("class", "unitFileUpload btn btn-default")
+                    .text("Upload")
+                    .on("click", function () {
                         var softwareTypeName = data.context.select("#softwareTypeName").node().value;
                         var inputFileName = data.context.select("td .fileNameInput").node().value;
                         data.context.select("td.fileName").html(inputFileName);
@@ -350,7 +400,6 @@ $(document).ready(function() {
                             fileName: inputFileName,
                             fileExtension: fileExtension
                         };
-                        console.log()
                         progressCount++;
                         updateFilesList();
                         data.submit();
@@ -359,46 +408,72 @@ $(document).ready(function() {
         },
         progress: function(e, data) {
             var progress = parseInt(data.loaded / data.total * 50, 10);
-            data.context.select(".tdUploadButton").html("Uploading...")
-            data.context.select(".progress-bar").style("width", progress + "%");
+            data.context.select(".tdUploadButton")
+                .html("Uploading...")
+            data.context.select(".progress-bar")
+                .style("width", progress + "%");
         },
         done: function(e, data) {
             progressCount--;
             updateFilesList();
             if (data.result["success"] != undefined) {
                 progressCount++;
-                data.context.select(".tdUploadButton").html("Computation...");
+                data.context.select(".tdUploadButton")
+                    .html("Computation...");
                 var socket = new WebSocket("ws://" + location.host + "/account/" + data.formData.fileName + "/render");
                 socket.onmessage = function(event) {
                     if (event.data == "start") {
                         updateFilesList();
                     } else if (event.data != "ComputationDone" && event.data != "ComputationError") {
-                        data.context.select(".progress-bar").style("width", 50 + (event.data / 2) + "%");
+                        data.context.select(".progress-bar")
+                            .style("width", 50 + (event.data / 2) + "%");
                     } else if (event.data == "ComputationDone") {
-                        data.context.select(".tdUploadButton").html("").append("i").attr("class", "fa  fa-check fa-2x pull-right").style("color", "green");
-                        data.context.select(".progress-bar").attr("class", "progress-bar progress-bar-success");
-                        data.context.select(".progress").attr("class", "progress progress-striped")
-                        data.context.attr("class","success");
+                        data.context.select(".tdUploadButton")
+                            .html("")
+                            .append("i")
+                            .attr("class", "fa  fa-check fa-2x pull-right")
+                            .style("color", "green");
+                        data.context.select(".progress-bar")
+                            .attr("class", "progress-bar progress-bar-success");
+                        data.context.select(".progress")
+                            .attr("class", "progress progress-striped");
+                        data.context
+                            .attr("class","success");
                         progressCount--;
                         updateFilesList();
                         socket.close();
                     } else {
-                        data.context.select(".tdUploadButton").html("").append("i").attr("class", "fa  fa-remove fa-2x pull-right").style("color", "red");
-                        data.context.select(".progress-bar").attr("class", "progress-bar progress-bar-danger");
-                        data.context.attr("class", "danger computation-fail");
-                        data.context.select(".progress-td").html("Computation error");
+                        data.context.select(".tdUploadButton")
+                            .html("")
+                            .append("i")
+                            .attr("class", "fa  fa-remove fa-2x pull-right")
+                            .style("color", "red");
+                        data.context.select(".progress-bar")
+                            .attr("class", "progress-bar progress-bar-danger");
+                        data.context
+                            .attr("class", "danger computation-fail");
+                        data.context.select(".progress-td")
+                            .html("Computation error");
                         progressCount--;
                         updateFilesList();
                         socket.close();
                     }
                 };
             } else if (data.result["error"] != undefined) {
-                data.context.select(".tdUploadButton").html("").append("i").attr("class", "fa  fa-remove fa-2x pull-right").style("color", "red");;
-                data.context.select(".progress-bar").attr("class", "progress-bar progress-bar-danger");
-                data.context.attr("class", "danger upload-fail");
-                data.context.select(".progress-td").html(data.result["error"]);
+                data.context.select(".tdUploadButton")
+                    .html("").append("i")
+                    .attr("class", "fa  fa-remove fa-2x pull-right")
+                    .style("color", "red");;
+                data.context.select(".progress-bar")
+                    .attr("class", "progress-bar progress-bar-danger");
+                data.context
+                    .attr("class", "danger upload-fail");
+                data.context
+                    .select(".progress-td")
+                    .html(data.result["error"]);
             } else {
-                data.context.select(".tdUploadButton").html("");
+                data.context.select(".tdUploadButton")
+                    .html("");
             }
         }
     });
@@ -427,56 +502,6 @@ $(document).ready(function() {
         }, 0)
     });
 
-    $(".updateFilesButton").click(function() {
-        $(".updateFilesContainer").css("visibility", "visible");
-        $(".updateFilesContainer").animate({
-            opacity: "1"
-        },250)
-        $(".updateFilesContainer .filesTable").animate({
-            top : "20%"
-        },400)
-        $.getJSON("/api/allFilesInformation", function(data) {
-            $.each(data, function(i, elem) {
-                var tr = d3.select(".main-tbody-update-files").append("tr").attr("class", "updateFileRow");
-                tr.append("td").html(elem["fileName"]);
-                var optionValues = tr.append("td").attr("class", "software-td").append("select")
-                    .attr("id", "softwareTypeName").attr("name", "softwareTypeName");
-
-                optionValues.append("option").attr("value", "mitcr").text("MiTcr");
-                optionValues.append("option").attr("value", "migec").text("MiGec");
-                optionValues.append("option").attr("value", "simple").text("Simple");
-                optionValues.append("option").attr("value", "igblast").text("IgBlast");
-                optionValues.append("option").attr("value", "cdrblast").text("CdrBlast");
-                optionValues.node().value = elem["softwareTypeName"];
-
-                tr.append("td").append("div")
-                    .attr("class", "progress progress-striped active")
-                    .append("div").attr("class", "progress-bar")
-                    .style("width", "0%");
-                tr.append("td").attr("class", "tdUpdateButton").style("width", "10%")
-                    .append("button")
-                    .attr("class", "unitFileUpdate btn btn-default").text("Update");
-            })
-        })
-    });
-
-    $(".updateFilesContainer .closeButton").click(function() {
-        updateFilesList();
-        $(".updateFilesContainer tr.success").remove();
-        $(".updateFilesContainer tr.danger").remove();
-        $(".updateFileRow").remove();
-        $(".updateFilesContainer").animate({
-            opacity: "0"
-        },250)
-        $(" .updateFilesContainer .filesTable").animate({
-            top : "-100%"
-        },400, function() {
-            $(".updateFilesContainer").css("visibility", "hidden");
-        }, 0)
-    })
-
-
-
     $(".uploadAllButton").click(function() {
        $(".unitFileUpload").click();
    });
@@ -487,9 +512,14 @@ $(document).ready(function() {
 
     $(".commonSoftwareType").change(function() {
       var softwareType = d3.select(".commonSoftwareType").node().value;
-      d3.selectAll("#softwareTypeName").selectAll("option").attr("selected", null);
-      d3.selectAll("#softwareTypeName").select("option[value="+softwareType+"]").attr("selected", "selected");
-  })
+      d3.selectAll("#softwareTypeName")
+          .selectAll("option")
+          .attr("selected", null);
+      d3.selectAll("#softwareTypeName")
+          .select("option[value="+softwareType+"]")
+          .attr("selected", "selected");
+  });
+
 
     $(".fileDeleteButton").click(function() {
         $.ajax({

@@ -7,23 +7,20 @@ import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.basic.SpectratypeV;
 import com.antigenomics.vdjtools.db.*;
-import com.antigenomics.vdjtools.diversity.Diversity;
 import com.antigenomics.vdjtools.diversity.DiversityEstimator;
 import com.antigenomics.vdjtools.diversity.DownSampler;
+import com.antigenomics.vdjtools.diversity.FrequencyTable;
 import com.antigenomics.vdjtools.intersection.IntersectionType;
-import com.antigenomics.vdjtools.intersection.IntersectionUtil;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
-import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.util.*;
 
 public class ComputationUtil {
@@ -296,7 +293,7 @@ public class ComputationUtil {
     }
 
     public static Boolean diversityCache(Sample sample, UserFile file, WebSocket.Out out) {
-        DiversityEstimator diversityEstimator = new DiversityEstimator(sample, new IntersectionUtil(IntersectionType.AminoAcid));
+        DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
         List<HashMap<String, Integer>> values = new ArrayList<>();
@@ -307,16 +304,14 @@ public class ComputationUtil {
         for (Integer i = 0; i < sample.getCount(); i += step) {
             HashMap<String, Integer> coordinates = new HashMap<>();
             coordinates.put("x", i);
-            //TODO
-            coordinates.put("y", (int) downSampler.reSample(i).getDiversity());
+            coordinates.put("y", downSampler.reSample(i).getDiversity());
             values.add(coordinates);
             progress += stepProgress;
             out.write(String.format(Locale.US, "%.2f", progress));
         }
         HashMap<String, Integer> coorCount = new HashMap<>();
         coorCount.put("x", (int) sample.getCount());
-        //TODO
-        coorCount.put("y", (int) downSampler.reSample((int) sample.getCount()).getDiversity());
+        coorCount.put("y", downSampler.reSample((int) sample.getCount()).getDiversity());
         values.add(coorCount);
         diversity.put("values", values);
         diversity.put("key", file.fileName);
@@ -324,6 +319,67 @@ public class ComputationUtil {
             File annotationCacheFile = new File(file.fileDirPath + "/diversity.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
             fileWriter.write(Json.stringify(Json.toJson(diversity)));
+            fileWriter.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static Boolean kernelDensityCache(Sample sample, UserFile file, WebSocket.Out out) {
+        FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
+        List<HashMap<String, Object>> binValues = new ArrayList<>();
+        List<HashMap<String, Object>> stdValues = new ArrayList<>();
+        double sum = 0L;
+        for (FrequencyTable.BinInfo binInfo: frequencyTable.getBins()) {
+            HashMap<String, Object> binValue = new HashMap<>();
+            HashMap<String, Object> stdValue = new HashMap<>();
+            binValue.put("x", binInfo.getClonotypeSize());
+            binValue.put("y", binInfo.getComplementaryCdf());
+            sum += binInfo.getComplementaryCdf();
+            if (binInfo.getClonotypeSize() - binInfo.getCloneStd() >= 1) {
+                stdValue.put("x", binInfo.getClonotypeSize() - binInfo.getCloneStd());
+                stdValue.put("y", binInfo.getComplementaryCdf());
+                stdValues.add(0, stdValue);
+            } else {
+                HashMap<String, Object> stdValue1 = new HashMap<>();
+                stdValue1.put("x", 1);
+                stdValue1.put("y", frequencyTable.getBins().get(0).getComplementaryCdf());
+                stdValues.add(0, stdValue1);
+                stdValue.put("x", 1);
+                stdValue.put("y", frequencyTable.getBins().get(1).getComplementaryCdf());
+                stdValues.add(0, stdValue);
+            }
+            binValues.add(binValue);
+        }
+
+        for (FrequencyTable.BinInfo binInfo: frequencyTable.getBins()) {
+            HashMap<String, Object> stdValue = new HashMap<>();
+            stdValue.put("x", binInfo.getClonotypeSize() + binInfo.getCloneStd());
+            stdValue.put("y", binInfo.getComplementaryCdf());
+            stdValues.add(stdValue);
+        }
+
+        List<HashMap<String, Object>> data = new ArrayList<>();
+        HashMap<String, Object> binData = new HashMap<>();
+        HashMap<String, Object> stdData = new HashMap<>();
+
+        for (HashMap<String, Object> value: binValues) {
+
+        }
+
+        binData.put("values", binValues);
+        binData.put("key", "bin");
+        data.add(binData);
+        stdData.put("values", stdValues);
+        stdData.put("key", "std");
+        stdData.put("area", true);
+        data.add(stdData);
+        try {
+            File annotationCacheFile = new File(file.fileDirPath + "/kernelDensity.cache");
+            PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
+            fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
             return true;
         } catch (Exception e) {
@@ -355,11 +411,11 @@ public class ComputationUtil {
         out.write("start");
         try {
             if (vdjUsageData(sampleCollection, file, out)
-                //todo for testing
                 && AnnotationData(sample, file, out)
                 && spectrotypeHistogram(sample, file, out)
                 && spectrotypeVHistogram(sample, file, out)
                 && BasicStats(sample, file, out)
+                && kernelDensityCache(sample, file, out)
                 && diversityCache(sample, file, out)) {
                     file.rendering = false;
                     file.rendered = true;
