@@ -331,13 +331,19 @@ public class ComputationUtil {
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         List<HashMap<String, Object>> binValues = new ArrayList<>();
         List<HashMap<String, Object>> stdValues = new ArrayList<>();
-        double sum = 0L;
+        double y_max = 0, y_min = 0.0001;
+        long x_max = 0L, x_min = 1L;
         for (FrequencyTable.BinInfo binInfo: frequencyTable.getBins()) {
             HashMap<String, Object> binValue = new HashMap<>();
             HashMap<String, Object> stdValue = new HashMap<>();
             binValue.put("x", binInfo.getClonotypeSize());
+            if (binInfo.getClonotypeSize() > x_max) {
+                x_max = binInfo.getClonotypeSize();
+            }
             binValue.put("y", binInfo.getComplementaryCdf());
-            sum += binInfo.getComplementaryCdf();
+            if (binInfo.getComplementaryCdf() > y_max) {
+                y_max = binInfo.getComplementaryCdf();
+            }
             if (binInfo.getClonotypeSize() - binInfo.getCloneStd() >= 1) {
                 stdValue.put("x", binInfo.getClonotypeSize() - binInfo.getCloneStd());
                 stdValue.put("y", binInfo.getComplementaryCdf());
@@ -353,22 +359,15 @@ public class ComputationUtil {
             }
             binValues.add(binValue);
         }
-
         for (FrequencyTable.BinInfo binInfo: frequencyTable.getBins()) {
             HashMap<String, Object> stdValue = new HashMap<>();
             stdValue.put("x", binInfo.getClonotypeSize() + binInfo.getCloneStd());
             stdValue.put("y", binInfo.getComplementaryCdf());
             stdValues.add(stdValue);
         }
-
         List<HashMap<String, Object>> data = new ArrayList<>();
         HashMap<String, Object> binData = new HashMap<>();
         HashMap<String, Object> stdData = new HashMap<>();
-
-        for (HashMap<String, Object> value: binValues) {
-
-        }
-
         binData.put("values", binValues);
         binData.put("key", "bin");
         data.add(binData);
@@ -376,10 +375,20 @@ public class ComputationUtil {
         stdData.put("key", "std");
         stdData.put("area", true);
         data.add(stdData);
+        HashMap<String, Object> jsonData = new HashMap<>();
+        jsonData.put("data", data);
+        List<Long> xAxisDomain = new ArrayList<>();
+        xAxisDomain.add(x_min);
+        xAxisDomain.add(x_max);
+        List<Double> yAxisDomain = new ArrayList<>();
+        yAxisDomain.add(y_min);
+        yAxisDomain.add(y_max);
+        jsonData.put("yAxisDomain", yAxisDomain);
+        jsonData.put("xAxisDomain", xAxisDomain);
         try {
             File annotationCacheFile = new File(file.fileDirPath + "/kernelDensity.cache");
             PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
-            fileWriter.write(Json.stringify(Json.toJson(data)));
+            fileWriter.write(Json.stringify(Json.toJson(jsonData)));
             fileWriter.close();
             return true;
         } catch (Exception e) {
