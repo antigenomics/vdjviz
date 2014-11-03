@@ -15,6 +15,8 @@ import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
+import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
@@ -296,23 +298,35 @@ public class ComputationUtil {
         DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
-        List<HashMap<String, Integer>> values = new ArrayList<>();
-
+        List<HashMap<String, Object>> values = new ArrayList<>();
+        double[] x = new double[101], y = new double[101];
         Integer step = Math.round(sample.getCount() / 100);
         Double stepProgress = 0.2;
         Double progress = 79.8;
-        for (Integer i = 0; i < sample.getCount(); i += step) {
-            HashMap<String, Integer> coordinates = new HashMap<>();
-            coordinates.put("x", i);
-            coordinates.put("y", downSampler.reSample(i).getDiversity());
+        int j = 0;
+        for (Integer i = 0; i < sample.getCount(); i += step, j++) {
+            HashMap<String, Object> coordinates = new HashMap<>();
+            x[j] = (double) i;
+            y[j] = (double) downSampler.reSample(i).getDiversity();
+            coordinates.put("x", (int) x[j]);
+            coordinates.put("y", (int) y[j]);
             values.add(coordinates);
             progress += stepProgress;
             out.write(String.format(Locale.US, "%.2f", progress));
         }
-        HashMap<String, Integer> coorCount = new HashMap<>();
-        coorCount.put("x", (int) sample.getCount());
-        coorCount.put("y", downSampler.reSample((int) sample.getCount()).getDiversity());
+        x[j] = (int) sample.getCount();
+        y[j] = downSampler.reSample((int) sample.getCount()).getDiversity();
+        HashMap<String, Object> coorCount = new HashMap<>();
+        coorCount.put("x", x[j]);
+        coorCount.put("y", y[j]);
         values.add(coorCount);
+        Logger.info(Arrays.toString(x));
+        //Logger.info(Arrays.toString(y));
+        LoessInterpolator interpolator = new LoessInterpolator();
+        double[] z = interpolator.smooth(x, y);
+        for (int i = 0; i <= j; i++) {
+            values.get(i).put("y", z[i]);
+        }
         diversity.put("values", values);
         diversity.put("key", file.fileName);
         try {
@@ -331,19 +345,19 @@ public class ComputationUtil {
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         List<HashMap<String, Object>> binValues = new ArrayList<>();
         List<HashMap<String, Object>> stdValues = new ArrayList<>();
-        double y_max = 0, y_min = 0.0001;
+        double y_max = 0, y_min = 1.0;
         long x_max = 0L, x_min = 1L;
         for (FrequencyTable.BinInfo binInfo: frequencyTable.getBins()) {
             HashMap<String, Object> binValue = new HashMap<>();
             HashMap<String, Object> stdValue = new HashMap<>();
+            if (binInfo.getComplementaryCdf() == 0) {
+                break;
+            }
             binValue.put("x", binInfo.getClonotypeSize());
-            if (binInfo.getClonotypeSize() > x_max) {
-                x_max = binInfo.getClonotypeSize();
-            }
             binValue.put("y", binInfo.getComplementaryCdf());
-            if (binInfo.getComplementaryCdf() > y_max) {
-                y_max = binInfo.getComplementaryCdf();
-            }
+            x_max = binInfo.getClonotypeSize() > x_max ? binInfo.getClonotypeSize() : x_max;
+            y_max = binInfo.getComplementaryCdf() > y_max ? binInfo.getComplementaryCdf() : y_max;
+            y_min = binInfo.getComplementaryCdf() < y_min ? binInfo.getComplementaryCdf() : y_min;
             if (binInfo.getClonotypeSize() - binInfo.getCloneStd() >= 1) {
                 stdValue.put("x", binInfo.getClonotypeSize() - binInfo.getCloneStd());
                 stdValue.put("y", binInfo.getComplementaryCdf());
@@ -361,6 +375,9 @@ public class ComputationUtil {
         }
         for (FrequencyTable.BinInfo binInfo: frequencyTable.getBins()) {
             HashMap<String, Object> stdValue = new HashMap<>();
+            if (binInfo.getComplementaryCdf() == 0) {
+                break;
+            }
             stdValue.put("x", binInfo.getClonotypeSize() + binInfo.getCloneStd());
             stdValue.put("y", binInfo.getComplementaryCdf());
             stdValues.add(stdValue);
