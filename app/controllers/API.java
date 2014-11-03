@@ -526,7 +526,7 @@ public class API extends Controller {
         return ok();
     }
 
-    public static Result returnAnnotationData(String fileName) throws FileNotFoundException {
+    public static Result returnAnnotationData(String fileName) throws JsonProcessingException, FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API
@@ -560,7 +560,7 @@ public class API extends Controller {
         return ok();
     }
 
-    public static Result returnBasicStats() throws FileNotFoundException {
+    public static Result returnBasicStats() throws JsonProcessingException, FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API
@@ -590,7 +590,7 @@ public class API extends Controller {
 
     }
 
-    public static Result returnDiversity() throws FileNotFoundException {
+    public static Result returnDiversity() throws JsonProcessingException, FileNotFoundException {
 
         /**
          * Identifying User using the SecureSocial API

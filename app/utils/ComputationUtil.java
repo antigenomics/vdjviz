@@ -299,12 +299,12 @@ public class ComputationUtil {
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
         List<HashMap<String, Object>> values = new ArrayList<>();
-        double[] x = new double[101], y = new double[101];
         Integer step = Math.round(sample.getCount() / 100);
+        double[] x = new double[101], y = new double[101];
         Double stepProgress = 0.2;
         Double progress = 79.8;
         int j = 0;
-        for (Integer i = 0; i < sample.getCount(); i += step, j++) {
+        for (Integer i = 0; j < 100; i += step, j++) {
             HashMap<String, Object> coordinates = new HashMap<>();
             x[j] = (double) i;
             y[j] = (double) downSampler.reSample(i).getDiversity();
@@ -320,8 +320,6 @@ public class ComputationUtil {
         coorCount.put("x", x[j]);
         coorCount.put("y", y[j]);
         values.add(coorCount);
-        Logger.info(Arrays.toString(x));
-        //Logger.info(Arrays.toString(y));
         LoessInterpolator interpolator = new LoessInterpolator();
         double[] z = interpolator.smooth(x, y);
         for (int i = 0; i <= j; i++) {
