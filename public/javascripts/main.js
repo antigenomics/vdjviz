@@ -385,11 +385,13 @@ $(document).ready(function() {
 
                 chart.xAxis
                     .axisLabel('Clonotype size')
-                    .tickFormat(d3.format(',r'));
+                    .tickFormat(d3.format(',r'))
+                    .tickValues(d3.range(data["xAxisDomain"][0], data["xAxisDomain"][1], (data["xAxisDomain"][1] - data["xAxisDomain"][0]) / 5));
 
                 chart.yAxis
                     .axisLabel('1-CDF')
-                    .tickFormat(d3.format('.02e'));
+                    .tickFormat(d3.format('.02e'))
+                    .tickValues(d3.range(data["yAxisDomain"][0], data["yAxisDomain"][1], (data["yAxisDomain"][1] - data["yAxisDomain"][0]) / 5));
 
 
                 d3.select('#chart svg')
@@ -419,7 +421,7 @@ $(document).ready(function() {
                         .height(700)
                         .stacked(true)
                         .tooltip(function(key, x, y, e, graph) {
-                            if (key != "Common") {
+                            if (key != "Other") {
                                 return '<h3>' + e.series.name + '</h3>' +
                                     '<p>Length : ' + x + '</p>' +
                                     '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
@@ -427,7 +429,7 @@ $(document).ready(function() {
                                     '<p>V : ' + e.series.v + '</p>' +
                                     '<p>J : ' + e.series.j + '</p>';
                             } else {
-                                return '<h3>Common</h3>' +
+                                return '<h3>Other</h3>' +
                                     '<p>Length : ' + x + '</p>' +
                                     '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
                             }
@@ -490,7 +492,6 @@ $(document).ready(function() {
                 return chart;
             });
     }
-
 
     //TODO!!!!
     function VJUsage(data) {
@@ -1232,7 +1233,6 @@ $(document).ready(function() {
                 "type" : type
             }),
             success: function(data) {
-                console.log(data);
                 if (data["result"] == "success") {
                     handleData(data["data"]);
 
