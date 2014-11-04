@@ -406,31 +406,34 @@ public class API extends Controller {
         String fileName = request.findValue("fileName").asText();
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
-        if (file == null) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "You have no access to this operation");
-            return forbidden(Json.toJson(jsonResults));
-        }
-
         switch (request.findValue("type").asText()) {
             case "vjusage" :
-                return ok(cache(file, "vjUsage"));
+                return cache(file, "vjUsage");
             case "spectrotype" :
-                return ok(cache(file, "spectrotype"));
+                return cache(file, "spectrotype");
             case "spectrotypeV" :
-                return ok(cache(file, "spectrotypeV"));
+                return cache(file, "spectrotypeV");
             case "kernelDensity" :
-                return ok(cache(file, "kernelDensity"));
+                return cache(file, "kernelDensity");
             case "annotation" :
-                return ok(cache(file, "annotation"));
+                return cache(file, "annotation");
+            case "basicStats" :
+                return basicStats(account);
+            case "diversity" :
+                return diversity(account);
             default:
                 Logger.info("blablablaba");
                 return badRequest();
         }
     }
 
-    public static JsonNode cache(UserFile file, String cacheName) {
+    public static Result cache(UserFile file, String cacheName) {
         HashMap<String, Object> serverResponse = new HashMap<>();
+        if (file == null) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "You have no access to this operation");
+            return forbidden(Json.toJson(serverResponse));
+        }
         if (file.rendered) {
             try {
                 File jsonFile = new File(file.fileDirPath + "/" + cacheName + ".cache");
@@ -439,79 +442,62 @@ public class API extends Controller {
                 serverResponse.put("result", "success");
                 serverResponse.put("message", "");
                 serverResponse.put("data", jsonData);
-                return Json.toJson(serverResponse);
+                return ok(Json.toJson(serverResponse));
             } catch (Exception e) {
                 serverResponse.put("result", "error");
                 serverResponse.put("message", "File does not exist");
-                return Json.toJson(serverResponse);
+                return ok(Json.toJson(serverResponse));
             }
         } else {
             serverResponse.put("result", "error");
             serverResponse.put("message", "File did not rendered");
-            return Json.toJson(serverResponse);
+            return ok(Json.toJson(serverResponse));
         }
     }
 
-    public static Result returnBasicStats() throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        List<JsonNode> basicStatsAll = new ArrayList<>();
-
-        /**
-         * Getting jsonNode of BasicStats for each file
-         * is belonging to user
-         */
-
-        for (UserFile file : localAccount.userfiles) {
+    public static Result basicStats(Account account) {
+        List<JsonNode> basicStatsData = new ArrayList<>();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        int errors = 0;
+        for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
                 File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
-                if (basicStatsCache.exists()) {
-                    FileInputStream jsonFile = new FileInputStream(basicStatsCache);
-                    JsonNode basicStatsNode = Json.parse(jsonFile);
-                    basicStatsAll.add(basicStatsNode.get(0));
+                try {
+                    FileInputStream cacheFile = new FileInputStream(basicStatsCache);
+                    JsonNode basicStatsNode = Json.parse(cacheFile);
+                    basicStatsData.add(basicStatsNode.get(0));
+                } catch (Exception e) {
+                    errors++;
                 }
             }
         }
-        return ok(Json.toJson(basicStatsAll));
-
+        serverResponse.put("result", "success");
+        serverResponse.put("errors", errors);
+        serverResponse.put("data", basicStatsData);
+        serverResponse.put("message", "");
+        return ok(Json.toJson(serverResponse));
     }
 
-    public static Result returnDiversity() throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        List<JsonNode> diversityAll = new ArrayList<>();
-
-        /**
-         * Getting jsonNode of diversity for each file
-         * is belonging to user
-         */
-
-        for (UserFile file : localAccount.userfiles) {
+    public static Result diversity(Account account) {
+        List<JsonNode> diversityData = new ArrayList<>();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        int errors = 0;
+        for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
                 File diversityCache = new File(file.fileDirPath + "/diversity.cache");
-                if (diversityCache.exists()) {
-                    FileInputStream jsonFile = new FileInputStream(diversityCache);
-                    JsonNode basicStatsNode = Json.parse(jsonFile);
-                    diversityAll.add(basicStatsNode);
+                try {
+                    FileInputStream cacheFile = new FileInputStream(diversityCache);
+                    JsonNode diversityNode = Json.parse(cacheFile);
+                    diversityData.add(diversityNode);
+                } catch (Exception e) {
+                    errors++;
                 }
             }
         }
-        return ok(Json.toJson(diversityAll));
-
+        serverResponse.put("result", "success");
+        serverResponse.put("errors", errors);
+        serverResponse.put("data", diversityData);
+        serverResponse.put("message", "");
+        return ok(Json.toJson(serverResponse));
     }
-
-
-
 }

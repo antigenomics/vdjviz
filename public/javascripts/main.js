@@ -9,6 +9,8 @@ $(document).ready(function() {
     }
 
     var currentFile = "";
+    var progressCount = 0;
+    var filesCount = 0;
 
     function accountPageInitializing() {
         $.getJSON("/api/accountInformation", function (data) {
@@ -75,12 +77,14 @@ $(document).ready(function() {
                             return "#DCDCDC";
                         }
                         return "#FFFFFF";
-                    }).on("mouseover", function() {
+                    })
+                    .on("mouseover", function() {
                         $(this).css("background-color", "#DCDCDC");
                         if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
                             $(this).find(".fa-trash").css("visibility", "visible");
                         }
-                    }).on("mouseout", function() {
+                    })
+                    .on("mouseout", function() {
                         if (liMain.classed("disabled") || liMain.classed("waitForRender") || liMain.classed("error")) {
                             $(this).css("background-color", "#DCDCDC");
                             $(this).find(".fa-trash").css("visibility", "hidden");
@@ -129,22 +133,31 @@ $(document).ready(function() {
                 count++;
             });
             if (count == 0) {
-                fileTable.append("li").append("a").text("You have no files");
+                fileTable.append("li")
+                    .append("a")
+                    .text("You have no files");
             } else {
                 fileTable.append("hr");
-                fileTable.append("li").append("a")
+                fileTable.append("li")
+                    .append("a")
                     .on("click", function() {
-                        diversityStats();
+                        getData(diversityStats, "diversity", "all");
                     })
                     .text("Diversity")
-                    .append("i").attr("class", "fa fa-area-chart pull-right");
-                fileTable.append("li").append("a")
+                    .append("i")
+                    .attr("class", "fa fa-area-chart pull-right");
+                fileTable.append("li")
+                    .append("a")
                     .on("click", function() {
-                        basicStats();
-                    }).text("Summary")
-                    .append("i").attr("class", "fa fa-th-list pull-right");
+                        getData(basicStats, "basicStats", "all");
+                    })
+                    .text("Summary")
+                    .append("i")
+                    .attr("class", "fa fa-th-list pull-right");
                 fileTable.append("hr");
-                fileTable.append("li").append("a").on("click", function() {
+                fileTable.append("li")
+                    .append("a")
+                    .on("click", function() {
                     $.ajax({
                         url : "/api/deleteAll",
                         type : "post",
@@ -157,7 +170,8 @@ $(document).ready(function() {
                             updateFilesList();
                         }
                     })
-                }).text("Delete all");
+                })
+                    .text("Delete all");
             }
             if (progressCount != 0) {
                 d3.select(".addNewFilesButton").classed("fa-plus", false);
@@ -289,38 +303,6 @@ $(document).ready(function() {
         getData(spectrotype, "spectrotype", fileName);
     }
 
-    function diversityStats() {
-        clearMainContent();
-        d3.select(".mainContent")
-            .append("div")
-            .attr("class", "hero-unit")
-            .append("div")
-            .attr("class", "visualisation")
-            .style("top", "50px")
-            .style("width", "100%")
-            .style("position", "relative")
-            .style("height", "50%")
-            .append("div")
-            .attr("id", "chart")
-            .append("svg")
-            .attr("height", "800px")
-            .attr("width", "100%")
-            .style("overflow", "visible");
-        renderLineChart("/api/diversity");
-    }
-
-    function basicStats() {
-        clearMainContent();
-        d3.select(".mainContent").append("div")
-            .attr("class", "hero-unit")
-            .append("div").attr("class", "visualisation")
-            .style("top", "50px").style("width", "100%")
-            .style("opacity", "0")
-            .style("position", "relative").style("height", "50%");
-
-        BasicStatsTable("/api/getBasicStats");
-    }
-
     function loading(place) {
         d3.select(place).style("display", "block");
         var loading = d3.select(place).append("div").attr("class", "loading");
@@ -338,8 +320,17 @@ $(document).ready(function() {
             .remove();
     }
 
-    function renderLineChart(url) {
-        $.getJSON(url, function(data) {
+    function diversityStats(data) {
+        clearMainContent();
+        console.log(data);
+        d3.select(".mainContent")
+            .append("div")
+            .attr("class", "visualisation")
+            .append("div")
+            .attr("id", "chart")
+            .append("svg")
+            .style("overflow", "visible");
+
             nv.addGraph(function() {
                 var chart = nv.models.lineChart()
                     .margin({left: 100})
@@ -359,14 +350,13 @@ $(document).ready(function() {
                     .tickFormat(d3.format('.02f'));
 
 
-                d3.select('#chart svg')
+                d3.select("#chart svg")
                     .datum(data)
                     .call(chart);
 
                 nv.utils.windowResize(function() { chart.update() });
                 return chart;
             });
-        });
     }
 
     function kernelDensity(data) {
@@ -512,19 +502,13 @@ $(document).ready(function() {
         renderVJUsage(vdjUsageData);
     }
 
-    function BasicStatsTable(url) {
-        hideVisualisationContent();
-        loading(".loadingMainContent");
-        $.getJSON(url, function(data) {
-            var header = Object.keys(data[0]);
-            renderBasicStatsTable(data, header);
-            loaded(".loadingMainContent");
-            showVisualisationContent();
-        })
-    }
-
-    function renderBasicStatsTable(data, header) {
-        var svg = d3.select(".visualisation")
+    function basicStats(data) {
+        clearMainContent();
+        currentFile = "";
+        var header = Object.keys(data[0]);
+        var svg = d3.select(".mainContent")
+            .append("div")
+            .attr("class", "visualisation")
             .append("div")
             .attr("class", "svg");
         var table = svg
@@ -1007,9 +991,6 @@ $(document).ready(function() {
         this.bP = bP;
     }
 
-    var progressCount = 0;
-    var filesCount = 0;
-
     $(".fileNameInput #fileName").keyup(function() {
        var pattern = "^[a-zA-Z0-9_.-]{0,20}$";
        if (!$(this).val().match(pattern)) {
@@ -1251,6 +1232,7 @@ $(document).ready(function() {
                 "type" : type
             }),
             success: function(data) {
+                console.log(data);
                 if (data["result"] == "success") {
                     handleData(data["data"]);
 
