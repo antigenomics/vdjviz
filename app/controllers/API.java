@@ -19,6 +19,7 @@ import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Timestamp;
@@ -148,8 +149,6 @@ public class API extends Controller {
              */
 
             Ebean.save(newFile);
-            account.userfiles.add(newFile);
-            Ebean.update(account);
             resultJson.put("success", "success");
             return ok(Json.toJson(resultJson));
         } catch (Exception e) {
@@ -170,23 +169,23 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> jsonResults = new HashMap<>();
-        JsonNode jsonData = request().body().asJson();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        JsonNode request = request().body().asJson();
 
-        if (!jsonData.findValue("action").asText().equals("delete")) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Invalid action");
-            return badRequest(Json.toJson(jsonResults));
+        if (!request.findValue("action").asText().equals("delete")) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Invalid action");
+            return badRequest(Json.toJson(serverResponse));
         }
 
-        String fileName = jsonData.findValue("fileName").asText();
+        String fileName = request.findValue("fileName").asText();
         Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + fileName);
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
         if (file == null) {
             Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "You have no file named " + fileName);
-            return forbidden(Json.toJson(jsonResults));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "You have no file named " + fileName);
+            return forbidden(Json.toJson(serverResponse));
         }
 
         /**
@@ -194,48 +193,41 @@ public class API extends Controller {
          * and try to delete it
          */
 
-        String fileDirectoryName =  file.fileDirPath;
+        File fileDir = new File(file.fileDirPath);
+        File[] files = fileDir.listFiles();
 
-        File f = new File(file.filePath);
-        File histogram = new File(fileDirectoryName + "/histogram.cache");
-        File histogramV = new File(fileDirectoryName + "/histogramV.cache");
-        File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
-        File annotation = new File(fileDirectoryName + "/annotation.cache");
-        File basicStats = new File(fileDirectoryName + "/basicStats.cache");
-        File diversity = new File(fileDirectoryName + "/diversity.cache");
-        File kernelDensity = new File(fileDirectoryName + "/kernelDensity.cache");
-        File fileDir = new File(fileDirectoryName + "/");
+        if (files == null) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "File does not exist");
+            return ok(Json.toJson(serverResponse));
+        }
+
         Boolean deleted = false;
         try {
-            f.delete();
-            annotation.delete();
-            basicStats.delete();
-            histogram.delete();
-            histogramV.delete();
-            vdjUsage.delete();
-            kernelDensity.delete();
-            diversity.delete();
+            for (File cache : files) {
+                Files.deleteIfExists(cache.toPath());
+            }
             if (fileDir.delete()) {
                 deleted = true;
             }
         } catch (Exception e) {
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
             e.printStackTrace();
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Error while deleting file " + fileName);
-            return ok(Json.toJson(jsonResults));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Error while deleting file " + fileName);
+            return ok(Json.toJson(serverResponse));
         }
         if (deleted) {
             Ebean.delete(file);
             Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + fileName);
-            jsonResults.put("result", "ok");
-            jsonResults.put("message", "Successfully deleted");
-            return ok(Json.toJson(jsonResults));
+            serverResponse.put("result", "ok");
+            serverResponse.put("message", "Successfully deleted");
+            return ok(Json.toJson(serverResponse));
         } else {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Error while deleting file " + fileName);
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Error while deleting file " + fileName);
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
-            return ok(Json.toJson(jsonResults));
+            return ok(Json.toJson(serverResponse));
         }
     }
 
@@ -249,59 +241,47 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> jsonResults = new HashMap<>();
-        JsonNode jsonData = request().body().asJson();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        JsonNode request = request().body().asJson();
 
-        if (!jsonData.findValue("action").asText().equals("deleteAll")) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Invalid action");
-            return badRequest(Json.toJson(jsonResults));
+        if (!request.findValue("action").asText().equals("deleteAll")) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Invalid action");
+            return badRequest(Json.toJson(serverResponse));
         }
 
         for (UserFile file: UserFile.findByAccount(account)) {
-            String fileDirectoryName =  file.fileDirPath;
-
-            File f = new File(file.filePath);
-            File histogram = new File(fileDirectoryName + "/histogram.cache");
-            File histogramV = new File(fileDirectoryName + "/histogramV.cache");
-            File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
-            File annotation = new File(fileDirectoryName + "/annotation.cache");
-            File basicStats = new File(fileDirectoryName + "/basicStats.cache");
-            File diversity = new File(fileDirectoryName + "/diversity.cache");
-            File kernelDensity = new File(fileDirectoryName + "/kernelDensity.cache");
-            File fileDir = new File(fileDirectoryName + "/");
+            File fileDir = new File(file.fileDirPath);
+            File[] files = fileDir.listFiles();
             Boolean deleted = false;
             try {
-                f.delete();
-                annotation.delete();
-                basicStats.delete();
-                histogram.delete();
-                histogramV.delete();
-                vdjUsage.delete();
-                kernelDensity.delete();
-                diversity.delete();
+                if (files != null) {
+                    for (File cache : files) {
+                        Files.deleteIfExists(cache.toPath());
+                    }
+                }
                 if (fileDir.delete()) {
                     deleted = true;
                 }
             } catch (Exception e) {
                 Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
                 e.printStackTrace();
-                jsonResults.put("result", "error");
-                jsonResults.put("message", "Error while deleting file " + file.fileName);
-                return ok(Json.toJson(jsonResults));
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "Error while deleting file " + file.fileName);
+                return ok(Json.toJson(serverResponse));
             }
             if (deleted) {
                 Ebean.delete(file);
                 Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + file.fileName);
             } else {
-                jsonResults.put("result", "error");
-                jsonResults.put("message", "Error while deleting file " + file.fileName);
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "Error while deleting file " + file.fileName);
                 Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
-                return ok(Json.toJson(jsonResults));
+                return ok(Json.toJson(serverResponse));
             }
         }
-        jsonResults.put("result", "ok");
-        return ok(Json.toJson(jsonResults));
+        serverResponse.put("result", "ok");
+        return ok(Json.toJson(serverResponse));
     }
 
     public static Result getAccountAllFilesInformation() {
