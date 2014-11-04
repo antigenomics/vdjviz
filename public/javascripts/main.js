@@ -214,7 +214,7 @@ $(document).ready(function() {
                     clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
-                    VJUsage("/api/" + fileName + "/vjusage");
+                    getData(VJUsage, "vjusage", fileName);
                 })
                 .html("V-J Usage");
             header.append("li")
@@ -226,7 +226,7 @@ $(document).ready(function() {
                     clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
-                    HistogramData("/api/" + fileName + "/histogram");
+                    getData(spectrotype, "spectrotype", fileName);
                 })
                 .html("Spectrotype")
                 .append("i")
@@ -240,7 +240,7 @@ $(document).ready(function() {
                     clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
-                    HistogramVData("/api/" + fileName + "/histogramV");
+                    getData(spectrotypeV, "spectrotypeV", fileName);
                 })
                 .html("SpectrotypeV")
                 .append("i")
@@ -254,7 +254,7 @@ $(document).ready(function() {
                     clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
-                    renderKernelDensity("/api/" + fileName + "/kernelDensity");
+                    getData(kernelDensity, "kernelDensity", fileName);
                 })
                 .html("Kernel Density");
             header.append("li")
@@ -266,7 +266,7 @@ $(document).ready(function() {
                     clearVisualisation();
                     d3.selectAll(".computationResultsButton").classed("active", false);
                     d3.select(this.parentNode).classed("active", true);
-                    AnnotationTable("/api/" + fileName + "/annotation");
+                    getData(annotationTable, "annotation", fileName);
                 })
                 .html("Annotation")
                 .append("i")
@@ -286,7 +286,7 @@ $(document).ready(function() {
             .style("position", "relative")
             .style("height", "50%");
 
-        HistogramData("/api/" + fileName + "/histogram");
+        getData(spectrotype, "spectrotype", fileName);
     }
 
     function diversityStats() {
@@ -369,10 +369,7 @@ $(document).ready(function() {
         });
     }
 
-    function renderKernelDensity(url) {
-        hideVisualisationContent();
-        loading(".loadingMainContent");
-        $.getJSON(url, function(data) {
+    function kernelDensity(data) {
             nv.addGraph(function() {
                 var svg = d3.select(".visualisation")
                     .html("")
@@ -395,7 +392,6 @@ $(document).ready(function() {
                     .yDomain(data["yAxisDomain"])
                     .forceY(data["yAxisDomain"])
                     .yScale(d3.scale.log());
-                console.log(data["xAxisDomain"]);
 
                 chart.xAxis
                     .axisLabel('Clonotype size')
@@ -409,18 +405,12 @@ $(document).ready(function() {
                 d3.select('#chart svg')
                     .datum(data["data"])
                     .call(chart);
-                loaded(".loadingMainContent");
-                showVisualisationContent();
                 nv.utils.windowResize(function() { chart.update() });
                 return chart;
             });
-        });
     }
 
-    function HistogramData(url) {
-        hideVisualisationContent();
-        loading(".loadingMainContent");
-        $.getJSON(url, function(data){
+    function spectrotype(data) {
             nv.addGraph(function() {
                 var svg = d3.select(".visualisation")
                     .append("div")
@@ -464,18 +454,12 @@ $(document).ready(function() {
                     .datum(data)
                     .call(chart);
 
-                loaded(".loadingMainContent");
-                showVisualisationContent();
                 nv.utils.windowResize(chart.update);
                 return chart;
             });
-        });
     }
 
-    function HistogramVData(url) {
-        hideVisualisationContent();
-        loading(".loadingMainContent");
-        $.getJSON(url, function(data){
+    function spectrotypeV(data) {
             nv.addGraph(function() {
                 var svg = d3.select(".visualisation")
                     .append("div")
@@ -515,34 +499,17 @@ $(document).ready(function() {
                 nv.utils.windowResize(chart.update);
                 return chart;
             });
-        });
     }
 
-    function VJUsage(url) {
+
+    //TODO!!!!
+    function VJUsage(data) {
         var vdjUsageData = [];
-        hideVisualisationContent();
-        loading(".loadingMainContent");
-        $.getJSON(url, function(data){
             $.each(data, function(key, value){
                 var item = [value.vSegment, value.jSegment, value.relationNum ];
                 vdjUsageData.push(item);
-
-            });
-            renderVJUsage(vdjUsageData);
-            loaded(".loadingMainContent");
-            showVisualisationContent();
         });
-    }
-
-    function AnnotationTable(url) {
-        hideVisualisationContent();
-        loading(".loadingMainContent");
-        $.getJSON(url, function(data) {
-            var header = Object.keys(data[0]);
-            renderAnnotationTable(data, header);
-            loaded(".loadingMainContent");
-            showVisualisationContent();
-        })
+        renderVJUsage(vdjUsageData);
     }
 
     function BasicStatsTable(url) {
@@ -622,7 +589,8 @@ $(document).ready(function() {
         });
     }
 
-    function renderAnnotationTable(data, header) {
+    function annotationTable(data) {
+        var header = Object.keys(data[0]);
         var svg = d3.select(".visualisation")
             .append("div")
             .attr("class", "svg");
@@ -660,21 +628,23 @@ $(document).ready(function() {
     }
 
     var bP = {};
-    function renderVJUsage(vdjUsageData) {
+    function renderVJUsage(vjUsageData) {
         var height = 600, margin = {b: 0, t: 40, l: 170, r: 50};
 
         var svg = d3.select(".visualisation")
-            .append("svg").attr('height', (height + margin.b + margin.t))
-            .append("g").attr("transform", "translate(" + $(".visualisation").width() / 3 + "," + margin.t + ")");
+            .append("svg")
+            .attr('height', (height + margin.b + margin.t))
+            .append("g")
+            .attr("transform", "translate(" + $(".visualisation").width() / 4.5 + "," + margin.t + ")");
         createbP();
         var data = [
-            {data: bP.partData(vdjUsageData, 2), id: 'V-J-Usage', header: ["V", "J", "V-J Usage"]}
+            {data: bP.partData(vjUsageData, 2), id: 'V-J-Usage', header: ["V", "J", "V-J Usage"]}
         ];
         bP.draw(data, svg);
     }
 
     function createbP() {
-        var b = 30, bb = $(".visualisation svg").width() / 4, height = 500, buffMargin = 5, minHeight = 5;
+        var b = 30, bb = $(".visualisation svg").width() / 2, height = 600, buffMargin = 5, minHeight = 5;
         var c1 = [-165, 50], c2 = [-50, 160], c3 = [-10, 250]; //Column positions of labels.
         var colors = d3.scale.category20().range();
 
@@ -1246,7 +1216,6 @@ $(document).ready(function() {
           .attr("selected", "selected");
   });
 
-
     $(".fileDeleteButton").click(function() {
         $.ajax({
             url : "/api/deleteFile",
@@ -1260,7 +1229,39 @@ $(document).ready(function() {
                 updateFilesList();
             }
         })
-    })
+    });
 
+    function errorData() {
+        d3.select(".visualisation")
+            .append("div")
+            .attr("class", "error")
+            .text("error");
+    }
 
+    function getData(handleData, type, fileName) {
+        hideVisualisationContent();
+        loading(".loadingMainContent");
+        $.ajax({
+            url : "/api/getData",
+            type : "post",
+            contentType: 'application/json; charset=utf-8',
+            data : JSON.stringify({
+                "action" : "data",
+                "fileName" : fileName,
+                "type" : type
+            }),
+            success: function(data) {
+                if (data["result"] == "success") {
+                    handleData(data["data"]);
+
+                } else {
+                    console.log(data["result"]);
+                    console.log(data["message"]);
+                    errorData();
+                }
+                loaded(".loadingMainContent");
+                showVisualisationContent();
+            }
+        });
+    }
 });

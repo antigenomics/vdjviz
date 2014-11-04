@@ -27,8 +27,8 @@ import java.util.*;
 
 public class ComputationUtil {
 
-    //TODO
-    public static Boolean vdjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out out) {
+    //TODO !!!!
+    public static Boolean vjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out out) {
 
         /**
          * SegmentUsage creating
@@ -96,7 +96,7 @@ public class ComputationUtil {
          * Creating cache files
          */
 
-        File vdjJsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
+        File vdjJsonFile = new File(file.fileDirPath + "/vjUsage.cache");
         try {
             PrintWriter jsonWriter = new PrintWriter(vdjJsonFile.getAbsoluteFile());
             JsonNode jsonData = Json.toJson(opt_data);
@@ -110,7 +110,7 @@ public class ComputationUtil {
         }
     }
 
-    public static Boolean spectrotypeHistogram(Sample sample, UserFile file, WebSocket.Out out) {
+    public static Boolean spectrotype(Sample sample, UserFile file, WebSocket.Out out) {
 
         /**
          * Getting the spectratype
@@ -143,7 +143,7 @@ public class ComputationUtil {
         }
         HashMap<String, Object> commonDataNode = new HashMap<>();
         commonDataNode.put("values", commonData);
-        commonDataNode.put("key", "Common");
+        commonDataNode.put("key", "Other");
         histogramData.add(commonDataNode);
 
         int count = 1;
@@ -172,7 +172,7 @@ public class ComputationUtil {
 
         }
 
-        File histogramJsonFile = new File(file.fileDirPath + "/histogram.cache");
+        File histogramJsonFile = new File(file.fileDirPath + "/spectrotype.cache");
         try {
             PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
             JsonNode jsonData = Json.toJson(histogramData);
@@ -186,7 +186,7 @@ public class ComputationUtil {
         }
     }
 
-    public static Boolean spectrotypeVHistogram(Sample sample, UserFile file, WebSocket.Out out) {
+    public static Boolean spectrotypeV(Sample sample, UserFile file, WebSocket.Out out) {
         //TODO
         SpectratypeV spectratypeV = new SpectratypeV(false, false);
         spectratypeV.addAll(sample);
@@ -211,7 +211,7 @@ public class ComputationUtil {
             histogramVNode.put("key", key);
             histogramV.add(histogramVNode);
         }
-        File histogramJsonFile = new File(file.fileDirPath + "/histogramV.cache");
+        File histogramJsonFile = new File(file.fileDirPath + "/spectrotypeV.cache");
         try {
             PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
             JsonNode jsonData = Json.toJson(histogramV);
@@ -434,10 +434,10 @@ public class ComputationUtil {
         Ebean.update(file);
         out.write("start");
         try {
-            if (vdjUsageData(sampleCollection, file, out)
+            if (vjUsageData(sampleCollection, file, out)
                 && AnnotationData(sample, file, out)
-                && spectrotypeHistogram(sample, file, out)
-                && spectrotypeVHistogram(sample, file, out)
+                && spectrotype(sample, file, out)
+                && spectrotypeV(sample, file, out)
                 && BasicStats(sample, file, out)
                 && kernelDensityCache(sample, file, out)
                 && diversityCache(sample, file, out)) {

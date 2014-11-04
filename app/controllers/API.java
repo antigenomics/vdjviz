@@ -382,182 +382,74 @@ public class API extends Controller {
         return ok(Json.toJson(jsonResults));
     }
 
-    public static Result returnVdjUsageData(String fileName) throws FileNotFoundException {
+    public static Result getData() {
 
         /**
-         * Identifying User using the SecureSocial API
+         * Identifying user using the SecureSocial API
          */
 
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
+        Account account = localUser.account;
 
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
+        HashMap<String, Object> jsonResults = new HashMap<>();
+        JsonNode request = request().body().asJson();
+        Logger.info(String.valueOf(request));
+        if (!request.findValue("action").asText().equals("data")
+                || request.findValue("fileName") == null
+                || request.findValue("type") == null) {
+            jsonResults.put("result", "error");
+            jsonResults.put("message", "Invalid action");
+            return badRequest(Json.toJson(jsonResults));
         }
 
-        /**
-         * Verification of the existence
-         * vdjUsage data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
+        String fileName = request.findValue("fileName").asText();
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
-        if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
+        if (file == null) {
+            jsonResults.put("result", "error");
+            jsonResults.put("message", "You have no access to this operation");
+            return forbidden(Json.toJson(jsonResults));
         }
-        return ok();
+
+        switch (request.findValue("type").asText()) {
+            case "vjusage" :
+                return ok(cache(file, "vjUsage"));
+            case "spectrotype" :
+                return ok(cache(file, "spectrotype"));
+            case "spectrotypeV" :
+                return ok(cache(file, "spectrotypeV"));
+            case "kernelDensity" :
+                return ok(cache(file, "kernelDensity"));
+            case "annotation" :
+                return ok(cache(file, "annotation"));
+            default:
+                Logger.info("blablablaba");
+                return badRequest();
+        }
     }
 
-    public static Result returnSpectrotypeHistogram(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
+    public static JsonNode cache(UserFile file, String cacheName) {
+        HashMap<String, Object> serverResponse = new HashMap<>();
         if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/histogram.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
+            try {
+                File jsonFile = new File(file.fileDirPath + "/" + cacheName + ".cache");
+                FileInputStream fis = new FileInputStream(jsonFile);
+                JsonNode jsonData = Json.parse(fis);
+                serverResponse.put("result", "success");
+                serverResponse.put("message", "");
+                serverResponse.put("data", jsonData);
+                return Json.toJson(serverResponse);
+            } catch (Exception e) {
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "File does not exist");
+                return Json.toJson(serverResponse);
+            }
+        } else {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "File did not rendered");
+            return Json.toJson(serverResponse);
         }
-        return ok();
-    }
-
-    public static Result returnSpectrotypeVHistogram(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/histogramV.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
-        }
-        return ok();
-    }
-
-    public static Result returnKernelDensity(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/kernelDensity.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
-        }
-        return ok();
-    }
-
-    public static Result returnAnnotationData(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (file != null && !localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file != null && file.rendered) {
-            File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
-            FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
-            return ok(Json.parse(jsonFile));
-        }
-        return ok();
     }
 
     public static Result returnBasicStats() throws JsonProcessingException, FileNotFoundException {
