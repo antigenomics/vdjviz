@@ -23,16 +23,13 @@ import java.nio.file.Files;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 @SecureSocial.SecuredAction
 public class API extends Controller {
 
-    public static Result uploadFile() {
+    public static Result upload() {
         /**
          * Identifying user using the SecureSocial API
          */
@@ -159,7 +156,7 @@ public class API extends Controller {
         }
     }
 
-    public static Result deleteFile() {
+    public static Result delete() {
 
         /**
          * Identifying User using the SecureSocial API
@@ -264,7 +261,7 @@ public class API extends Controller {
                     deleted = true;
                 }
             } catch (Exception e) {
-                Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
+                Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + file.fileName);
                 e.printStackTrace();
                 serverResponse.put("result", "error");
                 serverResponse.put("message", "Error while deleting file " + file.fileName);
@@ -284,24 +281,29 @@ public class API extends Controller {
         return ok(Json.toJson(serverResponse));
     }
 
-    public static Result getAccountAllFilesInformation() {
+    public static Result files() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-        List<HashMap<String, Object>> fileNames = new ArrayList<>();
+        List<HashMap<String, Object>> files = new ArrayList<>();
+        List<String> names = new ArrayList<>();
         for (UserFile file: account.userfiles) {
             HashMap<String, Object> fileInformation = new HashMap<>();
+            names.add(file.fileName);
             fileInformation.put("fileName", file.fileName);
             fileInformation.put("softwareTypeName", file.softwareTypeName);
             fileInformation.put("rendered", file.rendered);
             fileInformation.put("rendering", file.rendering);
             fileInformation.put("renderCount", file.renderCount);
-            fileNames.add(fileInformation);
+            files.add(fileInformation);
         }
-        return ok(Json.toJson(fileNames));
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        serverResponse.put("data", files);
+        serverResponse.put("names", names);
+        return ok(Json.toJson(serverResponse));
     }
 
-    public static Result getFileInformation() {
+    public static Result fileInformation() {
         /**
          * Identifying user using the SecureSocial API
          */
@@ -338,7 +340,7 @@ public class API extends Controller {
         return ok(Json.toJson(jsonResults));
     }
 
-    public static Result getAccountInformation() {
+    public static Result accountInformation() {
 
         /**
          * Identifying user using the SecureSocial API
@@ -372,46 +374,50 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> jsonResults = new HashMap<>();
+        HashMap<String, Object> serverRequest = new HashMap<>();
         JsonNode request = request().body().asJson();
         Logger.info(String.valueOf(request));
         if (!request.findValue("action").asText().equals("data")
                 || request.findValue("fileName") == null
                 || request.findValue("type") == null) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Invalid action");
-            return badRequest(Json.toJson(jsonResults));
+            serverRequest.put("result", "error");
+            serverRequest.put("message", "Invalid action");
+            return badRequest(Json.toJson(serverRequest));
         }
 
         String fileName = request.findValue("fileName").asText();
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-
         switch (request.findValue("type").asText()) {
             case "vjusage" :
-                return cache(file, "vjUsage");
+                return cache(file, "vjUsage", account);
             case "spectrotype" :
-                return cache(file, "spectrotype");
+                return cache(file, "spectrotype", account);
             case "spectrotypeV" :
-                return cache(file, "spectrotypeV");
+                return cache(file, "spectrotypeV", account);
             case "kernelDensity" :
-                return cache(file, "kernelDensity");
+                return cache(file, "kernelDensity", account);
             case "annotation" :
-                return cache(file, "annotation");
+                return cache(file, "annotation", account);
             case "basicStats" :
                 return basicStats(account);
             case "diversity" :
                 return diversity(account);
             default:
-                Logger.info("blablablaba");
-                return badRequest();
+                Logger.of("user." + account.userName).error("User " + account.userName +
+                        ": unknown type: " + request.findValue("type").asText());
+                serverRequest.put("result", "error");
+                serverRequest.put("message", "Unknown type");
+                return badRequest(Json.toJson(serverRequest));
         }
     }
 
-    public static Result cache(UserFile file, String cacheName) {
+    public static Result cache(UserFile file, String cacheName, Account account) {
         HashMap<String, Object> serverResponse = new HashMap<>();
         if (file == null) {
+            Logger.of("user." + account.userName).error("User " + account.userName +
+                    " have no requested file");
             serverResponse.put("result", "error");
-            serverResponse.put("message", "You have no access to this operation");
+            serverResponse.put("message", "You have no requested file");
             return forbidden(Json.toJson(serverResponse));
         }
         if (file.rendered) {
@@ -424,11 +430,15 @@ public class API extends Controller {
                 serverResponse.put("data", jsonData);
                 return ok(Json.toJson(serverResponse));
             } catch (Exception e) {
+                Logger.of("user." + account.userName).error("User " + account.userName +
+                        ": cache file does not exists");
                 serverResponse.put("result", "error");
-                serverResponse.put("message", "File does not exist");
+                serverResponse.put("message", "Cache file does not exist");
                 return ok(Json.toJson(serverResponse));
             }
         } else {
+            Logger.of("user." + account.userName).error("User: " + account.userName + " File: "
+                    + file.fileName + " did not rendered");
             serverResponse.put("result", "error");
             serverResponse.put("message", "File did not rendered");
             return ok(Json.toJson(serverResponse));

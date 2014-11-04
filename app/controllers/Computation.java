@@ -62,20 +62,4 @@ public class Computation extends Controller {
         };
     }
 
-    @SecureSocial.SecuredAction
-    public static Result computationPage(String fileName) {
-
-        /**
-         *
-         */
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-        if (file == null || file.rendering) {
-            flash("error", "You have no file named " + fileName);
-            return Results.redirect(routes.AccountPage.index());
-        }
-        return ok(views.html.computation.computationProgressPage.render(localAccount, fileName));
-    }
 }

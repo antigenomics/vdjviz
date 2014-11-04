@@ -9,6 +9,7 @@ $(document).ready(function() {
     }
 
     var currentFile = "";
+    var fileNames = [];
     var progressCount = 0;
     var filesCount = 0;
 
@@ -48,14 +49,16 @@ $(document).ready(function() {
     }
 
     function updateFilesList() {
-        $.getJSON("/api/allFilesInformation", function(data) {
+        $.getJSON("/api/files", function(data) {
             if (!data) {
                 window.location.replace("/account")
             }
             var fileTable = d3.select(".userFilesList");
-            var count = 0;
+            var count = data["data"].length;
+            fileNames = data["names"];
+            filesCount = data["names"].length;
             fileTable.html("");
-            data.forEach(function(elem) {
+            data["data"].forEach(function(elem) {
                 var liMain = fileTable.append("li")
                     .attr("class", function() {
                         var cls = "dropdown";
@@ -71,7 +74,6 @@ $(document).ready(function() {
                         return cls;
                     });
                 var a = liMain.append("a").style("cursor", "pointer");
-
                 a.style("background-color", function() {
                         if (elem["rendering"] || !elem["rendered"]) {
                             return "#DCDCDC";
@@ -118,7 +120,7 @@ $(document).ready(function() {
                             accountPageInitializing();
                         }
                         $.ajax({
-                            url : "/api/deleteFile",
+                            url : "/api/delete",
                             type : "post",
                             contentType: 'application/json; charset=utf-8',
                             data : JSON.stringify({
@@ -130,7 +132,6 @@ $(document).ready(function() {
                             }
                         })
                     });
-                count++;
             });
             if (count == 0) {
                 fileTable.append("li")
@@ -329,7 +330,7 @@ $(document).ready(function() {
             .append("div")
             .attr("id", "chart")
             .append("svg")
-            .style("overflow", "visible");
+            .style("height", "900px");
 
             nv.addGraph(function() {
                 var chart = nv.models.lineChart()
@@ -1009,7 +1010,7 @@ $(document).ready(function() {
    });
 
     $('#fileupload').fileupload({
-        url: '/api/uploadFile',
+        url: '/api/upload',
         dataType: 'json',
         add: function (e, data) {
             var originalFileName = data.files[0].name;
@@ -1021,15 +1022,15 @@ $(document).ready(function() {
                 fileExtension = "txt";
             }
             $(".fileName").each(function() {
-                if ($(this).html() == fileName) {
+                if ($(this).html() == fileName || fileNames.indexOf(fileName) != -1 || filesCount >= 10) {
                     create = false;
+                    return false;
                 }
             });
+            d3.select(".filesTable .table")
+                .style("visibility", "visible");
             if (create) {
                 filesCount++;
-                d3.select(".filesTable .table")
-                    .style("visibility", "visible");
-
                 data.context = d3.select(".filesTable .table tbody.main-tbody-files")
                     .append("tr");
 
@@ -1082,12 +1083,41 @@ $(document).ready(function() {
                         updateFilesList();
                         data.submit();
                     });
+            } else {
+                data.context = d3.select(".filesTable .table tbody.main-tbody-files")
+                    .append("tr")
+                    .attr("class", "danger");
+
+                data.context.append("td")
+                    .attr("class", "fileName")
+                    .append("div")
+                    .text(fileName);
+
+                data.context.append("td");
+
+                data.context.append("td")
+                    .style("width", "40%")
+                    .append("div")
+                    .text(function() {
+                        if (fileNames.length == 10) {
+                            return "You have exceeded the limit of the number of files"
+                        } else if (fileNames.indexOf(fileName) != -1) {
+                            return "You should use unique names for your files"
+                        } else {
+                            return "Unknown error"
+                        }
+                    });
+
+                data.context.append("td")
+                    .append("i")
+                    .attr("class", "fa  fa-remove fa-2x pull-right")
+                    .style("color", "red");
             }
         },
         progress: function(e, data) {
             var progress = parseInt(data.loaded / data.total * 50, 10);
             data.context.select(".tdUploadButton")
-                .html("Uploading...")
+                .html("Uploading...");
             data.context.select(".progress-bar")
                 .style("width", progress + "%");
         },
@@ -1141,7 +1171,7 @@ $(document).ready(function() {
                 data.context.select(".tdUploadButton")
                     .html("").append("i")
                     .attr("class", "fa  fa-remove fa-2x pull-right")
-                    .style("color", "red");;
+                    .style("color", "red");
                 data.context.select(".progress-bar")
                     .attr("class", "progress-bar progress-bar-danger");
                 data.context
@@ -1200,7 +1230,7 @@ $(document).ready(function() {
 
     $(".fileDeleteButton").click(function() {
         $.ajax({
-            url : "/api/deleteFile",
+            url : "/api/delete",
             type : "post",
             contentType: 'application/json; charset=utf-8',
             data : JSON.stringify({

@@ -14,22 +14,18 @@ GET         /assets/*file                       controllers.Assets.at(path="/pub
 
 # Account routes
 GET         /account                            controllers.AccountPage.index()
-GET         /account/                           controllers.AccountPage.index()
-GET         /test/                              controllers.AccountPage.test()
 
 #Computation
 GET         /account/:fileName/render           controllers.Computation.computationProgressBar(fileName: String)
-GET         /account/:fileName/progress         controllers.Computation.computationPage(fileName: String)
-
 
 # API
-POST        /api/uploadFile                     controllers.API.uploadFile()
-POST        /api/deleteFile                     controllers.API.deleteFile()
+POST        /api/upload                         controllers.API.upload()
+POST        /api/delete                         controllers.API.delete()
 POST        /api/deleteAll                      controllers.API.deleteAllFiles()
-POST        /api/fileInformation                controllers.API.getFileInformation()
+POST        /api/fileInformation                controllers.API.fileInformation()
 POST        /api/getData                        controllers.API.getData()
-GET         /api/accountInformation             controllers.API.getAccountInformation()
-GET         /api/allFilesInformation            controllers.API.getAccountAllFilesInformation()
+GET         /api/accountInformation             controllers.API.accountInformation()
+GET         /api/files                          controllers.API.files()
 
 # Auth routes
 GET         /signin                             securesocial.controllers.LoginPage.login
