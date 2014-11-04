@@ -412,7 +412,7 @@ public class ComputationUtil {
         }
     }
 
-    public static void createSampleCache(UserFile file, play.mvc.WebSocket.Out out) {
+    public static void createSampleCache(UserFile file, WebSocket.Out out) {
 
         /**
          * Getting Sample from text file
