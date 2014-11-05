@@ -252,15 +252,26 @@ public class ComputationUtil {
         List<HashMap<String, Object>> annotationData = new ArrayList<>();
         for (CdrDatabaseMatch cdrDatabaseMatch : browserResult) {
             HashMap<String, Object> annotationDataNode = new HashMap<>();
-            annotationDataNode.put("query_cdr3aa", cdrDatabaseMatch.query.getCdr3aa());
-            annotationDataNode.put("query_V", cdrDatabaseMatch.query.getV());
-            annotationDataNode.put("query_J", cdrDatabaseMatch.query.getJ());
-            annotationDataNode.put("subject_cdr3aa", cdrDatabaseMatch.subject.cdr3aa);
-            annotationDataNode.put("subject_V", cdrDatabaseMatch.subject.v);
-            annotationDataNode.put("subject_J", cdrDatabaseMatch.subject.j);
-            annotationDataNode.put("V_match", cdrDatabaseMatch.vMatch);
-            annotationDataNode.put("J_match", cdrDatabaseMatch.jMatch);
-            annotationDataNode.put("substitutions", Arrays.toString(cdrDatabaseMatch.getSubstitutions().toArray()));
+            HashMap<String, Object> v = new HashMap<>();
+            HashMap<String, Object> j = new HashMap<>();
+            HashMap<String, Object> cdr3aa = new HashMap<>();
+            v.put("v", cdrDatabaseMatch.query.getV());
+            v.put("match", cdrDatabaseMatch.vMatch);
+            j.put("j", cdrDatabaseMatch.query.getJ());
+            j.put("match", cdrDatabaseMatch.jMatch);
+            cdr3aa.put("cdr3aa", cdrDatabaseMatch.query.getCdr3aa());
+            if (cdrDatabaseMatch.getSubstitutions().size() > 0) {
+                cdr3aa.put("pos", cdrDatabaseMatch.getSubstitutions().get(0).pos);
+            } else {
+                cdr3aa.put("pos", -1);
+            }
+            cdr3aa.put("vend", cdrDatabaseMatch.query.getVEnd());
+            cdr3aa.put("jstart", cdrDatabaseMatch.query.getJStart());
+            annotationDataNode.put("query_cdr3aa", cdr3aa);
+            annotationDataNode.put("query_V", v);
+            annotationDataNode.put("query_J", j);
+            annotationDataNode.put("freq", cdrDatabaseMatch.query.getFreq());
+            annotationDataNode.put("count", cdrDatabaseMatch.query.getCount());
             annotationDataNode.put("annotations", cdrDatabaseMatch.subject.getAnnotation());
             annotationData.add(annotationDataNode);
         }

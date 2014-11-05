@@ -594,15 +594,23 @@ $(document).ready(function () {
                 .attr("id", "annotation_table")
                 .attr("class", "table table-striped table-hover"),
             thead = table.append("thead").append("tr");
-        thead.selectAll("th").data(header).enter()
-            .append("th").html(function (d) {
-                return d;
-            });
 
-        var column = [];
-        for (var i = 0; i < header.length; i++) {
-            column.push({"data": header[i.toString()]});
-        }
+        thead.append("th").html("Frequency");
+        thead.append("th").html("Count");
+        thead.append("th").html("CDR3AA");
+        thead.append("th").html("J");
+        thead.append("th").html("V");
+        thead.append("th").html("Annotations");
+
+        var column = [
+            {"data" : "freq"},
+            {"data" : "count" },
+            {"data": "query_cdr3aa"},
+            {"data": "query_J"},
+            {"data": "query_V"},
+            {"data": "annotations"}
+        ];
+
 
         $('#annotation_table').dataTable({
             "data": data,
@@ -618,8 +626,76 @@ $(document).ready(function () {
             },
             "columnDefs": [
                 {
-                    "width": "10%",
+                    "width": "6%",
                     "targets": 0
+                },
+                {
+                    "width": "6%",
+                    "targets": 1
+                },
+                {
+                    "render": function (data) {
+                        var cdr3aa = data["cdr3aa"];
+                        var vend = data["vend"] / 3;
+                        var jstart = data["jstart"] / 3;
+                        var pos = data["pos"];
+                        if (vend >= 0 && jstart >= 0) {
+                            var str = [
+                                data["cdr3aa"].substring(0, vend + 1),
+                                data["cdr3aa"].substring(vend + 1, jstart),
+                                data["cdr3aa"].substring(jstart, data["cdr3aa"].length),
+                            ];
+                            if (pos != -1) {
+                                if (pos <= vend) {
+                                    str[0] = str[0].substring(0, pos) + "<b><u>" + str[0].substring(pos, pos + 1) + "</u></b>" + str[0].substring(pos + 1, str[0].length);
+                                } else if (pos > vend && pos < jstart) {
+                                    str[1] = str[1].substring(0, pos - vend) + "<b><u>" + str[1].substring(pos - vend, pos - vend + 1) + "</u></b>" + str[1].substring(pos - vend + 1, str[1].length);
+                                } else if (pos >= jstart) {
+                                    str[2] = str[2].substring(0, pos - jstart) + "<b><u>" + str[2].substring(pos - jstart, pos - jstart + 1) + "</u></b>" + str[2].substring(pos - jstart + 1, str[2].length);
+                                }
+                            }
+                            str[0] = "<text style='color : #31a354'>" + str[0] + "</text>";
+                            str[2] = "<text style='color : #3182bd'>" + str[2] + "</text>";
+                            return str.join("")
+                        } else {
+                            if (pos != -1) {
+                                return data["cdr3aa"].substring(0, pos) + "<b><u>" + data["cdr3aa"].substring(pos, pos + 1) + "</u></b>" + data["cdr3aa"].substring(pos + 1, data["cdr3aa"].length)
+                            } else {
+                                return data["cdr3aa"];
+                            }
+                        }
+                    },
+                    "width": "20%",
+                    "targets": 2
+                },
+                {
+                    "render": function (data) {
+                        if (!data["match"]) {
+                            return "<div style='color: red;'>" + data["j"] + "</div>";
+                        } else {
+                            return data["j"];
+                        }
+                    },
+                    "width": "10%",
+                    "targets": 3
+                },
+                {
+                    "render": function (data) {
+                        if (!data["match"]) {
+                            return "<div style='color: red;'>" + data["v"] + "</div>";
+                        } else {
+                            return data["v"];
+                        }
+                    },
+                    "width": "10%",
+                    "targets": 4
+                },
+                {
+                    "render": function (data) {
+                        return data;
+                    },
+                    "width": "48%",
+                    "targets": 5
                 }
             ]
         });
@@ -1153,6 +1229,7 @@ $(document).ready(function () {
                     socket.send(JSON.stringify(msg));
                 };
                 socket.onmessage = function (message) {
+                    updateFilesList();
                     var event = JSON.parse(message["data"]);
                     if (event.result == "ok") {
                         if (event.data.progress == "progress") {
@@ -1173,7 +1250,7 @@ $(document).ready(function () {
                             progressCount--;
                             socket.close();
                         }
-                    } else if (event.result == "error"){
+                    } else if (event.result == "error") {
                         data.context.select(".tdUploadButton")
                             .html("")
                             .append("i")
