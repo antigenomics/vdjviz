@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
 
     if ($(".addNewFilesButton").length != 0) {
         updateFilesList();
@@ -26,22 +26,22 @@ $(document).ready(function() {
                 .append("tbody");
 
             var emailtr = accountInformationTable.append("tr");
-                emailtr.append("td")
-                    .text("Email: ");
-                emailtr.append("td")
-                    .text(data["data"]["email"]);
+            emailtr.append("td")
+                .text("Email: ");
+            emailtr.append("td")
+                .text(data["data"]["email"]);
 
             var firstNametr = accountInformationTable.append("tr");
-                firstNametr.append("td")
-                    .text("First Name: ");
-                firstNametr.append("td")
-                    .text(data["data"]["firstName"]);
+            firstNametr.append("td")
+                .text("First Name: ");
+            firstNametr.append("td")
+                .text(data["data"]["firstName"]);
 
             var lastNametr = accountInformationTable.append("tr");
-                lastNametr.append("td")
-                    .text("Last Name: ");
-                lastNametr.append("td")
-                    .text(data["data"]["lastName"]);
+            lastNametr.append("td")
+                .text("Last Name: ");
+            lastNametr.append("td")
+                .text(data["data"]["lastName"]);
 
         }).error(function () {
             location.reload();
@@ -49,7 +49,7 @@ $(document).ready(function() {
     }
 
     function updateFilesList() {
-        $.getJSON("/api/files", function(data) {
+        $.getJSON("/api/files", function (data) {
             if (!data) {
                 window.location.replace("/account")
             }
@@ -58,9 +58,9 @@ $(document).ready(function() {
             fileNames = data["names"];
             filesCount = data["names"].length;
             fileTable.html("");
-            data["data"].forEach(function(elem) {
+            data["data"].forEach(function (elem) {
                 var liMain = fileTable.append("li")
-                    .attr("class", function() {
+                    .attr("class", function () {
                         var cls = "dropdown";
                         if (elem["rendering"]) {
                             cls += " disabled";
@@ -74,19 +74,19 @@ $(document).ready(function() {
                         return cls;
                     });
                 var a = liMain.append("a").style("cursor", "pointer");
-                a.style("background-color", function() {
-                        if (elem["rendering"] || !elem["rendered"]) {
-                            return "#DCDCDC";
-                        }
-                        return "#FFFFFF";
-                    })
-                    .on("mouseover", function() {
+                a.style("background-color", function () {
+                    if (elem["rendering"] || !elem["rendered"]) {
+                        return "#DCDCDC";
+                    }
+                    return "#FFFFFF";
+                })
+                    .on("mouseover", function () {
                         $(this).css("background-color", "#DCDCDC");
                         if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
                             $(this).find(".fa-trash").css("visibility", "visible");
                         }
                     })
-                    .on("mouseout", function() {
+                    .on("mouseout", function () {
                         if (liMain.classed("disabled") || liMain.classed("waitForRender") || liMain.classed("error")) {
                             $(this).css("background-color", "#DCDCDC");
                             $(this).find(".fa-trash").css("visibility", "hidden");
@@ -95,9 +95,9 @@ $(document).ready(function() {
                             $(this).find(".fa-trash").css("visibility", "hidden");
                         }
                     })
-                    .on("click", function() {
+                    .on("click", function () {
                         fileComputationResults(elem["fileName"]);
-                    }).text(function() {
+                    }).text(function () {
                         var text = elem["fileName"];
                         if (elem["rendering"]) {
                             text += " | File is rendering";
@@ -112,22 +112,22 @@ $(document).ready(function() {
                 a.append("i").attr("class", "fa fa-trash pull-right")
                     .style("visibility", "hidden")
                     .style("cursor", "pointer")
-                    .on("click", function() {
-                        if (currentFile !=  elem["fileName"]) {
+                    .on("click", function () {
+                        if (currentFile != elem["fileName"]) {
                             d3.event.stopPropagation();
                         } else {
                             d3.event.stopPropagation();
                             accountPageInitializing();
                         }
                         $.ajax({
-                            url : "/api/delete",
-                            type : "post",
+                            url: "/api/delete",
+                            type: "post",
                             contentType: 'application/json; charset=utf-8',
-                            data : JSON.stringify({
-                                "action" : "delete",
-                                "fileName" : elem["fileName"]
+                            data: JSON.stringify({
+                                "action": "delete",
+                                "fileName": elem["fileName"]
                             }),
-                            success: function() {
+                            success: function () {
                                 updateFilesList();
                             }
                         })
@@ -141,7 +141,7 @@ $(document).ready(function() {
                 fileTable.append("hr");
                 fileTable.append("li")
                     .append("a")
-                    .on("click", function() {
+                    .on("click", function () {
                         getData(diversityStats, "diversity", "all");
                     })
                     .text("Diversity")
@@ -149,7 +149,7 @@ $(document).ready(function() {
                     .attr("class", "fa fa-area-chart pull-right");
                 fileTable.append("li")
                     .append("a")
-                    .on("click", function() {
+                    .on("click", function () {
                         getData(basicStats, "basicStats", "all");
                     })
                     .text("Summary")
@@ -158,20 +158,20 @@ $(document).ready(function() {
                 fileTable.append("hr");
                 fileTable.append("li")
                     .append("a")
-                    .on("click", function() {
-                    $.ajax({
-                        url : "/api/deleteAll",
-                        type : "post",
-                        contentType: 'application/json; charset=utf-8',
-                        data : JSON.stringify({
-                            "action" : "deleteAll"
-                        }),
-                        success: function(data) {
-                            accountPageInitializing();
-                            updateFilesList();
-                        }
+                    .on("click", function () {
+                        $.ajax({
+                            url: "/api/deleteAll",
+                            type: "post",
+                            contentType: 'application/json; charset=utf-8',
+                            data: JSON.stringify({
+                                "action": "deleteAll"
+                            }),
+                            success: function (data) {
+                                accountPageInitializing();
+                                updateFilesList();
+                            }
+                        })
                     })
-                })
                     .text("Delete all");
             }
             if (progressCount != 0) {
@@ -181,7 +181,7 @@ $(document).ready(function() {
                 d3.select(".addNewFilesButton").classed("fa-plus", true);
                 d3.select(".addNewFilesButton").classed("fa-refresh", false);
             }
-        }).error( function() {
+        }).error(function () {
             location.reload();
         });
     }
@@ -220,72 +220,72 @@ $(document).ready(function() {
             .attr("class", "nav nav-pills")
             .style("cursor", "pointer");
 
-            header.append("li")
-                .style("width", "19%")
-                .attr("class", "computationResultsButton")
-                .append("a")
-                .attr("class", "text-center")
-                .on("click", function() {
-                    clearVisualisation();
-                    d3.selectAll(".computationResultsButton").classed("active", false);
-                    d3.select(this.parentNode).classed("active", true);
-                    getData(VJUsage, "vjusage", fileName);
-                })
-                .html("V-J Usage");
-            header.append("li")
-                .attr("class", "active computationResultsButton")
-                .style("width", "19%")
-                .append("a")
-                .attr("class", "text-center")
-                .on("click", function() {
-                    clearVisualisation();
-                    d3.selectAll(".computationResultsButton").classed("active", false);
-                    d3.select(this.parentNode).classed("active", true);
-                    getData(spectrotype, "spectrotype", fileName);
-                })
-                .html("Spectrotype")
-                .append("i")
-                .attr("class", "fa fa-bar-chart-o pull-right");
-            header.append("li")
-                .style("width", "19%").
-                attr("class", "computationResultsButton")
-                .append("a")
-                .attr("class", "text-center")
-                .on("click", function() {
-                    clearVisualisation();
-                    d3.selectAll(".computationResultsButton").classed("active", false);
-                    d3.select(this.parentNode).classed("active", true);
-                    getData(spectrotypeV, "spectrotypeV", fileName);
-                })
-                .html("SpectrotypeV")
-                .append("i")
-                .attr("class", "fa fa-bar-chart-o pull-right");
-            header.append("li")
-                .style("width", "19%")
-                .attr("class", "computationResultsButton")
-                .append("a")
-                .attr("class", "text-center")
-                .on("click", function() {
-                    clearVisualisation();
-                    d3.selectAll(".computationResultsButton").classed("active", false);
-                    d3.select(this.parentNode).classed("active", true);
-                    getData(kernelDensity, "kernelDensity", fileName);
-                })
-                .html("Kernel Density");
-            header.append("li")
-                .style("width", "19%")
-                .attr("class", "computationResultsButton")
-                .append("a")
-                .attr("class", "text-center")
-                .on("click", function() {
-                    clearVisualisation();
-                    d3.selectAll(".computationResultsButton").classed("active", false);
-                    d3.select(this.parentNode).classed("active", true);
-                    getData(annotationTable, "annotation", fileName);
-                })
-                .html("Annotation")
-                .append("i")
-                .attr("class", "fa fa-th-list pull-right");
+        header.append("li")
+            .style("width", "19%")
+            .attr("class", "computationResultsButton")
+            .append("a")
+            .attr("class", "text-center")
+            .on("click", function () {
+                clearVisualisation();
+                d3.selectAll(".computationResultsButton").classed("active", false);
+                d3.select(this.parentNode).classed("active", true);
+                getData(VJUsage, "vjusage", fileName);
+            })
+            .html("V-J Usage");
+        header.append("li")
+            .attr("class", "active computationResultsButton")
+            .style("width", "19%")
+            .append("a")
+            .attr("class", "text-center")
+            .on("click", function () {
+                clearVisualisation();
+                d3.selectAll(".computationResultsButton").classed("active", false);
+                d3.select(this.parentNode).classed("active", true);
+                getData(spectrotype, "spectrotype", fileName);
+            })
+            .html("Spectrotype")
+            .append("i")
+            .attr("class", "fa fa-bar-chart-o pull-right");
+        header.append("li")
+            .style("width", "19%").
+            attr("class", "computationResultsButton")
+            .append("a")
+            .attr("class", "text-center")
+            .on("click", function () {
+                clearVisualisation();
+                d3.selectAll(".computationResultsButton").classed("active", false);
+                d3.select(this.parentNode).classed("active", true);
+                getData(spectrotypeV, "spectrotypeV", fileName);
+            })
+            .html("SpectrotypeV")
+            .append("i")
+            .attr("class", "fa fa-bar-chart-o pull-right");
+        header.append("li")
+            .style("width", "19%")
+            .attr("class", "computationResultsButton")
+            .append("a")
+            .attr("class", "text-center")
+            .on("click", function () {
+                clearVisualisation();
+                d3.selectAll(".computationResultsButton").classed("active", false);
+                d3.select(this.parentNode).classed("active", true);
+                getData(kernelDensity, "kernelDensity", fileName);
+            })
+            .html("Kernel Density");
+        header.append("li")
+            .style("width", "19%")
+            .attr("class", "computationResultsButton")
+            .append("a")
+            .attr("class", "text-center")
+            .on("click", function () {
+                clearVisualisation();
+                d3.selectAll(".computationResultsButton").classed("active", false);
+                d3.select(this.parentNode).classed("active", true);
+                getData(annotationTable, "annotation", fileName);
+            })
+            .html("Annotation")
+            .append("i")
+            .attr("class", "fa fa-th-list pull-right");
 
         d3.select(".mainContent")
             .append("div")
@@ -332,174 +332,178 @@ $(document).ready(function() {
             .append("svg")
             .style("height", "900px");
 
-            nv.addGraph(function() {
-                var chart = nv.models.lineChart()
-                    .margin({left: 100})
-                    .useInteractiveGuideline(true)
-                    .transitionDuration(350)
-                    .showLegend(true)
-                    .showYAxis(true)
-                    .showXAxis(true)
-                    .height(700);
+        nv.addGraph(function () {
+            var chart = nv.models.lineChart()
+                .margin({left: 100})
+                .useInteractiveGuideline(true)
+                .transitionDuration(350)
+                .showLegend(true)
+                .showYAxis(true)
+                .showXAxis(true)
+                .height(700);
 
-                chart.xAxis
-                    .axisLabel('Count')
-                    .tickFormat(d3.format(',r'));
+            chart.xAxis
+                .axisLabel('Count')
+                .tickFormat(d3.format(',r'));
 
-                chart.yAxis
-                    .axisLabel('CDR3AA')
-                    .tickFormat(d3.format('.02f'));
+            chart.yAxis
+                .axisLabel('CDR3AA')
+                .tickFormat(d3.format('.02f'));
 
 
-                d3.select("#chart svg")
-                    .datum(data)
-                    .call(chart);
+            d3.select("#chart svg")
+                .datum(data)
+                .call(chart);
 
-                nv.utils.windowResize(function() { chart.update() });
-                return chart;
+            nv.utils.windowResize(function () {
+                chart.update()
             });
+            return chart;
+        });
     }
 
     function kernelDensity(data) {
-            nv.addGraph(function() {
-                var svg = d3.select(".visualisation")
-                    .html("")
-                    .append("div")
-                    .attr("id", "chart")
-                    .append("svg")
-                    .style("height", "800px");
+        nv.addGraph(function () {
+            var svg = d3.select(".visualisation")
+                .html("")
+                .append("div")
+                .attr("id", "chart")
+                .append("svg")
+                .style("height", "800px");
 
-                var chart = nv.models.lineChart()
-                    .margin({left: 100})
-                    .useInteractiveGuideline(true)
-                    .transitionDuration(350)
-                    .showLegend(true)
-                    .showYAxis(true)
-                    .showXAxis(true)
-                    .height(700)
-                    .xScale(d3.scale.log())
-                    .xDomain(data["xAxisDomain"])
-                    .forceX(data["xAxisDomain"])
-                    .yDomain(data["yAxisDomain"])
-                    .forceY(data["yAxisDomain"])
-                    .yScale(d3.scale.log());
+            var chart = nv.models.lineChart()
+                .margin({left: 100})
+                .useInteractiveGuideline(true)
+                .transitionDuration(350)
+                .showLegend(true)
+                .showYAxis(true)
+                .showXAxis(true)
+                .height(700)
+                .xScale(d3.scale.log())
+                .xDomain(data["xAxisDomain"])
+                .forceX(data["xAxisDomain"])
+                .yDomain(data["yAxisDomain"])
+                .forceY(data["yAxisDomain"])
+                .yScale(d3.scale.log());
 
-                chart.xAxis
-                    .axisLabel('Clonotype size')
-                    .tickFormat(d3.format(',r'))
-                    .tickValues(d3.range(data["xAxisDomain"][0], data["xAxisDomain"][1], (data["xAxisDomain"][1] - data["xAxisDomain"][0]) / 5));
+            chart.xAxis
+                .axisLabel('Clonotype size')
+                .tickFormat(d3.format(',r'))
+                .tickValues(d3.range(data["xAxisDomain"][0], data["xAxisDomain"][1], (data["xAxisDomain"][1] - data["xAxisDomain"][0]) / 5));
 
-                chart.yAxis
-                    .axisLabel('1-CDF')
-                    .tickFormat(d3.format('.02e'))
-                    .tickValues(d3.range(data["yAxisDomain"][0], data["yAxisDomain"][1], (data["yAxisDomain"][1] - data["yAxisDomain"][0]) / 5));
+            chart.yAxis
+                .axisLabel('1-CDF')
+                .tickFormat(d3.format('.02e'))
+                .tickValues(d3.range(data["yAxisDomain"][0], data["yAxisDomain"][1], (data["yAxisDomain"][1] - data["yAxisDomain"][0]) / 5));
 
 
-                d3.select('#chart svg')
-                    .datum(data["data"])
-                    .call(chart);
-                nv.utils.windowResize(function() { chart.update() });
-                return chart;
+            d3.select('#chart svg')
+                .datum(data["data"])
+                .call(chart);
+            nv.utils.windowResize(function () {
+                chart.update()
             });
+            return chart;
+        });
     }
 
     function spectrotype(data) {
-            nv.addGraph(function() {
-                var svg = d3.select(".visualisation")
-                    .append("div")
-                    .attr("id", "chart")
-                    .append("svg")
-                    .style("height", "800px")
-                    .style("overflow", "visible");
+        nv.addGraph(function () {
+            var svg = d3.select(".visualisation")
+                .append("div")
+                .attr("id", "chart")
+                .append("svg")
+                .style("height", "800px")
+                .style("overflow", "visible");
 
-                var chart = nv.models.multiBarChart()
-                        .transitionDuration(350)
-                        .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
-                        .rotateLabels(0)      //Angle to rotate x-axis labels.
-                        .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
-                        .showLegend(true)
-                        .groupSpacing(0.1)    //Distance between each group of bars.
-                        .height(700)
-                        .stacked(true)
-                        .tooltip(function(key, x, y, e, graph) {
-                            if (key != "Other") {
-                                return '<h3>' + e.series.name + '</h3>' +
-                                    '<p>Length : ' + x + '</p>' +
-                                    '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
-                                    '<p>CDR3AA : ' + e.series.cdr3aa + '</p>' +
-                                    '<p>V : ' + e.series.v + '</p>' +
-                                    '<p>J : ' + e.series.j + '</p>';
-                            } else {
-                                return '<h3>Other</h3>' +
-                                    '<p>Length : ' + x + '</p>' +
-                                    '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
-                            }
-                        })
-                    ;
+            var chart = nv.models.multiBarChart()
+                    .transitionDuration(350)
+                    .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+                    .rotateLabels(0)      //Angle to rotate x-axis labels.
+                    .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .showLegend(true)
+                    .groupSpacing(0.1)    //Distance between each group of bars.
+                    .height(700)
+                    .stacked(true)
+                    .tooltip(function (key, x, y, e, graph) {
+                        if (key != "Other") {
+                            return '<h3>' + e.series.name + '</h3>' +
+                                '<p>Length : ' + x + '</p>' +
+                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
+                                '<p>CDR3AA : ' + e.series.cdr3aa + '</p>' +
+                                '<p>V : ' + e.series.v + '</p>' +
+                                '<p>J : ' + e.series.j + '</p>';
+                        } else {
+                            return '<h3>Other</h3>' +
+                                '<p>Length : ' + x + '</p>' +
+                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
+                        }
+                    })
+                ;
 
-                chart.xAxis
-                    .tickFormat(d3.format(',f'));
+            chart.xAxis
+                .tickFormat(d3.format(',f'));
 
-                chart.yAxis
-                    .tickFormat(d3.format(',.2e'));
+            chart.yAxis
+                .tickFormat(d3.format(',.2e'));
 
-                d3.select('#chart svg')
-                    .datum(data)
-                    .call(chart);
+            d3.select('#chart svg')
+                .datum(data)
+                .call(chart);
 
-                nv.utils.windowResize(chart.update);
-                return chart;
-            });
+            nv.utils.windowResize(chart.update);
+            return chart;
+        });
     }
 
     function spectrotypeV(data) {
-            nv.addGraph(function() {
-                var svg = d3.select(".visualisation")
-                    .append("div")
-                    .attr("id", "chart")
-                    .append("svg")
-                    .style("height", "800px")
-                    .style("overflow", "visible");
+        nv.addGraph(function () {
+            var svg = d3.select(".visualisation")
+                .append("div")
+                .attr("id", "chart")
+                .append("svg")
+                .style("height", "800px")
+                .style("overflow", "visible");
 
-                var chart = nv.models.multiBarChart()
-                        .transitionDuration(350)
-                        .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
-                        .rotateLabels(0)      //Angle to rotate x-axis labels.
-                        .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
-                        .showLegend(true)
-                        .groupSpacing(0.1)    //Distance between each group of bars.
-                        .height(700)
-                        .stacked(true)
-                        .tooltip(function(key, x, y, e, graph) {
-                            return '<h3>' + key + '</h3>' +
-                                '<p>Length : ' + x + '</p>' +
-                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
-                        })
-                    ;
+            var chart = nv.models.multiBarChart()
+                    .transitionDuration(350)
+                    .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+                    .rotateLabels(0)      //Angle to rotate x-axis labels.
+                    .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
+                    .showLegend(true)
+                    .groupSpacing(0.1)    //Distance between each group of bars.
+                    .height(700)
+                    .stacked(true)
+                    .tooltip(function (key, x, y, e, graph) {
+                        return '<h3>' + key + '</h3>' +
+                            '<p>Length : ' + x + '</p>' +
+                            '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
+                    })
+                ;
 
-                chart.xAxis
-                    .tickFormat(d3.format(',f'));
+            chart.xAxis
+                .tickFormat(d3.format(',f'));
 
-                chart.yAxis
-                    .tickFormat(d3.format(',.2e'));
+            chart.yAxis
+                .tickFormat(d3.format(',.2e'));
 
-                d3.select('#chart svg')
-                    .datum(data)
-                    .call(chart);
+            d3.select('#chart svg')
+                .datum(data)
+                .call(chart);
 
-                loaded(".loadingMainContent");
-                showVisualisationContent();
-                nv.utils.windowResize(chart.update);
-                return chart;
-            });
+            loaded(".loadingMainContent");
+            showVisualisationContent();
+            nv.utils.windowResize(chart.update);
+            return chart;
+        });
     }
 
     //TODO!!!!
     function VJUsage(data) {
         var vdjUsageData = [];
-            $.each(data, function(key, value){
-                var item = [value.vSegment, value.jSegment, value.relationNum ];
-                vdjUsageData.push(item);
+        $.each(data, function (key, value) {
+            var item = [value.vSegment, value.jSegment, value.relationNum ];
+            vdjUsageData.push(item);
         });
         renderVJUsage(vdjUsageData);
     }
@@ -519,7 +523,9 @@ $(document).ready(function() {
                 .attr("class", "table table-striped table-hover"),
             thead = table.append("thead").append("tr");
         thead.selectAll("th").data(header).enter()
-            .append("th").html(function(d) {return d});
+            .append("th").html(function (d) {
+                return d
+            });
         var column = [];
         for (var i = 0; i < header.length; i++) {
             column.push({"data": header[i.toString()]});
@@ -528,14 +534,14 @@ $(document).ready(function() {
 
         $('#basicStatsTable').dataTable({
             dom: 'T<"clear">lfrtip',
-            tableTools : {
+            tableTools: {
                 "sSwfPath": "../assets/javascripts/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
             },
             data: data,
             "columnDefs": [
                 {
-                    "width" : "10%",
-                    "targets" : 0
+                    "width": "10%",
+                    "targets": 0
                 },
                 {
                     "render": function (data, type, row) {
@@ -570,7 +576,9 @@ $(document).ready(function() {
             ],
             "columns": column,
             'iDisplayLength': 100,
-            'order' : [[ 0, "asc" ]],
+            'order': [
+                [ 0, "asc" ]
+            ],
             responsive: true
         });
     }
@@ -587,7 +595,9 @@ $(document).ready(function() {
                 .attr("class", "table table-striped table-hover"),
             thead = table.append("thead").append("tr");
         thead.selectAll("th").data(header).enter()
-            .append("th").html(function(d) {return d;});
+            .append("th").html(function (d) {
+                return d;
+            });
 
         var column = [];
         for (var i = 0; i < header.length; i++) {
@@ -598,22 +608,25 @@ $(document).ready(function() {
             "data": data,
             "columns": column,
             'iDisplayLength': 100,
-            'order': [[ 0 , "decs"]],
+            'order': [
+                [ 0 , "decs"]
+            ],
             dom: 'T<"clear">lfrtip',
             responsive: true,
-            tableTools : {
+            tableTools: {
                 "sSwfPath": "../../assets/javascripts/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
             },
-            "columnDefs" : [
+            "columnDefs": [
                 {
-                    "width" : "10%",
-                    "targets" : 0
+                    "width": "10%",
+                    "targets": 0
                 }
             ]
         });
     }
 
     var bP = {};
+
     function renderVJUsage(vjUsageData) {
         var height = 600, margin = {b: 0, t: 40, l: 170, r: 50};
 
@@ -993,21 +1006,21 @@ $(document).ready(function() {
         this.bP = bP;
     }
 
-    $(".fileNameInput #fileName").keyup(function() {
-       var pattern = "^[a-zA-Z0-9_.-]{0,20}$";
-       if (!$(this).val().match(pattern)) {
-           $(".fileNameInput .regex-error").css("visibility", "visible");
-           $(".buttonsInput input").addClass("disabled");
-       } else {
-           $(".fileNameInput .regex-error").css("visibility", "hidden");
-           $(".buttonsInput input").removeClass("disabled");
-       }
-   });
+    $(".fileNameInput #fileName").keyup(function () {
+        var pattern = "^[a-zA-Z0-9_.-]{0,20}$";
+        if (!$(this).val().match(pattern)) {
+            $(".fileNameInput .regex-error").css("visibility", "visible");
+            $(".buttonsInput input").addClass("disabled");
+        } else {
+            $(".fileNameInput .regex-error").css("visibility", "hidden");
+            $(".buttonsInput input").removeClass("disabled");
+        }
+    });
 
-    $(".fileInput input").change(function() {
-       var fileName = $(".fileInput input").val().split(/(\\|\/)/g).pop();
-       $(".fileNameInput input").attr("value", fileName.substr(0, fileName.lastIndexOf('.')) || fileName);
-   });
+    $(".fileInput input").change(function () {
+        var fileName = $(".fileInput input").val().split(/(\\|\/)/g).pop();
+        $(".fileNameInput input").attr("value", fileName.substr(0, fileName.lastIndexOf('.')) || fileName);
+    });
 
     $('#fileupload').fileupload({
         url: '/api/upload',
@@ -1021,7 +1034,7 @@ $(document).ready(function() {
                 fileName += fileExtension;
                 fileExtension = "txt";
             }
-            $(".fileName").each(function() {
+            $(".fileName").each(function () {
                 if ($(this).html() == fileName || fileNames.indexOf(fileName) != -1 || filesCount >= 10) {
                     create = false;
                     return false;
@@ -1098,7 +1111,7 @@ $(document).ready(function() {
                 data.context.append("td")
                     .style("width", "40%")
                     .append("div")
-                    .text(function() {
+                    .text(function () {
                         if (fileNames.length == 10) {
                             return "You have exceeded the limit of the number of files"
                         } else if (fileNames.indexOf(fileName) != -1) {
@@ -1114,43 +1127,53 @@ $(document).ready(function() {
                     .style("color", "red");
             }
         },
-        progress: function(e, data) {
+        progress: function (e, data) {
             var progress = parseInt(data.loaded / data.total * 50, 10);
             data.context.select(".tdUploadButton")
                 .html("Uploading...");
             data.context.select(".progress-bar")
                 .style("width", progress + "%");
         },
-        done: function(e, data) {
+        done: function (e, data) {
             progressCount--;
             updateFilesList();
             if (data.result["success"] != undefined) {
                 progressCount++;
                 data.context.select(".tdUploadButton")
                     .html("Computation...");
-                var socket = new WebSocket("ws://" + location.host + "/account/" + data.formData.fileName + "/render");
-                socket.onmessage = function(event) {
-                    if (event.data == "start") {
-                        updateFilesList();
-                    } else if (event.data != "ComputationDone" && event.data != "ComputationError") {
-                        data.context.select(".progress-bar")
-                            .style("width", 50 + (event.data / 2) + "%");
-                    } else if (event.data == "ComputationDone") {
-                        data.context.select(".tdUploadButton")
-                            .html("")
-                            .append("i")
-                            .attr("class", "fa  fa-check fa-2x pull-right")
-                            .style("color", "green");
-                        data.context.select(".progress-bar")
-                            .attr("class", "progress-bar progress-bar-success");
-                        data.context.select(".progress")
-                            .attr("class", "progress progress-striped");
-                        data.context
-                            .attr("class","success");
-                        progressCount--;
-                        updateFilesList();
-                        socket.close();
-                    } else {
+                var socket = new WebSocket("ws://" + location.host + "/api/ws");
+                socket.onopen = function () {
+                    var msg = {
+                        type: "message",
+                        action: "render",
+                        data: {
+                            fileName: data.formData.fileName
+                        }
+                    };
+                    socket.send(JSON.stringify(msg));
+                };
+                socket.onmessage = function (message) {
+                    var event = JSON.parse(message["data"]);
+                    if (event.result == "ok") {
+                        if (event.data.progress == "progress") {
+                            data.context.select(".progress-bar")
+                                .style("width", 50 + (event.data.result / 2) + "%");
+                        } else if (event.data.progress == "end") {
+                            data.context.select(".tdUploadButton")
+                                .html("")
+                                .append("i")
+                                .attr("class", "fa  fa-check fa-2x pull-right")
+                                .style("color", "green");
+                            data.context.select(".progress-bar")
+                                .attr("class", "progress-bar progress-bar-success");
+                            data.context.select(".progress")
+                                .attr("class", "progress progress-striped");
+                            data.context
+                                .attr("class", "success");
+                            progressCount--;
+                            socket.close();
+                        }
+                    } else if (event.result == "error"){
                         data.context.select(".tdUploadButton")
                             .html("")
                             .append("i")
@@ -1161,9 +1184,8 @@ $(document).ready(function() {
                         data.context
                             .attr("class", "danger computation-fail");
                         data.context.select(".progress-td")
-                            .html("Computation error");
+                            .html(event.data.message);
                         progressCount--;
-                        updateFilesList();
                         socket.close();
                     }
                 };
@@ -1186,58 +1208,58 @@ $(document).ready(function() {
         }
     });
 
-    $(".addNewFilesButton").click(function() {
-       $(".newFilesContainer").css("visibility", "visible");
-       $(".newFilesContainer").animate({
-           opacity: "1"
-       },250)
-       $(".newFilesContainer .filesTable").animate({
-           top : "20%"
-       },400)
+    $(".addNewFilesButton").click(function () {
+        $(".newFilesContainer").css("visibility", "visible");
+        $(".newFilesContainer").animate({
+            opacity: "1"
+        }, 250)
+        $(".newFilesContainer .filesTable").animate({
+            top: "20%"
+        }, 400)
     });
 
-    $(".newFilesContainer .closeButton").click(function() {
+    $(".newFilesContainer .closeButton").click(function () {
         updateFilesList();
         $(".newFilesContainer tr.success").remove();
         $(".newFilesContainer tr.danger").remove();
         $(".newFilesContainer").animate({
             opacity: "0"
-        },250)
+        }, 250)
         $(".newFilesContainer .filesTable").animate({
-            top : "-100%"
-        },400, function() {
+            top: "-100%"
+        }, 400, function () {
             $(".newFilesContainer").css("visibility", "hidden");
         }, 0)
     });
 
-    $(".uploadAllButton").click(function() {
-       $(".unitFileUpload").click();
-   });
+    $(".uploadAllButton").click(function () {
+        $(".unitFileUpload").click();
+    });
 
-    $(".chooseFilesButton").click(function() {
-      $("form input[type=file]").click();
-  });
+    $(".chooseFilesButton").click(function () {
+        $("form input[type=file]").click();
+    });
 
-    $(".commonSoftwareType").change(function() {
-      var softwareType = d3.select(".commonSoftwareType").node().value;
-      d3.selectAll("#softwareTypeName")
-          .selectAll("option")
-          .attr("selected", null);
-      d3.selectAll("#softwareTypeName")
-          .select("option[value="+softwareType+"]")
-          .attr("selected", "selected");
-  });
+    $(".commonSoftwareType").change(function () {
+        var softwareType = d3.select(".commonSoftwareType").node().value;
+        d3.selectAll("#softwareTypeName")
+            .selectAll("option")
+            .attr("selected", null);
+        d3.selectAll("#softwareTypeName")
+            .select("option[value=" + softwareType + "]")
+            .attr("selected", "selected");
+    });
 
-    $(".fileDeleteButton").click(function() {
+    $(".fileDeleteButton").click(function () {
         $.ajax({
-            url : "/api/delete",
-            type : "post",
+            url: "/api/delete",
+            type: "post",
             contentType: 'application/json; charset=utf-8',
-            data : JSON.stringify({
-                "action" : "delete",
-                "fileName" : $(this).attr("id")
+            data: JSON.stringify({
+                "action": "delete",
+                "fileName": $(this).attr("id")
             }),
-            success: function() {
+            success: function () {
                 updateFilesList();
             }
         })
@@ -1254,15 +1276,15 @@ $(document).ready(function() {
         hideVisualisationContent();
         loading(".loadingMainContent");
         $.ajax({
-            url : "/api/getData",
-            type : "post",
+            url: "/api/getData",
+            type: "post",
             contentType: 'application/json; charset=utf-8',
-            data : JSON.stringify({
-                "action" : "data",
-                "fileName" : fileName,
-                "type" : type
+            data: JSON.stringify({
+                "action": "data",
+                "fileName": fileName,
+                "type": type
             }),
-            success: function(data) {
+            success: function (data) {
                 if (data["result"] == "success") {
                     handleData(data["data"]);
 

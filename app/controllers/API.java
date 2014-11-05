@@ -10,6 +10,7 @@ import models.UserFile;
 import play.Logger;
 import play.Play;
 import play.data.Form;
+import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
 import securesocial.core.Identity;
@@ -226,6 +227,73 @@ public class API extends Controller {
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
             return ok(Json.toJson(serverResponse));
         }
+    }
+
+    public static WebSocket<JsonNode> ws() {
+
+        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
+        final Account account = localUser.account;
+
+        return new WebSocket<JsonNode>() {
+
+            @Override
+            public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
+                in.onMessage(new F.Callback<JsonNode>() {
+                    public void invoke(JsonNode event) {
+                        HashMap<String, Object> serverResponse = new HashMap<>();
+                        HashMap<String, Object> dataResponse = new HashMap<>();
+                        switch (event.findValue("action").asText()) {
+                            case "render" :
+                                String fileName = event.findValue("data").findValue("fileName").asText();
+                                if (fileName == null) {
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("message", "Missing file name");
+                                    out.write(Json.toJson(serverResponse));
+                                    return;
+                                }
+
+                                UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+
+                                if (file == null) {
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("message", "You have no file named " + fileName);
+                                    out.write(Json.toJson(serverResponse));
+                                    return;
+                                }
+                                file.rendering = true;
+                                file.renderCount++;
+                                Ebean.update(file);
+                                try {
+                                    ComputationUtil.createSampleCache(file, out);
+                                    file.rendered = true;
+                                    file.rendering = false;
+                                    Ebean.update(file);
+                                    return;
+                                } catch (Exception e) {
+                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
+                                    serverResponse.put("result", "error");
+                                    dataResponse.put("fileName", file.fileName);
+                                    dataResponse.put("message", "Error while rendering");
+                                    serverResponse.put("data", dataResponse);
+                                    out.write(Json.toJson(serverResponse));
+                                    file.rendered = false;
+                                    file.rendering = false;
+                                    Ebean.update(file);
+                                    return;
+                                }
+                            default:
+                                serverResponse.put("result", "error");
+                                Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
+                                dataResponse.put("message", "Error while rendering");
+                                serverResponse.put("data", dataResponse);
+                                out.write(Json.toJson(serverResponse));
+                        }
+                    }
+                });
+            }
+        };
     }
 
     public static Result deleteAllFiles() {

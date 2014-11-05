@@ -3,42 +3,41 @@
 # ~~~~
 
 # Home page
-GET         /                                   controllers.Application.index()
-GET         /contacts                           controllers.Application.contacts()
-GET         /about                              controllers.Application.about()
+GET         /                              controllers.Application.index()
+GET         /account                       controllers.Application.account()
+GET         /contacts                      controllers.Application.contacts()
+GET         /about                         controllers.Application.about()
+GET         /test                          controllers.Application.test()
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                       controllers.Assets.at(path="/public", file)
+GET         /assets/*file                  controllers.Assets.at(path="/public", file)
 
-
-
-# Account routes
-GET         /account                            controllers.AccountPage.index()
-
-#Computation
-GET         /account/:fileName/render           controllers.Computation.computationProgressBar(fileName: String)
+#WebSockets
+GET         /api/ws                        controllers.API.ws()
 
 # API
-POST        /api/upload                         controllers.API.upload()
-POST        /api/delete                         controllers.API.delete()
-POST        /api/deleteAll                      controllers.API.deleteAllFiles()
-POST        /api/fileInformation                controllers.API.fileInformation()
-POST        /api/getData                        controllers.API.getData()
-GET         /api/accountInformation             controllers.API.accountInformation()
-GET         /api/files                          controllers.API.files()
+POST        /api/upload                    controllers.API.upload()
+POST        /api/delete                    controllers.API.delete()
+POST        /api/deleteAll                 controllers.API.deleteAllFiles()
+POST        /api/fileInformation           controllers.API.fileInformation()
+POST        /api/getData                   controllers.API.getData()
+GET         /api/accountInformation        controllers.API.accountInformation()
+GET         /api/files                     controllers.API.files()
+
+
 
 # Auth routes
-GET         /signin                             securesocial.controllers.LoginPage.login
-GET         /logout                             securesocial.controllers.LoginPage.logout
-GET         /authenticate/:provider             securesocial.controllers.ProviderController.authenticate(provider)
-POST        /authenticate/:provider             securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET         /signup                             securesocial.controllers.Registration.startSignUp
-POST        /signup                             securesocial.controllers.Registration.handleStartSignUp
-GET         /signup/:token                      securesocial.controllers.Registration.signUp(token)
-POST        /signup/:token                      securesocial.controllers.Registration.handleSignUp(token)
-GET         /password                           securesocial.controllers.PasswordChange.page
-POST        /password                           securesocial.controllers.PasswordChange.handlePasswordChange
-GET         /reset                              securesocial.controllers.Registration.startResetPassword
-POST        /reset                              securesocial.controllers.Registration.handleStartResetPassword
-GET         /reset/:token                       securesocial.controllers.Registration.resetPassword(token)
-POST        /reset/:token                       securesocial.controllers.Registration.handleResetPassword(token)
+GET         /signin                        securesocial.controllers.LoginPage.login
+GET         /logout                        securesocial.controllers.LoginPage.logout
+GET         /authenticate/:provider        securesocial.controllers.ProviderController.authenticate(provider)
+POST        /authenticate/:provider        securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET         /signup                        securesocial.controllers.Registration.startSignUp
+POST        /signup                        securesocial.controllers.Registration.handleStartSignUp
+GET         /signup/:token                 securesocial.controllers.Registration.signUp(token)
+POST        /signup/:token                 securesocial.controllers.Registration.handleSignUp(token)
+GET         /password                      securesocial.controllers.PasswordChange.page
+POST        /password                      securesocial.controllers.PasswordChange.handlePasswordChange
+GET         /reset                         securesocial.controllers.Registration.startResetPassword
+POST        /reset                         securesocial.controllers.Registration.handleStartResetPassword
+GET         /reset/:token                  securesocial.controllers.Registration.resetPassword(token)
+POST        /reset/:token                  securesocial.controllers.Registration.handleResetPassword(token)
