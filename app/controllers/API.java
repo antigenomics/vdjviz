@@ -10,6 +10,7 @@ import models.UserFile;
 import play.Logger;
 import play.Play;
 import play.data.Form;
+import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
 import securesocial.core.Identity;
@@ -19,19 +20,17 @@ import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 @SecureSocial.SecuredAction
 public class API extends Controller {
 
-    public static Result uploadFile() {
+    public static Result upload() {
         /**
          * Identifying user using the SecureSocial API
          */
@@ -148,8 +147,6 @@ public class API extends Controller {
              */
 
             Ebean.save(newFile);
-            account.userfiles.add(newFile);
-            Ebean.update(account);
             resultJson.put("success", "success");
             return ok(Json.toJson(resultJson));
         } catch (Exception e) {
@@ -160,7 +157,7 @@ public class API extends Controller {
         }
     }
 
-    public static Result deleteFile() {
+    public static Result delete() {
 
         /**
          * Identifying User using the SecureSocial API
@@ -170,23 +167,23 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> jsonResults = new HashMap<>();
-        JsonNode jsonData = request().body().asJson();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        JsonNode request = request().body().asJson();
 
-        if (!jsonData.findValue("action").asText().equals("delete")) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Invalid action");
-            return badRequest(Json.toJson(jsonResults));
+        if (!request.findValue("action").asText().equals("delete")) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Invalid action");
+            return badRequest(Json.toJson(serverResponse));
         }
 
-        String fileName = jsonData.findValue("fileName").asText();
+        String fileName = request.findValue("fileName").asText();
         Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + fileName);
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
         if (file == null) {
             Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "You have no file named " + fileName);
-            return forbidden(Json.toJson(jsonResults));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "You have no file named " + fileName);
+            return forbidden(Json.toJson(serverResponse));
         }
 
         /**
@@ -194,49 +191,109 @@ public class API extends Controller {
          * and try to delete it
          */
 
-        String fileDirectoryName =  file.fileDirPath;
+        File fileDir = new File(file.fileDirPath);
+        File[] files = fileDir.listFiles();
 
-        File f = new File(file.filePath);
-        File histogram = new File(fileDirectoryName + "/histogram.cache");
-        File histogramV = new File(fileDirectoryName + "/histogramV.cache");
-        File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
-        File annotation = new File(fileDirectoryName + "/annotation.cache");
-        File basicStats = new File(fileDirectoryName + "/basicStats.cache");
-        File diversity = new File(fileDirectoryName + "/diversity.cache");
-        File kernelDensity = new File(fileDirectoryName + "/kernelDensity.cache");
-        File fileDir = new File(fileDirectoryName + "/");
+        if (files == null) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "File does not exist");
+            return ok(Json.toJson(serverResponse));
+        }
+
         Boolean deleted = false;
         try {
-            f.delete();
-            annotation.delete();
-            basicStats.delete();
-            histogram.delete();
-            histogramV.delete();
-            vdjUsage.delete();
-            kernelDensity.delete();
-            diversity.delete();
+            for (File cache : files) {
+                Files.deleteIfExists(cache.toPath());
+            }
             if (fileDir.delete()) {
                 deleted = true;
             }
         } catch (Exception e) {
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
             e.printStackTrace();
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Error while deleting file " + fileName);
-            return ok(Json.toJson(jsonResults));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Error while deleting file " + fileName);
+            return ok(Json.toJson(serverResponse));
         }
         if (deleted) {
             Ebean.delete(file);
             Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + fileName);
-            jsonResults.put("result", "ok");
-            jsonResults.put("message", "Successfully deleted");
-            return ok(Json.toJson(jsonResults));
+            serverResponse.put("result", "ok");
+            serverResponse.put("message", "Successfully deleted");
+            return ok(Json.toJson(serverResponse));
         } else {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Error while deleting file " + fileName);
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Error while deleting file " + fileName);
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
-            return ok(Json.toJson(jsonResults));
+            return ok(Json.toJson(serverResponse));
         }
+    }
+
+    public static WebSocket<JsonNode> ws() {
+
+        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
+        final Account account = localUser.account;
+
+        return new WebSocket<JsonNode>() {
+
+            @Override
+            public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
+                in.onMessage(new F.Callback<JsonNode>() {
+                    public void invoke(JsonNode event) {
+                        HashMap<String, Object> serverResponse = new HashMap<>();
+                        HashMap<String, Object> dataResponse = new HashMap<>();
+                        switch (event.findValue("action").asText()) {
+                            case "render" :
+                                String fileName = event.findValue("data").findValue("fileName").asText();
+                                if (fileName == null) {
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("message", "Missing file name");
+                                    out.write(Json.toJson(serverResponse));
+                                    return;
+                                }
+
+                                UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+
+                                if (file == null) {
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("message", "You have no file named " + fileName);
+                                    out.write(Json.toJson(serverResponse));
+                                    return;
+                                }
+                                file.rendering = true;
+                                file.renderCount++;
+                                Ebean.update(file);
+                                try {
+                                    ComputationUtil.createSampleCache(file, out);
+                                    file.rendered = true;
+                                    file.rendering = false;
+                                    Ebean.update(file);
+                                    return;
+                                } catch (Exception e) {
+                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
+                                    serverResponse.put("result", "error");
+                                    dataResponse.put("fileName", file.fileName);
+                                    dataResponse.put("message", "Error while rendering");
+                                    serverResponse.put("data", dataResponse);
+                                    out.write(Json.toJson(serverResponse));
+                                    file.rendered = false;
+                                    file.rendering = false;
+                                    Ebean.update(file);
+                                    return;
+                                }
+                            default:
+                                serverResponse.put("result", "error");
+                                Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
+                                dataResponse.put("message", "Error while rendering");
+                                serverResponse.put("data", dataResponse);
+                                out.write(Json.toJson(serverResponse));
+                        }
+                    }
+                });
+            }
+        };
     }
 
     public static Result deleteAllFiles() {
@@ -249,79 +306,72 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> jsonResults = new HashMap<>();
-        JsonNode jsonData = request().body().asJson();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        JsonNode request = request().body().asJson();
 
-        if (!jsonData.findValue("action").asText().equals("deleteAll")) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Invalid action");
-            return badRequest(Json.toJson(jsonResults));
+        if (!request.findValue("action").asText().equals("deleteAll")) {
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Invalid action");
+            return badRequest(Json.toJson(serverResponse));
         }
 
         for (UserFile file: UserFile.findByAccount(account)) {
-            String fileDirectoryName =  file.fileDirPath;
-
-            File f = new File(file.filePath);
-            File histogram = new File(fileDirectoryName + "/histogram.cache");
-            File histogramV = new File(fileDirectoryName + "/histogramV.cache");
-            File vdjUsage = new File(fileDirectoryName + "/vdjUsage.cache");
-            File annotation = new File(fileDirectoryName + "/annotation.cache");
-            File basicStats = new File(fileDirectoryName + "/basicStats.cache");
-            File diversity = new File(fileDirectoryName + "/diversity.cache");
-            File kernelDensity = new File(fileDirectoryName + "/kernelDensity.cache");
-            File fileDir = new File(fileDirectoryName + "/");
+            File fileDir = new File(file.fileDirPath);
+            File[] files = fileDir.listFiles();
             Boolean deleted = false;
             try {
-                f.delete();
-                annotation.delete();
-                basicStats.delete();
-                histogram.delete();
-                histogramV.delete();
-                vdjUsage.delete();
-                kernelDensity.delete();
-                diversity.delete();
+                if (files != null) {
+                    for (File cache : files) {
+                        Files.deleteIfExists(cache.toPath());
+                    }
+                }
                 if (fileDir.delete()) {
                     deleted = true;
                 }
             } catch (Exception e) {
-                Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
+                Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + file.fileName);
                 e.printStackTrace();
-                jsonResults.put("result", "error");
-                jsonResults.put("message", "Error while deleting file " + file.fileName);
-                return ok(Json.toJson(jsonResults));
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "Error while deleting file " + file.fileName);
+                return ok(Json.toJson(serverResponse));
             }
             if (deleted) {
                 Ebean.delete(file);
                 Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + file.fileName);
             } else {
-                jsonResults.put("result", "error");
-                jsonResults.put("message", "Error while deleting file " + file.fileName);
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "Error while deleting file " + file.fileName);
                 Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
-                return ok(Json.toJson(jsonResults));
+                return ok(Json.toJson(serverResponse));
             }
         }
-        jsonResults.put("result", "ok");
-        return ok(Json.toJson(jsonResults));
+        serverResponse.put("result", "ok");
+        return ok(Json.toJson(serverResponse));
     }
 
-    public static Result getAccountAllFilesInformation() {
+    public static Result files() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-        List<HashMap<String, Object>> fileNames = new ArrayList<>();
+        List<HashMap<String, Object>> files = new ArrayList<>();
+        List<String> names = new ArrayList<>();
         for (UserFile file: account.userfiles) {
             HashMap<String, Object> fileInformation = new HashMap<>();
+            names.add(file.fileName);
             fileInformation.put("fileName", file.fileName);
             fileInformation.put("softwareTypeName", file.softwareTypeName);
             fileInformation.put("rendered", file.rendered);
             fileInformation.put("rendering", file.rendering);
             fileInformation.put("renderCount", file.renderCount);
-            fileNames.add(fileInformation);
+            files.add(fileInformation);
         }
-        return ok(Json.toJson(fileNames));
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        serverResponse.put("data", files);
+        serverResponse.put("names", names);
+        return ok(Json.toJson(serverResponse));
     }
 
-    public static Result getFileInformation() {
+    public static Result fileInformation() {
         /**
          * Identifying user using the SecureSocial API
          */
@@ -358,7 +408,7 @@ public class API extends Controller {
         return ok(Json.toJson(jsonResults));
     }
 
-    public static Result getAccountInformation() {
+    public static Result accountInformation() {
 
         /**
          * Identifying user using the SecureSocial API
@@ -382,244 +432,130 @@ public class API extends Controller {
         return ok(Json.toJson(jsonResults));
     }
 
-    public static Result returnVdjUsageData(String fileName) throws FileNotFoundException {
+    public static Result getData() {
 
         /**
-         * Identifying User using the SecureSocial API
+         * Identifying user using the SecureSocial API
          */
 
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
+        Account account = localUser.account;
 
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
+        HashMap<String, Object> serverRequest = new HashMap<>();
+        JsonNode request = request().body().asJson();
+        Logger.info(String.valueOf(request));
+        if (!request.findValue("action").asText().equals("data")
+                || request.findValue("fileName") == null
+                || request.findValue("type") == null) {
+            serverRequest.put("result", "error");
+            serverRequest.put("message", "Invalid action");
+            return badRequest(Json.toJson(serverRequest));
         }
 
-        /**
-         * Verification of the existence
-         * vdjUsage data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
+        String fileName = request.findValue("fileName").asText();
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+        switch (request.findValue("type").asText()) {
+            case "vjusage" :
+                return cache(file, "vjUsage", account);
+            case "spectrotype" :
+                return cache(file, "spectrotype", account);
+            case "spectrotypeV" :
+                return cache(file, "spectrotypeV", account);
+            case "kernelDensity" :
+                return cache(file, "kernelDensity", account);
+            case "annotation" :
+                return cache(file, "annotation", account);
+            case "basicStats" :
+                return basicStats(account);
+            case "diversity" :
+                return diversity(account);
+            default:
+                Logger.of("user." + account.userName).error("User " + account.userName +
+                        ": unknown type: " + request.findValue("type").asText());
+                serverRequest.put("result", "error");
+                serverRequest.put("message", "Unknown type");
+                return badRequest(Json.toJson(serverRequest));
+        }
+    }
 
+    public static Result cache(UserFile file, String cacheName, Account account) {
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        if (file == null) {
+            Logger.of("user." + account.userName).error("User " + account.userName +
+                    " have no requested file");
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "You have no requested file");
+            return forbidden(Json.toJson(serverResponse));
+        }
         if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/vdjUsage.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
+            try {
+                File jsonFile = new File(file.fileDirPath + "/" + cacheName + ".cache");
+                FileInputStream fis = new FileInputStream(jsonFile);
+                JsonNode jsonData = Json.parse(fis);
+                serverResponse.put("result", "success");
+                serverResponse.put("message", "");
+                serverResponse.put("data", jsonData);
+                return ok(Json.toJson(serverResponse));
+            } catch (Exception e) {
+                Logger.of("user." + account.userName).error("User " + account.userName +
+                        ": cache file does not exists");
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "Cache file does not exist");
+                return ok(Json.toJson(serverResponse));
+            }
+        } else {
+            Logger.of("user." + account.userName).error("User: " + account.userName + " File: "
+                    + file.fileName + " did not rendered");
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "File did not rendered");
+            return ok(Json.toJson(serverResponse));
         }
-        return ok();
     }
 
-    public static Result returnSpectrotypeHistogram(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/histogram.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
-        }
-        return ok();
-    }
-
-    public static Result returnSpectrotypeVHistogram(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/histogramV.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
-        }
-        return ok();
-    }
-
-    public static Result returnKernelDensity(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (!localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file.rendered) {
-            File jsonFile = new File(file.fileDirPath + "/kernelDensity.cache");
-            FileInputStream fis = new FileInputStream(jsonFile);
-            JsonNode jsonData = Json.parse(fis);
-            return ok(jsonData);
-        }
-        return ok();
-    }
-
-    public static Result returnAnnotationData(String fileName) throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        UserFile file = UserFile.fyndByNameAndAccount(localAccount, fileName);
-
-        /**
-         * Verifying access to the file
-         */
-
-        if (file != null && !localAccount.userfiles.contains(file)) {
-            return ok("You have no access to this operation");
-        }
-
-        /**
-         * Verification of the existence
-         * Histogram data cache file
-         * if exists return jsonData
-         * else render SampleCache files again
-         */
-
-        if (file != null && file.rendered) {
-            File annotationCacheFile = new File(file.fileDirPath + "/annotation.cache");
-            FileInputStream jsonFile = new FileInputStream(annotationCacheFile);
-            return ok(Json.parse(jsonFile));
-        }
-        return ok();
-    }
-
-    public static Result returnBasicStats() throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        List<JsonNode> basicStatsAll = new ArrayList<>();
-
-        /**
-         * Getting jsonNode of BasicStats for each file
-         * is belonging to user
-         */
-
-        for (UserFile file : localAccount.userfiles) {
+    public static Result basicStats(Account account) {
+        List<JsonNode> basicStatsData = new ArrayList<>();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        int errors = 0;
+        for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
                 File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
-                if (basicStatsCache.exists()) {
-                    FileInputStream jsonFile = new FileInputStream(basicStatsCache);
-                    JsonNode basicStatsNode = Json.parse(jsonFile);
-                    basicStatsAll.add(basicStatsNode.get(0));
+                try {
+                    FileInputStream cacheFile = new FileInputStream(basicStatsCache);
+                    JsonNode basicStatsNode = Json.parse(cacheFile);
+                    basicStatsData.add(basicStatsNode.get(0));
+                } catch (Exception e) {
+                    errors++;
                 }
             }
         }
-        return ok(Json.toJson(basicStatsAll));
-
+        serverResponse.put("result", "success");
+        serverResponse.put("errors", errors);
+        serverResponse.put("data", basicStatsData);
+        serverResponse.put("message", "");
+        return ok(Json.toJson(serverResponse));
     }
 
-    public static Result returnDiversity() throws JsonProcessingException, FileNotFoundException {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account localAccount = localUser.account;
-        List<JsonNode> diversityAll = new ArrayList<>();
-
-        /**
-         * Getting jsonNode of diversity for each file
-         * is belonging to user
-         */
-
-        for (UserFile file : localAccount.userfiles) {
+    public static Result diversity(Account account) {
+        List<JsonNode> diversityData = new ArrayList<>();
+        HashMap<String, Object> serverResponse = new HashMap<>();
+        int errors = 0;
+        for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
                 File diversityCache = new File(file.fileDirPath + "/diversity.cache");
-                if (diversityCache.exists()) {
-                    FileInputStream jsonFile = new FileInputStream(diversityCache);
-                    JsonNode basicStatsNode = Json.parse(jsonFile);
-                    diversityAll.add(basicStatsNode);
+                try {
+                    FileInputStream cacheFile = new FileInputStream(diversityCache);
+                    JsonNode diversityNode = Json.parse(cacheFile);
+                    diversityData.add(diversityNode);
+                } catch (Exception e) {
+                    errors++;
                 }
             }
         }
-        return ok(Json.toJson(diversityAll));
-
+        serverResponse.put("result", "success");
+        serverResponse.put("errors", errors);
+        serverResponse.put("data", diversityData);
+        serverResponse.put("message", "");
+        return ok(Json.toJson(serverResponse));
     }
-
-
-
 }

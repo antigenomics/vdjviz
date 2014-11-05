@@ -40,6 +40,13 @@ public class Application extends Controller {
         }
     }
 
+    @SecureSocial.SecuredAction
+    public static Result account() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        return ok(views.html.account.accountMainPage.render(localUser.account));
+    }
+
     public static Result contacts() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = null;
@@ -64,5 +71,10 @@ public class Application extends Controller {
         } else {
             return ok(views.html.commonPages.about.render(null));
         }
+    }
+
+    @SecureSocial.SecuredAction
+    public static Result test() {
+        return ok(views.html.test.render());
     }
 }

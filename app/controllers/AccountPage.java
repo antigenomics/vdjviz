@@ -21,8 +21,4 @@ public class AccountPage extends Controller {
         return ok(views.html.account.accountMainPage.render(localUser.account));
     }
 
-    public static Result test() {
-        return ok(views.html.test.render());
-    }
-
 }
