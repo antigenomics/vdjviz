@@ -29,7 +29,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public String filePath;
     public String fileDirPath;
     public String fileExtension;
-    public Integer renderCount;
     public Boolean rendered;
     public Boolean rendering;
 
@@ -47,7 +46,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.fileDirPath = fileDirPath;
         this.rendered = false;
         this.rendering = false;
-        this.renderCount = 0;
         this.fileExtension = fileExtension;
 
     }

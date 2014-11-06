@@ -31,19 +31,23 @@ import java.util.*;
 public class API extends Controller {
 
     public static Result upload() {
+
         /**
          * Identifying user using the SecureSocial API
          */
+
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, String> resultJson = new HashMap<>();
+        HashMap<String, String> serverResponse = new HashMap<>();
 
         if (account == null) {
-            resultJson.put("error", "Unknow Error");
-            return ok(Json.toJson(resultJson));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Unknown error");
+            return ok(Json.toJson(serverResponse));
         }
+
         Logger.of("user." + account.userName).info("User " + account.userName + " is uploading new file");
 
         /**
@@ -51,9 +55,10 @@ public class API extends Controller {
          */
 
         if (account.userfiles.size() >= 10) {
-            resultJson.put("error", "You have exceeded the limit of the number of files");
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "You have exceeded the limit of the number of files");
             Logger.of("user." + account.userName).info("User" + account.userName + " exceeded  the limit of the number of files");
-            return ok(Json.toJson(resultJson));
+            return ok(Json.toJson(serverResponse));
         }
 
         /**
@@ -64,8 +69,9 @@ public class API extends Controller {
         Http.MultipartFormData.FilePart file = body.getFile("files[]");
 
         if (file == null) {
-            resultJson.put("error", "You should upload file");
-            return ok(Json.toJson(resultJson));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "You should upload file");
+            return ok(Json.toJson(serverResponse));
         }
 
         /**
@@ -74,7 +80,7 @@ public class API extends Controller {
          * it will be fills automatically using current file name
          */
 
-        String fileName = null;
+        String fileName;
         //TODO
         if (file.getFilename().equals("")) {
             fileName = FilenameUtils.removeExtension(file.getFilename());
@@ -84,16 +90,18 @@ public class API extends Controller {
 
         String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
         if (!fileName.matches(pattern)) {
-            resultJson.put("error", "Invalid name");
-            return ok(Json.toJson(resultJson));
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Invalid name");
+            return ok(Json.toJson(serverResponse));
         }
 
 
         List<UserFile> allFiles = UserFile.findByAccount(account);
         for (UserFile userFile: allFiles) {
             if (userFile.fileName.equals(fileName)) {
-                resultJson.put("error", "You should use unique names for your files");
-                return ok(Json.toJson(resultJson));
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "You should use unique names for your files");
+                return ok(Json.toJson(serverResponse));
             }
         }
 
@@ -113,27 +121,25 @@ public class API extends Controller {
 
             /**
              * Trying to create file's directory
-             * if failed redirect to the account
              */
 
             if (!fileDir.exists()) {
                 Boolean created = fileDir.mkdir();
                 if (!created) {
-                    resultJson.put("error", "Server currently unavailable");
+                    serverResponse.put("result", "error");
+                    serverResponse.put("message", "Server currently unavailable");
                     Logger.of("user." + account.userName).error("Error creating file directory for user " + account.userName);
-                    return ok(Json.toJson(resultJson));
+                    return ok(Json.toJson(serverResponse));
                 }
             }
 
-            /**
-             * Checking
-             */
             String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
             Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension));
             if (!uploaded) {
-                resultJson.put("error", "Server currently unavailable");
+                serverResponse.put("result", "error");
+                serverResponse.put("message", "Server currently unavailable");
                 Logger.of("user." + account.userName).error("Error upload file for user " + account.userName);
-                return ok(Json.toJson(resultJson));
+                return ok(Json.toJson(serverResponse));
             }
 
             UserFile newFile = new UserFile(account, fileName,
@@ -147,13 +153,14 @@ public class API extends Controller {
              */
 
             Ebean.save(newFile);
-            resultJson.put("success", "success");
-            return ok(Json.toJson(resultJson));
+            serverResponse.put("result", "success");
+            return ok(Json.toJson(serverResponse));
         } catch (Exception e) {
-            resultJson.put("error", "Unknown error");
+            serverResponse.put("result", "error");
+            serverResponse.put("message", "Server currently unavailable");
             e.printStackTrace();
             Logger.of("user." + account.userName).error("Error while uploading new file for user : " + account.userName);
-            return ok(Json.toJson(resultJson));
+            return ok(Json.toJson(serverResponse));
         }
     }
 
@@ -258,15 +265,15 @@ public class API extends Controller {
                                 if (file == null) {
                                     serverResponse.put("result", "error");
                                     serverResponse.put("action", "render");
+                                    serverResponse.put("fileName", fileName);
                                     serverResponse.put("message", "You have no file named " + fileName);
                                     out.write(Json.toJson(serverResponse));
                                     return;
                                 }
                                 file.rendering = true;
-                                file.renderCount++;
                                 Ebean.update(file);
                                 try {
-                                    ComputationUtil.createSampleCache(file, out);
+                                    ComputationUtil.createSampleCache(account, file, out);
                                     file.rendered = true;
                                     file.rendering = false;
                                     Ebean.update(file);
@@ -274,13 +281,11 @@ public class API extends Controller {
                                 } catch (Exception e) {
                                     Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
                                     serverResponse.put("result", "error");
-                                    dataResponse.put("fileName", file.fileName);
-                                    dataResponse.put("message", "Error while rendering");
-                                    serverResponse.put("data", dataResponse);
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("fileName", fileName);
+                                    serverResponse.put("message", "Error while rendering");
                                     out.write(Json.toJson(serverResponse));
-                                    file.rendered = false;
-                                    file.rendering = false;
-                                    Ebean.update(file);
+                                    CommonUtil.deleteFile(file, account);
                                     return;
                                 }
                             default:
@@ -360,9 +365,13 @@ public class API extends Controller {
             names.add(file.fileName);
             fileInformation.put("fileName", file.fileName);
             fileInformation.put("softwareTypeName", file.softwareTypeName);
-            fileInformation.put("rendered", file.rendered);
-            fileInformation.put("rendering", file.rendering);
-            fileInformation.put("renderCount", file.renderCount);
+            if (file.rendered) {
+                fileInformation.put("state", "rendered");
+            } else if (file.rendering) {
+                fileInformation.put("state", "rendering");
+            } else {
+                fileInformation.put("state", "wait");
+            }
             files.add(fileInformation);
         }
         HashMap<String, Object> serverResponse = new HashMap<>();
@@ -401,7 +410,6 @@ public class API extends Controller {
         HashMap<String, Object> fileInformationNode = new HashMap<>();
         fileInformationNode.put("fileName", file.fileName);
         fileInformationNode.put("softwareTypeName", file.softwareTypeName);
-        fileInformationNode.put("renderCount", file.renderCount);
         fileInformationNode.put("rendered", file.rendered);
         fileInformationNode.put("rendering", file.rendering);
         jsonResults.put("data", fileInformationNode);

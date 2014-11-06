@@ -1,5 +1,10 @@
 $(document).ready(function () {
 
+    var currentFile = "";
+    var fileNames = [];
+    var progressCount = 0;
+    var filesCount = 0;
+
     if ($(".addNewFilesButton").length != 0) {
         updateFilesList();
     }
@@ -7,11 +12,6 @@ $(document).ready(function () {
     if ($(".mainContent").length != 0) {
         accountPageInitializing();
     }
-
-    var currentFile = "";
-    var fileNames = [];
-    var progressCount = 0;
-    var filesCount = 0;
 
     function accountPageInitializing() {
         $.getJSON("/api/accountInformation", function (data) {
@@ -54,31 +54,29 @@ $(document).ready(function () {
                 window.location.replace("/account")
             }
             var fileTable = d3.select(".userFilesList");
-            var count = data["data"].length;
             fileNames = data["names"];
             filesCount = data["names"].length;
             fileTable.html("");
             data["data"].forEach(function (elem) {
                 var liMain = fileTable.append("li")
                     .attr("class", function () {
-                        var cls = "dropdown";
-                        if (elem["rendering"]) {
-                            cls += " disabled";
+                        switch (elem["state"]) {
+                            case "rendered":
+                                return "dropdown";
+                            case "rendering":
+                                return "dropdown disabled";
+                            case "wait":
+                                return "dropdown waitForRender";
                         }
-                        if (elem["renderCount"] == 0) {
-                            cls += " waitForRender";
-                        }
-                        if (!elem["rendered"]) {
-                            cls += " error";
-                        }
-                        return cls;
                     });
                 var a = liMain.append("a").style("cursor", "pointer");
                 a.style("background-color", function () {
-                    if (elem["rendering"] || !elem["rendered"]) {
-                        return "#DCDCDC";
+                    switch (elem["state"]) {
+                        case "rendered" :
+                            return "#FFFFFF";
+                        default:
+                            return "#DCDCDC";
                     }
-                    return "#FFFFFF";
                 })
                     .on("mouseover", function () {
                         $(this).css("background-color", "#DCDCDC");
@@ -87,26 +85,34 @@ $(document).ready(function () {
                         }
                     })
                     .on("mouseout", function () {
-                        if (liMain.classed("disabled") || liMain.classed("waitForRender") || liMain.classed("error")) {
-                            $(this).css("background-color", "#DCDCDC");
-                            $(this).find(".fa-trash").css("visibility", "hidden");
-                        } else {
-                            $(this).css("background-color", "#FFFFFF");
-                            $(this).find(".fa-trash").css("visibility", "hidden");
-                        }
+                        $(this).css("background-color", function() {
+                            switch (elem["state"]) {
+                                case "rendered":
+                                    return "#FFFFFF";
+                                default:
+                                    return "#DCDCDC";
+                            }
+                        });
+                        $(this).find(".fa-trash").css("visibility", "hidden");
                     })
                     .on("click", function () {
-                        fileComputationResults(elem["fileName"]);
-                    }).text(function () {
-                        var text = elem["fileName"];
-                        if (elem["rendering"]) {
-                            text += " | File is rendering";
-                        } else if (elem["renderCount"] == 0) {
-                            text += " | Waiting for computation";
-                        } else if (!elem["rendered"]) {
-                            text += " | Error while rendering";
+                        switch (elem["state"]) {
+                            case "rendered":
+                                fileComputationResults(elem["fileName"]);
+                                break;
+                            default:
+                                break;
                         }
-                        return text;
+                    })
+                    .text(function () {
+                        switch (elem["state"]) {
+                            case "rendered":
+                                return elem["fileName"];
+                            case "rendering":
+                                return elem["fileName"] + " | File is rendering";
+                            case "wait":
+                                return elem["fileName"] + " | In queue"
+                        }
                     });
 
                 a.append("i").attr("class", "fa fa-trash pull-right")
@@ -133,7 +139,7 @@ $(document).ready(function () {
                         })
                     });
             });
-            if (count == 0) {
+            if (filesCount == 0) {
                 fileTable.append("li")
                     .append("a")
                     .text("You have no files");
@@ -194,12 +200,6 @@ $(document).ready(function () {
         d3.select(".mainContent").html("");
     }
 
-    function hideMainContent() {
-        d3.select(".mainContent")
-            .transition()
-            .style("opacity", "0");
-    }
-
     function hideVisualisationContent() {
         d3.select(".visualisation")
             .transition()
@@ -229,7 +229,7 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                getData(VJUsage, "vjusage", fileName);
+                getData(vjUsage, "vjusage", fileName);
             })
             .html("V-J Usage");
         header.append("li")
@@ -418,7 +418,7 @@ $(document).ready(function () {
 
             var chart = nv.models.multiBarChart()
                     .transitionDuration(350)
-                    .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+                    .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
                     .rotateLabels(0)      //Angle to rotate x-axis labels.
                     .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                     .showLegend(true)
@@ -441,11 +441,19 @@ $(document).ready(function () {
                     })
                 ;
 
+            var xValues = [];
+            for (var i = 0; i < 100; i++) {
+                if (i % 3 == 0) {
+                    xValues.push(i);
+                }
+            }
+
             chart.xAxis
+                .tickValues(xValues)
                 .tickFormat(d3.format(',f'));
 
             chart.yAxis
-                .tickFormat(d3.format(',.2e'));
+                .tickFormat(d3.format('%'));
 
             d3.select('#chart svg')
                 .datum(data)
@@ -467,7 +475,7 @@ $(document).ready(function () {
 
             var chart = nv.models.multiBarChart()
                     .transitionDuration(350)
-                    .reduceXTicks(true)   //If 'false', every single x-axis tick label will be rendered.
+                    .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
                     .rotateLabels(0)      //Angle to rotate x-axis labels.
                     .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                     .showLegend(true)
@@ -481,11 +489,21 @@ $(document).ready(function () {
                     })
                 ;
 
+            var xValues = [];
+            for (var i = 0; i < 100; i++) {
+                if (i % 3 == 0) {
+                    xValues.push(i);
+                }
+            }
+
             chart.xAxis
+                .tickValues(xValues)
                 .tickFormat(d3.format(',f'));
 
             chart.yAxis
-                .tickFormat(d3.format(',.2e'));
+                .tickFormat(function (d) {
+                    return Math.round(d * 10) + "%"
+                });
 
             d3.select('#chart svg')
                 .datum(data)
@@ -496,16 +514,6 @@ $(document).ready(function () {
             nv.utils.windowResize(chart.update);
             return chart;
         });
-    }
-
-    //TODO!!!!
-    function VJUsage(data) {
-        var vdjUsageData = [];
-        $.each(data, function (key, value) {
-            var item = [value.vSegment, value.jSegment, value.relationNum ];
-            vdjUsageData.push(item);
-        });
-        renderVJUsage(vdjUsageData);
     }
 
     function basicStats(data) {
@@ -584,7 +592,6 @@ $(document).ready(function () {
     }
 
     function annotationTable(data) {
-        var header = Object.keys(data[0]);
         var svg = d3.select(".visualisation")
             .append("div")
             .attr("class", "svg");
@@ -600,20 +607,22 @@ $(document).ready(function () {
         thead.append("th").html("CDR3AA");
         thead.append("th").html("J");
         thead.append("th").html("V");
-        thead.append("th").html("Annotations");
 
         var column = [
-            {"data" : "freq"},
-            {"data" : "count" },
+            {"data": "freq"},
+            {"data": "count" },
             {"data": "query_cdr3aa"},
             {"data": "query_J"},
-            {"data": "query_V"},
-            {"data": "annotations"}
+            {"data": "query_V"}
         ];
 
+        for (var i = 0; i < data["header"].length; i++) {
+            thead.append("th").html(data["header"][i]);
+            column.push({"data": data["header"][i]});
+        }
 
         $('#annotation_table').dataTable({
-            "data": data,
+            "data": data["data"],
             "columns": column,
             'iDisplayLength': 100,
             'order': [
@@ -659,7 +668,7 @@ $(document).ready(function () {
                             return str.join("")
                         } else {
                             if (pos != -1) {
-                                return data["cdr3aa"].substring(0, pos) + "<b><u>" + data["cdr3aa"].substring(pos, pos + 1) + "</u></b>" + data["cdr3aa"].substring(pos + 1, data["cdr3aa"].length)
+                                return data["cdr3aa"].substring(0, pos) + "<b><u>" + data["cdr3aa"].substring(pos, pos + 1) + "</u></b>" + data["cdr3aa"].substring(pos + 1, data["cdr3aa"].lengthыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыы)
                             } else {
                                 return data["cdr3aa"];
                             }
@@ -689,21 +698,12 @@ $(document).ready(function () {
                     },
                     "width": "10%",
                     "targets": 4
-                },
-                {
-                    "render": function (data) {
-                        return data;
-                    },
-                    "width": "48%",
-                    "targets": 5
                 }
             ]
         });
     }
 
-    var bP = {};
-
-    function renderVJUsage(vjUsageData) {
+    function vjUsage(vjUsageData) {
         var height = 600, margin = {b: 0, t: 40, l: 170, r: 50};
 
         var svg = d3.select(".visualisation")
@@ -711,7 +711,7 @@ $(document).ready(function () {
             .attr('height', (height + margin.b + margin.t))
             .append("g")
             .attr("transform", "translate(" + $(".visualisation").width() / 4.5 + "," + margin.t + ")");
-        createbP();
+        var bP = createbP();
         var data = [
             {data: bP.partData(vjUsageData, 2), id: 'V-J-Usage', header: ["V", "J", "V-J Usage"]}
         ];
@@ -722,6 +722,7 @@ $(document).ready(function () {
         var b = 30, bb = $(".visualisation svg").width() / 2, height = 600, buffMargin = 5, minHeight = 5;
         var c1 = [-165, 50], c2 = [-50, 160], c3 = [-10, 250]; //Column positions of labels.
         var colors = d3.scale.category20().range();
+        var bP = {};
 
         bP.partData = function (data, p) {
             var sData = {};
@@ -1029,7 +1030,7 @@ $(document).ready(function () {
                         });
                 });
             });
-        }
+        };
 
         bP.selectSegment = function (data, m, s) {
             data.forEach(function (k) {
@@ -1062,7 +1063,7 @@ $(document).ready(function () {
                 selectedBar.select(".barvalue").style('font-weight', 'bold');
                 selectedBar.select(".barpercent").style('font-weight', 'bold');
             });
-        }
+        };
 
         bP.deSelectSegment = function (data, m, s) {
             data.forEach(function (k) {
@@ -1078,25 +1079,10 @@ $(document).ready(function () {
                 selectedBar.select(".barvalue").style('font-weight', 'normal');
                 selectedBar.select(".barpercent").style('font-weight', 'normal');
             });
-        }
-        this.bP = bP;
+        };
+
+        return bP;
     }
-
-    $(".fileNameInput #fileName").keyup(function () {
-        var pattern = "^[a-zA-Z0-9_.-]{0,20}$";
-        if (!$(this).val().match(pattern)) {
-            $(".fileNameInput .regex-error").css("visibility", "visible");
-            $(".buttonsInput input").addClass("disabled");
-        } else {
-            $(".fileNameInput .regex-error").css("visibility", "hidden");
-            $(".buttonsInput input").removeClass("disabled");
-        }
-    });
-
-    $(".fileInput input").change(function () {
-        var fileName = $(".fileInput input").val().split(/(\\|\/)/g).pop();
-        $(".fileNameInput input").attr("value", fileName.substr(0, fileName.lastIndexOf('.')) || fileName);
-    });
 
     $('#fileupload').fileupload({
         url: '/api/upload',
@@ -1110,12 +1096,10 @@ $(document).ready(function () {
                 fileName += fileExtension;
                 fileExtension = "txt";
             }
-            $(".fileName").each(function () {
-                if ($(this).html() == fileName || fileNames.indexOf(fileName) != -1 || filesCount >= 10) {
-                    create = false;
-                    return false;
-                }
-            });
+            if (fileNames.indexOf(fileName) != -1 || filesCount >= 10) {
+                create = false;
+                return false;
+            }
             d3.select(".filesTable .table")
                 .style("visibility", "visible");
             if (create) {
@@ -1213,83 +1197,101 @@ $(document).ready(function () {
         done: function (e, data) {
             progressCount--;
             updateFilesList();
-            if (data.result["success"] != undefined) {
-                progressCount++;
-                data.context.select(".tdUploadButton")
-                    .html("Computation...");
-                var socket = new WebSocket("ws://" + location.host + "/api/ws");
-                socket.onopen = function () {
-                    var msg = {
-                        type: "message",
-                        action: "render",
-                        data: {
-                            fileName: data.formData.fileName
-                        }
+            switch (data.result["result"]) {
+                case "success" :
+                    progressCount++;
+                    var socket = new WebSocket("ws://" + location.host + "/api/ws");
+                    socket.onopen = function () {
+                        var msg = {
+                            type: "message",
+                            action: "render",
+                            data: {
+                                fileName: data.formData.fileName
+                            }
+                        };
+                        socket.send(JSON.stringify(msg));
                     };
-                    socket.send(JSON.stringify(msg));
-                };
-                socket.onmessage = function (message) {
-                    updateFilesList();
-                    var event = JSON.parse(message["data"]);
-                    if (event.result == "ok") {
-                        if (event.data.progress == "progress") {
-                            data.context.select(".progress-bar")
-                                .style("width", 50 + (event.data.result / 2) + "%");
-                        } else if (event.data.progress == "end") {
-                            data.context.select(".tdUploadButton")
-                                .html("")
-                                .append("i")
-                                .attr("class", "fa  fa-check fa-2x pull-right")
-                                .style("color", "green");
-                            data.context.select(".progress-bar")
-                                .attr("class", "progress-bar progress-bar-success");
-                            data.context.select(".progress")
-                                .attr("class", "progress progress-striped");
-                            data.context
-                                .attr("class", "success");
-                            progressCount--;
-                            socket.close();
+                    socket.onmessage = function (message) {
+                        updateFilesList();
+                        var event = JSON.parse(message["data"]);
+                        switch (event["result"]) {
+                            case "ok" :
+                                switch (event["progress"]) {
+                                    case "start" :
+                                        data.context.select(".tdUploadButton")
+                                            .html("Computation...");
+                                        break;
+                                    case "end" :
+                                        data.context.select(".tdUploadButton")
+                                            .html("")
+                                            .append("i")
+                                            .attr("class", "fa  fa-check fa-2x pull-right")
+                                            .style("color", "green");
+                                        data.context.select(".progress-bar")
+                                            .attr("class", "progress-bar progress-bar-success");
+                                        data.context.select(".progress")
+                                            .attr("class", "progress progress-striped");
+                                        data.context
+                                            .attr("class", "success");
+                                        progressCount--;
+                                        socket.close();
+                                        break;
+                                    default:
+                                        data.context.select(".progress-bar")
+                                            .style("width", 50 + (event["progress"] / 2) + "%");
+
+                                }
+                                break;
+                            case "error" :
+                                data.context.select(".tdUploadButton")
+                                    .html("")
+                                    .append("i")
+                                    .attr("class", "fa  fa-remove fa-2x pull-right")
+                                    .style("color", "red");
+                                data.context.select(".progress-bar")
+                                    .attr("class", "progress-bar progress-bar-danger");
+                                data.context
+                                    .attr("class", "danger computation-fail");
+                                data.context.select(".progress-td")
+                                    .html(event["message"]);
+                                progressCount--;
+                                socket.close();
+                                break;
+                            default:
+                                data.context
+                                    .attr("class", "danger computation-fail")
+                                    .select(".tdUploadButton")
+                                    .html("Server unavailable")
+                                break;
                         }
-                    } else if (event.result == "error") {
-                        data.context.select(".tdUploadButton")
-                            .html("")
-                            .append("i")
-                            .attr("class", "fa  fa-remove fa-2x pull-right")
-                            .style("color", "red");
-                        data.context.select(".progress-bar")
-                            .attr("class", "progress-bar progress-bar-danger");
-                        data.context
-                            .attr("class", "danger computation-fail");
-                        data.context.select(".progress-td")
-                            .html(event.data.message);
-                        progressCount--;
-                        socket.close();
-                    }
-                };
-            } else if (data.result["error"] != undefined) {
-                data.context.select(".tdUploadButton")
-                    .html("").append("i")
-                    .attr("class", "fa  fa-remove fa-2x pull-right")
-                    .style("color", "red");
-                data.context.select(".progress-bar")
-                    .attr("class", "progress-bar progress-bar-danger");
-                data.context
-                    .attr("class", "danger upload-fail");
-                data.context
-                    .select(".progress-td")
-                    .html(data.result["error"]);
-            } else {
-                data.context.select(".tdUploadButton")
-                    .html("");
+
+                    };
+                    break;
+                case "error" :
+                    data.context.select(".tdUploadButton")
+                        .html("").append("i")
+                        .attr("class", "fa  fa-remove fa-2x pull-right")
+                        .style("color", "red");
+                    data.context.select(".progress-bar")
+                        .attr("class", "progress-bar progress-bar-danger");
+                    data.context
+                        .attr("class", "danger upload-fail");
+                    data.context
+                        .select(".progress-td")
+                        .html(data.result["message"]);
+                    break;
+                default:
+                    data.context.select(".tdUploadButton")
+                        .html("Server unavailable");
             }
         }
     });
 
     $(".addNewFilesButton").click(function () {
-        $(".newFilesContainer").css("visibility", "visible");
-        $(".newFilesContainer").animate({
-            opacity: "1"
-        }, 250)
+        $(".newFilesContainer").css("visibility", "visible")
+            .animate({
+                opacity: "1"
+            }, 250);
         $(".newFilesContainer .filesTable").animate({
             top: "20%"
         }, 400)
@@ -1362,16 +1364,22 @@ $(document).ready(function () {
                 "type": type
             }),
             success: function (data) {
-                if (data["result"] == "success") {
-                    handleData(data["data"]);
-
-                } else {
-                    console.log(data["result"]);
-                    console.log(data["message"]);
-                    errorData();
+                switch (data["result"]) {
+                    case "success" :
+                        handleData(data["data"]);
+                        break;
+                    case "error" :
+                        errorData();
+                        break;
+                    default :
+                        window.location.replace("/");
+                        break;
                 }
                 loaded(".loadingMainContent");
                 showVisualisationContent();
+            },
+            error: function() {
+                window.location.replace("/");
             }
         });
     }

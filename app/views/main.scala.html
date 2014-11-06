@@ -27,29 +27,6 @@
         <script src="@routes.Assets.at("javascripts/fileUpload/jquery.iframe-transport.js")"></script>
     </head>
     <body>
-        <div class="flash-content">
-            @if(flash.containsKey("success")) {
-                <div class="alert alert-success">
-                @flash.get("success")
-                </div>
-            }
-            @if(flash.containsKey("error")) {
-                <div class="alert alert-warning">
-                @flash.get("error")
-                </div>
-            }
-            @if(flash.containsKey("not found")) {
-                <div class="alert alert-info">
-                @flash.get("not found")
-                </div>
-            }
-            @if(flash.containsKey("info")) {
-                <div class="alert alert-info">
-                @flash.get("info")
-                </div>
-            }
-
-        </div>
             @content
     </body>
 </html>

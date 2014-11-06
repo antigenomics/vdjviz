@@ -41,7 +41,6 @@ create table user_file (
   file_path                 varchar(255),
   file_dir_path             varchar(255),
   file_extension            varchar(255),
-  render_count              integer,
   rendered                  boolean,
   rendering                 boolean,
   constraint ck_user_file_software_type check (software_type in (0,1,2,3,4)),

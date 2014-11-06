@@ -15,6 +15,7 @@ import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import models.Account;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
 import play.Logger;
 import play.mvc.WebSocket;
@@ -40,33 +41,17 @@ public class ComputationUtil {
         String sampleId = sampleCollection.getAt(0).getSampleMetadata().getSampleId();
         double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
 
-        /**
-         * Table class contains information about one relationship
-         */
-
-        class Table {
-            public String vSegment;
-            public String jSegment;
-            public Double relationNum;
-
-            public Table(String vSegment, String jSegment, Double relationNum) {
-                this.vSegment = vSegment;
-                this.jSegment = jSegment;
-                this.relationNum = relationNum;
-            }
-        }
-
-        /**
-         * Initializing Table list
-         */
-
-        List<Table> data = new ArrayList<>();
+        List<List<Object>> data = new ArrayList<>();
         String[] vVector = segmentUsage.vUsageHeader();
         String[] jVector = segmentUsage.jUsageHeader();
         for (int i = 0; i < jVector.length; i++) {
             for (int j = 0; j < vVector.length; j++) {
+                List<Object> dataNode = new ArrayList<>();
                 vjMatrix[i][j] = Math.round(vjMatrix[i][j] * 100000);
-                data.add(new Table(vVector[j], jVector[i], vjMatrix[i][j]));
+                dataNode.add(vVector[j]);
+                dataNode.add(jVector[i]);
+                dataNode.add(vjMatrix[i][j]);
+                data.add(dataNode);
             }
         }
 
@@ -77,11 +62,11 @@ public class ComputationUtil {
          */
 
         Integer optimization_value = 35;
-        List<Table> opt_data = new ArrayList<>();
-        Collections.sort(data, new Comparator<Table>() {
-            public int compare(Table c1, Table c2) {
-                if (c1.relationNum > c2.relationNum) return -1;
-                if (c1.relationNum < c2.relationNum) return 1;
+        List<List<Object>> opt_data = new ArrayList<>();
+        Collections.sort(data, new Comparator<List<Object>>() {
+            public int compare(List<Object> c1, List<Object> c2) {
+                if ((double) c1.get(2) > (double) c2.get(2)) return -1;
+                if ((double) c1.get(2) < (double) c2.get(2)) return 1;
                 return 0;
             }
         });
@@ -102,15 +87,14 @@ public class ComputationUtil {
         JsonNode jsonData = Json.toJson(opt_data);
         jsonWriter.write(Json.stringify(jsonData));
         jsonWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 20);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 20);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
+
     }
 
     public static void spectrotype(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
@@ -180,14 +164,12 @@ public class ComputationUtil {
         JsonNode jsonData = Json.toJson(histogramData);
         jsonWriter.write(Json.stringify(jsonData));
         jsonWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 30);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 30);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
     }
 
@@ -221,18 +203,16 @@ public class ComputationUtil {
         JsonNode jsonData = Json.toJson(histogramV);
         jsonWriter.write(Json.stringify(jsonData));
         jsonWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 40);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 40);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
     }
 
-    public static void AnnotationData(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
 
         /**
          * Getting CdrDatabase
@@ -249,7 +229,9 @@ public class ComputationUtil {
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
 
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
+        HashMap<String, Object> data = new HashMap<>();
         List<HashMap<String, Object>> annotationData = new ArrayList<>();
+        String[] header = cdrDatabase.header;
         for (CdrDatabaseMatch cdrDatabaseMatch : browserResult) {
             HashMap<String, Object> annotationDataNode = new HashMap<>();
             HashMap<String, Object> v = new HashMap<>();
@@ -272,23 +254,26 @@ public class ComputationUtil {
             annotationDataNode.put("query_J", j);
             annotationDataNode.put("freq", cdrDatabaseMatch.query.getFreq());
             annotationDataNode.put("count", cdrDatabaseMatch.query.getCount());
-            annotationDataNode.put("annotations", cdrDatabaseMatch.subject.getAnnotation());
+            String[] annotations = cdrDatabaseMatch.subject.getAnnotation();
+            for (int i = 0; i < header.length; i++) {
+                annotationDataNode.put(header[i], annotations[i]);
+            }
             annotationData.add(annotationDataNode);
         }
-        fileWriter.write(Json.stringify(Json.toJson(annotationData)));
+        data.put("data", annotationData);
+        data.put("header", header);
+        fileWriter.write(Json.stringify(Json.toJson(data)));
         fileWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 60);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 60);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
     }
 
-    public static void BasicStats(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void basicStats(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
         BasicStats basicStats = new BasicStats(sample);
         String[] header = BasicStats.getHEADER().split("\t");
         List<HashMap<String, String>> basicStatsList = new ArrayList<>();
@@ -303,18 +288,16 @@ public class ComputationUtil {
         PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
         fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
         fileWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 80);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 80);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
     }
 
-    public static void diversityCache(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void diversity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
         DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
@@ -347,18 +330,16 @@ public class ComputationUtil {
         PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
         fileWriter.write(Json.stringify(Json.toJson(diversity)));
         fileWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 90);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 90);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
     }
 
-    public static void kernelDensityCache(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void kernelDensity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         List<HashMap<String, Object>> binValues = new ArrayList<>();
         List<HashMap<String, Object>> stdValues = new ArrayList<>();
@@ -423,18 +404,16 @@ public class ComputationUtil {
         PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
         fileWriter.write(Json.stringify(Json.toJson(jsonData)));
         fileWriter.close();
+
         HashMap<String, Object> serverResponse = new HashMap<>();
-        HashMap<String, Object> dataResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        dataResponse.put("progress", "progress");
-        dataResponse.put("fileName", file.fileName);
-        dataResponse.put("result", 100);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", 100);
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
     }
 
-    public static void createSampleCache(UserFile file, WebSocket.Out<JsonNode> out) {
+    public static void createSampleCache(Account account, UserFile file, WebSocket.Out<JsonNode> out) {
 
         /**
          * Getting Sample from text file
@@ -452,40 +431,31 @@ public class ComputationUtil {
          * Creating all cache files
          */
 
-        file.rendered = false;
         file.rendering = true;
         Ebean.update(file);
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");
-        HashMap<String, Object> dataResponse = new HashMap<>();
-        dataResponse.put("progress", "start");
-        dataResponse.put("fileName", file.fileName);
-        serverResponse.put("data", dataResponse);
+        serverResponse.put("progress", "start");
+        serverResponse.put("fileName", file.fileName);
         out.write(Json.toJson(serverResponse));
         try {
             vjUsageData(sampleCollection, file, out);
             spectrotype(sample, file, out);
             spectrotypeV(sample, file, out);
-            AnnotationData(sample, file, out);
-            BasicStats(sample, file, out);
-            diversityCache(sample, file, out);
-            kernelDensityCache(sample, file, out);
+            annotation(sample, file, out);
+            basicStats(sample, file, out);
+            diversity(sample, file, out);
+            kernelDensity(sample, file, out);
             file.rendering = false;
             file.rendered = true;
-            serverResponse.put("result", "ok");
-            serverResponse.put("action", "render");
-            dataResponse.put("progress", "end");
-            serverResponse.put("data", dataResponse);
+            serverResponse.put("progress", "end");
             out.write(Json.toJson(serverResponse));
             Ebean.update(file);
         } catch (Exception e) {
-            file.rendering = false;
-            file.rendered = false;
             serverResponse.put("result", "error");
-            serverResponse.put("action", "render");
+            serverResponse.put("progress", "end");
             serverResponse.put("message", "Computation error");
             out.write(Json.toJson(serverResponse));
-            Ebean.update(file);
             e.printStackTrace();
         }
     }
