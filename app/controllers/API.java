@@ -81,7 +81,6 @@ public class API extends Controller {
          */
 
         String fileName;
-        //TODO
         if (file.getFilename().equals("")) {
             fileName = FilenameUtils.removeExtension(file.getFilename());
         } else {
@@ -531,7 +530,7 @@ public class API extends Controller {
                 try {
                     FileInputStream cacheFile = new FileInputStream(basicStatsCache);
                     JsonNode basicStatsNode = Json.parse(cacheFile);
-                    basicStatsData.add(basicStatsNode.get(0));
+                    basicStatsData.add(basicStatsNode);
                 } catch (Exception e) {
                     errors++;
                 }

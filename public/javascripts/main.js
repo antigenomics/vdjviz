@@ -4,6 +4,7 @@ $(document).ready(function () {
     var fileNames = [];
     var progressCount = 0;
     var filesCount = 0;
+    var updating = false;
 
     if ($(".addNewFilesButton").length != 0) {
         updateFilesList();
@@ -49,147 +50,145 @@ $(document).ready(function () {
     }
 
     function updateFilesList() {
-        $.getJSON("/api/files", function (data) {
-            if (!data) {
-                window.location.replace("/account")
-            }
-            var fileTable = d3.select(".userFilesList");
-            fileNames = data["names"];
-            filesCount = data["names"].length;
-            fileTable.html("");
-            data["data"].forEach(function (elem) {
-                var liMain = fileTable.append("li")
-                    .attr("class", function () {
-                        switch (elem["state"]) {
-                            case "rendered":
-                                return "dropdown";
-                            case "rendering":
-                                return "dropdown disabled";
-                            case "wait":
-                                return "dropdown waitForRender";
-                        }
-                    });
-                var a = liMain.append("a").style("cursor", "pointer");
-                a.style("background-color", function () {
-                    switch (elem["state"]) {
-                        case "rendered" :
-                            return "#FFFFFF";
-                        default:
-                            return "#DCDCDC";
-                    }
-                })
-                    .on("mouseover", function () {
-                        $(this).css("background-color", "#DCDCDC");
-                        if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
-                            $(this).find(".fa-trash").css("visibility", "visible");
-                        }
-                    })
-                    .on("mouseout", function () {
-                        $(this).css("background-color", function() {
+        if (!updating) {
+            updating = true;
+            $.getJSON("/api/files", function (data) {
+                if (!data) {
+                    window.location.replace("/account")
+                }
+                var fileTable = d3.select(".userFilesList");
+                fileNames = data["names"];
+                filesCount = data["names"].length;
+                fileTable.html("");
+                data["data"].forEach(function (elem) {
+                    var liMain = fileTable.append("li")
+                        .attr("class", function () {
                             switch (elem["state"]) {
                                 case "rendered":
-                                    return "#FFFFFF";
-                                default:
-                                    return "#DCDCDC";
+                                    return "dropdown";
+                                case "rendering":
+                                    return "dropdown disabled";
+                                case "wait":
+                                    return "dropdown waitForRender";
                             }
                         });
-                        $(this).find(".fa-trash").css("visibility", "hidden");
-                    })
-                    .on("click", function () {
+                    var a = liMain.append("a").style("cursor", "pointer");
+                    a.style("background-color", function () {
                         switch (elem["state"]) {
-                            case "rendered":
-                                fileComputationResults(elem["fileName"]);
-                                break;
+                            case "rendered" :
+                                return "#FFFFFF";
                             default:
-                                break;
+                                return "#DCDCDC";
                         }
                     })
-                    .text(function () {
-                        switch (elem["state"]) {
-                            case "rendered":
-                                return elem["fileName"];
-                            case "rendering":
-                                return elem["fileName"] + " | File is rendering";
-                            case "wait":
-                                return elem["fileName"] + " | In queue"
-                        }
-                    });
+                        .on("mouseover", function () {
+                            $(this).css("background-color", "#DCDCDC");
+                            if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
+                                $(this).find(".fa-trash").css("visibility", "visible");
+                            }
+                        })
+                        .on("mouseout", function () {
+                            $(this).css("background-color", function () {
+                                switch (elem["state"]) {
+                                    case "rendered":
+                                        return "#FFFFFF";
+                                    default:
+                                        return "#DCDCDC";
+                                }
+                            });
+                            $(this).find(".fa-trash").css("visibility", "hidden");
+                        })
+                        .on("click", function () {
+                            if (elem["state"] == "rendered") {
+                                fileComputationResults(elem["fileName"]);
+                            }
+                        })
+                        .text(function () {
+                            switch (elem["state"]) {
+                                case "rendered":
+                                    return elem["fileName"];
+                                case "rendering":
+                                    return elem["fileName"] + " | File is rendering";
+                                case "wait":
+                                    return elem["fileName"] + " | In queue"
+                            }
+                        });
 
-                a.append("i").attr("class", "fa fa-trash pull-right")
-                    .style("visibility", "hidden")
-                    .style("cursor", "pointer")
-                    .on("click", function () {
-                        if (currentFile != elem["fileName"]) {
+                    a.append("i").attr("class", "fa fa-trash pull-right")
+                        .style("visibility", "hidden")
+                        .style("cursor", "pointer")
+                        .on("click", function () {
                             d3.event.stopPropagation();
-                        } else {
-                            d3.event.stopPropagation();
-                            accountPageInitializing();
-                        }
-                        $.ajax({
-                            url: "/api/delete",
-                            type: "post",
-                            contentType: 'application/json; charset=utf-8',
-                            data: JSON.stringify({
-                                "action": "delete",
-                                "fileName": elem["fileName"]
-                            }),
-                            success: function () {
-                                updateFilesList();
-                            }
-                        })
-                    });
-            });
-            if (filesCount == 0) {
-                fileTable.append("li")
-                    .append("a")
-                    .text("You have no files");
-            } else {
-                fileTable.append("hr");
-                fileTable.append("li")
-                    .append("a")
-                    .on("click", function () {
-                        getData(diversityStats, "diversity", "all");
-                    })
-                    .text("Diversity")
-                    .append("i")
-                    .attr("class", "fa fa-area-chart pull-right");
-                fileTable.append("li")
-                    .append("a")
-                    .on("click", function () {
-                        getData(basicStats, "basicStats", "all");
-                    })
-                    .text("Summary")
-                    .append("i")
-                    .attr("class", "fa fa-th-list pull-right");
-                fileTable.append("hr");
-                fileTable.append("li")
-                    .append("a")
-                    .on("click", function () {
-                        $.ajax({
-                            url: "/api/deleteAll",
-                            type: "post",
-                            contentType: 'application/json; charset=utf-8',
-                            data: JSON.stringify({
-                                "action": "deleteAll"
-                            }),
-                            success: function (data) {
+                            if (currentFile == elem["fileName"]) {
                                 accountPageInitializing();
-                                updateFilesList();
                             }
+                            $.ajax({
+                                url: "/api/delete",
+                                type: "post",
+                                contentType: 'application/json; charset=utf-8',
+                                data: JSON.stringify({
+                                    "action": "delete",
+                                    "fileName": elem["fileName"]
+                                }),
+                                success: function () {
+                                    updateFilesList();
+                                }
+                            })
+                        });
+                });
+                if (filesCount == 0) {
+                    fileTable.append("li")
+                        .append("a")
+                        .text("You have no files");
+                } else {
+                    fileTable.append("hr");
+                    fileTable.append("li")
+                        .append("a")
+                        .on("click", function () {
+                            getData(diversityStats, "diversity", "all");
                         })
-                    })
-                    .text("Delete all");
-            }
-            if (progressCount != 0) {
-                d3.select(".addNewFilesButton").classed("fa-plus", false);
-                d3.select(".addNewFilesButton").classed("fa-refresh", true);
-            } else {
-                d3.select(".addNewFilesButton").classed("fa-plus", true);
-                d3.select(".addNewFilesButton").classed("fa-refresh", false);
-            }
-        }).error(function () {
-            location.reload();
-        });
+                        .text("Diversity")
+                        .append("i")
+                        .attr("class", "fa fa-area-chart pull-right");
+                    fileTable.append("li")
+                        .append("a")
+                        .on("click", function () {
+                            getData(basicStats, "basicStats", "all");
+                        })
+                        .text("Summary")
+                        .append("i")
+                        .attr("class", "fa fa-th-list pull-right");
+                    fileTable.append("hr");
+                    fileTable.append("li")
+                        .append("a")
+                        .on("click", function () {
+                            $.ajax({
+                                url: "/api/deleteAll",
+                                type: "post",
+                                contentType: 'application/json; charset=utf-8',
+                                data: JSON.stringify({
+                                    "action": "deleteAll"
+                                }),
+                                success: function () {
+                                    accountPageInitializing();
+                                    updateFilesList();
+                                }
+                            })
+                        })
+                        .text("Delete all");
+                }
+                if (progressCount != 0) {
+                    d3.select(".addNewFilesButton").classed("fa-plus", false);
+                    d3.select(".addNewFilesButton").classed("fa-refresh", true);
+                } else {
+                    d3.select(".addNewFilesButton").classed("fa-plus", true);
+                    d3.select(".addNewFilesButton").classed("fa-refresh", false);
+                }
+                updating = false;
+            }).error(function () {
+                location.reload();
+            });
+        }
     }
 
     function clearVisualisation() {
@@ -364,12 +363,16 @@ $(document).ready(function () {
 
     function kernelDensity(data) {
         nv.addGraph(function () {
+
             var svg = d3.select(".visualisation")
                 .html("")
                 .append("div")
                 .attr("id", "chart")
                 .append("svg")
                 .style("height", "800px");
+
+            var x = data["xAxisDomain"];
+            var y = data["yAxisDomain"];
 
             var chart = nv.models.lineChart()
                 .margin({left: 100})
@@ -380,22 +383,21 @@ $(document).ready(function () {
                 .showXAxis(true)
                 .height(700)
                 .xScale(d3.scale.log())
-                .xDomain(data["xAxisDomain"])
-                .forceX(data["xAxisDomain"])
-                .yDomain(data["yAxisDomain"])
-                .forceY(data["yAxisDomain"])
+                .xDomain(x)
+                .forceX(x)
+                .yDomain(y)
+                .forceY(y)
                 .yScale(d3.scale.log());
 
             chart.xAxis
                 .axisLabel('Clonotype size')
                 .tickFormat(d3.format(',r'))
-                .tickValues(d3.range(data["xAxisDomain"][0], data["xAxisDomain"][1], (data["xAxisDomain"][1] - data["xAxisDomain"][0]) / 5));
+                .tickValues(d3.range(x[0], x[1], (x[1] - x[0]) / 5));
 
             chart.yAxis
                 .axisLabel('1-CDF')
                 .tickFormat(d3.format('.02e'))
-                .tickValues(d3.range(data["yAxisDomain"][0], data["yAxisDomain"][1], (data["yAxisDomain"][1] - data["yAxisDomain"][0]) / 5));
-
+                .tickValues(d3.range(y[0], y[1], (y[1] - y[0]) / 5));
 
             d3.select('#chart svg')
                 .datum(data["data"])
@@ -539,7 +541,7 @@ $(document).ready(function () {
             column.push({"data": header[i.toString()]});
         }
 
-
+        console.log(data);
         $('#basicStatsTable').dataTable({
             dom: 'T<"clear">lfrtip',
             tableTools: {
@@ -585,7 +587,7 @@ $(document).ready(function () {
             "columns": column,
             'iDisplayLength': 100,
             'order': [
-                [ 0, "asc" ]
+                [0, "asc"]
             ],
             responsive: true
         });
@@ -610,7 +612,7 @@ $(document).ready(function () {
 
         var column = [
             {"data": "freq"},
-            {"data": "count" },
+            {"data": "count"},
             {"data": "query_cdr3aa"},
             {"data": "query_J"},
             {"data": "query_V"}
@@ -626,7 +628,7 @@ $(document).ready(function () {
             "columns": column,
             'iDisplayLength': 100,
             'order': [
-                [ 0 , "decs"]
+                [0, "decs"]
             ],
             dom: 'T<"clear">lfrtip',
             responsive: true,
@@ -740,7 +742,7 @@ $(document).ready(function () {
                 })
             ];
 
-            sData.data = [    sData.keys[0].map(function (d) {
+            sData.data = [sData.keys[0].map(function (d) {
                 return sData.keys[1].map(function (v) {
                     return 0;
                 });
@@ -1098,7 +1100,6 @@ $(document).ready(function () {
             }
             if (fileNames.indexOf(fileName) != -1 || filesCount >= 10) {
                 create = false;
-                return false;
             }
             d3.select(".filesTable .table")
                 .style("visibility", "visible");
@@ -1125,7 +1126,6 @@ $(document).ready(function () {
                 optionValues.append("option").attr("value", "migec").text("MiGec");
                 optionValues.append("option").attr("value", "simple").text("Simple");
                 optionValues.append("option").attr("value", "igblast").text("IgBlast");
-                optionValues.append("option").attr("value", "cdrblast").text("CdrBlast");
 
                 data.context.append("td")
                     .style("width", "40%")
@@ -1172,10 +1172,10 @@ $(document).ready(function () {
                     .style("width", "40%")
                     .append("div")
                     .text(function () {
-                        if (fileNames.length == 10) {
-                            return "You have exceeded the limit of the number of files"
-                        } else if (fileNames.indexOf(fileName) != -1) {
+                        if (fileNames.indexOf(fileName) != -1) {
                             return "You should use unique names for your files"
+                        } else if (filesCount >= 10) {
+                            return "You have exceeded the limit of the number of files"
                         } else {
                             return "Unknown error"
                         }
@@ -1212,7 +1212,6 @@ $(document).ready(function () {
                         socket.send(JSON.stringify(msg));
                     };
                     socket.onmessage = function (message) {
-                        updateFilesList();
                         var event = JSON.parse(message["data"]);
                         switch (event["result"]) {
                             case "ok" :
@@ -1222,6 +1221,7 @@ $(document).ready(function () {
                                             .html("Computation...");
                                         break;
                                     case "end" :
+                                        updateFilesList();
                                         data.context.select(".tdUploadButton")
                                             .html("")
                                             .append("i")
@@ -1261,7 +1261,7 @@ $(document).ready(function () {
                                 data.context
                                     .attr("class", "danger computation-fail")
                                     .select(".tdUploadButton")
-                                    .html("Server unavailable")
+                                    .html("Server unavailable");
                                 break;
                         }
 
@@ -1378,7 +1378,7 @@ $(document).ready(function () {
                 loaded(".loadingMainContent");
                 showVisualisationContent();
             },
-            error: function() {
+            error: function () {
                 window.location.replace("/");
             }
         });

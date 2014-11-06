@@ -28,7 +28,6 @@ import java.util.*;
 
 public class ComputationUtil {
 
-    //TODO !!!!
     public static void vjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
 
         /**
@@ -174,7 +173,6 @@ public class ComputationUtil {
     }
 
     public static void spectrotypeV(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
-        //TODO
         SpectratypeV spectratypeV = new SpectratypeV(false, false);
         spectratypeV.addAll(sample);
         int default_top = 12;
@@ -182,7 +180,7 @@ public class ComputationUtil {
 
         List<Object> histogramV = new ArrayList<>();
 
-        for (String key : new HashSet<String>(collapsedSpectratypes.keySet())) {
+        for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
             List<HashMap<String, Object>> valuesList = new ArrayList<>();
             HashMap<String, Object> histogramVNode = new HashMap<>();
@@ -276,17 +274,15 @@ public class ComputationUtil {
     public static void basicStats(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
         BasicStats basicStats = new BasicStats(sample);
         String[] header = BasicStats.getHEADER().split("\t");
-        List<HashMap<String, String>> basicStatsList = new ArrayList<>();
-        HashMap<String, String> basicStatsNode = new HashMap<>();
+        HashMap<String, String> basicStatsCache = new HashMap<>();
         String[] basicStatsValues = basicStats.toString().split("\t");
-        basicStatsNode.put("Name", file.fileName);
+        basicStatsCache.put("Name", file.fileName);
         for (int i = 0; i < header.length; i++) {
-            basicStatsNode.put(header[i], basicStatsValues[i]);
+            basicStatsCache.put(header[i], basicStatsValues[i]);
         }
-        basicStatsList.add(basicStatsNode);
         File annotationCacheFile = new File(file.fileDirPath + "/basicStats.cache");
         PrintWriter fileWriter = new PrintWriter(annotationCacheFile.getAbsoluteFile());
-        fileWriter.write(Json.stringify(Json.toJson(basicStatsList)));
+        fileWriter.write(Json.stringify(Json.toJson(basicStatsCache)));
         fileWriter.close();
 
         HashMap<String, Object> serverResponse = new HashMap<>();
@@ -385,10 +381,10 @@ public class ComputationUtil {
         HashMap<String, Object> stdData = new HashMap<>();
         binData.put("values", binValues);
         binData.put("key", "bin");
-        data.add(binData);
         stdData.put("values", stdValues);
         stdData.put("key", "std");
         stdData.put("area", true);
+        data.add(binData);
         data.add(stdData);
         HashMap<String, Object> jsonData = new HashMap<>();
         jsonData.put("data", data);
