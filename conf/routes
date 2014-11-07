@@ -18,8 +18,6 @@ GET         /api/ws                        controllers.API.ws()
 # API
 POST        /api/upload                    controllers.API.upload()
 POST        /api/delete                    controllers.API.delete()
-POST        /api/deleteAll                 controllers.API.deleteAllFiles()
-POST        /api/fileInformation           controllers.API.fileInformation()
 POST        /api/getData                   controllers.API.getData()
 GET         /api/accountInformation        controllers.API.accountInformation()
 GET         /api/files                     controllers.API.files()

@@ -143,6 +143,7 @@ $(document).ready(function () {
                 } else {
                     fileTable.append("hr");
                     fileTable.append("li")
+			.style("cursor", "pointer")
                         .append("a")
                         .on("click", function () {
                             getData(diversityStats, "diversity", "all");
@@ -152,6 +153,7 @@ $(document).ready(function () {
                         .attr("class", "fa fa-area-chart pull-right");
                     fileTable.append("li")
                         .append("a")
+			.style("cursor", "pointer")
                         .on("click", function () {
                             getData(basicStats, "basicStats", "all");
                         })
@@ -163,7 +165,7 @@ $(document).ready(function () {
                         .append("a")
                         .on("click", function () {
                             $.ajax({
-                                url: "/api/deleteAll",
+                                url: "/api/delete",
                                 type: "post",
                                 contentType: 'application/json; charset=utf-8',
                                 data: JSON.stringify({
@@ -531,17 +533,19 @@ $(document).ready(function () {
                 .append("table")
                 .attr("id", "basicStatsTable")
                 .attr("class", "table table-striped table-hover"),
-            thead = table.append("thead").append("tr");
-        thead.selectAll("th").data(header).enter()
-            .append("th").html(function (d) {
-                return d
-            });
+            thead = table.append("thead")
+                .append("tr")
+                .selectAll("th")
+                .data(header)
+                .enter()
+                .append("th")
+                .html(function (d) {
+                    return d;
+                });
         var column = [];
         for (var i = 0; i < header.length; i++) {
             column.push({"data": header[i.toString()]});
         }
-
-        console.log(data);
         $('#basicStatsTable').dataTable({
             dom: 'T<"clear">lfrtip',
             tableTools: {
@@ -554,31 +558,31 @@ $(document).ready(function () {
                     "targets": 0
                 },
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return parseFloat(data).toExponential(2);
                     },
                     "targets": 4
                 },
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return parseFloat(data).toExponential(2);
                     },
                     "targets": 5
                 },
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return parseFloat(data).toFixed(2);
                     },
                     "targets": 6
                 },
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return parseFloat(data).toFixed(2);
                     },
                     "targets": 7
                 },
                 {
-                    "render": function (data, type, row) {
+                    "render": function (data) {
                         return parseFloat(data).toExponential(2);
                     },
                     "targets": 8
@@ -623,14 +627,15 @@ $(document).ready(function () {
             column.push({"data": data["header"][i]});
         }
 
-        $('#annotation_table').dataTable({
+        var dataTable = $('#annotation_table').dataTable({
             "data": data["data"],
             "columns": column,
-            'iDisplayLength': 100,
+            'iDisplayLength': 10000,
             'order': [
                 [0, "decs"]
             ],
-            dom: 'T<"clear">lfrtip',
+            "scrollY": "600px",
+            dom: 'T<"clear">frtiS',
             responsive: true,
             tableTools: {
                 "sSwfPath": "../../assets/javascripts/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
@@ -670,7 +675,7 @@ $(document).ready(function () {
                             return str.join("")
                         } else {
                             if (pos != -1) {
-                                return data["cdr3aa"].substring(0, pos) + "<b><u>" + data["cdr3aa"].substring(pos, pos + 1) + "</u></b>" + data["cdr3aa"].substring(pos + 1, data["cdr3aa"].lengthыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыы)
+                                return data["cdr3aa"].substring(0, pos) + "<b><u>" + data["cdr3aa"].substring(pos, pos + 1) + "</u></b>" + data["cdr3aa"].substring(pos + 1, data["cdr3aa"].length)
                             } else {
                                 return data["cdr3aa"];
                             }
@@ -1217,6 +1222,7 @@ $(document).ready(function () {
                             case "ok" :
                                 switch (event["progress"]) {
                                     case "start" :
+					updateFilesList();
                                         data.context.select(".tdUploadButton")
                                             .html("Computation...");
                                         break;
@@ -1254,6 +1260,11 @@ $(document).ready(function () {
                                     .attr("class", "danger computation-fail");
                                 data.context.select(".progress-td")
                                     .html(event["message"]);
+                                for (var i = 0; i < fileNames.length; i++) {
+                                    if (fileNames[i] == event["fileName"]) {
+                                        fileNames.splice(i, 1);
+                                    }
+                                }
                                 progressCount--;
                                 socket.close();
                                 break;
@@ -1344,11 +1355,11 @@ $(document).ready(function () {
         })
     });
 
-    function errorData() {
+    function errorData(message) {
         d3.select(".visualisation")
             .append("div")
-            .attr("class", "error")
-            .text("error");
+            .attr("class", "error-message")
+            .text(message);
     }
 
     function getData(handleData, type, fileName) {
@@ -1364,12 +1375,15 @@ $(document).ready(function () {
                 "type": type
             }),
             success: function (data) {
+                if (!data) {
+                    location.reload();
+                }
                 switch (data["result"]) {
                     case "success" :
                         handleData(data["data"]);
                         break;
                     case "error" :
-                        errorData();
+                        errorData(data["message"]);
                         break;
                     default :
                         window.location.replace("/");
@@ -1379,7 +1393,7 @@ $(document).ready(function () {
                 showVisualisationContent();
             },
             error: function () {
-                window.location.replace("/");
+                location.reload();
             }
         });
     }

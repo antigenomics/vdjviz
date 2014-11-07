@@ -57,7 +57,7 @@ public class CommonUtil {
             }
             return;
         }
-        Logger.of("user." + account.userName).error("User: " + account.userName + "Server is trying to delete file " + file.fileName + " after failed rendering");
+        Logger.of("user." + account.userName).info("User: " + account.userName + " trying to delete file " + file.fileName);
         Boolean deleted = false;
         try {
             for (File cache : files) {
@@ -67,7 +67,7 @@ public class CommonUtil {
                 deleted = true;
             }
         } catch (Exception e) {
-            Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
+            Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + file.fileName);
         }
         if (deleted) {
             Ebean.delete(file);

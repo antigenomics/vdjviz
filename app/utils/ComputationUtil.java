@@ -86,7 +86,6 @@ public class ComputationUtil {
         JsonNode jsonData = Json.toJson(opt_data);
         jsonWriter.write(Json.stringify(jsonData));
         jsonWriter.close();
-
         HashMap<String, Object> serverResponse = new HashMap<>();
         serverResponse.put("result", "ok");
         serverResponse.put("action", "render");

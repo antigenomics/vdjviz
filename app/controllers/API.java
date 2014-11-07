@@ -1,15 +1,11 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Software;
 import com.avaje.ebean.Ebean;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
 import play.Logger;
-import play.Play;
-import play.data.Form;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
@@ -22,8 +18,6 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.File;
 import java.nio.file.Files;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.sql.Timestamp;
 import java.util.*;
 
 
@@ -176,181 +170,93 @@ public class API extends Controller {
         HashMap<String, Object> serverResponse = new HashMap<>();
         JsonNode request = request().body().asJson();
 
-        if (!request.findValue("action").asText().equals("delete")) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Invalid action");
-            return badRequest(Json.toJson(serverResponse));
-        }
-
-        String fileName = request.findValue("fileName").asText();
-        Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + fileName);
-        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-        if (file == null) {
-            Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "You have no file named " + fileName);
-            return forbidden(Json.toJson(serverResponse));
-        }
-
-        /**
-         * Getting file directory
-         * and try to delete it
-         */
-
-        File fileDir = new File(file.fileDirPath);
-        File[] files = fileDir.listFiles();
-
-        if (files == null) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "File does not exist");
-            return ok(Json.toJson(serverResponse));
-        }
-
+        File fileDir;
+        File[] files;
         Boolean deleted = false;
-        try {
-            for (File cache : files) {
-                Files.deleteIfExists(cache.toPath());
-            }
-            if (fileDir.delete()) {
-                deleted = true;
-            }
-        } catch (Exception e) {
-            Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
-            e.printStackTrace();
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Error while deleting file " + fileName);
-            return ok(Json.toJson(serverResponse));
-        }
-        if (deleted) {
-            Ebean.delete(file);
-            Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + fileName);
-            serverResponse.put("result", "ok");
-            serverResponse.put("message", "Successfully deleted");
-            return ok(Json.toJson(serverResponse));
-        } else {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Error while deleting file " + fileName);
-            Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
-            return ok(Json.toJson(serverResponse));
-        }
-    }
 
-    public static WebSocket<JsonNode> ws() {
-
-        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
-        final Account account = localUser.account;
-
-        return new WebSocket<JsonNode>() {
-
-            @Override
-            public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
-                in.onMessage(new F.Callback<JsonNode>() {
-                    public void invoke(JsonNode event) {
-                        HashMap<String, Object> serverResponse = new HashMap<>();
-                        HashMap<String, Object> dataResponse = new HashMap<>();
-                        switch (event.findValue("action").asText()) {
-                            case "render" :
-                                String fileName = event.findValue("data").findValue("fileName").asText();
-                                if (fileName == null) {
-                                    serverResponse.put("result", "error");
-                                    serverResponse.put("action", "render");
-                                    serverResponse.put("message", "Missing file name");
-                                    out.write(Json.toJson(serverResponse));
-                                    return;
-                                }
-
-                                UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-
-                                if (file == null) {
-                                    serverResponse.put("result", "error");
-                                    serverResponse.put("action", "render");
-                                    serverResponse.put("fileName", fileName);
-                                    serverResponse.put("message", "You have no file named " + fileName);
-                                    out.write(Json.toJson(serverResponse));
-                                    return;
-                                }
-                                file.rendering = true;
-                                Ebean.update(file);
-                                try {
-                                    ComputationUtil.createSampleCache(account, file, out);
-                                    file.rendered = true;
-                                    file.rendering = false;
-                                    Ebean.update(file);
-                                    return;
-                                } catch (Exception e) {
-                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
-                                    serverResponse.put("result", "error");
-                                    serverResponse.put("action", "render");
-                                    serverResponse.put("fileName", fileName);
-                                    serverResponse.put("message", "Error while rendering");
-                                    out.write(Json.toJson(serverResponse));
-                                    CommonUtil.deleteFile(file, account);
-                                    return;
-                                }
-                            default:
-                                serverResponse.put("result", "error");
-                                Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
-                                dataResponse.put("message", "Error while rendering");
-                                serverResponse.put("data", dataResponse);
-                                out.write(Json.toJson(serverResponse));
-                        }
-                    }
-                });
-            }
-        };
-    }
-
-    public static Result deleteAllFiles() {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        JsonNode request = request().body().asJson();
-
-        if (!request.findValue("action").asText().equals("deleteAll")) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Invalid action");
-            return badRequest(Json.toJson(serverResponse));
-        }
-
-        for (UserFile file: UserFile.findByAccount(account)) {
-            File fileDir = new File(file.fileDirPath);
-            File[] files = fileDir.listFiles();
-            Boolean deleted = false;
-            try {
-                if (files != null) {
+        switch (request.findValue("action").asText()) {
+            case "delete":
+                String fileName = request.findValue("fileName").asText();
+                Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + fileName);
+                UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+                if (file == null) {
+                    Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
+                    serverResponse.put("result", "error");
+                    serverResponse.put("message", "You have no file named " + fileName);
+                    return forbidden(Json.toJson(serverResponse));
+                }
+                fileDir = new File(file.fileDirPath);
+                files = fileDir.listFiles();
+                if (files == null) {
+                    serverResponse.put("result", "error");
+                    serverResponse.put("message", "File does not exist");
+                    return ok(Json.toJson(serverResponse));
+                }
+                try {
                     for (File cache : files) {
                         Files.deleteIfExists(cache.toPath());
                     }
+                    if (fileDir.delete()) {
+                        deleted = true;
+                    }
+                } catch (Exception e) {
+                    Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
+                    e.printStackTrace();
+                    serverResponse.put("result", "error");
+                    serverResponse.put("message", "Error while deleting file " + fileName);
+                    return ok(Json.toJson(serverResponse));
                 }
-                if (fileDir.delete()) {
-                    deleted = true;
+                if (deleted) {
+                    Ebean.delete(file);
+                    Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + fileName);
+                    serverResponse.put("result", "ok");
+                    serverResponse.put("message", "Successfully deleted");
+                    return ok(Json.toJson(serverResponse));
+                } else {
+                    serverResponse.put("result", "error");
+                    serverResponse.put("message", "Error while deleting file " + fileName);
+                    Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
+                    return ok(Json.toJson(serverResponse));
                 }
-            } catch (Exception e) {
-                Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + file.fileName);
-                e.printStackTrace();
-                serverResponse.put("result", "error");
-                serverResponse.put("message", "Error while deleting file " + file.fileName);
+            case "deleteAll":
+                for (UserFile f: UserFile.findByAccount(account)) {
+                    fileDir = new File(f.fileDirPath);
+                    Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + f.fileName);
+                    files = fileDir.listFiles();
+                    deleted = false;
+                    try {
+                        if (files != null) {
+                            for (File cache : files) {
+                                Files.deleteIfExists(cache.toPath());
+                            }
+                        }
+                        if (fileDir.delete()) {
+                            deleted = true;
+                        }
+                    } catch (Exception e) {
+                        Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + f.fileName);
+                        e.printStackTrace();
+                        serverResponse.put("result", "error");
+                        serverResponse.put("message", "Error while deleting file " + f.fileName);
+                        return ok(Json.toJson(serverResponse));
+                    }
+                    if (deleted) {
+                        Ebean.delete(f);
+                        Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + f.fileName);
+                    } else {
+                        serverResponse.put("result", "error");
+                        serverResponse.put("message", "Error while deleting file " + f.fileName);
+                        Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + f.fileName);
+                        return ok(Json.toJson(serverResponse));
+                    }
+                }
+                serverResponse.put("result", "ok");
                 return ok(Json.toJson(serverResponse));
-            }
-            if (deleted) {
-                Ebean.delete(file);
-                Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + file.fileName);
-            } else {
+            default:
                 serverResponse.put("result", "error");
-                serverResponse.put("message", "Error while deleting file " + file.fileName);
-                Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
-                return ok(Json.toJson(serverResponse));
-            }
+                serverResponse.put("message", "Invalid action");
+                return badRequest(Json.toJson(serverResponse));
         }
-        serverResponse.put("result", "ok");
-        return ok(Json.toJson(serverResponse));
     }
 
     public static Result files() {
@@ -377,42 +283,6 @@ public class API extends Controller {
         serverResponse.put("data", files);
         serverResponse.put("names", names);
         return ok(Json.toJson(serverResponse));
-    }
-
-    public static Result fileInformation() {
-        /**
-         * Identifying user using the SecureSocial API
-         */
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-
-        HashMap<String, Object> jsonResults = new HashMap<>();
-        JsonNode jsonData = request().body().asJson();
-
-        if (!jsonData.findValue("action").asText().equals("fileInformation")) {
-            jsonResults.put("result", "error");
-            jsonResults.put("message", "Invalid action");
-            return badRequest(Json.toJson(jsonResults));
-        }
-
-        String fileName = jsonData.findValue("fileName").asText();
-
-        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-
-        if (file == null) {
-            jsonResults.put("result", "error");
-            return forbidden(Json.toJson(jsonResults));
-        }
-
-        jsonResults.put("result", "ok");
-        HashMap<String, Object> fileInformationNode = new HashMap<>();
-        fileInformationNode.put("fileName", file.fileName);
-        fileInformationNode.put("softwareTypeName", file.softwareTypeName);
-        fileInformationNode.put("rendered", file.rendered);
-        fileInformationNode.put("rendering", file.rendering);
-        jsonResults.put("data", fileInformationNode);
-        return ok(Json.toJson(jsonResults));
     }
 
     public static Result accountInformation() {
@@ -451,7 +321,6 @@ public class API extends Controller {
 
         HashMap<String, Object> serverRequest = new HashMap<>();
         JsonNode request = request().body().asJson();
-        Logger.info(String.valueOf(request));
         if (!request.findValue("action").asText().equals("data")
                 || request.findValue("fileName") == null
                 || request.findValue("type") == null) {
@@ -564,5 +433,70 @@ public class API extends Controller {
         serverResponse.put("data", diversityData);
         serverResponse.put("message", "");
         return ok(Json.toJson(serverResponse));
+    }
+
+    public static WebSocket<JsonNode> ws() {
+
+        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
+        final Account account = localUser.account;
+
+        return new WebSocket<JsonNode>() {
+
+            @Override
+            public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
+                in.onMessage(new F.Callback<JsonNode>() {
+                    public void invoke(JsonNode event) {
+                        HashMap<String, Object> serverResponse = new HashMap<>();
+                        HashMap<String, Object> dataResponse = new HashMap<>();
+                        switch (event.findValue("action").asText()) {
+                            case "render" :
+                                String fileName = event.findValue("data").findValue("fileName").asText();
+                                if (fileName == null) {
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("message", "Missing file name");
+                                    out.write(Json.toJson(serverResponse));
+                                    return;
+                                }
+
+                                UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+
+                                if (file == null) {
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("fileName", fileName);
+                                    serverResponse.put("message", "You have no file named " + fileName);
+                                    out.write(Json.toJson(serverResponse));
+                                    return;
+                                }
+                                file.rendering = true;
+                                Ebean.update(file);
+                                try {
+                                    ComputationUtil.createSampleCache(account, file, out);
+                                    file.rendered = true;
+                                    file.rendering = false;
+                                    Ebean.update(file);
+                                    return;
+                                } catch (Exception e) {
+                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
+                                    serverResponse.put("result", "error");
+                                    serverResponse.put("action", "render");
+                                    serverResponse.put("fileName", fileName);
+                                    serverResponse.put("message", "Error while rendering");
+                                    out.write(Json.toJson(serverResponse));
+                                    CommonUtil.deleteFile(file, account);
+                                    return;
+                                }
+                            default:
+                                serverResponse.put("result", "error");
+                                Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
+                                dataResponse.put("message", "Error while rendering");
+                                serverResponse.put("data", dataResponse);
+                                out.write(Json.toJson(serverResponse));
+                        }
+                    }
+                });
+            }
+        };
     }
 }
