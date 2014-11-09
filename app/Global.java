@@ -16,8 +16,8 @@ public class Global extends GlobalSettings {
 
         Logger.info("Application started");
 
-        String usersFilesDir = Play.application().configuration().getString("usersFilesDir");
-        File applicationDir = new File(usersFilesDir);
+        String usersFilesDir = Play.application().configuration().getString("uploadPath");
+        File applicationDir = new File(usersFilesDir + "/users/");
         if (!applicationDir.exists()) {
             Boolean createAppDir = applicationDir.mkdir();
             if (!createAppDir) {

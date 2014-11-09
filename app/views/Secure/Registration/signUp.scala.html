@@ -5,22 +5,20 @@
     @implicitFieldConstructor = @{ FieldConstructor(securesocial.views.html.inputFieldConstructor.f) }
 
 @Secure.main( Messages("securesocial.signup.title") ) {
-    <div class="page-header">
-        <h1>@Messages("securesocial.signup.title")</h1>
-    </div>
-
+        <div class="container">
+            <div class="col-lg-6 col-lg-offset-3">
     @request.flash.get("error").map { msg =>
         <div class="alert alert-error">
             @msg
         </div>
     }
-
     <form action="@securesocial.core.providers.utils.RoutesHelper.handleSignUp(token).absoluteURL(IdentityProvider.sslEnabled)(request)"
     class="form-horizontal"
     autocomplete= "off"
     method="POST"
     >
         <fieldset>
+            <legend><h1>@Messages("securesocial.signup.title")</h1></legend>
             @if( UsernamePasswordProvider.withUserNameSupport ) {
                 @helper.inputText(
                     signUpForm("userName"),
@@ -60,4 +58,6 @@
             </div>
         </fieldset>
     </form>
+    </div>
+    </div>
 }

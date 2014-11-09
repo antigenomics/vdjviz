@@ -109,7 +109,7 @@ public class API extends Controller {
              */
 
             File uploadedFile = file.getFile();
-            String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(30, CommonUtil.RandomStringGenerator.Mode.ALPHA);
+            String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
             File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
 
             /**
@@ -309,7 +309,7 @@ public class API extends Controller {
         return ok(Json.toJson(jsonResults));
     }
 
-    public static Result getData() {
+    public static Result data() {
 
         /**
          * Identifying user using the SecureSocial API

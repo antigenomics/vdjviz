@@ -1,9 +1,6 @@
-body {
-    min-width: 1000px;
-}
-
-.content {
-    min-width: 1000px;
+.modal .modal-body {
+    max-height: 700px;
+    overflow-y: auto;
 }
 
 .axis path, .axis line {

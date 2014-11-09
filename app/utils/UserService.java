@@ -135,7 +135,7 @@ public class UserService extends BaseUserService {
              * Getting user's dir path from configuration file
              */
 
-            String usersDirPath = Play.application().configuration().getString("usersFilesDir");
+            String usersDirPath = Play.application().configuration().getString("uploadPath") + "/users/";
 
             /**
              * Trying to create a user's directory

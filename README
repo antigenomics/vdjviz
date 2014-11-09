@@ -1,4 +1,10 @@
-This is your new Play application
-=====================================
+# VDJ Visualisation
 
-This file will be packaged with your application, when using `play dist`.
+## Configuration
+
+Before using this application you need to edit application.conf file in conf directory
+
+- uploadPath for handling user's files
+- application secret key
+- database configuration
+

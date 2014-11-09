@@ -18,7 +18,7 @@ GET         /api/ws                        controllers.API.ws()
 # API
 POST        /api/upload                    controllers.API.upload()
 POST        /api/delete                    controllers.API.delete()
-POST        /api/getData                   controllers.API.getData()
+POST        /api/data                      controllers.API.data()
 GET         /api/accountInformation        controllers.API.accountInformation()
 GET         /api/files                     controllers.API.files()
 

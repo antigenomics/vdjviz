@@ -4,7 +4,7 @@
 # --- !Ups
 
 create table account (
-  id                        bigint not null,
+  id                        bigint auto_increment not null,
   user_name                 varchar(255),
   user_id                   varchar(255),
   user_dir_path             varchar(255),
@@ -14,9 +14,9 @@ create table account (
 create table local_token (
   uuid                      varchar(255) not null,
   email                     varchar(255),
-  created_at                timestamp,
-  expire_at                 timestamp,
-  is_sign_up                boolean,
+  created_at                datetime,
+  expire_at                 datetime,
+  is_sign_up                tinyint(1) default 0,
   constraint pk_local_token primary key (uuid))
 ;
 
@@ -32,7 +32,7 @@ create table local_user (
 ;
 
 create table user_file (
-  id                        bigint not null,
+  id                        bigint auto_increment not null,
   account_id                bigint,
   file_name                 varchar(255),
   unique_name               varchar(255),
@@ -41,19 +41,11 @@ create table user_file (
   file_path                 varchar(255),
   file_dir_path             varchar(255),
   file_extension            varchar(255),
-  rendered                  boolean,
-  rendering                 boolean,
+  rendered                  tinyint(1) default 0,
+  rendering                 tinyint(1) default 0,
   constraint ck_user_file_software_type check (software_type in (0,1,2,3)),
   constraint pk_user_file primary key (id))
 ;
-
-create sequence account_seq;
-
-create sequence local_token_seq;
-
-create sequence local_user_seq;
-
-create sequence user_file_seq;
 
 alter table account add constraint fk_account_user_1 foreign key (user_id) references local_user (id) on delete restrict on update restrict;
 create index ix_account_user_1 on account (user_id);
@@ -66,23 +58,15 @@ create index ix_user_file_account_3 on user_file (account_id);
 
 # --- !Downs
 
-SET REFERENTIAL_INTEGRITY FALSE;
+SET FOREIGN_KEY_CHECKS=0;
 
-drop table if exists account;
+drop table account;
 
-drop table if exists local_token;
+drop table local_token;
 
-drop table if exists local_user;
+drop table local_user;
 
-drop table if exists user_file;
+drop table user_file;
 
-SET REFERENTIAL_INTEGRITY TRUE;
-
-drop sequence if exists account_seq;
-
-drop sequence if exists local_token_seq;
-
-drop sequence if exists local_user_seq;
-
-drop sequence if exists user_file_seq;
+SET FOREIGN_KEY_CHECKS=1;
 

@@ -1,5 +1,6 @@
 @(username: String)
-<div class="navbar navbar-inverse">
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
     <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
             <span class="icon-bar"></span>
@@ -8,7 +9,7 @@
         </button>
         <a class="navbar-brand" href="/">VDJvisualisation</a>
     </div>
-    <div class="navbar-collapse collapse navbar-responsive-collapse">
+    <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
             <li><a href="/">Main</a></li>
             <li><a href="/contacts">Contacts</a></li>
@@ -24,4 +25,5 @@
             }
         </ul>
     </div>
-</div>
+    </div>
+</nav>

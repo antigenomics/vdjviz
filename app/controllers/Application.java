@@ -47,6 +47,7 @@ public class Application extends Controller {
         return ok(views.html.account.accountMainPage.render(localUser.account));
     }
 
+    @SecureSocial.UserAwareAction
     public static Result contacts() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = null;
@@ -60,6 +61,7 @@ public class Application extends Controller {
         }
     }
 
+    @SecureSocial.UserAwareAction
     public static Result about() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = null;

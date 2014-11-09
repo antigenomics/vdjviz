@@ -1,13 +1,26 @@
 @(account: Account)
 @main("Account") {
-    @navbar(account.userName)
+    @if(account != null) {
+        @navbar(account.userName)
+    }else{
+        @navbar(null)
+    }
     <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="span2">
-            @views.html.account.filePanel(account)
+        <div class="row">
+            <div class="col-sm-3 col-md-2 sidebar">
+                <ul class="nav nav-sidebar">
+                    <li class="active">
+                        <a href="#new-files-table" role="button" class="btn" data-toggle="modal">
+                            Your Files<i class="fa fa-plus add-new-files-button pull-right"></i>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="nav nav-sidebar user-files-list">
+
+                </ul>
             </div>
 
-            <div class="span10">
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
                 <div class="hero-unit">
                     <div class="mainContent">
 
@@ -17,4 +30,47 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="new-files-table" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="choose-files-button btn btn-primary">Add</div>
+                    <div class="upload-all-button btn btn-primary">Upload All</div>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table modal-file-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Software Type</th>
+                                <th>Progress</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody class="main-tbody-files">
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <select id="common-software-type">
+                                        <option value="mitcr" >MiTcr</option>
+                                        <option value="migec" >MiGec</option>
+                                        <option value="simple" >Simple</option>
+                                        <option value="igblast" >IgBlast</option>
+                                    </select>
+                                </td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility: hidden">
+        <input type="file" name="files[]" multiple />
+    </form>
 }
