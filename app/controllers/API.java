@@ -472,7 +472,7 @@ public class API extends Controller {
                                 file.rendering = true;
                                 Ebean.update(file);
                                 try {
-                                    ComputationUtil.createSampleCache(account, file, out);
+                                    ComputationUtil.createSampleCache(file, out);
                                     file.rendered = true;
                                     file.rendering = false;
                                     Ebean.update(file);

@@ -17,10 +17,11 @@ import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
-import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
+import utils.ArrayUtils.Data;
+import utils.ArrayUtils.xyValues;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -28,7 +29,7 @@ import java.util.*;
 
 public class ComputationUtil {
 
-    public static void vjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void vjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
 
         /**
          * SegmentUsage creating
@@ -83,133 +84,90 @@ public class ComputationUtil {
         File vdjJsonFile = new File(file.fileDirPath + "/vjUsage.cache");
 
         PrintWriter jsonWriter = new PrintWriter(vdjJsonFile.getAbsoluteFile());
-        JsonNode jsonData = Json.toJson(opt_data);
-        jsonWriter.write(Json.stringify(jsonData));
+        jsonWriter.write(Json.stringify(Json.toJson(opt_data)));
         jsonWriter.close();
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 20);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+
+        serverResponse.changeValue("progress", 20);
+        out.write(Json.toJson(serverResponse.getData()));
 
     }
 
-    public static void spectrotype(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
-
-        /**
-         * Getting the spectratype
-         */
+    public static void spectrotype(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
 
         Spectratype sp = new Spectratype(false, false);
-
-        /**
-         * Getting the list of clonotypes
-         * Default top 10
-         */
-
         List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
-
-        /**
-         * Initializing HistogramData list
-         */
-
         int[] x_coordinates = sp.getLengths();
         double[] y_coordinates = sp.getHistogram();
         int x_min = x_coordinates[0];
         int x_max = x_coordinates[x_coordinates.length - 1];
 
-        List<HashMap<String, Object>> histogramData = new ArrayList<>();
-        List<HashMap<String, Object>> commonData = new ArrayList<>();
+        List<HashMap<String, Object>> data = new ArrayList<>();
+        xyValues commonValues = new xyValues();
         for (int i = 0; i < x_coordinates.length; i++) {
-            HashMap<String, Object> commonDataItem = new HashMap<>();
-            commonDataItem.put("x", x_coordinates[i]);
-            commonDataItem.put("y", y_coordinates[i]);
-            commonData.add(commonDataItem);
+            commonValues.addValue(x_coordinates[i], y_coordinates[i]);
         }
-        HashMap<String, Object> commonDataNode = new HashMap<>();
-        commonDataNode.put("values", commonData);
-        commonDataNode.put("key", "Other");
-        histogramData.add(commonDataNode);
+        Data commonData = new Data(new String[]{"values", "key"});
+        commonData.addData(new Object[]{commonValues.getValues(), "Other"});
+        data.add(commonData.getData());
 
         int count = 1;
         for (Clonotype topclone : topclones) {
-            HashMap<String, Object> topCloneNode = new HashMap<>();
-            List<HashMap<String, Object>> topCloneData = new ArrayList<>();
+            Data topCloneNode = new Data(new String[]{"values", "key", "name", "v", "j", "cdr3aa"});
+            xyValues values = new xyValues();
             int top_clone_x = topclone.getCdr3nt().length();
             for (int i = x_min; i <= x_max; i++) {
-                HashMap<String, Object> simpleNode = new HashMap<>();
-                if (i != top_clone_x) {
-                    simpleNode.put("x", i);
-                    simpleNode.put("y", 0);
-                } else {
-                    simpleNode.put("x", top_clone_x);
-                    simpleNode.put("y", topclone.getFreq());
-                }
-                topCloneData.add(simpleNode);
+                values.addValue(i, i != top_clone_x ? 0 : topclone.getFreq());
             }
-            topCloneNode.put("values", topCloneData);
-            topCloneNode.put("key", count++);
-            topCloneNode.put("name", topclone.getCdr3nt());
-            topCloneNode.put("v", topclone.getV());
-            topCloneNode.put("j", topclone.getJ());
-            topCloneNode.put("cdr3aa", topclone.getCdr3aa());
-            histogramData.add(topCloneNode);
+            topCloneNode.addData(new Object[]{
+                    values.getValues(),
+                    count++,
+                    topclone.getCdr3nt(),
+                    topclone.getV(),
+                    topclone.getJ(),
+                    topclone.getCdr3aa()});
+            data.add(topCloneNode.getData());
         }
 
         File histogramJsonFile = new File(file.fileDirPath + "/spectrotype.cache");
         PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
-        JsonNode jsonData = Json.toJson(histogramData);
-        jsonWriter.write(Json.stringify(jsonData));
+        jsonWriter.write(Json.stringify(Json.toJson(data)));
         jsonWriter.close();
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 30);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.changeValue("progress", 30);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void spectrotypeV(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void spectrotypeV(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
         SpectratypeV spectratypeV = new SpectratypeV(false, false);
         spectratypeV.addAll(sample);
         int default_top = 12;
         Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(default_top);
 
-        List<Object> histogramV = new ArrayList<>();
+        List<Object> data = new ArrayList<>();
 
         for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
-            List<HashMap<String, Object>> valuesList = new ArrayList<>();
-            HashMap<String, Object> histogramVNode = new HashMap<>();
+            xyValues values = new xyValues();
+            Data node = new Data(new String[]{"values", "key"});
             int x_coordinates[] = spectratype.getLengths();
             double y_coordinates[] = spectratype.getHistogram();
             for (int i = 0; i < x_coordinates.length; i++) {
-                HashMap<String, Object> valuesNode = new HashMap<>();
-                valuesNode.put("x", x_coordinates[i]);
-                valuesNode.put("y", y_coordinates[i]);
-                valuesList.add(valuesNode);
+                values.addValue(x_coordinates[i], y_coordinates[i]);
             }
-            histogramVNode.put("values", valuesList);
-            histogramVNode.put("key", key);
-            histogramV.add(histogramVNode);
+            node.addData(new Object[]{values.getValues(), key});
+            data.add(node.getData());
         }
+
         File histogramJsonFile = new File(file.fileDirPath + "/spectrotypeV.cache");
         PrintWriter jsonWriter = new PrintWriter(histogramJsonFile.getAbsoluteFile());
-        JsonNode jsonData = Json.toJson(histogramV);
-        jsonWriter.write(Json.stringify(jsonData));
+        jsonWriter.write(Json.stringify(Json.toJson(data)));
         jsonWriter.close();
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 40);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.changeValue("progress", 40);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
 
         /**
          * Getting CdrDatabase
@@ -262,15 +220,11 @@ public class ComputationUtil {
         fileWriter.write(Json.stringify(Json.toJson(data)));
         fileWriter.close();
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 60);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.changeValue("progress", 60);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void basicStats(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void basicStats(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
         BasicStats basicStats = new BasicStats(sample);
         String[] header = BasicStats.getHEADER().split("\t");
         HashMap<String, String> basicStatsCache = new HashMap<>();
@@ -284,15 +238,11 @@ public class ComputationUtil {
         fileWriter.write(Json.stringify(Json.toJson(basicStatsCache)));
         fileWriter.close();
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 80);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.changeValue("progress", 60);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void diversity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void diversity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
         DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         HashMap<String, Object> diversity = new HashMap<>();
@@ -326,15 +276,11 @@ public class ComputationUtil {
         fileWriter.write(Json.stringify(Json.toJson(diversity)));
         fileWriter.close();
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 90);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.changeValue("progress", 90);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void kernelDensity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out) throws Exception {
+    public static void kernelDensity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         List<HashMap<String, Object>> binValues = new ArrayList<>();
         List<HashMap<String, Object>> stdValues = new ArrayList<>();
@@ -400,15 +346,11 @@ public class ComputationUtil {
         fileWriter.write(Json.stringify(Json.toJson(jsonData)));
         fileWriter.close();
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", 100);
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.changeValue("progress", 100);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void createSampleCache(Account account, UserFile file, WebSocket.Out<JsonNode> out) {
+    public static void createSampleCache(UserFile file, WebSocket.Out<JsonNode> out) {
 
         /**
          * Getting Sample from text file
@@ -420,7 +362,7 @@ public class ComputationUtil {
         sampleFileNames.add(file.filePath);
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         Sample sample = sampleCollection.getAt(0);
-        HashMap<String, Object> serverResponse = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
 
         /**
          * Creating all cache files
@@ -428,29 +370,26 @@ public class ComputationUtil {
 
         file.rendering = true;
         Ebean.update(file);
-        serverResponse.put("result", "ok");
-        serverResponse.put("action", "render");
-        serverResponse.put("progress", "start");
-        serverResponse.put("fileName", file.fileName);
-        out.write(Json.toJson(serverResponse));
+        serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
+        out.write(Json.toJson(serverResponse.getData()));
         try {
-            vjUsageData(sampleCollection, file, out);
-            spectrotype(sample, file, out);
-            spectrotypeV(sample, file, out);
-            annotation(sample, file, out);
-            basicStats(sample, file, out);
-            diversity(sample, file, out);
-            kernelDensity(sample, file, out);
+            vjUsageData(sampleCollection, file, out, serverResponse);
+            spectrotype(sample, file, out, serverResponse);
+            spectrotypeV(sample, file, out, serverResponse);
+            annotation(sample, file, out, serverResponse);
+            basicStats(sample, file, out, serverResponse);
+            diversity(sample, file, out, serverResponse);
+            kernelDensity(sample, file, out, serverResponse);
             file.rendering = false;
             file.rendered = true;
-            serverResponse.put("progress", "end");
-            out.write(Json.toJson(serverResponse));
+            serverResponse.changeValue("progress", "end");
+            out.write(Json.toJson(serverResponse.getData()));
             Ebean.update(file);
         } catch (Exception e) {
-            serverResponse.put("result", "error");
-            serverResponse.put("progress", "end");
-            serverResponse.put("message", "Computation error");
-            out.write(Json.toJson(serverResponse));
+            serverResponse.changeValue("result", "error");
+            serverResponse.changeValue("progress", "end");
+            serverResponse.changeValue("message", "Computation error");
+            out.write(Json.toJson(serverResponse.getData()));
             e.printStackTrace();
         }
     }
