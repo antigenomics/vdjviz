@@ -73,10 +73,10 @@ $(document).ready(function () {
                         });
                     var a = liMain.append("a").style("cursor", "pointer");
                     a.on("mouseover", function () {
-                            if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
-                                $(this).find(".fa-trash").css("visibility", "visible");
-                            }
-                        })
+                        if (!liMain.classed("disabled") && !liMain.classed("waitForRender")) {
+                            $(this).find(".fa-trash").css("visibility", "visible");
+                        }
+                    })
                         .on("mouseout", function () {
                             $(this).find(".fa-trash").css("visibility", "hidden");
                         })
@@ -143,7 +143,7 @@ $(document).ready(function () {
                     var liSummary = fileTable.append("li");
 
                     liSummary.append("a")
-			            .style("cursor", "pointer")
+                        .style("cursor", "pointer")
                         .on("click", function () {
                             getData(basicStats, "basicStats", "all");
                             d3.select(".user-files-list")
@@ -1215,7 +1215,7 @@ $(document).ready(function () {
                             case "ok" :
                                 switch (event["progress"]) {
                                     case "start" :
-					                    updateFilesList();
+                                        updateFilesList();
                                         data.context.select(".td-upload-button")
                                             .html("Computation...");
                                         break;
@@ -1372,4 +1372,13 @@ $(document).ready(function () {
             }
         });
     }
+
+    $('.bxslider').bxSlider({
+        mode: 'horizontal',
+        adaptiveHeight: true,
+        responsive: true
+    });
+
 });
+
+
