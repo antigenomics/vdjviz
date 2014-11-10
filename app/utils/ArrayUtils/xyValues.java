@@ -18,6 +18,13 @@ public class xyValues {
         values.add(value);
     }
 
+    public void addValueToPosition(Integer pos, Object x, Object y) {
+        HashMap<String, Object> value = new HashMap<>();
+        value.put("x", x);
+        value.put("y", y);
+        values.add(pos, value);
+    }
+
     public List<HashMap<String, Object>> getValues() {
         return values;
     }

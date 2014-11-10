@@ -490,6 +490,7 @@ public class API extends Controller {
                             default:
                                 serverResponse.put("result", "error");
                                 Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
+                                //todo ?!
                                 dataResponse.put("message", "Error while rendering");
                                 serverResponse.put("data", dataResponse);
                                 out.write(Json.toJson(serverResponse));

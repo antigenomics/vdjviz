@@ -368,9 +368,6 @@ $(document).ready(function () {
                 .append("svg")
                 .style("height", "800px");
 
-            var x = data["xAxisDomain"];
-            var y = data["yAxisDomain"];
-
             var chart = nv.models.lineChart()
                 .margin({left: 100})
                 .useInteractiveGuideline(true)
@@ -380,24 +377,18 @@ $(document).ready(function () {
                 .showXAxis(true)
                 .height(700)
                 .xScale(d3.scale.log())
-                .xDomain(x)
-                .forceX(x)
-                .yDomain(y)
-                .forceY(y)
                 .yScale(d3.scale.log());
 
             chart.xAxis
                 .axisLabel('Clonotype size')
-                .tickFormat(d3.format(',r'))
-                .tickValues(d3.range(x[0], x[1], (x[1] - x[0]) / 5));
+                .tickFormat(d3.format(',r'));
 
             chart.yAxis
                 .axisLabel('1-CDF')
-                .tickFormat(d3.format('.02e'))
-                .tickValues(d3.range(y[0], y[1], (y[1] - y[0]) / 5));
+                .tickFormat(d3.format('.02e'));
 
             d3.select('#chart svg')
-                .datum(data["data"])
+                .datum(data)
                 .call(chart);
             nv.utils.windowResize(function () {
                 chart.update()
