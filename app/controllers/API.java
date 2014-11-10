@@ -11,6 +11,7 @@ import play.libs.Json;
 import play.mvc.*;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
+import utils.ArrayUtils.Data;
 import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
@@ -294,19 +295,12 @@ public class API extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-
         HashMap<String, Object> jsonResults = new HashMap<>();
-
-        jsonResults.put("result", "ok");
-        HashMap<String, Object> accountInformation = new HashMap<>();
-
-        accountInformation.put("email", localUser.email);
-        accountInformation.put("firstName", localUser.firstName);
-        accountInformation.put("lastName", localUser.lastName);
-        accountInformation.put("userName", account.userName);
-        accountInformation.put("filesCount", account.userfiles.size());
-        jsonResults.put("data", accountInformation);
-        return ok(Json.toJson(jsonResults));
+        Data serverResponse = new Data(new String[]{"result", "data"});
+        Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
+        accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.userName, account.userfiles.size()});
+        serverResponse.addData(new Object[]{"ok", accountInformation.getData()});
+        return ok(Json.toJson(serverResponse.getData()));
     }
 
     public static Result data() {
@@ -319,14 +313,13 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> serverRequest = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "message"});
         JsonNode request = request().body().asJson();
         if (!request.findValue("action").asText().equals("data")
                 || request.findValue("fileName") == null
                 || request.findValue("type") == null) {
-            serverRequest.put("result", "error");
-            serverRequest.put("message", "Invalid action");
-            return badRequest(Json.toJson(serverRequest));
+            serverResponse.addData(new Object[]{"error", "Invalid action"});
+            return badRequest(Json.toJson(serverResponse.getData()));
         }
 
         String fileName = request.findValue("fileName").asText();
@@ -349,49 +342,43 @@ public class API extends Controller {
             default:
                 Logger.of("user." + account.userName).error("User " + account.userName +
                         ": unknown type: " + request.findValue("type").asText());
-                serverRequest.put("result", "error");
-                serverRequest.put("message", "Unknown type");
-                return badRequest(Json.toJson(serverRequest));
+                serverResponse.addData(new Object[]{"error", "Unknown type"});
+                return badRequest(Json.toJson(serverResponse.getData()));
         }
     }
 
     public static Result cache(UserFile file, String cacheName, Account account) {
-        HashMap<String, Object> serverResponse = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "message", "data"});
         if (file == null) {
             Logger.of("user." + account.userName).error("User " + account.userName +
                     " have no requested file");
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "You have no requested file");
-            return forbidden(Json.toJson(serverResponse));
+            serverResponse.addData(new Object[]{"error", "You have no file named " + file.fileName, null});
+            return forbidden(Json.toJson(serverResponse.getData()));
         }
         if (file.rendered) {
             try {
                 File jsonFile = new File(file.fileDirPath + "/" + cacheName + ".cache");
                 FileInputStream fis = new FileInputStream(jsonFile);
                 JsonNode jsonData = Json.parse(fis);
-                serverResponse.put("result", "success");
-                serverResponse.put("message", "");
-                serverResponse.put("data", jsonData);
-                return ok(Json.toJson(serverResponse));
+                serverResponse.addData(new Object[]{"success", "", jsonData});
+                return ok(Json.toJson(serverResponse.getData()));
             } catch (Exception e) {
                 Logger.of("user." + account.userName).error("User " + account.userName +
                         ": cache file does not exists");
-                serverResponse.put("result", "error");
-                serverResponse.put("message", "Cache file does not exist");
-                return ok(Json.toJson(serverResponse));
+                serverResponse.addData(new Object[]{"error", "Cache file does not exist", null});
+                return ok(Json.toJson(serverResponse.getData()));
             }
         } else {
             Logger.of("user." + account.userName).error("User: " + account.userName + " File: "
                     + file.fileName + " did not rendered");
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "File did not rendered");
-            return ok(Json.toJson(serverResponse));
+            serverResponse.addData(new Object[]{"error", "File did not rendered", null});
+            return ok(Json.toJson(serverResponse.getData()));
         }
     }
 
     public static Result basicStats(Account account) {
         List<JsonNode> basicStatsData = new ArrayList<>();
-        HashMap<String, Object> serverResponse = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "errors", "data", "message"});
         int errors = 0;
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
@@ -405,16 +392,13 @@ public class API extends Controller {
                 }
             }
         }
-        serverResponse.put("result", "success");
-        serverResponse.put("errors", errors);
-        serverResponse.put("data", basicStatsData);
-        serverResponse.put("message", "");
-        return ok(Json.toJson(serverResponse));
+        serverResponse.addData(new Object[]{"success", errors, basicStatsData, ""});
+        return ok(Json.toJson(serverResponse.getData()));
     }
 
     public static Result diversity(Account account) {
         List<JsonNode> diversityData = new ArrayList<>();
-        HashMap<String, Object> serverResponse = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "errors", "data", "message"});
         int errors = 0;
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
@@ -428,11 +412,8 @@ public class API extends Controller {
                 }
             }
         }
-        serverResponse.put("result", "success");
-        serverResponse.put("errors", errors);
-        serverResponse.put("data", diversityData);
-        serverResponse.put("message", "");
-        return ok(Json.toJson(serverResponse));
+        serverResponse.addData(new Object[]{"success", errors, diversityData, ""});
+        return ok(Json.toJson(serverResponse.getData()));
     }
 
     public static WebSocket<JsonNode> ws() {
@@ -446,27 +427,21 @@ public class API extends Controller {
             public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
                 in.onMessage(new F.Callback<JsonNode>() {
                     public void invoke(JsonNode event) {
-                        HashMap<String, Object> serverResponse = new HashMap<>();
-                        HashMap<String, Object> dataResponse = new HashMap<>();
+                        Data serverResponse = new Data(new String[]{"result", "action", "fileName", "message"});
                         switch (event.findValue("action").asText()) {
                             case "render" :
                                 String fileName = event.findValue("data").findValue("fileName").asText();
                                 if (fileName == null) {
-                                    serverResponse.put("result", "error");
-                                    serverResponse.put("action", "render");
-                                    serverResponse.put("message", "Missing file name");
-                                    out.write(Json.toJson(serverResponse));
+                                    serverResponse.addData(new Object[]{"error", "render", "", "Missing file name"});
+                                    out.write(Json.toJson(serverResponse.getData()));
                                     return;
                                 }
 
                                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
                                 if (file == null) {
-                                    serverResponse.put("result", "error");
-                                    serverResponse.put("action", "render");
-                                    serverResponse.put("fileName", fileName);
-                                    serverResponse.put("message", "You have no file named " + fileName);
-                                    out.write(Json.toJson(serverResponse));
+                                    serverResponse.addData(new Object[]{"error", "render", fileName, "You have no file named " + fileName});
+                                    out.write(Json.toJson(serverResponse.getData()));
                                     return;
                                 }
                                 file.rendering = true;
@@ -479,21 +454,15 @@ public class API extends Controller {
                                     return;
                                 } catch (Exception e) {
                                     Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
-                                    serverResponse.put("result", "error");
-                                    serverResponse.put("action", "render");
-                                    serverResponse.put("fileName", fileName);
-                                    serverResponse.put("message", "Error while rendering");
-                                    out.write(Json.toJson(serverResponse));
+                                    serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
+                                    out.write(Json.toJson(serverResponse.getData()));
                                     CommonUtil.deleteFile(file, account);
                                     return;
                                 }
                             default:
-                                serverResponse.put("result", "error");
                                 Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
-                                //todo ?!
-                                dataResponse.put("message", "Error while rendering");
-                                serverResponse.put("data", dataResponse);
-                                out.write(Json.toJson(serverResponse));
+                                serverResponse.addData(new Object[]{"error", "render", "", "Unknown Action"});
+                                out.write(Json.toJson(serverResponse.getData()));
                         }
                     }
                 });
