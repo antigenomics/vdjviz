@@ -35,12 +35,11 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, String> serverResponse = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "message"});
 
         if (account == null) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Unknown error");
-            return ok(Json.toJson(serverResponse));
+            serverResponse.addData(new Object[]{"error", "Unknown error"});
+            return ok(Json.toJson(serverResponse.getData()));
         }
 
         Logger.of("user." + account.userName).info("User " + account.userName + " is uploading new file");
@@ -50,10 +49,9 @@ public class API extends Controller {
          */
 
         if (account.userfiles.size() >= 10) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "You have exceeded the limit of the number of files");
+            serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
             Logger.of("user." + account.userName).info("User" + account.userName + " exceeded  the limit of the number of files");
-            return ok(Json.toJson(serverResponse));
+            return ok(Json.toJson(serverResponse.getData()));
         }
 
         /**
@@ -64,9 +62,8 @@ public class API extends Controller {
         Http.MultipartFormData.FilePart file = body.getFile("files[]");
 
         if (file == null) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "You should upload file");
-            return ok(Json.toJson(serverResponse));
+            serverResponse.addData(new Object[]{"error", "You should upload file"});
+            return ok(Json.toJson(serverResponse.getData()));
         }
 
         /**
@@ -84,18 +81,16 @@ public class API extends Controller {
 
         String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
         if (!fileName.matches(pattern)) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Invalid name");
-            return ok(Json.toJson(serverResponse));
+            serverResponse.addData(new Object[]{"error", "Invalid name"});
+            return ok(Json.toJson(serverResponse.getData()));
         }
 
 
         List<UserFile> allFiles = UserFile.findByAccount(account);
         for (UserFile userFile: allFiles) {
             if (userFile.fileName.equals(fileName)) {
-                serverResponse.put("result", "error");
-                serverResponse.put("message", "You should use unique names for your files");
-                return ok(Json.toJson(serverResponse));
+                serverResponse.addData(new Object[]{"error", "You should use unique names for your files"});
+                return ok(Json.toJson(serverResponse.getData()));
             }
         }
 
@@ -120,20 +115,18 @@ public class API extends Controller {
             if (!fileDir.exists()) {
                 Boolean created = fileDir.mkdir();
                 if (!created) {
-                    serverResponse.put("result", "error");
-                    serverResponse.put("message", "Server currently unavailable");
+                    serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                     Logger.of("user." + account.userName).error("Error creating file directory for user " + account.userName);
-                    return ok(Json.toJson(serverResponse));
+                    return ok(Json.toJson(serverResponse.getData()));
                 }
             }
 
             String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
             Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension));
             if (!uploaded) {
-                serverResponse.put("result", "error");
-                serverResponse.put("message", "Server currently unavailable");
+                serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                 Logger.of("user." + account.userName).error("Error upload file for user " + account.userName);
-                return ok(Json.toJson(serverResponse));
+                return ok(Json.toJson(serverResponse.getData()));
             }
 
             UserFile newFile = new UserFile(account, fileName,
@@ -147,14 +140,13 @@ public class API extends Controller {
              */
 
             Ebean.save(newFile);
-            serverResponse.put("result", "success");
-            return ok(Json.toJson(serverResponse));
+            serverResponse.addData(new Object[]{"success", ""});
+            return ok(Json.toJson(serverResponse.getData()));
         } catch (Exception e) {
-            serverResponse.put("result", "error");
-            serverResponse.put("message", "Server currently unavailable");
+            serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
             e.printStackTrace();
             Logger.of("user." + account.userName).error("Error while uploading new file for user : " + account.userName);
-            return ok(Json.toJson(serverResponse));
+            return ok(Json.toJson(serverResponse.getData()));
         }
     }
 
@@ -168,7 +160,7 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        HashMap<String, Object> serverResponse = new HashMap<>();
+        Data serverResponse = new Data(new String[]{"result", "message"});
         JsonNode request = request().body().asJson();
 
         File fileDir;
@@ -182,16 +174,14 @@ public class API extends Controller {
                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
                 if (file == null) {
                     Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
-                    serverResponse.put("result", "error");
-                    serverResponse.put("message", "You have no file named " + fileName);
-                    return forbidden(Json.toJson(serverResponse));
+                    serverResponse.addData(new Object[]{"error", "You have no file named " + fileName});
+                    return forbidden(Json.toJson(serverResponse.getData()));
                 }
                 fileDir = new File(file.fileDirPath);
                 files = fileDir.listFiles();
                 if (files == null) {
-                    serverResponse.put("result", "error");
-                    serverResponse.put("message", "File does not exist");
-                    return ok(Json.toJson(serverResponse));
+                    serverResponse.addData(new Object[]{"error", "File does not exist"});
+                    return ok(Json.toJson(serverResponse.getData()));
                 }
                 try {
                     for (File cache : files) {
@@ -203,21 +193,18 @@ public class API extends Controller {
                 } catch (Exception e) {
                     Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
                     e.printStackTrace();
-                    serverResponse.put("result", "error");
-                    serverResponse.put("message", "Error while deleting file " + fileName);
-                    return ok(Json.toJson(serverResponse));
+                    serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
+                    return ok(Json.toJson(serverResponse.getData()));
                 }
                 if (deleted) {
                     Ebean.delete(file);
                     Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + fileName);
-                    serverResponse.put("result", "ok");
-                    serverResponse.put("message", "Successfully deleted");
-                    return ok(Json.toJson(serverResponse));
+                    serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
+                    return ok(Json.toJson(serverResponse.getData()));
                 } else {
-                    serverResponse.put("result", "error");
-                    serverResponse.put("message", "Error while deleting file " + fileName);
+                    serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
                     Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
-                    return ok(Json.toJson(serverResponse));
+                    return ok(Json.toJson(serverResponse.getData()));
                 }
             case "deleteAll":
                 for (UserFile f: UserFile.findByAccount(account)) {
@@ -237,26 +224,23 @@ public class API extends Controller {
                     } catch (Exception e) {
                         Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + f.fileName);
                         e.printStackTrace();
-                        serverResponse.put("result", "error");
-                        serverResponse.put("message", "Error while deleting file " + f.fileName);
-                        return ok(Json.toJson(serverResponse));
+                        serverResponse.addData(new Object[]{"error", "Error while deleting file " + f.fileName});
+                        return ok(Json.toJson(serverResponse.getData()));
                     }
                     if (deleted) {
                         Ebean.delete(f);
                         Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + f.fileName);
                     } else {
-                        serverResponse.put("result", "error");
-                        serverResponse.put("message", "Error while deleting file " + f.fileName);
+                        serverResponse.addData(new Object[]{"error", "Error while deleting file " + f.fileName});
                         Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + f.fileName);
-                        return ok(Json.toJson(serverResponse));
+                        return ok(Json.toJson(serverResponse.getData()));
                     }
                 }
-                serverResponse.put("result", "ok");
-                return ok(Json.toJson(serverResponse));
+                serverResponse.addData(new Object[]{"ok", ""});
+                return ok(Json.toJson(serverResponse.getData()));
             default:
-                serverResponse.put("result", "error");
-                serverResponse.put("message", "Invalid action");
-                return badRequest(Json.toJson(serverResponse));
+                serverResponse.addData(new Object[]{"error", "Invalid action"});
+                return badRequest(Json.toJson(serverResponse.getData()));
         }
     }
 
@@ -378,7 +362,7 @@ public class API extends Controller {
 
     public static Result basicStats(Account account) {
         List<JsonNode> basicStatsData = new ArrayList<>();
-        Data serverResponse = new Data(new String[]{"result", "errors", "data", "message"});
+        Data serverResponse = new Data(new String[]{"result", "errors", "data"});
         int errors = 0;
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
@@ -392,13 +376,13 @@ public class API extends Controller {
                 }
             }
         }
-        serverResponse.addData(new Object[]{"success", errors, basicStatsData, ""});
+        serverResponse.addData(new Object[]{"success", errors, basicStatsData});
         return ok(Json.toJson(serverResponse.getData()));
     }
 
     public static Result diversity(Account account) {
         List<JsonNode> diversityData = new ArrayList<>();
-        Data serverResponse = new Data(new String[]{"result", "errors", "data", "message"});
+        Data serverResponse = new Data(new String[]{"result", "errors", "data"});
         int errors = 0;
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
@@ -412,7 +396,7 @@ public class API extends Controller {
                 }
             }
         }
-        serverResponse.addData(new Object[]{"success", errors, diversityData, ""});
+        serverResponse.addData(new Object[]{"success", errors, diversityData});
         return ok(Json.toJson(serverResponse.getData()));
     }
 
