@@ -238,6 +238,7 @@ $(document).ready(function () {
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
                 getData(spectrotype, "spectrotype", fileName);
+
             })
             .html("Spectrotype")
             .append("i")
@@ -288,8 +289,7 @@ $(document).ready(function () {
             .attr("class", "loadingMainContent")
             .style("display", "none");
 
-        d3.select(".mainContent").append("div")
-            .attr("class", "hero-unit")
+        d3.select(".mainContent")
             .append("div")
             .attr("class", "visualisation")
             .style("top", "50px")
@@ -319,18 +319,18 @@ $(document).ready(function () {
 
     function diversityStats(data) {
         clearMainContent();
-        console.log(data);
-        d3.select(".mainContent")
+        var place = d3.select(".mainContent")
             .append("div")
             .attr("class", "visualisation")
             .append("div")
             .attr("id", "chart")
             .append("svg")
-            .style("height", "900px");
+            .attr("id", "svgtopng")
+            .style("height", "900px")
+            .style("margin-top", "50px");
 
         nv.addGraph(function () {
             var chart = nv.models.lineChart()
-                .margin({left: 100})
                 .useInteractiveGuideline(true)
                 .transitionDuration(350)
                 .showLegend(true)
@@ -351,6 +351,7 @@ $(document).ready(function () {
                 .datum(data)
                 .call(chart);
 
+            saveButtonAppend(place, 60, 0, "diversity", "");
             nv.utils.windowResize(function () {
                 chart.update()
             });
@@ -358,7 +359,7 @@ $(document).ready(function () {
         });
     }
 
-    function kernelDensity(data) {
+    function kernelDensity(data, fileName) {
         nv.addGraph(function () {
 
             var svg = d3.select(".visualisation")
@@ -366,10 +367,10 @@ $(document).ready(function () {
                 .append("div")
                 .attr("id", "chart")
                 .append("svg")
+                .attr("id", "svgtopng")
                 .style("height", "800px");
 
             var chart = nv.models.lineChart()
-                .margin({left: 100})
                 .useInteractiveGuideline(true)
                 .transitionDuration(350)
                 .showLegend(true)
@@ -387,9 +388,10 @@ $(document).ready(function () {
                 .axisLabel('1-CDF')
                 .tickFormat(d3.format('.02e'));
 
-            d3.select('#chart svg')
+            var place = d3.select('#chart svg')
                 .datum(data)
                 .call(chart);
+            saveButtonAppend(place, 60, 0, fileName, "kernel_density");
             nv.utils.windowResize(function () {
                 chart.update()
             });
@@ -397,12 +399,13 @@ $(document).ready(function () {
         });
     }
 
-    function spectrotype(data) {
+    function spectrotype(data, fileName) {
         nv.addGraph(function () {
             var svg = d3.select(".visualisation")
                 .append("div")
                 .attr("id", "chart")
                 .append("svg")
+                .attr("id", "svgtopng")
                 .style("height", "800px")
                 .style("overflow", "visible");
 
@@ -417,12 +420,17 @@ $(document).ready(function () {
                     .stacked(true)
                     .tooltip(function (key, x, y, e, graph) {
                         if (key != "Other") {
-                            return '<h3>' + e.series.name + '</h3>' +
-                                '<p>Length : ' + x + '</p>' +
-                                '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
-                                '<p>CDR3AA : ' + e.series.cdr3aa + '</p>' +
-                                '<p>V : ' + e.series.v + '</p>' +
-                                '<p>J : ' + e.series.j + '</p>';
+                            if (e.series.values[e.pointIndex].y != 0) {
+                                return '<h3>' + e.series.name + '</h3>' +
+                                    '<p>Length : ' + x + '</p>' +
+                                    '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
+                                    '<p>CDR3AA : ' + e.series.cdr3aa + '</p>' +
+                                    '<p>V : ' + e.series.v + '</p>' +
+                                    '<p>J : ' + e.series.j + '</p>';
+                            } else {
+                                return null;
+                            }
+
                         } else {
                             return '<h3>Other</h3>' +
                                 '<p>Length : ' + x + '</p>' +
@@ -432,7 +440,7 @@ $(document).ready(function () {
                 ;
 
             var xValues = [];
-            for (var i = 0; i < 100; i++) {
+            for (var i = 1; i < 100; i++) {
                 if (i % 3 == 0) {
                     xValues.push(i);
                 }
@@ -445,21 +453,22 @@ $(document).ready(function () {
             chart.yAxis
                 .tickFormat(d3.format('%'));
 
-            d3.select('#chart svg')
+            var place = d3.select('#chart svg')
                 .datum(data)
                 .call(chart);
-
+            saveButtonAppend(place, 60, 0, fileName, "spectrotype");
             nv.utils.windowResize(chart.update);
             return chart;
         });
     }
 
-    function spectrotypeV(data) {
+    function spectrotypeV(data, fileName) {
         nv.addGraph(function () {
             var svg = d3.select(".visualisation")
                 .append("div")
                 .attr("id", "chart")
                 .append("svg")
+                .attr("id", "svgtopng")
                 .style("height", "800px")
                 .style("overflow", "visible");
 
@@ -495,12 +504,11 @@ $(document).ready(function () {
                     return Math.round(d * 10) + "%"
                 });
 
-            d3.select('#chart svg')
+            var place = d3.select('#chart svg')
                 .datum(data)
                 .call(chart);
 
-            loaded(".loadingMainContent");
-            showVisualisationContent();
+            saveButtonAppend(place, 60, 0, fileName, "spectrotype_v");
             nv.utils.windowResize(chart.update);
             return chart;
         });
@@ -696,20 +704,23 @@ $(document).ready(function () {
         });
     }
 
-    function vjUsage(vjUsageData) {
+    function vjUsage(vjUsageData, fileName) {
         var height = 600, margin = {b: 0, t: 40, l: 170, r: 50};
 
-        var svg = d3.select(".visualisation")
+        var place = d3.select(".visualisation")
             .append("svg")
-            .attr('height', (height + margin.b + margin.t))
-            .append("g")
+            .attr("id", "svgtopng")
+            .attr('height', (height + margin.b + margin.t));
+        var svg = place.append("g")
             .attr("transform", "translate(" + $(".visualisation").width() / 4.5 + "," + margin.t + ")");
         var bP = createbP();
         var data = [
             {data: bP.partData(vjUsageData, 2), id: 'V-J-Usage', header: ["V", "J", "V-J Usage"]}
         ];
         bP.draw(data, svg);
+        saveButtonAppend(place, 0, 0, fileName, "vjusage");
     }
+
 
     function createbP() {
         var b = 30, bb = $(".visualisation svg").width() / 2, height = 600, buffMargin = 5, minHeight = 5;
@@ -1077,6 +1088,36 @@ $(document).ready(function () {
         return bP;
     }
 
+    function saveButtonAppend(place, x, y, fileName, type) {
+        var btn = place.append("g")
+            .attr("transform", "translate(" + x + "," + y +")")
+            .append("g")
+            .attr("id", "save-svg-g");
+
+            btn.append("rect")
+                .attr("height", "25px")
+                .attr("width", "100px")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("rx", 2)
+                .attr("ry", 2)
+                .attr("fill", "#008cba");
+
+            btn.append("text")
+                .style("cursor", "pointer")
+                .attr("x", "15px")
+                .attr("y", "17px")
+                .attr("fill", "white")
+                .text("Save as png")
+                .on("click", function() {
+                    d3.select("#save-svg-g").style("visibility", "hidden");
+                    saveSvgAsPng(document.getElementById("svgtopng"), fileName + "_" + type + ".png", 3);
+                    d3.select("#save-svg-g").style("visibility", "visible");
+                })
+                .append("i")
+                .attr("class", "fa fa-floppy-o");
+    }
+
     $('#fileupload').fileupload({
         url: '/api/upload',
         dataType: 'json',
@@ -1346,7 +1387,7 @@ $(document).ready(function () {
                 }
                 switch (data["result"]) {
                     case "success" :
-                        handleData(data["data"]);
+                        handleData(data["data"], fileName);
                         break;
                     case "error" :
                         errorData(data["message"]);
