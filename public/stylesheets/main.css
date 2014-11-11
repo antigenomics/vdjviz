@@ -1,3 +1,13 @@
+html, body {
+    min-width:1000px;
+    width: auto !important;
+    padding-top: 0;
+}
+
+.container-width-fixed {
+    min-width:1000px;
+}
+
 .modal .modal-body {
     max-height: 700px;
     overflow-y: auto;

@@ -42,13 +42,11 @@ public class API extends Controller {
             return ok(Json.toJson(serverResponse.getData()));
         }
 
-        Logger.of("user." + account.userName).info("User " + account.userName + " is uploading new file");
-
         /**
          * Checking files count
          */
 
-        if (account.userfiles.size() >= 10) {
+        if (account.userfiles.size() >= 25) {
             serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
             Logger.of("user." + account.userName).info("User" + account.userName + " exceeded  the limit of the number of files");
             return ok(Json.toJson(serverResponse.getData()));
@@ -170,7 +168,6 @@ public class API extends Controller {
         switch (request.findValue("action").asText()) {
             case "delete":
                 String fileName = request.findValue("fileName").asText();
-                Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + fileName);
                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
                 if (file == null) {
                     Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
@@ -198,7 +195,6 @@ public class API extends Controller {
                 }
                 if (deleted) {
                     Ebean.delete(file);
-                    Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + fileName);
                     serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
                     return ok(Json.toJson(serverResponse.getData()));
                 } else {
@@ -209,7 +205,6 @@ public class API extends Controller {
             case "deleteAll":
                 for (UserFile f: UserFile.findByAccount(account)) {
                     fileDir = new File(f.fileDirPath);
-                    Logger.of("user." + account.userName).info("User " + account.userName + "is trying to delete file named " + f.fileName);
                     files = fileDir.listFiles();
                     deleted = false;
                     try {
@@ -229,7 +224,6 @@ public class API extends Controller {
                     }
                     if (deleted) {
                         Ebean.delete(f);
-                        Logger.of("user." + account.userName).info("User " + account.userName + " successfully deleted file named " + f.fileName);
                     } else {
                         serverResponse.addData(new Object[]{"error", "Error while deleting file " + f.fileName});
                         Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + f.fileName);

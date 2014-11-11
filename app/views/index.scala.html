@@ -1,6 +1,7 @@
 @(username: String)
 
 @main("Welcome to VDJvisualisation") {
+    <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
     @navbar(username)
     <ul class="bxslider">
         <li><img src="@routes.Assets.at("images/1920x500.gif")" /></li>
@@ -8,7 +9,7 @@
         <li><img src="@routes.Assets.at("images/1920x500.gif")" /></li>
     </ul>
 
-        <div class="container">
+        <div class="container container-width-fixed">
             <div class="row">
                 <div class="span4">
                     <h2>Heading</h2>

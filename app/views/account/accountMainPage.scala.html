@@ -1,5 +1,6 @@
 @(account: Account)
 @main("Account") {
+    <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
     @if(account != null) {
         @navbar(account.userName)
     }else{
