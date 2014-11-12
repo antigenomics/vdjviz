@@ -252,24 +252,24 @@ public class ComputationUtil {
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         xyValues binValues = new xyValues();
         xyValues stdValues = new xyValues();
+        int count = 0;
         for (FrequencyTable.BinInfo binInfo : frequencyTable.getBins()) {
             if (binInfo.getComplementaryCdf() == 0) {
                 break;
             }
-            binValues.addValue(binInfo.getClonotypeSize(), binInfo.getComplementaryCdf());
-
-            if (binInfo.getClonotypeSize() - binInfo.getCloneStd() >= 1) {
-                stdValues.addValueToPosition(0, binInfo.getClonotypeSize() - binInfo.getCloneStd(), binInfo.getComplementaryCdf());
+            binValues.addValue(binInfo.getClonotypeFreq(), binInfo.getComplementaryCdf());
+            if (count >= 1) {
+                stdValues.addValueToPosition(0, binInfo.getClonotypeFreq() - binInfo.getClonotypeFreqStd(), binInfo.getComplementaryCdf());
             } else {
-                stdValues.addValueToPosition(0, 1, frequencyTable.getBins().get(0).getComplementaryCdf());
-                stdValues.addValueToPosition(0, 1, frequencyTable.getBins().get(1).getComplementaryCdf());
+                stdValues.addValueToPosition(0, frequencyTable.getBins().get(1).getClonotypeFreq() - frequencyTable.getBins().get(1).getClonotypeFreqStd(), binInfo.getComplementaryCdf());
             }
+            count++;
         }
         for (FrequencyTable.BinInfo binInfo : frequencyTable.getBins()) {
             if (binInfo.getComplementaryCdf() == 0) {
                 break;
             }
-            stdValues.addValue(binInfo.getClonotypeSize() + binInfo.getCloneStd(), binInfo.getComplementaryCdf());
+            stdValues.addValue(binInfo.getClonotypeFreq() + binInfo.getClonotypeFreqStd(), binInfo.getComplementaryCdf());
         }
         List<HashMap<String, Object>> data = new ArrayList<>();
         Data binData = new Data(new String[]{"values", "key"});

@@ -163,7 +163,6 @@ public class API extends Controller {
 
         File fileDir;
         File[] files;
-        Boolean deleted = false;
 
         switch (request.findValue("action").asText()) {
             case "delete":
@@ -184,49 +183,32 @@ public class API extends Controller {
                     for (File cache : files) {
                         Files.deleteIfExists(cache.toPath());
                     }
-                    if (fileDir.delete()) {
-                        deleted = true;
-                    }
+                    fileDir.delete();
+                    Ebean.delete(file);
+                    serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
+                    return ok(Json.toJson(serverResponse.getData()));
                 } catch (Exception e) {
                     Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
                     e.printStackTrace();
                     serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
                     return ok(Json.toJson(serverResponse.getData()));
                 }
-                if (deleted) {
-                    Ebean.delete(file);
-                    serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
-                    return ok(Json.toJson(serverResponse.getData()));
-                } else {
-                    serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
-                    Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
-                    return ok(Json.toJson(serverResponse.getData()));
-                }
             case "deleteAll":
                 for (UserFile f: UserFile.findByAccount(account)) {
                     fileDir = new File(f.fileDirPath);
                     files = fileDir.listFiles();
-                    deleted = false;
                     try {
                         if (files != null) {
                             for (File cache : files) {
                                 Files.deleteIfExists(cache.toPath());
                             }
                         }
-                        if (fileDir.delete()) {
-                            deleted = true;
-                        }
+                        fileDir.delete();
+                        Ebean.delete(f);
                     } catch (Exception e) {
                         Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + f.fileName);
                         e.printStackTrace();
                         serverResponse.addData(new Object[]{"error", "Error while deleting file " + f.fileName});
-                        return ok(Json.toJson(serverResponse.getData()));
-                    }
-                    if (deleted) {
-                        Ebean.delete(f);
-                    } else {
-                        serverResponse.addData(new Object[]{"error", "Error while deleting file " + f.fileName});
-                        Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + f.fileName);
                         return ok(Json.toJson(serverResponse.getData()));
                     }
                 }

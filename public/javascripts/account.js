@@ -8,6 +8,8 @@ $(document).ready(function () {
     var cache = {};
     var cached_files = [];
     var tabs = {};
+    var comparing_count = 0;
+
 
     updateFilesList();
     accountPageInitializing();
@@ -43,6 +45,137 @@ $(document).ready(function () {
                 .text(data["data"]["lastName"]);
 
         });
+    }
+
+    function comparingInitialization() {
+        clearMainContent();
+        var comparingContent = d3.select(".mainContent")
+            .append("div")
+            .attr("class", "comparing-content");
+
+        comparingContent
+            .append("div")
+            .attr("class", "col-lg-9")
+            .style("position", "fixed")
+            .append("a")
+            .attr("href", "#comparing-files-table")
+            .attr("role", "button")
+            .attr("class", "btn pull-right")
+            .attr("data-toggle", "modal")
+            .text("Add");
+
+        var comparingTBody = d3.select(".main-tbody-comparing-files");
+        comparingTBody.html("");
+
+        fileNames.forEach(function(fileName) {
+            var tr = comparingTBody.append("tr");
+            tr.append("th").text(fileName);
+            var types = tr.append("th")
+                .append("ul")
+                .attr("class", "nav nav-pills");
+            types.append("li").append("a").style("cursor", "pointer")
+                .on("click", function() {
+                    var li = d3.select(this.parentNode);
+                    if (li.classed("active")) {
+                        d3.select("#comparing-place" + li.attr("id")).remove();
+                        li.classed("active", false);
+                    } else {
+                        var place_param = {
+                            col: "col-lg-9",
+                            header: fileName + " V-J Usage",
+                            id: comparing_count
+                        };
+                        var param = {
+                            place: createCompareItem(comparingContent, place_param),
+                            height: 400,
+                            width: 400,
+                            id: comparing_count,
+                            svg_width: "100%"
+                        };
+                        li.attr("id", comparing_count++);
+                        li.classed("active", true);
+                        getData(vjUsage, "vjusage", fileName, param)
+                    }
+                })
+                .text("VJ-Usage");
+            types.append("li").append("a").style("cursor", "pointer")
+                .on("click", function() {
+                    var li = d3.select(this.parentNode);
+                    if (li.classed("active")) {
+                        d3.select("#comparing-place" + li.attr("id")).remove();
+                        li.classed("active", false);
+                    } else {
+                        var place_param = {
+                            col: "col-lg-5",
+                            header: fileName + " spectrotype",
+                            id: comparing_count
+                        };
+                        var param = {
+                            place: createCompareItem(comparingContent, place_param),
+                            height: 500
+                        };
+                        li.attr("id", comparing_count++);
+                        li.classed("active", true);
+                        getData(spectrotype, "spectrotype", fileName, param)
+                    }
+                })
+                .text("Spectrotype");
+            types.append("li").append("a").style("cursor", "pointer")
+                .on("click", function() {
+                    var li = d3.select(this.parentNode);
+                    if (li.classed("active")) {
+                        d3.select("#comparing-place" + li.attr("id")).remove();
+                        li.classed("active", false);
+                    } else {
+                        var place_param = {
+                            col: "col-lg-5",
+                            header: fileName + " spectrotypeV",
+                            id: comparing_count,
+                        };
+                        var param = {
+                            place: createCompareItem(comparingContent, place_param),
+                            height: 500
+                        };
+                        li.attr("id", comparing_count++);
+                        li.classed("active", true);
+                        getData(spectrotypeV, "spectrotypeV", fileName, param)
+                    }
+                })
+                .text("SpectrotypeV");
+            types.append("li").append("a").style("cursor", "pointer")
+                .on("click", function() {
+                    var li = d3.select(this.parentNode);
+                    if (li.classed("active")) {
+                        d3.select("#comparing-place" + li.attr("id")).remove();
+                        li.classed("active", false)
+                    } else {
+                        var place_param = {
+                            col: "col-lg-5",
+                            header: fileName + " Kernel Density",
+                            id: comparing_count
+                        };
+                        var param = {
+                            place: createCompareItem(comparingContent, place_param),
+                            height: 500
+                        };
+                        li.attr("id", comparing_count++);
+                        li.classed("active", true);
+                        getData(kernelDensity, "kernelDensity", fileName, param)
+                    }
+                })
+                .text("Kernel Density");
+        });
+    }
+
+    function createCompareItem(place, param) {
+        var col = place.append("div")
+            .attr("id", "comparing-place" + param["id"])
+            .attr("class", param["col"]);
+            col.append("h3")
+            .text(param["header"])
+            .append("hr");
+        return col.append("div")
+            .attr("class", "visualisation comparing-item" + param["id"]);
     }
 
     function updateFilesList() {
@@ -122,8 +255,8 @@ $(document).ready(function () {
                         .text("You have no files");
                 } else {
                     fileTable.append("hr");
-                    var liDiversity = fileTable.append("li");
 
+                    var liDiversity = fileTable.append("li");
                     liDiversity.style("cursor", "pointer")
                         .append("a")
                         .on("click", function () {
@@ -137,8 +270,8 @@ $(document).ready(function () {
                         .text("Diversity")
                         .append("i")
                         .attr("class", "fa fa-area-chart pull-right");
-                    var liSummary = fileTable.append("li");
 
+                    var liSummary = fileTable.append("li");
                     liSummary.append("a")
                         .style("cursor", "pointer")
                         .on("click", function () {
@@ -152,6 +285,19 @@ $(document).ready(function () {
                         .text("Summary")
                         .append("i")
                         .attr("class", "fa fa-th-list pull-right");
+
+                    var liComparing = fileTable.append("li");
+                    liComparing.append("a")
+                        .style("cursor", "pointer")
+                        .on("click", function() {
+                            comparingInitialization();
+                            d3.select(".user-files-list")
+                                .selectAll("li")
+                                .classed("active", false);
+                            liComparing.classed("active", true);
+                        })
+                        .text("Comparing");
+
                     fileTable.append("hr");
                     fileTable.append("li")
                         .style("cursor", "pointer")
@@ -206,11 +352,26 @@ $(document).ready(function () {
 
     function fileComputationResults(fileName) {
         currentFile = fileName;
+        var param = {};
         clearMainContent();
         var header = d3.select(".mainContent")
             .append("ul")
             .attr("class", "nav nav-pills")
             .style("cursor", "pointer");
+
+        d3.select(".mainContent")
+            .append("div")
+            .attr("class", "col-lg-12")
+            .append("h3")
+            .attr("class", "visualisation-type-header")
+            .text("Header")
+            .append("hr");
+
+        param["place"] = d3.select(".mainContent")
+            .append("div")
+            .attr("class", "col-lg-12 visualisation");
+
+        param["height"] = 500;
 
         header.append("li")
             .style("width", "19%")
@@ -222,7 +383,9 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                getData(vjUsage, "vjusage", fileName);
+                param["width"] = 300;
+                param["svg_width"] = "70%";
+                getData(vjUsage, "vjusage", fileName, param);
                 tabs[fileName] = "vjusage";
             })
             .html("V-J Usage");
@@ -236,9 +399,8 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                getData(spectrotype, "spectrotype", fileName);
+                getData(spectrotype, "spectrotype", fileName, param);
                 tabs[fileName] = "spectrotype";
-
             })
             .html("Spectrotype")
             .append("i")
@@ -253,7 +415,7 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                getData(spectrotypeV, "spectrotypeV", fileName);
+                getData(spectrotypeV, "spectrotypeV", fileName, param);
                 tabs[fileName] = "spectrotypeV";
             })
             .html("SpectrotypeV")
@@ -269,7 +431,7 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                getData(kernelDensity, "kernelDensity", fileName);
+                getData(kernelDensity, "kernelDensity", fileName, param);
                 tabs[fileName] = "kernelDensity";
             })
             .html("Kernel Density");
@@ -283,7 +445,7 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                getData(annotationTable, "annotation", fileName);
+                getData(annotationTable, "annotation", fileName, param);
                 tabs[fileName] = "annotation";
             })
             .html("Annotation")
@@ -295,43 +457,34 @@ $(document).ready(function () {
             .attr("class", "loadingMainContent")
             .style("display", "none");
 
-        d3.select(".mainContent")
-            .append("div")
-            .attr("class", "visualisation")
-            .style("top", "50px")
-            .style("width", "100%")
-            .style("position", "relative")
-            .style("height", "50%");
-
         if (fileName in tabs) {
-            console.log(tabs[fileName]);
             switch (tabs[fileName]) {
                 case "spectrotype" :
-                    getData(spectrotype, "spectrotype", fileName);
+                    getData(spectrotype, "spectrotype", fileName, param);
                     d3.select("#spectrotype").classed("active", true);
                     break;
                 case "spectrotypeV" :
-                    getData(spectrotypeV, "spectrotypeV", fileName);
+                    getData(spectrotypeV, "spectrotypeV", fileName, param);
                     d3.select("#spectrotypeV").classed("active", true);
                     break;
                 case "annotation" :
-                    getData(annotationTable, "annotation", fileName);
+                    getData(annotationTable, "annotation", fileName, param);
                     d3.select("#annotation").classed("active", true);
                     break;
                 case "kernelDensity" :
-                    getData(kernelDensity, "kernelDensity", fileName);
+                    getData(kernelDensity, "kernelDensity", fileName, param);
                     d3.select("#kernelDensity").classed("active", true);
                     break;
                 case "vjusage" :
-                    getData(vjUsage, "vjusage", fileName);
+                    getData(vjUsage, "vjusage", fileName, param);
                     d3.select("#vjusage").classed("active", true);
                     break;
                 default :
-                    getData(spectrotype, "spectrotype", fileName);
+                    getData(spectrotype, "spectrotype", fileName, param);
             }
         } else {
             tabs[fileName] = "spectrotype";
-            getData(spectrotype, "spectrotype", fileName);
+            getData(spectrotype, "spectrotype", fileName, param);
             d3.select("#spectrotype").classed("active", true);
         }
     }
@@ -395,39 +548,37 @@ $(document).ready(function () {
         });
     }
 
-    function kernelDensity(data, fileName) {
+    function kernelDensity(data, fileName, param) {
         nv.addGraph(function () {
 
-            var svg = d3.select(".visualisation")
-                .html("")
+            var svg = param["place"]
                 .append("div")
                 .attr("id", "chart")
                 .append("svg")
-                .attr("id", "svgtopng")
-                .style("height", "800px");
+                .style("height", param["height"] + "px");
 
             var chart = nv.models.lineChart()
-                .useInteractiveGuideline(true)
+                .useInteractiveGuideline(false)
                 .transitionDuration(350)
                 .showLegend(true)
                 .showYAxis(true)
                 .showXAxis(true)
-                .height(700)
+                .height(param["height"])
                 .xScale(d3.scale.log())
                 .yScale(d3.scale.log());
 
             chart.xAxis
-                .axisLabel('Clonotype size')
-                .tickFormat(d3.format(',r'));
+                .axisLabel('Clonotype frequency')
+                .tickFormat(d3.format('.2s'));
 
             chart.yAxis
                 .axisLabel('1-CDF')
                 .tickFormat(d3.format('.02e'));
 
-            var place = d3.select('#chart svg')
-                .datum(data)
+            svg.datum(data)
                 .call(chart);
-            saveButtonAppend(place, 60, 0, fileName, "kernel_density");
+
+            saveButtonAppend(param["place"], 60, 0, fileName, "kernel_density");
             nv.utils.windowResize(function () {
                 chart.update()
             });
@@ -435,14 +586,12 @@ $(document).ready(function () {
         });
     }
 
-    function spectrotype(data, fileName) {
+    function spectrotype(data, fileName, parameters) {
         nv.addGraph(function () {
-            var svg = d3.select(".visualisation")
-                .append("div")
+            var svg = parameters["place"].append("div")
                 .attr("id", "chart")
                 .append("svg")
-                .attr("id", "svgtopng")
-                .style("height", "800px")
+                .style("height", parameters["height"] + "px")
                 .style("overflow", "visible");
 
             var chart = nv.models.multiBarChart()
@@ -452,7 +601,7 @@ $(document).ready(function () {
                     .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                     .showLegend(true)
                     .groupSpacing(0.1)    //Distance between each group of bars.
-                    .height(700)
+                    .height(parameters["height"])
                     .stacked(true)
                     .tooltip(function (key, x, y, e, graph) {
                         if (key != "Other") {
@@ -489,23 +638,23 @@ $(document).ready(function () {
             chart.yAxis
                 .tickFormat(d3.format('%'));
 
-            var place = d3.select('#chart svg')
-                .datum(data)
+            svg.datum(data)
                 .call(chart);
-            saveButtonAppend(place, 60, 0, fileName, "spectrotype");
+
+            saveButtonAppend(parameters["place"], 60, 0, fileName, "spectrotype");
             nv.utils.windowResize(chart.update);
             return chart;
         });
     }
 
-    function spectrotypeV(data, fileName) {
+    function spectrotypeV(data, fileName, param) {
         nv.addGraph(function () {
-            var svg = d3.select(".visualisation")
-                .append("div")
+            var svg = param["place"].append("div")
+                .style("margin-left", "auto")
+                .style("margin-right", "auto")
                 .attr("id", "chart")
                 .append("svg")
-                .attr("id", "svgtopng")
-                .style("height", "800px")
+                .style("height", param["height"] + "px")
                 .style("overflow", "visible");
 
             var chart = nv.models.multiBarChart()
@@ -515,7 +664,7 @@ $(document).ready(function () {
                     .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                     .showLegend(true)
                     .groupSpacing(0.1)    //Distance between each group of bars.
-                    .height(700)
+                    .height(param["height"])
                     .stacked(true)
                     .tooltip(function (key, x, y, e, graph) {
                         return '<h3>' + key + '</h3>' +
@@ -540,11 +689,10 @@ $(document).ready(function () {
                     return Math.round(d * 10) + "%"
                 });
 
-            var place = d3.select('#chart svg')
-                .datum(data)
+            svg.datum(data)
                 .call(chart);
 
-            saveButtonAppend(place, 60, 0, fileName, "spectrotype_v");
+            saveButtonAppend(param["place"], 60, 0, fileName, "spectrotype_v");
             nv.utils.windowResize(chart.update);
             return chart;
         });
@@ -740,26 +888,29 @@ $(document).ready(function () {
         });
     }
 
-    function vjUsage(vjUsageData, fileName) {
-        var height = 600, margin = {b: 0, t: 40, l: 170, r: 50};
+    function vjUsage(vjUsageData, fileName, param) {
+        var height = param["height"], margin = {b: 0, t: 40, l: 170, r: 50};
 
-        var place = d3.select(".visualisation")
+        var place = param["place"]
             .append("svg")
-            .attr("id", "svgtopng")
+            .style("display", "block")
+            .style("margin", "auto")
+            .style("width", param["svg_width"])
+            .style("overflow", "visible")
             .attr('height', (height + margin.b + margin.t));
         var svg = place.append("g")
-            .attr("transform", "translate(" + $(".visualisation").width() / 4.5 + "," + margin.t + ")");
-        var bP = createbP();
+            .attr("transform", "translate(" + margin.l + "," + margin.t + ")");
+        var bP = createbP(param["height"], param["width"]);
         var data = [
-            {data: bP.partData(vjUsageData, 2), id: 'V-J-Usage', header: ["V", "J", "V-J Usage"]}
+            {data: bP.partData(vjUsageData, 2), id: 'V-J-Usage-' + param["id"], header: ["V", "J"]}
         ];
         bP.draw(data, svg);
-        saveButtonAppend(place, 0, 0, fileName, "vjusage");
+        saveButtonAppend(param["place"], 0, 0, fileName, "vjusage");
     }
 
-    function createbP() {
-        var b = 30, bb = $(".visualisation svg").width() / 2, height = 600, buffMargin = 5, minHeight = 5;
-        var c1 = [-165, 50], c2 = [-50, 160], c3 = [-10, 250]; //Column positions of labels.
+    function createbP(height, bb) {
+        var b = 30, buffMargin = 5, minHeight = 5;
+        var c1 = [-165, 50], c2 = [-50, 140], c3 = [-10, 200]; //Column positions of labels.
         var colors = d3.scale.category20().range();
         var bP = {};
 
@@ -1124,6 +1275,7 @@ $(document).ready(function () {
     }
 
     function saveButtonAppend(place, x, y, fileName, type) {
+        /*
         var btn = place.append("g")
             .attr("transform", "translate(" + x + "," + y + ")")
             .append("g")
@@ -1151,6 +1303,8 @@ $(document).ready(function () {
             })
             .append("i")
             .attr("class", "fa fa-floppy-o");
+            */
+        //todo
     }
 
     $('#fileupload').fileupload({
@@ -1159,7 +1313,7 @@ $(document).ready(function () {
         sequentialUploads: true,
         add: function (e, data) {
             var originalFileName = data.files[0].name;
-            var maxFileSize = 500000;
+            var maxFileSize = 5000000;
             var create = true;
             var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
             var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
@@ -1408,7 +1562,7 @@ $(document).ready(function () {
             .text(message);
     }
 
-    function getData(handleData, type, fileName) {
+    function getData(handleData, type, fileName, parameters) {
         hideVisualisationContent();
         loading(".loadingMainContent");
         if (cached_files.length > 10) {
@@ -1416,7 +1570,7 @@ $(document).ready(function () {
             cached_files.shift();
         }
         if (fileName in cache && type in cache[fileName]) {
-            handleData(cache[fileName][type], fileName);
+            handleData(cache[fileName][type], fileName, parameters);
         } else {
             $.ajax({
                 url: "/api/data",
@@ -1438,7 +1592,7 @@ $(document).ready(function () {
                                 cached_files.push(fileName);
                             }
                             cache[fileName][type] = data["data"];
-                            handleData(data["data"], fileName);
+                            handleData(data["data"], fileName, parameters);
                             break;
                         case "error" :
                             errorData(data["message"]);
