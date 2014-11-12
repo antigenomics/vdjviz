@@ -8,6 +8,7 @@ $(document).ready(function () {
     var cache = {};
     var cached_files = [];
     var tabs = {};
+    var global_state = "";
     var comparing_count = 0;
 
 
@@ -67,14 +68,14 @@ $(document).ready(function () {
         var comparingTBody = d3.select(".main-tbody-comparing-files");
         comparingTBody.html("");
 
-        fileNames.forEach(function(fileName) {
+        fileNames.forEach(function (fileName) {
             var tr = comparingTBody.append("tr");
             tr.append("th").text(fileName);
             var types = tr.append("th")
                 .append("ul")
                 .attr("class", "nav nav-pills");
             types.append("li").append("a").style("cursor", "pointer")
-                .on("click", function() {
+                .on("click", function () {
                     var li = d3.select(this.parentNode);
                     if (li.classed("active")) {
                         d3.select("#comparing-place" + li.attr("id")).remove();
@@ -99,7 +100,7 @@ $(document).ready(function () {
                 })
                 .text("VJ-Usage");
             types.append("li").append("a").style("cursor", "pointer")
-                .on("click", function() {
+                .on("click", function () {
                     var li = d3.select(this.parentNode);
                     if (li.classed("active")) {
                         d3.select("#comparing-place" + li.attr("id")).remove();
@@ -121,7 +122,7 @@ $(document).ready(function () {
                 })
                 .text("Spectrotype");
             types.append("li").append("a").style("cursor", "pointer")
-                .on("click", function() {
+                .on("click", function () {
                     var li = d3.select(this.parentNode);
                     if (li.classed("active")) {
                         d3.select("#comparing-place" + li.attr("id")).remove();
@@ -143,7 +144,7 @@ $(document).ready(function () {
                 })
                 .text("SpectrotypeV");
             types.append("li").append("a").style("cursor", "pointer")
-                .on("click", function() {
+                .on("click", function () {
                     var li = d3.select(this.parentNode);
                     if (li.classed("active")) {
                         d3.select("#comparing-place" + li.attr("id")).remove();
@@ -171,7 +172,7 @@ $(document).ready(function () {
         var col = place.append("div")
             .attr("id", "comparing-place" + param["id"])
             .attr("class", param["col"]);
-            col.append("h3")
+        col.append("h3")
             .text(param["header"])
             .append("hr");
         return col.append("div")
@@ -289,7 +290,7 @@ $(document).ready(function () {
                     var liComparing = fileTable.append("li");
                     liComparing.append("a")
                         .style("cursor", "pointer")
-                        .on("click", function() {
+                        .on("click", function () {
                             comparingInitialization();
                             d3.select(".user-files-list")
                                 .selectAll("li")
@@ -387,7 +388,7 @@ $(document).ready(function () {
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
                 getData(vjUsage, "vjusage", fileName, param);
-                tabs[fileName] = "vjusage";
+                global_state = "vjusage";
             })
             .html("V-J Usage");
         header.append("li")
@@ -401,7 +402,7 @@ $(document).ready(function () {
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
                 getData(spectrotype, "spectrotype", fileName, param);
-                tabs[fileName] = "spectrotype";
+                global_state = "spectrotype";
             })
             .html("Spectrotype")
             .append("i")
@@ -417,7 +418,7 @@ $(document).ready(function () {
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
                 getData(spectrotypeV, "spectrotypeV", fileName, param);
-                tabs[fileName] = "spectrotypeV";
+                global_state = "spectrotypeV";
             })
             .html("SpectrotypeV")
             .append("i")
@@ -433,7 +434,7 @@ $(document).ready(function () {
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
                 getData(kernelDensity, "kernelDensity", fileName, param);
-                tabs[fileName] = "kernelDensity";
+                global_state = "kernelDensity";
             })
             .html("Kernel Density");
         header.append("li")
@@ -447,7 +448,7 @@ $(document).ready(function () {
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
                 getData(annotationTable, "annotation", fileName, param);
-                tabs[fileName] = "annotation";
+                global_state = "annotation";
             })
             .html("Annotation")
             .append("i")
@@ -458,35 +459,30 @@ $(document).ready(function () {
             .attr("class", "loadingMainContent")
             .style("display", "none");
 
-        if (fileName in tabs) {
-            switch (tabs[fileName]) {
-                case "spectrotype" :
-                    getData(spectrotype, "spectrotype", fileName, param);
-                    d3.select("#spectrotype").classed("active", true);
-                    break;
-                case "spectrotypeV" :
-                    getData(spectrotypeV, "spectrotypeV", fileName, param);
-                    d3.select("#spectrotypeV").classed("active", true);
-                    break;
-                case "annotation" :
-                    getData(annotationTable, "annotation", fileName, param);
-                    d3.select("#annotation").classed("active", true);
-                    break;
-                case "kernelDensity" :
-                    getData(kernelDensity, "kernelDensity", fileName, param);
-                    d3.select("#kernelDensity").classed("active", true);
-                    break;
-                case "vjusage" :
-                    getData(vjUsage, "vjusage", fileName, param);
-                    d3.select("#vjusage").classed("active", true);
-                    break;
-                default :
-                    getData(spectrotype, "spectrotype", fileName, param);
-            }
-        } else {
-            tabs[fileName] = "spectrotype";
-            getData(spectrotype, "spectrotype", fileName, param);
-            d3.select("#spectrotype").classed("active", true);
+        switch (global_state) {
+            case "spectrotype" :
+                getData(spectrotype, "spectrotype", fileName, param);
+                d3.select("#spectrotype").classed("active", true);
+                break;
+            case "spectrotypeV" :
+                getData(spectrotypeV, "spectrotypeV", fileName, param);
+                d3.select("#spectrotypeV").classed("active", true);
+                break;
+            case "annotation" :
+                getData(annotationTable, "annotation", fileName, param);
+                d3.select("#annotation").classed("active", true);
+                break;
+            case "kernelDensity" :
+                getData(kernelDensity, "kernelDensity", fileName, param);
+                d3.select("#kernelDensity").classed("active", true);
+                break;
+            case "vjusage" :
+                getData(vjUsage, "vjusage", fileName, param);
+                d3.select("#vjusage").classed("active", true);
+                break;
+            default :
+                getData(vjUsage, "vjusage", fileName, param);
+                d3.select("#vjusage").classed("active", true);
         }
     }
 
@@ -1277,34 +1273,34 @@ $(document).ready(function () {
 
     function saveButtonAppend(place, x, y, fileName, type) {
         /*
-        var btn = place.append("g")
-            .attr("transform", "translate(" + x + "," + y + ")")
-            .append("g")
-            .attr("id", "save-svg-g");
+         var btn = place.append("g")
+         .attr("transform", "translate(" + x + "," + y + ")")
+         .append("g")
+         .attr("id", "save-svg-g");
 
-        btn.append("rect")
-            .attr("height", "25px")
-            .attr("width", "100px")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("rx", 2)
-            .attr("ry", 2)
-            .attr("fill", "#008cba");
+         btn.append("rect")
+         .attr("height", "25px")
+         .attr("width", "100px")
+         .attr("x", 0)
+         .attr("y", 0)
+         .attr("rx", 2)
+         .attr("ry", 2)
+         .attr("fill", "#008cba");
 
-        btn.append("text")
-            .style("cursor", "pointer")
-            .attr("x", "15px")
-            .attr("y", "17px")
-            .attr("fill", "white")
-            .text("Save as png")
-            .on("click", function () {
-                d3.select("#save-svg-g").style("visibility", "hidden");
-                saveSvgAsPng(document.getElementById("svgtopng"), fileName + "_" + type + ".png", 3);
-                d3.select("#save-svg-g").style("visibility", "visible");
-            })
-            .append("i")
-            .attr("class", "fa fa-floppy-o");
-            */
+         btn.append("text")
+         .style("cursor", "pointer")
+         .attr("x", "15px")
+         .attr("y", "17px")
+         .attr("fill", "white")
+         .text("Save as png")
+         .on("click", function () {
+         d3.select("#save-svg-g").style("visibility", "hidden");
+         saveSvgAsPng(document.getElementById("svgtopng"), fileName + "_" + type + ".png", 3);
+         d3.select("#save-svg-g").style("visibility", "visible");
+         })
+         .append("i")
+         .attr("class", "fa fa-floppy-o");
+         */
         //todo
     }
 
