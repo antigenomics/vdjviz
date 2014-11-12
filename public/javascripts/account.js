@@ -352,7 +352,6 @@ $(document).ready(function () {
 
     function fileComputationResults(fileName) {
         currentFile = fileName;
-        var param = {};
         clearMainContent();
         var header = d3.select(".mainContent")
             .append("ul")
@@ -367,11 +366,15 @@ $(document).ready(function () {
             .text("Header")
             .append("hr");
 
+        var param = {
+            height: 500,
+            width: 400,
+            svg_width: "70%"
+        };
+
         param["place"] = d3.select(".mainContent")
             .append("div")
             .attr("class", "col-lg-12 visualisation");
-
-        param["height"] = 500;
 
         header.append("li")
             .style("width", "19%")
@@ -383,8 +386,6 @@ $(document).ready(function () {
                 clearVisualisation();
                 d3.selectAll(".computationResultsButton").classed("active", false);
                 d3.select(this.parentNode).classed("active", true);
-                param["width"] = 300;
-                param["svg_width"] = "70%";
                 getData(vjUsage, "vjusage", fileName, param);
                 tabs[fileName] = "vjusage";
             })
