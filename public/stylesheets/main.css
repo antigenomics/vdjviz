@@ -4,6 +4,15 @@ html, body {
     padding-top: 0;
 }
 
+.user-files-list > li {
+    cursor: pointer;
+}
+
+.nav-visualisation > li {
+    width: 19%;
+    text-align: center;
+    cursor: pointer;
+}
 
 .container-width-fixed {
     min-width:1000px;

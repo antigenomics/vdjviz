@@ -1,12 +1,14 @@
 @(account: Account)
 @main("Account") {
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/angular.js")" type="text/javascript"></script>
     @if(account != null) {
         @navbar(account.userName)
-    }else{
+    } else {
         @navbar(null)
     }
-    <div class="container-fluid">
+    <div class="container-fluid" ng-app="accountPage" ng-controller="accountController as account">
         <div class="row">
             <div class="col-sm-3 col-md-2 sidebar">
                 <ul class="nav nav-sidebar">
@@ -16,18 +18,47 @@
                         </a>
                     </li>
                 </ul>
-                <ul class="nav nav-sidebar user-files-list">
-
+                <ul class="nav nav-sidebar" ng-hide="account.files.length">
+                    <li>
+                        <a>You have no files</a>
+                    </li>
+                </ul>
+                <ul class="nav nav-sidebar user-files-list" ng-show="account.files.length">
+                    <li ng-repeat="file in account.files" ng-class="{active:account.isActive($index)}" ng-click="account.setActive($index)">
+                        <a>{{ file.fileName }}</a>
+                    </li>
+                    <hr>
+                    <li ng-click="account.setActive('diversity')" ng-class="{active:account.isActive('diversity')}"><a>
+                        Diversity</a></li>
+                    <li ng-click="account.setActive('summary')" ng-class="{active:account.isActive('summary')}"><a>
+                        Summary</a></li>
+                    <li ng-click="account.setActive('comparing')" ng-class="{active:account.isActive('comparing')}"><a>
+                        Comparing</a></li>
+                    <hr>
+                    <li><a>Delete all</a></li>
                 </ul>
             </div>
 
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <div class="hero-unit">
-                    <div class="mainContent">
+                <div class="main-content">
+                    <div class="visualisation-tab" ng-show="account.state.fileComputationResults">
+                        <ul class="nav nav-pills nav-visualisation">
+                            <li><a>asd</a></li>
+                            <li><a>asd</a></li>
+                            <li><a>asd</a></li>
+                            <li><a>asd</a></li>
+                            <li><a>asd</a></li>
+                        </ul>
+                        <div class="col-lg-12">
+                            <h3>asd</h3>
+                            <hr>
+                            <div class="visualisation-results">
 
+                            </div>
+                        </div>
+                        <hr>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -38,7 +69,8 @@
                 <div class="modal-header">
                     <div class="choose-files-button btn btn-primary">Add</div>
                     <div class="upload-all-button btn btn-primary">Upload All</div>
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                        Close</span></button>
                 </div>
                 <div class="modal-body">
                     <table class="table modal-file-table">
@@ -75,7 +107,8 @@
         <div class="modal-dialog modal-lg">
             class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                    Close</span></button>
             </div>
             <div class="modal-content">
                 <div class="modal-body">
@@ -94,7 +127,7 @@
         </div>
     </div>
 
-    <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility: hidden">
+    <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility : hidden">
         <input type="file" name="files[]" multiple />
     </form>
 }

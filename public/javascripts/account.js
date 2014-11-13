@@ -12,7 +12,7 @@ $(document).ready(function () {
     var comparing_count = 0;
 
 
-    updateFilesList();
+    //updateFilesList();
     accountPageInitializing();
 
     function accountPageInitializing() {
