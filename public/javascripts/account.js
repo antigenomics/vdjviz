@@ -56,17 +56,22 @@ $(document).ready(function () {
 
         comparingContent
             .append("div")
-            .attr("class", "col-lg-9")
-            .style("position", "fixed")
+            .attr("class", "col-lg-12")
             .append("a")
             .attr("href", "#comparing-files-table")
             .attr("role", "button")
-            .attr("class", "btn pull-right")
+            .attr("class", "btn btn-default")
             .attr("data-toggle", "modal")
             .text("Add");
 
         var comparingTBody = d3.select(".main-tbody-comparing-files");
         comparingTBody.html("");
+
+        var all = comparingTBody.append("tr");
+            all.append("th").text("All files");
+
+        var ul = all.append("th").append("ul")
+            .attr("class", "nav nav-pills");
 
         fileNames.forEach(function (fileName) {
             var tr = comparingTBody.append("tr");
@@ -74,7 +79,10 @@ $(document).ready(function () {
             var types = tr.append("th")
                 .append("ul")
                 .attr("class", "nav nav-pills");
-            types.append("li").append("a").style("cursor", "pointer")
+            types.append("li")
+                .append("a")
+                .attr("id", "li_vjusage")
+                .style("cursor", "pointer")
                 .on("click", function () {
                     var li = d3.select(this.parentNode);
                     if (li.classed("active")) {
@@ -82,16 +90,16 @@ $(document).ready(function () {
                         li.classed("active", false);
                     } else {
                         var place_param = {
-                            col: "col-lg-9",
+                            col: "col-lg-12",
                             header: fileName + " V-J Usage",
                             id: comparing_count
                         };
                         var param = {
-                            place: createCompareItem(comparingContent, place_param),
+                            place: createComparePlace(comparingContent, place_param),
                             height: 400,
                             width: 400,
                             id: comparing_count,
-                            svg_width: "100%"
+                            svg_width: "70%"
                         };
                         li.attr("id", comparing_count++);
                         li.classed("active", true);
@@ -99,7 +107,10 @@ $(document).ready(function () {
                     }
                 })
                 .text("VJ-Usage");
-            types.append("li").append("a").style("cursor", "pointer")
+            types.append("li")
+                .append("a")
+                .attr("id", "li-spectrotype")
+                .style("cursor", "pointer")
                 .on("click", function () {
                     var li = d3.select(this.parentNode);
                     if (li.classed("active")) {
@@ -112,7 +123,7 @@ $(document).ready(function () {
                             id: comparing_count
                         };
                         var param = {
-                            place: createCompareItem(comparingContent, place_param),
+                            place: createComparePlace(comparingContent, place_param),
                             height: 500
                         };
                         li.attr("id", comparing_count++);
@@ -134,7 +145,7 @@ $(document).ready(function () {
                             id: comparing_count,
                         };
                         var param = {
-                            place: createCompareItem(comparingContent, place_param),
+                            place: createComparePlace(comparingContent, place_param),
                             height: 500
                         };
                         li.attr("id", comparing_count++);
@@ -156,7 +167,7 @@ $(document).ready(function () {
                             id: comparing_count
                         };
                         var param = {
-                            place: createCompareItem(comparingContent, place_param),
+                            place: createComparePlace(comparingContent, place_param),
                             height: 500
                         };
                         li.attr("id", comparing_count++);
@@ -166,9 +177,17 @@ $(document).ready(function () {
                 })
                 .text("Kernel Density");
         });
+
+        ul.append("li").append("a").text("V-J Usage");
+        ul.append("li").append("a").on("click", function() {
+            console.log($("#li-spectrotype"));
+            $("#li-spectrotype").click();
+        }).text("Spectrotype");
+        ul.append("li").append("a").text("SpectrotypeV");
+        ul.append("li").append("a").text("Kernel Density");
     }
 
-    function createCompareItem(place, param) {
+    function createComparePlace(place, param) {
         var col = place.append("div")
             .attr("id", "comparing-place" + param["id"])
             .attr("class", param["col"]);
@@ -342,12 +361,14 @@ $(document).ready(function () {
     function hideVisualisationContent() {
         d3.select(".visualisation")
             .transition()
+            .duration(1000)
             .style("opacity", "0");
     }
 
     function showVisualisationContent() {
         d3.select(".visualisation")
             .transition()
+            .duration(1000)
             .style("opacity", "1");
     }
 
@@ -359,13 +380,15 @@ $(document).ready(function () {
             .attr("class", "nav nav-pills")
             .style("cursor", "pointer");
 
-        d3.select(".mainContent")
+        var type_header = d3.select(".mainContent")
             .append("div")
             .attr("class", "col-lg-12")
             .append("h3")
             .attr("class", "visualisation-type-header")
             .text("Header")
             .append("hr");
+
+        saveButtonAppend(type_header, fileName, "spectrotype");
 
         var param = {
             height: 500,
@@ -537,7 +560,6 @@ $(document).ready(function () {
                 .datum(data)
                 .call(chart);
 
-            saveButtonAppend(place, 60, 0, "diversity", "");
             nv.utils.windowResize(function () {
                 chart.update()
             });
@@ -552,6 +574,7 @@ $(document).ready(function () {
                 .append("div")
                 .attr("id", "chart")
                 .append("svg")
+                .attr("id", "svgtopng")
                 .style("height", param["height"] + "px");
 
             var chart = nv.models.lineChart()
@@ -575,7 +598,6 @@ $(document).ready(function () {
             svg.datum(data)
                 .call(chart);
 
-            saveButtonAppend(param["place"], 60, 0, fileName, "kernel_density");
             nv.utils.windowResize(function () {
                 chart.update()
             });
@@ -588,6 +610,7 @@ $(document).ready(function () {
             var svg = parameters["place"].append("div")
                 .attr("id", "chart")
                 .append("svg")
+                .attr("id", "svgtopng")
                 .style("height", parameters["height"] + "px")
                 .style("overflow", "visible");
 
@@ -638,7 +661,6 @@ $(document).ready(function () {
             svg.datum(data)
                 .call(chart);
 
-            saveButtonAppend(parameters["place"], 60, 0, fileName, "spectrotype");
             nv.utils.windowResize(chart.update);
             return chart;
         });
@@ -651,6 +673,7 @@ $(document).ready(function () {
                 .style("margin-right", "auto")
                 .attr("id", "chart")
                 .append("svg")
+                .attr("id", "svgtopng")
                 .style("height", param["height"] + "px")
                 .style("overflow", "visible");
 
@@ -689,7 +712,6 @@ $(document).ready(function () {
             svg.datum(data)
                 .call(chart);
 
-            saveButtonAppend(param["place"], 60, 0, fileName, "spectrotype_v");
             nv.utils.windowResize(chart.update);
             return chart;
         });
@@ -890,6 +912,7 @@ $(document).ready(function () {
 
         var place = param["place"]
             .append("svg")
+            .attr("id", "svgtopng")
             .style("display", "block")
             .style("margin", "auto")
             .style("width", param["svg_width"])
@@ -902,7 +925,6 @@ $(document).ready(function () {
             {data: bP.partData(vjUsageData, 2), id: 'V-J-Usage-' + param["id"], header: ["V", "J"]}
         ];
         bP.draw(data, svg);
-        saveButtonAppend(param["place"], 0, 0, fileName, "vjusage");
     }
 
     function createbP(height, bb) {
@@ -1271,37 +1293,14 @@ $(document).ready(function () {
         return bP;
     }
 
-    function saveButtonAppend(place, x, y, fileName, type) {
-        /*
-         var btn = place.append("g")
-         .attr("transform", "translate(" + x + "," + y + ")")
-         .append("g")
-         .attr("id", "save-svg-g");
-
-         btn.append("rect")
-         .attr("height", "25px")
-         .attr("width", "100px")
-         .attr("x", 0)
-         .attr("y", 0)
-         .attr("rx", 2)
-         .attr("ry", 2)
-         .attr("fill", "#008cba");
-
-         btn.append("text")
-         .style("cursor", "pointer")
-         .attr("x", "15px")
-         .attr("y", "17px")
-         .attr("fill", "white")
-         .text("Save as png")
-         .on("click", function () {
-         d3.select("#save-svg-g").style("visibility", "hidden");
-         saveSvgAsPng(document.getElementById("svgtopng"), fileName + "_" + type + ".png", 3);
-         d3.select("#save-svg-g").style("visibility", "visible");
-         })
-         .append("i")
-         .attr("class", "fa fa-floppy-o");
-         */
-        //todo
+    function saveButtonAppend(place, fileName, type) {
+         place.append("button")
+             .attr("class", "btn btn-default")
+             .attr("id", "save-svg-g")
+             .on("click", function() {
+                 saveSvgAsPng(document.getElementById("svgtopng"), fileName + "_" + type + ".png", 3);
+             })
+             .text("Save as png");
     }
 
     $('#fileupload').fileupload({
