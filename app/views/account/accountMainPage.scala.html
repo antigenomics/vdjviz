@@ -8,9 +8,9 @@
     } else {
         @navbar(null)
     }
-    <div class="container-fluid" ng-app="accountPage" ng-controller="accountController as account">
+    <div class="container-fluid" ng-app="accountPage" ng-controller="account">
         <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
+            <div class="col-sm-3 col-md-2 sidebar user-files-list" ng-controller="filePanel">
                 <ul class="nav nav-sidebar">
                     <li class="active">
                         <a href="#new-files-table" role="button" class="btn" data-toggle="modal">
@@ -18,45 +18,41 @@
                         </a>
                     </li>
                 </ul>
-                <ul class="nav nav-sidebar" ng-hide="account.files.length">
-                    <li>
+                <ul class="nav nav-sidebar">
+                    <li ng-hide="files.length">
                         <a>You have no files</a>
                     </li>
                 </ul>
-                <ul class="nav nav-sidebar user-files-list" ng-show="account.files.length">
-                    <li ng-repeat="file in account.files" ng-class="{active:account.isActive($index)}" ng-click="account.setActive($index)">
-                        <a>{{ file.fileName }}</a>
-                    </li>
+                <ul class="nav nav-sidebar">
+                    <li ng-repeat="file in files" ng-class="{active:isFile($index)}" ng-click="setFile($index)"><a>{{ file.fileName }}</a></li>
                     <hr>
-                    <li ng-click="account.setActive('diversity')" ng-class="{active:account.isActive('diversity')}"><a>
-                        Diversity</a></li>
-                    <li ng-click="account.setActive('summary')" ng-class="{active:account.isActive('summary')}"><a>
-                        Summary</a></li>
-                    <li ng-click="account.setActive('comparing')" ng-class="{active:account.isActive('comparing')}"><a>
-                        Comparing</a></li>
-                    <hr>
-                    <li><a>Delete all</a></li>
+                    <li ng-class="{active:isActive('diversity')}" ng-click="setActive('diversity')"><a>Diversity</a></li>
+                    <li ng-class="{active:isActive('summary')}" ng-click="setActive('summary')"><a>Summary</a></li>
+                    <li ng-class="{active:isActive('comparing')}" ng-click="setActive('comparing')"><a>Comparing</a></li>
                 </ul>
             </div>
 
-            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" ng-controller="visualisation">
                 <div class="main-content">
-                    <div class="visualisation-tab" ng-show="account.state.fileComputationResults">
+                    <div class="visualisation-tab" ng-show="isState('file')">
                         <ul class="nav nav-pills nav-visualisation">
-                            <li><a>asd</a></li>
-                            <li><a>asd</a></li>
-                            <li><a>asd</a></li>
-                            <li><a>asd</a></li>
-                            <li><a>asd</a></li>
+                            <li ng-click="setActive('V-J Usage')" ng-class="{active:isActive('V-J Usage')}"><a>VJ-Usage</a></li>
+                            <li ng-click="setActive('Spectrotype')" ng-class="{active:isActive('Spectrotype')}"><a>Spectrotype</a></li>
+                            <li ng-click="setActive('SpectrotypeV')" ng-class="{active:isActive('SpectrotypeV')}"><a>SpectrotypeV</a></li>
+                            <li ng-click="setActive('Kernel Density')" ng-class="{active:isActive('Kernel Density')}"><a>Kernel Density</a></li>
+                            <li ng-click="setActive('Annotation')" ng-class="{active:isActive('Annotation')}"><a>Annotation</a></li>
                         </ul>
                         <div class="col-lg-12">
-                            <h3>asd</h3>
+                            <h3>{{ tab }}</h3>
                             <hr>
                             <div class="visualisation-results">
 
                             </div>
                         </div>
                         <hr>
+                    </div>
+                    <div class="account-information-tab" ng-show="isActive('accountInformation')">
+                        Account Information
                     </div>
                 </div>
             </div>

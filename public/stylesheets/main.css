@@ -4,7 +4,7 @@ html, body {
     padding-top: 0;
 }
 
-.user-files-list > li {
+.nav-sidebar > li {
     cursor: pointer;
 }
 

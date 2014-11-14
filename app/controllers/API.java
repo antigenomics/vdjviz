@@ -102,6 +102,11 @@ public class API extends Controller {
              * Creation the UserFile class
              */
 
+            File accountDir = new File(account.userDirPath);
+            if (!accountDir.exists()) {
+                accountDir.mkdir();
+            }
+
             File uploadedFile = file.getFile();
             String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
             File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
