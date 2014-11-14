@@ -168,10 +168,15 @@
     app.controller('fileUpload', ['$scope', '$http', '$log', 'data', function ($scope, $http, $log, account) {
 
         $scope.newFiles = {};
+        $scope.uploadedFiles = [];
         $scope.commonSoftwareType = 'mitcr';
 
-        $scope.alertName = function(file) {
-            console.log(file);
+        $scope.isEmpty = function() {
+            var size = 0;
+            angular.forEach($scope.newFiles, function() {
+                size++;
+            });
+            return size;
         };
 
         $scope.addNewButton = function() {
@@ -246,6 +251,15 @@
             return file.result === 'ok' || file.result === 'success';
         };
 
+        $scope.isSuccess = function(file) {
+            return file.result === 'success';
+        };
+
+        $scope.isError = function(file) {
+            return file.result === 'error';
+        }
+
+
         $('#fileupload').fileupload({
             url: '/api/upload',
             dataType: 'json',
@@ -307,13 +321,38 @@
                         };
                         break;
                     case "error" :
-                        $scope.updateTooltip(file, data.result.message);
+                        $scope.updateResult(file, 'error');
+                        $scope.updateResultTooltip(file, data.result.message);
                         break;
                     default:
-                        $scope.updateTooltip(file, "Server unavailable");
+                        $scope.updateResult(file, 'error');
+                        $scope.updateResultTooltip(file, "Server unavailable");
                 }
 
             }
+        });
+
+        $('#new-files-table').on('hidden.bs.modal', function () {
+            angular.forEach($scope.newFiles, function(file, key) {
+                switch(file.result) {
+                    case 'success':
+                        $scope.$apply(function() {
+                            $scope.uploadedFiles.push({
+                                fileName: file.fileName,
+                                softwareTypeName: file.softwareTypeName
+                            });
+                            delete $scope.newFiles[file.fileName];
+                        });
+                        break;
+                    case 'error':
+                        $scope.$apply(function() {
+                            delete $scope.newFiles[file.fileName];
+                        });
+                        break;
+                    default :
+                        break;
+                }
+            })
         });
 
     }])
