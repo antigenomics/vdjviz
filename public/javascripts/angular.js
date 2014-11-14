@@ -103,6 +103,19 @@
             }
         }
 
+        function getFilesList() {
+            return $rootScope.files;
+        }
+
+        function isContain(fileName) {
+            angular.forEach($rootScope.files, function(file) {
+                if (file.fileName == fileName) {
+                    return true;
+                }
+            });
+            return false;
+        }
+
         return {
             updateFilesList: updateFilesList,
             changeState: changeState,
@@ -111,7 +124,9 @@
             getFileIndex: getFileIndex,
             getVisualisationTab: getVisualisationTab,
             setVisualisationTab: setVisualisationTab,
-            updateVisualisationTab: updateVisualisationTab
+            updateVisualisationTab: updateVisualisationTab,
+            getFilesList: getFilesList,
+            isContain: isContain
         }
 
     }]);
@@ -199,6 +214,35 @@
             })
         };
 
+        $scope.addNewError = function(fileName, error) {
+            switch (error) {
+                case 0:
+                    $scope.$apply(function() {
+                        $scope.newFiles[fileName] = {
+                            fileName: fileName,
+                            softwareTypeName: '',
+                            wait: false,
+                            result: 'error',
+                            resultTooltip: 'You have exceeded limit of files'
+                        };
+                    });
+                    break;
+                case 1:
+                    $scope.$apply(function() {
+                        $scope.newFiles[fileName] = {
+                            fileName: fileName,
+                            softwareTypeName: '',
+                            wait: false,
+                            result: 'error',
+                            resultTooltip: 'You should use unique names for your files'
+                        };
+                    });
+                    break;
+                default :
+                    break;
+            }
+        };
+
         $scope.updateTooltip = function(file, tooltip) {
             $scope.$apply(function() {
                 file.tooltip = tooltip;
@@ -257,7 +301,7 @@
 
         $scope.isError = function(file) {
             return file.result === 'error';
-        }
+        };
 
 
         $('#fileupload').fileupload({
@@ -268,7 +312,14 @@
                 var originalFileName = data.files[0].name;
                 var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
                 var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
-                $scope.addNew(fileName, fileExtension, data);
+                $log.info(account.getFilesList().length);
+                if (account.getFilesList().length >= 25) {
+                    $scope.addNewError(fileName, 0);
+                } else if (account.isContain(fileName)) {
+                    $scope.addNewError(fileName, 1);
+                } else {
+                    $scope.addNew(fileName, fileExtension, data);
+                }
             },
             progress: function (e, data) {
                 var file = $scope.newFiles[data.formData.fileName];
