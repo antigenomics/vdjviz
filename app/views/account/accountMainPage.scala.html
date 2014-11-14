@@ -80,7 +80,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <div class="choose-files-button btn btn-primary" ng-click="addNewButton()">Add</div>
-                            <div class="upload-all-button btn btn-primary">Upload All</div>
+                            <div class="upload-all-button btn btn-primary" ng-click="uploadAll()">Upload All</div>
                             <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
                                 Close</span></button>
                         </div>
@@ -108,10 +108,10 @@
                                         <td></td>
                                         <td></td>
                                     </tr>
-                                    <tr ng-repeat="new in newFiles">
-                                        <td><input ng-model="new.fileName" type="text" value="new.fileName" /></td>
-                                        <td>
-                                            <select id="new-file-software-type" ng-model="new.softwareTypeName">
+                                    <tr ng-repeat="file in newFiles">
+                                        <td class="name-td"><input ng-model="file.fileName" type="text" value="file.fileName" /></td>
+                                        <td class="select-td">
+                                            <select id="new-file-software-type" ng-model="file.softwareTypeName">
                                                 <option value="mitcr" selected>MiTcr</option>
                                                 <option value="migec" >MiGec</option>
                                                 <option value="simple" >Simple</option>
@@ -119,15 +119,22 @@
                                             </select>
                                         </td>
                                         <td class="progress-td">
-                                            <div class="progress progress-striped active">
-                                                <div class="progress-bar">
+                                            <div class="progress progress-striped active" ng-show="isOk(file)">
+                                                <div class="progress-bar" style="width: {{ file.progress }}%">
+
                                                 </div>
                                             </div>
+                                            <div class="computation-result-message" ng-hide="isOk(file)">
+                                                {{ file.resultTooltip }}
+                                            </div>
                                         </td>
-                                        <td>
-                                            <button ng-show="new.wait" class="btn btn-default" ng-click="uploadFile(new)">
+                                        <td ng-show="isOk(file)">
+                                            <button ng-show="file.wait" class="btn btn-default" ng-click="uploadFile(file)">
                                                 Upload
                                             </button>
+                                            <div class="upload-tooltip" ng-hide="file.wait">
+                                                {{ file.tooltip }}
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>

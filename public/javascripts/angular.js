@@ -167,8 +167,8 @@
 
     app.controller('fileUpload', ['$scope', '$http', '$log', 'data', function ($scope, $http, $log, account) {
 
-        $scope.newFiles = [];
-        $scope.commonSoftwareType = 'mitcr'
+        $scope.newFiles = {};
+        $scope.commonSoftwareType = 'mitcr';
 
         $scope.alertName = function(file) {
             console.log(file);
@@ -178,27 +178,72 @@
             $("form input[type=file]").click();
         };
 
-        $scope.addNew = function(file) {
+        $scope.addNew = function(fileName, fileExtension, data) {
             $scope.$apply(function() {
-                $scope.newFiles.push(file);
+                $scope.newFiles[fileName] = {
+                    fileName: fileName,
+                    softwareTypeName: 'mitcr',
+                    fileExtension: fileExtension,
+                    wait: true,
+                    tooltip: '',
+                    progress: 0,
+                    result: 'ok',
+                    resultTooltip: '',
+                    data: data
+                };
+            })
+        };
+
+        $scope.updateTooltip = function(file, tooltip) {
+            $scope.$apply(function() {
+                file.tooltip = tooltip;
+            })
+        };
+
+        $scope.updateProgress = function(file, progress) {
+            $scope.$apply(function() {
+                file.progress = progress;
+            })
+        };
+
+        $scope.updateResult = function(file, result) {
+            $scope.$apply(function() {
+                file.result = result;
+            })
+        };
+
+        $scope.updateResultTooltip = function(file, resultTooltip) {
+            $scope.$apply(function() {
+                file.resultTooltip = resultTooltip;
             })
         };
 
         $scope.changeCommonSoftwareType = function() {
             angular.forEach($scope.newFiles, function(file, key) {
-                file.softwareType = $scope.commonSoftwareType;
+                file.softwareTypeName = $scope.commonSoftwareType;
             });
         };
 
+        $scope.uploadAll = function () {
+            angular.forEach($scope.newFiles, function(file, key) {
+                $scope.uploadFile(file);
+            })
+        };
+
         $scope.uploadFile = function(file) {
-            var fileData = file.data;
-            fileData.formData = {
-                softwareTypeName: file.softwareTypeName,
-                fileName: file.fileName,
-                fileExtension: file.fileExtension
-            };
-            file.wait = false;
-            fileData.submit();
+            if (file.wait) {
+                file.data.formData = {
+                    softwareTypeName: file.softwareTypeName,
+                    fileName: file.fileName,
+                    fileExtension: file.fileExtension
+                };
+                file.wait = false;
+                file.data.submit();
+            }
+        };
+
+        $scope.isOk = function(file) {
+            return file.result === 'ok' || file.result === 'success';
         };
 
         $('#fileupload').fileupload({
@@ -209,23 +254,65 @@
                 var originalFileName = data.files[0].name;
                 var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
                 var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
-                $scope.addNew({
-                    fileName: fileName,
-                    softwareTypeName: 'mitcr',
-                    fileExtension: fileExtension,
-                    wait: true,
-                    data: data
-                });
+                $scope.addNew(fileName, fileExtension, data);
             },
             progress: function (e, data) {
-                var progress = parseInt(data.loaded / data.total * 50, 10);
-                data.context.select(".td-upload-button")
-                    .html("Uploading...");
-                data.context.select(".progress-bar")
-                    .style("width", progress + "%");
+                var file = $scope.newFiles[data.formData.fileName];
+                $scope.updateTooltip(file, "Uploading");
+                $scope.updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
             },
             done: function (e, data) {
-                account.updateFilesList();
+                var file = $scope.newFiles[data.formData.fileName];
+                switch (data.result["result"]) {
+                    case "success" :
+                        var socket = new WebSocket("ws://" + location.host + "/api/ws");
+                        socket.onopen = function () {
+                            var msg = {
+                                type: "message",
+                                action: "render",
+                                data: {
+                                    fileName: data.formData.fileName
+                                }
+                            };
+                            socket.send(JSON.stringify(msg));
+                        };
+                        socket.onmessage = function (message) {
+                            var event = JSON.parse(message["data"]);
+                            switch (event["result"]) {
+                                case "ok" :
+                                    switch (event["progress"]) {
+                                        case "start" :
+                                            $scope.updateTooltip(file, "Computation");
+                                            break;
+                                        case "end" :
+                                            account.updateFilesList();
+                                            $scope.updateTooltip(file, "Success");
+                                            $scope.updateResult(file, 'success');
+                                            socket.close();
+                                            break;
+                                        default:
+                                            $scope.updateProgress(file, 50 + (event.progress / 2));
+                                    }
+                                    break;
+                                case "error" :
+                                    socket.close();
+                                    $scope.updateResult(file, 'error');
+                                    $scope.updateResultTooltip(file, "Error while computation");
+                                    break;
+                                default:
+                                    $scope.updateTooltip(file, "Server unavailable");
+                                    break;
+                            }
+
+                        };
+                        break;
+                    case "error" :
+                        $scope.updateTooltip(file, data.result.message);
+                        break;
+                    default:
+                        $scope.updateTooltip(file, "Server unavailable");
+                }
+
             }
         });
 
