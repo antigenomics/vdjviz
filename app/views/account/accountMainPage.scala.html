@@ -1,14 +1,14 @@
 @(account: Account)
 @main("Account") {
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/angular.js")" type="text/javascript"></script>
     @if(account != null) {
         @navbar(account.userName)
     } else {
         @navbar(null)
     }
-    <div class="container-fluid" ng-app="accountPage" ng-controller="account">
+    <div ng-app="accountPage" ng-controller="account">
+    <div class="container-fluid" >
         <div class="row">
             <div class="col-sm-3 col-md-2 sidebar user-files-list" ng-controller="filePanel">
                 <ul class="nav nav-sidebar">
@@ -23,24 +23,26 @@
                         <a>You have no files</a>
                     </li>
                 </ul>
-                <ul class="nav nav-sidebar">
+                <ul class="nav nav-sidebar" ng-show="files.length">
                     <li ng-repeat="file in files" ng-class="{active:isFile($index)}" ng-click="setFile($index)"><a>{{ file.fileName }}</a></li>
                     <hr>
-                    <li ng-class="{active:isActive('diversity')}" ng-click="setActive('diversity')"><a>Diversity</a></li>
-                    <li ng-class="{active:isActive('summary')}" ng-click="setActive('summary')"><a>Summary</a></li>
-                    <li ng-class="{active:isActive('comparing')}" ng-click="setActive('comparing')"><a>Comparing</a></li>
+                    <li ng-class="{active:isState('diversity')}" ng-click="changeState('diversity')"><a>Diversity</a></li>
+                    <li ng-class="{active:isState('summary')}" ng-click="changeState('summary')"><a>Summary</a></li>
+                    <li ng-class="{active:isState('comparing')}" ng-click="changeState('comparing')"><a>Comparing</a></li>
+                    <hr>
+                    <li ng-click="deleteAll()"><a>Delete All</a></li>
                 </ul>
-            </div>
 
+            </div>
             <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" ng-controller="visualisation">
                 <div class="main-content">
                     <div class="visualisation-tab" ng-show="isState('file')">
                         <ul class="nav nav-pills nav-visualisation">
-                            <li ng-click="setActive('V-J Usage')" ng-class="{active:isActive('V-J Usage')}"><a>VJ-Usage</a></li>
-                            <li ng-click="setActive('Spectrotype')" ng-class="{active:isActive('Spectrotype')}"><a>Spectrotype</a></li>
-                            <li ng-click="setActive('SpectrotypeV')" ng-class="{active:isActive('SpectrotypeV')}"><a>SpectrotypeV</a></li>
-                            <li ng-click="setActive('Kernel Density')" ng-class="{active:isActive('Kernel Density')}"><a>Kernel Density</a></li>
-                            <li ng-click="setActive('Annotation')" ng-class="{active:isActive('Annotation')}"><a>Annotation</a></li>
+                            <li ng-click="setActiveTab('V-J Usage')" ng-class="{active:isActiveTab('V-J Usage')}"><a>VJ-Usage</a></li>
+                            <li ng-click="setActiveTab('Spectrotype')" ng-class="{active:isActiveTab('Spectrotype')}"><a>Spectrotype</a></li>
+                            <li ng-click="setActiveTab('SpectrotypeV')" ng-class="{active:isActiveTab('SpectrotypeV')}"><a>SpectrotypeV</a></li>
+                            <li ng-click="setActiveTab('Kernel Density')" ng-class="{active:isActiveTab('Kernel Density')}"><a>Kernel Density</a></li>
+                            <li ng-click="setActiveTab('Annotation')" ng-class="{active:isActiveTab('Annotation')}"><a>Annotation</a></li>
                         </ul>
                         <div class="col-lg-12">
                             <h3>{{ tab }}</h3>
@@ -51,79 +53,118 @@
                         </div>
                         <hr>
                     </div>
-                    <div class="account-information-tab" ng-show="isActive('accountInformation')">
+                    <div class="account-information-tab" ng-show="isState('accountInformation')">
                         Account Information
+                    </div>
+                    <div class="diversity-tab" ng-show="isState('diversity')">
+                        <h3>Diversity</h3>
+                        <hr>
+                        <div class="diversity-visualisation-tab">
+
+                        </div>
+                    </div>
+                    <div class="summary-tab" ng-show="isState('summary')">
+                        <h3>Summary</h3>
+                        <hr>
+                        <div class="summary-visualisation-tab">
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="modal fade" id="new-files-table" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="fileUpload">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="choose-files-button btn btn-primary" ng-click="addNewButton()">Add</div>
+                            <div class="upload-all-button btn btn-primary">Upload All</div>
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                                Close</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table modal-file-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Software Type</th>
+                                        <th>Progress</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="main-tbody-files">
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <select id="common-software-type" ng-model="commonSoftwareType" ng-change="changeCommonSoftwareType()">
+                                                <option value="mitcr" >MiTcr</option>
+                                                <option value="migec" >MiGec</option>
+                                                <option value="simple" >Simple</option>
+                                                <option value="igblast" >IgBlast</option>
+                                            </select>
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr ng-repeat="new in newFiles">
+                                        <td><input ng-model="new.fileName" type="text" value="new.fileName" /></td>
+                                        <td>
+                                            <select id="new-file-software-type" ng-model="new.softwareTypeName">
+                                                <option value="mitcr" selected>MiTcr</option>
+                                                <option value="migec" >MiGec</option>
+                                                <option value="simple" >Simple</option>
+                                                <option value="igblast" >IgBlast</option>
+                                            </select>
+                                        </td>
+                                        <td class="progress-td">
+                                            <div class="progress progress-striped active">
+                                                <div class="progress-bar">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-show="new.wait" class="btn btn-default" ng-click="uploadFile(new)">
+                                                Upload
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="new-files-table" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="choose-files-button btn btn-primary">Add</div>
-                    <div class="upload-all-button btn btn-primary">Upload All</div>
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
-                        Close</span></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table modal-file-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Software Type</th>
-                                <th>Progress</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody class="main-tbody-files">
-                            <tr>
-                                <td></td>
-                                <td>
-                                    <select id="common-software-type">
-                                        <option value="mitcr" >MiTcr</option>
-                                        <option value="migec" >MiGec</option>
-                                        <option value="simple" >Simple</option>
-                                        <option value="igblast" >IgBlast</option>
-                                    </select>
-                                </td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                            Close</span></button>
+                    </div>
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <table class="table modal-file-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Types</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="main-tbody-comparing-files">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility : hidden">
+                <input type="file" name="files[]" multiple />
+            </form>
         </div>
     </div>
-
-    <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
-                    Close</span></button>
-            </div>
-            <div class="modal-content">
-                <div class="modal-body">
-                    <table class="table modal-file-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Types</th>
-                            </tr>
-                        </thead>
-                        <tbody class="main-tbody-comparing-files">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility : hidden">
-        <input type="file" name="files[]" multiple />
-    </form>
 }

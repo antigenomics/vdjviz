@@ -1303,6 +1303,7 @@ $(document).ready(function () {
              .text("Save as png");
     }
 
+    /*
     $('#fileupload').fileupload({
         url: '/api/upload',
         dataType: 'json',
@@ -1511,11 +1512,12 @@ $(document).ready(function () {
             }
         }
     });
+    */
 
     $('#new-files-table').on('hidden.bs.modal', function () {
         $(this).find("tr.success").remove();
         $(this).find("tr.danger").remove();
-        updateFilesList();
+        //updateFilesList();
     });
 
     $(".upload-all-button").click(function () {

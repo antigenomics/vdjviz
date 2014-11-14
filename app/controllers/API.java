@@ -300,7 +300,7 @@ public class API extends Controller {
                 return cache(file, "kernelDensity", account);
             case "annotation" :
                 return cache(file, "annotation", account);
-            case "basicStats" :
+            case "summary" :
                 return basicStats(account);
             case "diversity" :
                 return diversity(account);

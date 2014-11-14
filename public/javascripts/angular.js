@@ -5,7 +5,7 @@
 (function () {
     var app = angular.module('accountPage', []);
 
-    app.factory('data', ['$http', '$rootScope' ,function($http, $rootScope) {
+    app.factory('data', ['$http', '$rootScope', function ($http, $rootScope) {
 
         $rootScope.files = [];
         $rootScope.state = 'accountInformation';
@@ -15,13 +15,14 @@
         };
 
         function updateFilesList() {
-            $http({method: 'GET', url: '/api/files'}).success(function(data) {
+            $http({method: 'GET', url: '/api/files'}).success(function (data) {
                 $rootScope.files = data.data;
             })
         }
 
         function changeState(state) {
             $rootScope.state = state;
+            updateVisualisationTab();
         }
 
         function getState() {
@@ -31,6 +32,7 @@
         function setFile(index) {
             $rootScope.state = 'file';
             $rootScope.visualisationInfo.fileIndex = index;
+            updateVisualisationTab();
         }
 
         function getFileIndex() {
@@ -47,41 +49,57 @@
         }
 
         function updateVisualisationTab() {
-            if ($rootScope.visualisationInfo.fileIndex < 0) {
-                return;
-            }
-            var tab = getVisualisationTab();
-            var param = {
-                fileName: $rootScope.files[$rootScope.visualisationInfo.fileIndex].fileName,
-                type: '',
-                place: '.visualisation-results',
-                height: 600
-            };
-            switch (tab) {
-                case "V-J Usage":
-                    param.type = 'vjusage';
-                    param.svg_width = '70%';
-                    param.width = 600;
-                    getData(vjUsage, param);
+            var param = {};
+            switch ($rootScope.state) {
+                case 'file':
+                    var tab = getVisualisationTab();
+                    param = {
+                        fileName: $rootScope.files[$rootScope.visualisationInfo.fileIndex].fileName,
+                        type: '',
+                        place: '.visualisation-results',
+                        height: 600
+                    };
+                    switch (tab) {
+                        case "V-J Usage":
+                            param.type = 'vjusage';
+                            param.svg_width = '70%';
+                            param.width = 600;
+                            getData(vjUsage, param);
+                            break;
+                        case "Spectrotype":
+                            param.type = 'spectrotype';
+                            getData(spectrotype, param);
+                            break;
+                        case "SpectrotypeV":
+                            param.type = 'spectrotypeV';
+                            getData(spectrotypeV, param);
+                            break;
+                        case "Kernel Density":
+                            param.type = 'kernelDensity';
+                            getData(kernelDensity, param);
+                            break;
+                        case "Annotation":
+                            param.type = 'annotation';
+                            getData(annotationTable, param);
+                            break;
+                        default:
+                            break;
+                    }
                     break;
-                case "Spectrotype":
-                    param.type = 'spectrotype';
-                    getData(spectrotype, param);
+                case 'diversity':
+                    param.place = '.diversity-visualisation-tab';
+                    param.fileName = 'all';
+                    param.type = 'diversity';
+                    getData(diversityStats, param);
                     break;
-                case "SpectrotypeV":
-                    param.type = 'spectrotypeV';
-                    getData(spectrotypeV, param);
-                    break;
-                case "Kernel Density":
-                    param.type = 'kernelDensity';
-                    getData(kernelDensity, param);
-                    break;
-                case "Annotation":
-                    param.type = 'annotation';
-                    getData(annotationTable, param);
+                case 'summary':
+                    param.place = '.summary-visualisation-tab';
+                    param.fileName = 'all';
+                    param.type = 'summary';
+                    getData(summaryStats, param);
                     break;
                 default:
-                    break;
+                    break
             }
         }
 
@@ -98,56 +116,124 @@
 
     }]);
 
-    app.controller('account', ['$rootScope', '$scope', '$http', 'data', function($rootScope, $scope, $http, data) {
+    app.controller('account', ['$rootScope', '$scope', '$http', 'data', function ($rootScope, $scope, $http, data) {
         data.updateFilesList();
     }]);
 
-    app.controller('filePanel', ['$scope','$log', 'data', function($scope, $log, data) {
+    app.controller('filePanel', ['$scope', '$log', '$http', 'data', function ($scope, $log, $http, data) {
 
-        $scope.setActive = function(state) {
-            data.changeState(state);
-        };
+        $scope.changeState = data.changeState;
+        $scope.setFile = data.setFile;
 
-        $scope.isActive = function(state) {
+        $scope.isState = function (state) {
             return data.getState() === state;
         };
 
-        $scope.setFile = function(index) {
-            data.changeState('file');
-            data.setFile(index);
-            data.updateVisualisationTab();
+        $scope.isFile = function (index) {
+            return data.getState() === 'file' && data.getFileIndex() === index;
         };
 
-        $scope.isFile = function(index) {
-            return data.getFileIndex() === index && data.getState() === 'file';
+        $scope.isState = function (state) {
+            return data.getState() === state;
+        };
+
+        $scope.deleteAll = function () {
+            $http.post('/api/delete', {action: 'deleteAll'})
+                .success(function () {
+                    data.updateFilesList();
+                    data.changeState('accountInformation');
+                });
         }
     }]);
 
-    app.controller('visualisation', ['$rootScope', '$scope', '$log', 'data', function($rootScope ,$scope, $log, data) {
+    app.controller('visualisation', ['$rootScope', '$scope', '$log', 'data', function ($rootScope, $scope, $log, data) {
 
         $scope.tab = 'V-J Usage';
 
-        $scope.isActive = function (tab) {
+        $scope.isActiveTab = function (tab) {
             return data.getVisualisationTab() === tab;
         };
 
-        $scope.setActive = function(tab) {
+        $scope.setActiveTab = function (tab) {
             data.setVisualisationTab(tab);
             $scope.tab = tab;
         };
 
-        $scope.isState = function(state) {
+        $scope.isState = function (state) {
             return data.getState() === state;
         };
 
     }]);
+
+    app.controller('fileUpload', ['$scope', '$http', '$log', 'data', function ($scope, $http, $log, account) {
+
+        $scope.newFiles = [];
+        $scope.commonSoftwareType = 'mitcr'
+
+        $scope.alertName = function(file) {
+            console.log(file);
+        };
+
+        $scope.addNewButton = function() {
+            $("form input[type=file]").click();
+        };
+
+        $scope.addNew = function(file) {
+            $scope.$apply(function() {
+                $scope.newFiles.push(file);
+            })
+        };
+
+        $scope.changeCommonSoftwareType = function() {
+            angular.forEach($scope.newFiles, function(file, key) {
+                file.softwareType = $scope.commonSoftwareType;
+            });
+        };
+
+        $scope.uploadFile = function(file) {
+            var fileData = file.data;
+            fileData.formData = {
+                softwareTypeName: file.softwareTypeName,
+                fileName: file.fileName,
+                fileExtension: file.fileExtension
+            };
+            file.wait = false;
+            fileData.submit();
+        };
+
+        $('#fileupload').fileupload({
+            url: '/api/upload',
+            dataType: 'json',
+            sequentialUploads: true,
+            add: function (e, data) {
+                var originalFileName = data.files[0].name;
+                var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
+                var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
+                $scope.addNew({
+                    fileName: fileName,
+                    softwareTypeName: 'mitcr',
+                    fileExtension: fileExtension,
+                    wait: true,
+                    data: data
+                });
+            },
+            progress: function (e, data) {
+                var progress = parseInt(data.loaded / data.total * 50, 10);
+                data.context.select(".td-upload-button")
+                    .html("Uploading...");
+                data.context.select(".progress-bar")
+                    .style("width", progress + "%");
+            },
+            done: function (e, data) {
+                account.updateFilesList();
+            }
+        });
+
+    }])
 })();
 
 
 function getData(handleData, param) {
-    console.log(param.fileName);
-    console.log(param.type);
-
     $.ajax({
         url: "/api/data",
         type: "post",
@@ -835,3 +921,110 @@ function createbP(height, bb) {
     return bP;
 }
 
+function diversityStats(data, param) {
+    nv.addGraph(function () {
+        d3.select(param.place).html("");
+
+        var svg = d3.select(param.place)
+            .append("svg")
+            .attr("id", "svgtopng")
+            .style("height", "900px")
+            .style("margin-top", "50px");
+
+        var chart = nv.models.lineChart()
+            .useInteractiveGuideline(true)
+            .transitionDuration(350)
+            .showLegend(true)
+            .showYAxis(true)
+            .showXAxis(true)
+            .height(700);
+
+        chart.xAxis
+            .axisLabel('Count')
+            .tickFormat(d3.format(',r'));
+
+        chart.yAxis
+            .axisLabel('CDR3AA')
+            .tickFormat(d3.format('.02f'));
+
+
+        svg.datum(data)
+            .call(chart);
+
+        nv.utils.windowResize(function () {
+            chart.update()
+        });
+        return chart;
+    });
+}
+
+function summaryStats(data, param) {
+    var header = Object.keys(data[0]);
+    d3.select(param.place).html("");
+    var table = d3.select(param.place)
+            .append("table")
+            .attr("id", "basicStatsTable")
+            .attr("class", "table table-striped table-hover"),
+        thead = table.append("thead")
+            .append("tr")
+            .selectAll("th")
+            .data(header)
+            .enter()
+            .append("th")
+            .html(function (d) {
+                return d;
+            });
+    var column = [];
+    for (var i = 0; i < header.length; i++) {
+        column.push({"data": header[i.toString()]});
+    }
+    $('#basicStatsTable').dataTable({
+        dom: 'T<"clear">lfrtip',
+        tableTools: {
+            "sSwfPath": "../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
+        },
+        data: data,
+        "columnDefs": [
+            {
+                "width": "10%",
+                "targets": 0
+            },
+            {
+                "render": function (data) {
+                    return parseFloat(data).toExponential(2);
+                },
+                "targets": 4
+            },
+            {
+                "render": function (data) {
+                    return parseFloat(data).toExponential(2);
+                },
+                "targets": 5
+            },
+            {
+                "render": function (data) {
+                    return parseFloat(data).toFixed(2);
+                },
+                "targets": 6
+            },
+            {
+                "render": function (data) {
+                    return parseFloat(data).toFixed(2);
+                },
+                "targets": 7
+            },
+            {
+                "render": function (data) {
+                    return parseFloat(data).toExponential(2);
+                },
+                "targets": 8
+            }
+        ],
+        "columns": column,
+        'iDisplayLength': 100,
+        'order': [
+            [0, "asc"]
+        ],
+        responsive: true
+    });
+}
