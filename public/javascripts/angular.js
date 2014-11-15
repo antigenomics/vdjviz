@@ -17,10 +17,48 @@
         function updateFilesList() {
             $http({method: 'GET', url: '/api/files'}).success(function (data) {
                 $rootScope.files = data.data;
+                var id = 0;
+                angular.forEach(data.data, function(file) {
+                    $rootScope.files[file.fileName] = {
+                        index: id++,
+                        fileName: file.fileName,
+                        softwareTypeName: file.softwareTypeName,
+                        data: {
+                            vjusage: {
+                                cached: false,
+                                data: [],
+                                comparing: false
+                            },
+                            spectrotype: {
+                                cached: false,
+                                data: [],
+                                comparing: false
+                            },
+                            spectrotypeV: {
+                                cached: false,
+                                data: [],
+                                comparing: false
+                            },
+                            kernelDensity: {
+                                cached: false,
+                                data: [],
+                                comparing: false
+                            },
+                            annotation: {
+                                cached: false,
+                                data: [],
+                                comparing: false
+                            }
+                        }
+                    }
+                })
             })
         }
 
         function changeState(state) {
+            if (state != 'file') {
+                $rootScope.visualisationInfo.fileIndex = -1;
+            }
             $rootScope.state = state;
             updateVisualisationTab();
         }
@@ -108,12 +146,13 @@
         }
 
         function isContain(fileName) {
+            var isContain = false;
             angular.forEach($rootScope.files, function(file) {
-                if (file.fileName == fileName) {
-                    return true;
+                if (fileName == file.fileName) {
+                    isContain = true;
                 }
             });
-            return false;
+            return isContain;
         }
 
         return {
@@ -134,6 +173,26 @@
     app.controller('account', ['$rootScope', '$scope', '$http', 'data', function ($rootScope, $scope, $http, data) {
         data.updateFilesList();
     }]);
+
+    app.controller('visualisation', ['$rootScope', '$scope', '$log', 'data', function ($rootScope, $scope, $log, data) {
+
+        $scope.tab = 'V-J Usage';
+
+        $scope.isActiveTab = function (tab) {
+            return data.getVisualisationTab() === tab;
+        };
+
+        $scope.setActiveTab = function (tab) {
+            data.setVisualisationTab(tab);
+            $scope.tab = tab;
+        };
+
+        $scope.isState = function (state) {
+            return data.getState() === state;
+        };
+
+    }]);
+
 
     app.controller('filePanel', ['$scope', '$log', '$http', 'data', function ($scope, $log, $http, data) {
 
@@ -158,27 +217,28 @@
                     data.updateFilesList();
                     data.changeState('accountInformation');
                 });
+        };
+
+        $scope.deleteFile = function(file, $index) {
+            $http.post('/api/delete', {
+                action: 'delete',
+                fileName: file.fileName
+            }).success(function() {
+                if ($index == data.getFileIndex()) {
+                    data.changeState('accountInformation');
+                } else if (data.getState() != 'file') {
+                    data.updateVisualisationTab();
+                }
+                data.updateFilesList();
+            });
+        };
+
+        $scope.isRendering = function(file) {
+            return file.state === 'rendering';
         }
     }]);
 
-    app.controller('visualisation', ['$rootScope', '$scope', '$log', 'data', function ($rootScope, $scope, $log, data) {
 
-        $scope.tab = 'V-J Usage';
-
-        $scope.isActiveTab = function (tab) {
-            return data.getVisualisationTab() === tab;
-        };
-
-        $scope.setActiveTab = function (tab) {
-            data.setVisualisationTab(tab);
-            $scope.tab = tab;
-        };
-
-        $scope.isState = function (state) {
-            return data.getState() === state;
-        };
-
-    }]);
 
     app.controller('fileUpload', ['$scope', '$http', '$log', 'data', function ($scope, $http, $log, account) {
 
@@ -312,7 +372,10 @@
                 var originalFileName = data.files[0].name;
                 var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
                 var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
-                $log.info(account.getFilesList().length);
+                if (fileExtension != 'txt' && fileExtension != 'gz') {
+                    fileName += fileExtension;
+                    fileExtension = 'txt';
+                }
                 if (account.getFilesList().length >= 25) {
                     $scope.addNewError(fileName, 0);
                 } else if (account.isContain(fileName)) {
@@ -406,7 +469,14 @@
             })
         });
 
+    }]);
+
+    // Comparing tab controllers and service
+
+    app.factory('comparingTools', ['$rootScope', '$log', function($rootScope, $log) {
+
     }])
+
 })();
 
 

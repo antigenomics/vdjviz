@@ -24,8 +24,12 @@
                         </li>
                     </ul>
                     <ul class="nav nav-sidebar" ng-show="files.length">
-                        <li ng-repeat="file in files" ng-class="{active:isFile($index)}" ng-click="setFile($index)"><a>
-                            {{ file.fileName }}</a></li>
+                        <li ng-repeat="file in files" ng-class="{active:isFile($index), disabled:isRendering(file)}" ng-click="setFile($index)"  ng-mouseenter="hover=true" ng-mouseleave="hover=false">
+                            <a>
+                            {{ file.fileName }} <text ng-show="isRendering(file)">| Rendering</text>
+                                <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file, $index)" ng-hide="isRendering(file)"></i>
+                            </a>
+                        </li>
                         <hr>
                         <li ng-class="{active:isState('diversity')}" ng-click="changeState('diversity')"><a>
                             Diversity</a></li>
@@ -75,6 +79,15 @@
                             <h3>Summary</h3>
                             <hr>
                             <div class="summary-visualisation-tab">
+
+                            </div>
+                        </div>
+                        <div class="comparing-tab" ng-show="isState('comparing')">
+                            <div class="comparing-tab-header col-lg-12">
+                                <h3>Comparing</h3>
+                                <button class="btn btn-default pull-right">Add</button>
+                            </div>
+                            <div class="comparing-tab-body col-lg-12">
 
                             </div>
                         </div>

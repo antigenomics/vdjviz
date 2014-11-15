@@ -20,9 +20,17 @@ html, body {
     width: 50%;
 }
 
+.comparing-tab-header {
+    position: fixed;
+}
+
 .nav-visualisation > li {
     width: 19%;
     text-align: center;
+    cursor: pointer;
+}
+
+.nav-comparing > li {
     cursor: pointer;
 }
 
