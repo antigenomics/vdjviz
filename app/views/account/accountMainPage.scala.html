@@ -18,16 +18,16 @@
                             </a>
                         </li>
                     </ul>
-                    <ul class="nav nav-sidebar">
-                        <li ng-hide="files.length">
+                    <ul class="nav nav-sidebar" ng-hide="isFilesEmpty()">
+                        <li>
                             <a>You have no files</a>
                         </li>
                     </ul>
-                    <ul class="nav nav-sidebar" ng-show="files.length">
-                        <li ng-repeat="file in files" ng-class="{active:isFile($index), disabled:isRendering(file)}" ng-click="setFile($index)"  ng-mouseenter="hover=true" ng-mouseleave="hover=false">
+                    <ul class="nav nav-sidebar" ng-show="isFilesEmpty()">
+                        <li ng-repeat="file in files" ng-class="{active:isFile(file.fileName), disabled:isRendering(file)}" ng-click="setFile(file.fileName)"  ng-mouseenter="hover=true" ng-mouseleave="hover=false">
                             <a>
                             {{ file.fileName }} <text ng-show="isRendering(file)">| Rendering</text>
-                                <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file, $index)" ng-hide="isRendering(file)"></i>
+                                <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>
                             </a>
                         </li>
                         <hr>

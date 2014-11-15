@@ -7,21 +7,19 @@
 
     app.factory('data', ['$http', '$rootScope', function ($http, $rootScope) {
 
-        $rootScope.files = [];
+        $rootScope.files = {};
         $rootScope.state = 'accountInformation';
         $rootScope.visualisationInfo = {
-            fileIndex: -1,
+            activeFileName: '',
             tab: 'V-J Usage'
         };
 
         function updateFilesList() {
             $http({method: 'GET', url: '/api/files'}).success(function (data) {
-                $rootScope.files = data.data;
-                var id = 0;
                 angular.forEach(data.data, function(file) {
                     $rootScope.files[file.fileName] = {
-                        index: id++,
                         fileName: file.fileName,
+                        state: file.state,
                         softwareTypeName: file.softwareTypeName,
                         data: {
                             vjusage: {
@@ -55,9 +53,60 @@
             })
         }
 
+        function deleteAllFiles() {
+            $rootScope.files = {};
+        }
+
+        function deleteFileFromList(fileName) {
+            delete $rootScope.files[fileName];
+        }
+
+        function addFileToList(file) {
+            $rootScope.files[file.fileName] = {
+                fileName: file.fileName,
+                state: 'rendering',
+                softwareTypeName: file.softwareTypeName,
+                data: {
+                    vjusage: {
+                        cached: false,
+                        data: [],
+                        comparing: false
+                    },
+                    spectrotype: {
+                        cached: false,
+                        data: [],
+                        comparing: false
+                    },
+                    spectrotypeV: {
+                        cached: false,
+                        data: [],
+                        comparing: false
+                    },
+                    kernelDensity: {
+                        cached: false,
+                        data: [],
+                        comparing: false
+                    },
+                    annotation: {
+                        cached: false,
+                        data: [],
+                        comparing: false
+                    }
+                }
+            }
+        }
+
+        function changeFileState(file, state) {
+            $rootScope.files[file.fileName].state = state;
+        }
+
+        function isFilesEmpty() {
+            return Object.keys($rootScope.files).length;
+        }
+
         function changeState(state) {
             if (state != 'file') {
-                $rootScope.visualisationInfo.fileIndex = -1;
+                $rootScope.visualisationInfo.activeFileName = '';
             }
             $rootScope.state = state;
             updateVisualisationTab();
@@ -67,14 +116,14 @@
             return $rootScope.state;
         }
 
-        function setFile(index) {
+        function setFile(fileName) {
             $rootScope.state = 'file';
-            $rootScope.visualisationInfo.fileIndex = index;
+            $rootScope.visualisationInfo.activeFileName = fileName;
             updateVisualisationTab();
         }
 
-        function getFileIndex() {
-            return $rootScope.visualisationInfo.fileIndex;
+        function getActiveFileName() {
+            return $rootScope.visualisationInfo.activeFileName;
         }
 
         function getVisualisationTab() {
@@ -92,7 +141,7 @@
                 case 'file':
                     var tab = getVisualisationTab();
                     param = {
-                        fileName: $rootScope.files[$rootScope.visualisationInfo.fileIndex].fileName,
+                        fileName: getActiveFileName(),
                         type: '',
                         place: '.visualisation-results',
                         height: 600
@@ -146,13 +195,8 @@
         }
 
         function isContain(fileName) {
-            var isContain = false;
-            angular.forEach($rootScope.files, function(file) {
-                if (fileName == file.fileName) {
-                    isContain = true;
-                }
-            });
-            return isContain;
+            return !!(fileName in $rootScope.files);
+
         }
 
         return {
@@ -160,12 +204,17 @@
             changeState: changeState,
             getState: getState,
             setFile: setFile,
-            getFileIndex: getFileIndex,
+            getActiveFileName: getActiveFileName,
             getVisualisationTab: getVisualisationTab,
             setVisualisationTab: setVisualisationTab,
             updateVisualisationTab: updateVisualisationTab,
             getFilesList: getFilesList,
-            isContain: isContain
+            isContain: isContain,
+            isFilesEmpty: isFilesEmpty,
+            deleteFileFromList: deleteFileFromList,
+            addFileToList: addFileToList,
+            changeFileState: changeFileState,
+            deleteAllFiles: deleteAllFiles
         }
 
     }]);
@@ -198,13 +247,14 @@
 
         $scope.changeState = data.changeState;
         $scope.setFile = data.setFile;
+        $scope.isFilesEmpty = data.isFilesEmpty;
 
         $scope.isState = function (state) {
             return data.getState() === state;
         };
 
-        $scope.isFile = function (index) {
-            return data.getState() === 'file' && data.getFileIndex() === index;
+        $scope.isFile = function (fileName) {
+            return data.getState() === 'file' && data.getActiveFileName() === fileName;
         };
 
         $scope.isState = function (state) {
@@ -214,22 +264,22 @@
         $scope.deleteAll = function () {
             $http.post('/api/delete', {action: 'deleteAll'})
                 .success(function () {
-                    data.updateFilesList();
+                    data.deleteAllFiles();
                     data.changeState('accountInformation');
                 });
         };
 
-        $scope.deleteFile = function(file, $index) {
+        $scope.deleteFile = function(file) {
             $http.post('/api/delete', {
                 action: 'delete',
                 fileName: file.fileName
             }).success(function() {
-                if ($index == data.getFileIndex()) {
+                if (file.fileName == data.getActiveFileName(file.fileName)) {
                     data.changeState('accountInformation');
                 } else if (data.getState() != 'file') {
                     data.updateVisualisationTab();
                 }
-                data.updateFilesList();
+                data.deleteFileFromList(file.fileName);
             });
         };
 
@@ -411,9 +461,11 @@
                                     switch (event["progress"]) {
                                         case "start" :
                                             $scope.updateTooltip(file, "Computation");
+                                            account.addFileToList(file);
                                             break;
                                         case "end" :
-                                            account.updateFilesList();
+                                            account.changeFileState(file, 'rendered');
+                                            account.updateVisualisationTab()
                                             $scope.updateTooltip(file, "Success");
                                             $scope.updateResult(file, 'success');
                                             socket.close();
@@ -424,10 +476,12 @@
                                     break;
                                 case "error" :
                                     socket.close();
+                                    account.deleteFileFromList(file.fileName);
                                     $scope.updateResult(file, 'error');
                                     $scope.updateResultTooltip(file, "Error while computation");
                                     break;
                                 default:
+                                    account.deleteFileFromList(file.fileName);
                                     $scope.updateTooltip(file, "Server unavailable");
                                     break;
                             }
