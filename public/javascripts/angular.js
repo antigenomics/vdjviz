@@ -591,7 +591,7 @@
             if (!account.getDataInfo(file.fileName)[item].comparingCache) {
                 var param = {
                     fileName: file.fileName,
-                    id: file.uid,
+                    id: file.uid + '_comparing',
                     height: 500,
                     type: item
                 };
