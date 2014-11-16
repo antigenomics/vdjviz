@@ -144,44 +144,66 @@
             return $rootScope.visualisationInfo.tab;
         }
 
-        function setVisualisationTab(tab) {
+        function setVisualisationTab(tab, file) {
             $rootScope.visualisationInfo.tab = tab;
             updateVisualisationTab();
         }
 
         function updateVisualisationTab() {
             var param = {};
+
             switch ($rootScope.state) {
                 case 'file':
                     var tab = getVisualisationTab();
+                    var file = $rootScope.files[getActiveFileName()];
                     param = {
                         fileName: getActiveFileName(),
                         type: '',
-                        place: '.visualisation-results',
+                        id: file.uid,
                         height: 600
                     };
                     switch (tab) {
                         case "V-J Usage":
-                            param.type = 'vjusage';
-                            param.svg_width = '70%';
-                            param.width = 600;
-                            getData(vjUsage, param);
+                            if (!file.data.vjusage.cached) {
+                                param.type = 'vjusage';
+                                param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
+                                param.svg_width = '70%';
+                                param.width = 600;
+                                getData(vjUsage, param);
+                                file.data.vjusage.cached = true;
+                            }
                             break;
                         case "Spectrotype":
-                            param.type = 'spectrotype';
-                            getData(spectrotype, param);
+                            if (!file.data.spectrotype.cached) {
+                                param.type = 'spectrotype';
+                                param.place = '#id' + file.uid + ' .visualisation-results-spectrotype';
+                                getData(spectrotype, param);
+                                file.data.spectrotype.cached = true;
+                            }
                             break;
                         case "SpectrotypeV":
-                            param.type = 'spectrotypeV';
-                            getData(spectrotypeV, param);
+                            if (!file.data.spectrotypeV.cached) {
+                                param.type = 'spectrotypeV';
+                                param.place = '#id' + file.uid + ' .visualisation-results-spectrotypeV';
+                                getData(spectrotypeV, param);
+                                file.data.spectrotypeV.cached = true;
+                            }
                             break;
                         case "Kernel Density":
-                            param.type = 'kernelDensity';
-                            getData(kernelDensity, param);
+                            if (!file.data.kernelDensity.cached) {
+                                param.type = 'kernelDensity';
+                                param.place = '#id' + file.uid + ' .visualisation-results-kernelDensity';
+                                getData(kernelDensity, param);
+                                file.data.kernelDensity.cached = true;
+                            }
                             break;
                         case "Annotation":
-                            param.type = 'annotation';
-                            getData(annotationTable, param);
+                            if (!file.data.annotation.cached) {
+                                param.type = 'annotation';
+                                param.place = '#id' + file.uid + ' .visualisation-results-annotation';
+                                getData(annotationTable, param);
+                                file.data.annotation.cached = true;
+                            }
                             break;
                         default:
                             break;
@@ -265,6 +287,10 @@
         $scope.isState = function (state) {
             return data.getState() === state;
         };
+
+        $scope.isFile = function(fileName) {
+            return fileName === data.getActiveFileName();
+        }
 
     }]);
 
@@ -560,7 +586,7 @@
                 param = {
                     fileName: file.fileName,
                     id: file.uid,
-                    height: 400,
+                    height: 500,
                     type: item
                 };
                 switch (item) {
