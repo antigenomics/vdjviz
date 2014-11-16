@@ -85,10 +85,52 @@
                         <div class="comparing-tab" ng-show="isState('comparing')">
                             <div class="comparing-tab-header col-lg-12">
                                 <h3>Comparing</h3>
-                                <button class="btn btn-default pull-right">Add</button>
+                                <a href="#comparing-files-table" role="button" class="btn" data-toggle="modal">Add</a>
                             </div>
                             <div class="comparing-tab-body col-lg-12">
+                                <div ng-repeat="file in files">
+                                    <div class="comparing-vjusage col-lg-12" id="id{{ file.uid }}" ng-show="file.data.vjusage.comparing">
+                                        <h2>{{file.fileName}} V-J Usage</h2>
+                                        <hr>
+                                        <div class="comparing-vjusage-tab">
 
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                <div ng-repeat="file in files">
+                                    <div class="comparing-spectrotype col-lg-6" id="id{{ file.uid }}" ng-show="file.data.spectrotype.comparing">
+                                        <h2>{{file.fileName}} Spectrotype</h2>
+                                        <hr>
+                                        <div class="comparing-spectrotype-tab">
+
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="col-lg-12">
+                                <div ng-repeat="file in files">
+                                    <div class="comparing-spectrotypev col-lg-6" id="id{{ file.uid }}" ng-show="file.data.spectrotypeV.comparing">
+                                        <h2>{{file.fileName}} SpectrotypeV</h2>
+                                        <hr>
+                                        <div class="comparing-spectrotypev-tab">
+
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="col-lg-12">
+                                <div ng-repeat="file in files">
+                                    <div class="comparing-kerneldensity col-lg-6" id="id{{ file.uid }}" ng-show="file.data.kernelDensity.comparing">
+                                        <h2>{{file.fileName}} Kernel Density</h2>
+                                        <hr>
+                                        <div class="comparing-kerneldensity-tab">
+
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                </div>
                             </div>
                         </div>
 
@@ -187,7 +229,7 @@
                     </div>
                 </div>
 
-                <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="comparingTable">
                     <div class="modal-dialog modal-lg">
                         class="modal-content">
                         <div class="modal-header">
@@ -204,6 +246,18 @@
                                         </tr>
                                     </thead>
                                     <tbody class="main-tbody-comparing-files">
+                                        <tr ng-repeat="file in files">
+                                            <td>{{ file.fileName }}</td>
+                                            <td>
+                                                <ul class="nav nav-pills nav-comparing">
+                                                    <li ng-click="showItem(file, 'vjusage')" ng-class="{'active':file.data.vjusage.comparing}"><a>V-J Usage</a></li>
+                                                    <li ng-click="showItem(file, 'spectrotype')" ng-class="{'active':file.data.spectrotype.comparing}"><a>Spectrotype</a></li>
+                                                    <li ng-click="showItem(file, 'spectrotypeV')" ng-class="{'active':file.data.spectrotypeV.comparing}"><a>SpectrotypeV</a></li>
+                                                    <li ng-click="showItem(file, 'kernelDensity')" ng-class="{'active':file.data.kernelDensity.comparing}"><a>Kernel Density</a></li>
+                                                </ul>
+                                            </td>
+
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>

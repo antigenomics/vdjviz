@@ -14,36 +14,44 @@
             tab: 'V-J Usage'
         };
 
+        var uid = 0;
+
         function updateFilesList() {
             $http({method: 'GET', url: '/api/files'}).success(function (data) {
                 angular.forEach(data.data, function(file) {
                     $rootScope.files[file.fileName] = {
+                        uid: uid++,
                         fileName: file.fileName,
                         state: file.state,
                         softwareTypeName: file.softwareTypeName,
                         data: {
                             vjusage: {
                                 cached: false,
+                                comparingCache: false,
                                 data: [],
                                 comparing: false
                             },
                             spectrotype: {
                                 cached: false,
+                                comparingCache: false,
                                 data: [],
                                 comparing: false
                             },
                             spectrotypeV: {
                                 cached: false,
+                                comparingCache: false,
                                 data: [],
                                 comparing: false
                             },
                             kernelDensity: {
                                 cached: false,
+                                comparingCache: false,
                                 data: [],
                                 comparing: false
                             },
                             annotation: {
                                 cached: false,
+                                comparingCache: false,
                                 data: [],
                                 comparing: false
                             }
@@ -63,32 +71,38 @@
 
         function addFileToList(file) {
             $rootScope.files[file.fileName] = {
+                uid: uid++,
                 fileName: file.fileName,
                 state: 'rendering',
                 softwareTypeName: file.softwareTypeName,
                 data: {
                     vjusage: {
                         cached: false,
+                        comparingCache: false,
                         data: [],
                         comparing: false
                     },
                     spectrotype: {
                         cached: false,
+                        comparingCache: false,
                         data: [],
                         comparing: false
                     },
                     spectrotypeV: {
                         cached: false,
+                        comparingCache: false,
                         data: [],
                         comparing: false
                     },
                     kernelDensity: {
                         cached: false,
+                        comparingCache: false,
                         data: [],
                         comparing: false
                     },
                     annotation: {
                         cached: false,
+                        comparingCache: false,
                         data: [],
                         comparing: false
                     }
@@ -199,6 +213,16 @@
 
         }
 
+        function changeComparingItem(fileName, item) {
+            console.log(fileName);
+            $rootScope.files[fileName].data[item].comparing = !$rootScope.files[fileName].data[item].comparing;
+            $rootScope.files[fileName].data[item].comparingCache = true;
+        }
+
+        function getDataInfo(fileName) {
+            return $rootScope.files[fileName].data;
+        }
+
         return {
             updateFilesList: updateFilesList,
             changeState: changeState,
@@ -214,7 +238,9 @@
             deleteFileFromList: deleteFileFromList,
             addFileToList: addFileToList,
             changeFileState: changeFileState,
-            deleteAllFiles: deleteAllFiles
+            deleteAllFiles: deleteAllFiles,
+            changeComparingItem: changeComparingItem,
+            getDataInfo: getDataInfo
         }
 
     }]);
@@ -465,7 +491,7 @@
                                             break;
                                         case "end" :
                                             account.changeFileState(file, 'rendered');
-                                            account.updateVisualisationTab()
+                                            account.updateVisualisationTab();
                                             $scope.updateTooltip(file, "Success");
                                             $scope.updateResult(file, 'success');
                                             socket.close();
@@ -527,8 +553,41 @@
 
     // Comparing tab controllers and service
 
-    app.factory('comparingTools', ['$rootScope', '$log', function($rootScope, $log) {
-
+    app.controller('comparingTable', ['$scope', 'data', function($scope, account) {
+        $scope.showItem = function(file, item) {
+            if (!account.getDataInfo(file.fileName)[item].comparingCache) {
+                var param = {};
+                param = {
+                    fileName: file.fileName,
+                    id: file.uid,
+                    height: 400,
+                    type: item
+                };
+                switch (item) {
+                    case 'vjusage':
+                        param.place = '#id' + file.uid + ' .comparing-vjusage-tab';
+                        param.svg_width = '70%';
+                        param.width = 600;
+                        getData(vjUsage, param);
+                        break;
+                    case 'spectrotype':
+                        param.place = '#id' + file.uid + ' .comparing-spectrotype-tab';
+                        getData(spectrotype, param);
+                        break;
+                    case 'spectrotypeV':
+                        param.place = '#id' + file.uid + ' .comparing-spectrotypev-tab';
+                        getData(spectrotypeV, param);
+                        break;
+                    case 'kernelDensity':
+                        param.place = '#id' + file.uid + ' .comparing-kerneldensity-tab';
+                        getData(kernelDensity, param);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            account.changeComparingItem(file.fileName, item);
+        }
     }])
 
 })();
