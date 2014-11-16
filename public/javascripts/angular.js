@@ -344,9 +344,12 @@
 
     app.controller('fileUpload', ['$scope', '$http', '$log', 'data', function ($scope, $http, $log, account) {
 
+        var uid = 0;
+
         $scope.newFiles = {};
         $scope.uploadedFiles = [];
         $scope.commonSoftwareType = 'mitcr';
+
 
         $scope.isEmpty = function() {
             var size = 0;
@@ -360,9 +363,10 @@
             $("form input[type=file]").click();
         };
 
-        $scope.addNew = function(fileName, fileExtension, data) {
+        $scope.addNew = function(uid, fileName, fileExtension, data) {
             $scope.$apply(function() {
-                $scope.newFiles[fileName] = {
+                $scope.newFiles[uid] = {
+                    uid: uid,
                     fileName: fileName,
                     softwareTypeName: 'mitcr',
                     fileExtension: fileExtension,
@@ -376,11 +380,12 @@
             })
         };
 
-        $scope.addNewError = function(fileName, error) {
+        $scope.addNewError = function(uid, fileName, error) {
             switch (error) {
                 case 0:
                     $scope.$apply(function() {
-                        $scope.newFiles[fileName] = {
+                        $scope.newFiles[uid] = {
+                            uid: uid,
                             fileName: fileName,
                             softwareTypeName: '',
                             wait: false,
@@ -391,7 +396,8 @@
                     break;
                 case 1:
                     $scope.$apply(function() {
-                        $scope.newFiles[fileName] = {
+                        $scope.newFiles[uid] = {
+                            uid: uid,
                             fileName: fileName,
                             softwareTypeName: '',
                             wait: false,
@@ -446,7 +452,8 @@
                 file.data.formData = {
                     softwareTypeName: file.softwareTypeName,
                     fileName: file.fileName,
-                    fileExtension: file.fileExtension
+                    fileExtension: file.fileExtension,
+                    uid: file.uid
                 };
                 file.wait = false;
                 file.data.submit();
@@ -479,20 +486,20 @@
                     fileExtension = 'txt';
                 }
                 if (account.getFilesList().length >= 25) {
-                    $scope.addNewError(fileName, 0);
+                    $scope.addNewError(uid++, fileName, 0);
                 } else if (account.isContain(fileName)) {
-                    $scope.addNewError(fileName, 1);
+                    $scope.addNewError(uid++, fileName, 1);
                 } else {
-                    $scope.addNew(fileName, fileExtension, data);
+                    $scope.addNew(uid++, fileName, fileExtension, data);
                 }
             },
             progress: function (e, data) {
-                var file = $scope.newFiles[data.formData.fileName];
+                var file = $scope.newFiles[data.formData.uid];
                 $scope.updateTooltip(file, "Uploading");
                 $scope.updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
             },
             done: function (e, data) {
-                var file = $scope.newFiles[data.formData.fileName];
+                var file = $scope.newFiles[data.formData.uid];
                 switch (data.result["result"]) {
                     case "success" :
                         var socket = new WebSocket("ws://" + location.host + "/api/ws");
@@ -553,7 +560,7 @@
         });
 
         $('#new-files-table').on('hidden.bs.modal', function () {
-            angular.forEach($scope.newFiles, function(file, key) {
+            angular.forEach($scope.newFiles, function(file) {
                 switch(file.result) {
                     case 'success':
                         $scope.$apply(function() {
@@ -561,12 +568,12 @@
                                 fileName: file.fileName,
                                 softwareTypeName: file.softwareTypeName
                             });
-                            delete $scope.newFiles[file.fileName];
+                            delete $scope.newFiles[file.uid];
                         });
                         break;
                     case 'error':
                         $scope.$apply(function() {
-                            delete $scope.newFiles[file.fileName];
+                            delete $scope.newFiles[file.uid];
                         });
                         break;
                     default :
@@ -582,8 +589,7 @@
     app.controller('comparingTable', ['$scope', 'data', function($scope, account) {
         $scope.showItem = function(file, item) {
             if (!account.getDataInfo(file.fileName)[item].comparingCache) {
-                var param = {};
-                param = {
+                var param = {
                     fileName: file.fileName,
                     id: file.uid,
                     height: 500,
