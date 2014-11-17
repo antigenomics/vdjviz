@@ -7,14 +7,7 @@
     } else {
         @navbar(null)
     }
-    <div ng-app="accountPage" id="wrapper" class>
-        <div id="sidebar-wrapper" ng-controller="filePanel">
-            <ul class="sidebar-nav" ng-hide="isFilesEmpty()">
-                <li>
-                    <a>You have no files</a>
-                </li>
-            </ul>
-        </div>
+    <div ng-app="accountPage">
         <div class="container-fluid" >
             <div class="row">
                 <div class="col-sm-2 col-md-2 col-lg-2 sidebar user-files-list" ng-controller="filePanel">

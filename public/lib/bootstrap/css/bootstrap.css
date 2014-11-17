@@ -3785,7 +3785,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .nav-pills > li.active > a:hover,
 .nav-pills > li.active > a:focus {
   color: #ffffff;
-  background-color: #008cba;
+  background-color: #2c7fb8;
 }
 .nav-stacked > li {
   float: none;
@@ -4274,7 +4274,7 @@ fieldset[disabled] .navbar-default .btn-link:focus {
   color: #cccccc;
 }
 .navbar-inverse {
-  background-color: #428bca;
+  background-color: #2c7fb8;
   border-color: #006687;
 }
 .navbar-inverse .navbar-brand {
@@ -6367,7 +6367,7 @@ button.close {
   background-color: #272727;
 }
 .navbar-inverse .dropdown-menu {
-  background-color: #008cba;
+  background-color: #2c7fb8;
 }
 .navbar-inverse .dropdown-menu > li > a,
 .navbar-inverse .dropdown-menu > li > a:focus {
