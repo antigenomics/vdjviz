@@ -245,10 +245,7 @@ public class API extends Controller {
             }
             files.add(fileInformation);
         }
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("data", files);
-        serverResponse.put("names", names);
-        return ok(Json.toJson(serverResponse));
+        return ok(Json.toJson(files));
     }
 
     public static Result accountInformation() {

@@ -4274,7 +4274,7 @@ fieldset[disabled] .navbar-default .btn-link:focus {
   color: #cccccc;
 }
 .navbar-inverse {
-  background-color: #008cba;
+  background-color: #428bca;
   border-color: #006687;
 }
 .navbar-inverse .navbar-brand {
@@ -4624,7 +4624,7 @@ a.badge:focus {
 }
 a.list-group-item.active > .badge,
 .nav-pills > .active > a > .badge {
-  color: #008cba;
+  color: #428bca;
   background-color: #ffffff;
 }
 .nav-pills > li > a > .badge {
