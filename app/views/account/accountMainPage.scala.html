@@ -58,23 +58,53 @@
                             </ul>
                             <div class="col-lg-12" ng-repeat="file in files">
                                 <div id="id{{ file.uid }}" ng-show="isFile(file.fileName)" class="visualisation-results">
-                                    <h3>{{ tab }}</h3>
+                                    <h3>
+                                        {{ tab }}
+                                        <button class="btn btn-default pull-right" ng-click="exportPng(file)" ng-hide="isActiveTab('Annotation')">Export to png</button>
+                                    </h3>
                                     <hr>
-                                    <div class="visualisation-results-vjusage" ng-show="isActiveTab('V-J Usage')">
+                                    <div class="visualisation-results visualisation-results-vjusage" ng-show="isActiveTab('V-J Usage')">
 
                                     </div>
-                                    <div class="visualisation-results-spectrotype" ng-show="isActiveTab('Spectrotype')">
+                                    <div class="visualisation-results visualisation-results-spectrotype" ng-show="isActiveTab('Spectrotype')">
 
                                     </div>
-                                    <div class="visualisation-results-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
+                                    <div class="visualisation-results visualisation-results-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
 
                                     </div>
-                                    <div class="visualisation-results-kernelDensity" ng-show="isActiveTab('Kernel Density')">
+                                    <div class="visualisation-results visualisation-results-kernelDensity" ng-show="isActiveTab('Kernel Density')">
 
                                     </div>
-                                    <div class="visualisation-results-annotation" ng-show="isActiveTab('Annotation')">
+                                    <div class="visualisation-results visualisation-results-annotation" ng-show="isActiveTab('Annotation')">
 
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="visualisation-description-vjusage" ng-show="isActiveTab('V-J Usage')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    V-J Usage description placeholder
+                                </div>
+                                <div class="visualisation-description-spectrotype" ng-show="isActiveTab('Spectrotype')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    Spectrotype description placeholder
+                                </div>
+                                <div class="visualisation-description-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    SpectrotypeV description placeholder
+                                </div>
+                                <div class="visualisation-description-kernelDensity" ng-show="isActiveTab('Kernel Density')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    Kernel Density description placeholder
+                                </div>
+                                <div class="visualisation-description-annotation" ng-show="isActiveTab('Annotation')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    Annotation description placeholder
                                 </div>
                             </div>
                             <hr>
@@ -102,7 +132,7 @@
                             </div>
                             <div class="comparing-tab-body col-lg-12">
                                 <div ng-repeat="file in files">
-                                    <div class="comparing-vjusage col-lg-12" id="id{{ file.uid }}" ng-show="file.meta.vjusage.comparing">
+                                    <div class="comparing-tab comparing-vjusage col-lg-12" id="id{{ file.uid }}" ng-show="file.meta.vjusage.comparing">
                                         <h2>{{file.fileName}} V-J Usage</h2>
                                         <hr>
                                         <div class="comparing-vjusage-tab">
@@ -112,7 +142,7 @@
                                 </div>
                                 <div class="col-lg-12">
                                     <div ng-repeat="file in files">
-                                        <div class="comparing-spectrotype col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotype.comparing">
+                                        <div class="comparing-tab comparing-spectrotype col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotype.comparing">
                                             <h2>{{file.fileName}} Spectrotype</h2>
                                             <hr>
                                             <div class="comparing-spectrotype-tab">
@@ -123,7 +153,7 @@
                                 </div>
                                 <div class="col-lg-12">
                                     <div ng-repeat="file in files">
-                                        <div class="comparing-spectrotypev col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotypeV.comparing">
+                                        <div class="comparing-tab comparing-spectrotypev col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotypeV.comparing">
                                             <h2>{{file.fileName}} SpectrotypeV</h2>
                                             <hr>
                                             <div class="comparing-spectrotypev-tab">
@@ -134,7 +164,7 @@
                                 </div>
                                 <div class="col-lg-12">
                                     <div ng-repeat="file in files">
-                                        <div class="comparing-kerneldensity col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.kernelDensity.comparing">
+                                        <div class="comparing-tab comparing-kerneldensity col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.kernelDensity.comparing">
                                             <h2>{{file.fileName}} Kernel Density</h2>
                                             <hr>
                                             <div class="comparing-kerneldensity-tab">

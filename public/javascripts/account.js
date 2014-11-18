@@ -156,7 +156,7 @@
                         fileName: getActiveFileName(),
                         type: '',
                         id: file.uid,
-                        height: 600
+                        height: 500
                     };
                     switch (tab) {
                         case "V-J Usage":
@@ -164,7 +164,7 @@
                                 param.type = 'vjusage';
                                 param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
                                 param.svg_width = '70%';
-                                param.width = 600;
+                                param.width = 400;
                                 getData(vjUsage, param);
                                 file.meta.vjusage.cached = true;
                             }
@@ -282,6 +282,26 @@
 
         $scope.isFile = function(fileName) {
             return fileName === account.getActiveFileName();
+        };
+
+        $scope.exportPng = function(file) {
+            switch ($scope.tab) {
+                case 'V-J Usage':
+                    saveSvgAsPng(document.getElementById("svg_vjusage_" + file.uid), file.fileName + "_vjusage.png", 3);
+                    break;
+                case 'Spectrotype':
+                    saveSvgAsPng(document.getElementById("svg_spectrotype_" + file.uid), file.fileName + "_spectrotype.png", 3);
+                    break;
+                case 'SpectrotypeV':
+                    saveSvgAsPng(document.getElementById("svg_spectrotypeV_" + file.uid), file.fileName + "_spectrotypeV.png", 3);
+                    break;
+                case 'Kernel Density':
+                    saveSvgAsPng(document.getElementById("svg_kernelDensity_" + file.uid), file.fileName + "_kernelDensity.png", 3);
+                    break;
+                default:
+                    break;
+            }
+
         }
 
     }]);
@@ -584,14 +604,14 @@
                 var param = {
                     fileName: file.fileName,
                     id: file.uid + '_comparing',
-                    height: 500,
+                    height: 400,
                     type: item
                 };
                 switch (item) {
                     case 'vjusage':
                         param.place = '#id' + file.uid + ' .comparing-vjusage-tab';
                         param.svg_width = '70%';
-                        param.width = 600;
+                        param.width = 400;
                         getData(vjUsage, param);
                         break;
                     case 'spectrotype':
@@ -663,7 +683,7 @@ function spectrotype(data, param) {
         var svg = d3.select(param.place).append("div")
             .attr("id", "chart")
             .append("svg")
-            .attr("id", "svgtopng")
+            .attr("id", "svg_spectrotype_" + param.id)
             .style("height", param.height + "px")
             .style("overflow", "visible");
 
@@ -727,7 +747,7 @@ function spectrotypeV(data, param) {
             .style("margin-right", "auto")
             .attr("id", "chart")
             .append("svg")
-            .attr("id", "svgtopng")
+            .attr("id", "svg_spectrotypeV_" + param.id)
             .style("height", param.height + "px")
             .style("overflow", "visible");
 
@@ -780,7 +800,7 @@ function kernelDensity(data, param) {
             .append("div")
             .attr("id", "chart")
             .append("svg")
-            .attr("id", "svgtopng")
+            .attr("id", "svg_kernelDensity_" + param.id)
             .style("height", param.height + "px");
 
         var chart = nv.models.lineChart()
@@ -931,11 +951,11 @@ function vjUsage(vjUsageData, param) {
 
     d3.select(param.place).html("");
     var place = d3.select(param.place)
-        .append("svg")
-        .attr("id", "svgtopng")
+        .style("width", param.svg_width)
         .style("display", "block")
         .style("margin", "auto")
-        .style("width", param.svg_width)
+        .append("svg")
+        .attr("id", "svg_vjusage_" + param.id)
         .style("overflow", "visible")
         .attr('height', (height + margin.b + margin.t));
     var svg = place.append("g")
@@ -1329,7 +1349,7 @@ function diversityStats(data, param) {
             .showLegend(true)
             .showYAxis(true)
             .showXAxis(true)
-            .height(700);
+            .height(500);
 
         chart.xAxis
             .axisLabel('Count')

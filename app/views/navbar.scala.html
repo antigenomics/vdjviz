@@ -12,6 +12,9 @@
     <div id="navbar" class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
             <li><a href="/">Main</a></li>
+            @if(username != null) {
+                <li><a href="/account">Account</a></li>
+            }
             <li><a href="/contacts">Contacts</a></li>
             <li><a href="/about">About</a></li>
         </ul>
