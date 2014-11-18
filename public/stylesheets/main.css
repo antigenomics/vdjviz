@@ -22,6 +22,8 @@ html, body {
 
 .comparing-tab-header {
     position: fixed;
+    margin: 20px;
+    z-index: 10;
 }
 
 .nav-visualisation > li {
@@ -32,6 +34,7 @@ html, body {
 
 .nav-comparing > li {
     cursor: pointer;
+    width: 24%;
 }
 
 .container-width-fixed {
@@ -49,19 +52,37 @@ html, body {
     shape-rendering: crispEdges;
 }
 
-.error-label {
-    height: auto;
-    width: auto;
-    left: 20px;
-    position: relative;
+.upload-files-footer {
+    margin: 10px;
+    width: 98%;
+    text-align: right;
 }
 
-.softwareTypeNameInput {
-    top:20px;
+.drag-and-drop-icon {
+    margin-top: 40px;
 }
 
-.buttonsInput {
-    top:20px;
+.footer-close-button {
+    margin-right: 0;
+}
+
+#new-files-dropzone {
+    text-align: center;
+    height: 100%;
+    min-height: 300px;
+}
+
+#new-files-dropzone.hover {
+    background: #d3d3d3;
+}
+
+#new-files-dropzone.fade {
+    -webkit-transition: all 0.3s ease-out;
+    -moz-transition: all 0.3s ease-out;
+    -ms-transition: all 0.3s ease-out;
+    -o-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+    opacity: 1;
 }
 
 .loading {

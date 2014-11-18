@@ -10,7 +10,7 @@
         $rootScope.files = {};
         $rootScope.state = 'accountInformation';
         $rootScope.activeFileName = '';
-        $rootScope.filesTab = 'V-J Usage'
+        $rootScope.filesTab = 'V-J Usage';
 
         var uid = 0;
 
@@ -22,7 +22,7 @@
                         fileName: file.fileName,
                         state: file.state,
                         softwareTypeName: file.softwareTypeName,
-                        data: {
+                        meta: {
                             vjusage: {
                                 cached: false,
                                 comparingCache: false,
@@ -73,7 +73,7 @@
                 fileName: file.fileName,
                 state: 'rendering',
                 softwareTypeName: file.softwareTypeName,
-                data: {
+                meta: {
                     vjusage: {
                         cached: false,
                         comparingCache: false,
@@ -160,45 +160,45 @@
                     };
                     switch (tab) {
                         case "V-J Usage":
-                            if (!file.data.vjusage.cached) {
+                            if (!file.meta.vjusage.cached) {
                                 param.type = 'vjusage';
                                 param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
                                 param.svg_width = '70%';
                                 param.width = 600;
                                 getData(vjUsage, param);
-                                file.data.vjusage.cached = true;
+                                file.meta.vjusage.cached = true;
                             }
                             break;
                         case "Spectrotype":
-                            if (!file.data.spectrotype.cached) {
+                            if (!file.meta.spectrotype.cached) {
                                 param.type = 'spectrotype';
                                 param.place = '#id' + file.uid + ' .visualisation-results-spectrotype';
                                 getData(spectrotype, param);
-                                file.data.spectrotype.cached = true;
+                                file.meta.spectrotype.cached = true;
                             }
                             break;
                         case "SpectrotypeV":
-                            if (!file.data.spectrotypeV.cached) {
+                            if (!file.meta.spectrotypeV.cached) {
                                 param.type = 'spectrotypeV';
                                 param.place = '#id' + file.uid + ' .visualisation-results-spectrotypeV';
                                 getData(spectrotypeV, param);
-                                file.data.spectrotypeV.cached = true;
+                                file.meta.spectrotypeV.cached = true;
                             }
                             break;
                         case "Kernel Density":
-                            if (!file.data.kernelDensity.cached) {
+                            if (!file.meta.kernelDensity.cached) {
                                 param.type = 'kernelDensity';
                                 param.place = '#id' + file.uid + ' .visualisation-results-kernelDensity';
                                 getData(kernelDensity, param);
-                                file.data.kernelDensity.cached = true;
+                                file.meta.kernelDensity.cached = true;
                             }
                             break;
                         case "Annotation":
-                            if (!file.data.annotation.cached) {
+                            if (!file.meta.annotation.cached) {
                                 param.type = 'annotation';
                                 param.place = '#id' + file.uid + ' .visualisation-results-annotation';
                                 getData(annotationTable, param);
-                                file.data.annotation.cached = true;
+                                file.meta.annotation.cached = true;
                             }
                             break;
                         default:
@@ -232,12 +232,12 @@
         }
 
         function changeComparingItem(fileName, item) {
-            $rootScope.files[fileName].data[item].comparing = !$rootScope.files[fileName].data[item].comparing;
-            $rootScope.files[fileName].data[item].comparingCache = true;
+            $rootScope.files[fileName].meta[item].comparing = !$rootScope.files[fileName].meta[item].comparing;
+            $rootScope.files[fileName].meta[item].comparingCache = true;
         }
 
-        function getDataInfo(fileName) {
-            return $rootScope.files[fileName].data;
+        function getFileMeta(fileName) {
+            return $rootScope.files[fileName].meta;
         }
 
         return {
@@ -256,10 +256,12 @@
             changeFileState: changeFileState,
             deleteAllFiles: deleteAllFiles,
             changeComparingItem: changeComparingItem,
-            getDataInfo: getDataInfo
+            getFileMeta: getFileMeta
         }
 
     }]);
+
+    // Main visualisation controller
 
     app.controller('visualisation', ['$rootScope', '$scope', '$log', 'account', function ($rootScope, $scope, $log, account) {
 
@@ -283,6 +285,8 @@
         }
 
     }]);
+
+    // Sidebar controller
 
     app.controller('filePanel', ['$scope', '$log', '$http', 'account', function ($scope, $log, $http, account) {
 
@@ -330,6 +334,8 @@
             return file.state === 'rendering';
         }
     }]);
+
+    // Uploading controller
 
     app.controller('fileUpload', ['$scope', '$http', '$log', 'account', function ($scope, $http, $log, account) {
 
@@ -462,6 +468,7 @@
             url: '/api/upload',
             dataType: 'json',
             sequentialUploads: true,
+            dropZone: $('#new-files-dropzone'),
             add: function (e, data) {
                 var originalFileName = data.files[0].name;
                 var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
@@ -569,11 +576,11 @@
 
     }]);
 
-    // Comparing tab controllers and service
+    // Comparing tab controller
 
     app.controller('comparingTable', ['$scope', 'account', function($scope, account) {
         $scope.showItem = function(file, item) {
-            if (!account.getDataInfo(file.fileName)[item].comparingCache) {
+            if (!account.getFileMeta(file.fileName)[item].comparingCache) {
                 var param = {
                     fileName: file.fileName,
                     id: file.uid + '_comparing',
@@ -604,6 +611,12 @@
                 }
             }
             account.changeComparingItem(file.fileName, item);
+        };
+
+        $scope.showAllItems = function(item) {
+            angular.forEach(account.getFilesList(), function(file) {
+                $scope.showItem(file, item);
+            })
         }
     }])
 
@@ -1423,3 +1436,31 @@ function loaded(place) {
         .select(".loading")
         .remove();
 }
+
+$(document).bind('dragover', function (e) {
+    var dropZone = $('#new-files-dropzone'),
+        timeout = window.dropZoneTimeout;
+    if (!timeout) {
+        dropZone.addClass('in');
+    } else {
+        clearTimeout(timeout);
+    }
+    var found = false,
+        node = e.target;
+    do {
+        if (node === dropZone[0]) {
+            found = true;
+            break;
+        }
+        node = node.parentNode;
+    } while (node != null);
+    if (found) {
+        dropZone.addClass('hover');
+    } else {
+        dropZone.removeClass('hover');
+    }
+    window.dropZoneTimeout = setTimeout(function () {
+        window.dropZoneTimeout = null;
+        dropZone.removeClass('in hover');
+    }, 100);
+});
