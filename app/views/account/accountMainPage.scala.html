@@ -1,96 +1,336 @@
 @(account: Account)
 @main("Account") {
+    <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
     @if(account != null) {
         @navbar(account.userName)
-    }else{
+    } else {
         @navbar(null)
     }
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-3 col-md-2 sidebar">
-                <ul class="nav nav-sidebar">
-                    <li class="active">
-                        <a href="#new-files-table" role="button" class="btn" data-toggle="modal">
-                            Your Files<i class="fa fa-plus add-new-files-button pull-right"></i>
-                        </a>
-                    </li>
-                </ul>
-                <ul class="nav nav-sidebar user-files-list">
+    <div ng-app="accountPage">
+        <div class="container-fluid" >
+            <div class="row">
+                <div class="col-sm-2 col-md-2 col-lg-2 sidebar user-files-list" ng-controller="filePanel">
+                    <ul class="nav nav-sidebar">
+                        <li class="active">
+                            <a href="#new-files-table" role="button" class="btn" data-toggle="modal">
+                                Your Files<i class="fa fa-plus add-new-files-button pull-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav nav-sidebar" ng-hide="isFilesEmpty()">
+                        <li>
+                            <a>You have no files</a>
+                        </li>
+                    </ul>
+                    <ul class="nav nav-sidebar" ng-show="isFilesEmpty()">
+                        <li ng-repeat="file in files" ng-class="{active:isFile(file.fileName), disabled:isRendering(file)}" ng-click="setActiveFile(file)" ng-mouseenter="hover=true" ng-mouseleave="hover=false">
+                            <a>
+                                {{ file.fileName }} <text ng-show="isRendering(file)">| Rendering</text>
+                                <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>
+                            </a>
+                        </li>
+                        <hr>
+                        <li ng-class="{active:isState('diversity')}" ng-click="changeState('diversity')"><a>
+                            Diversity</a></li>
+                        <li ng-class="{active:isState('summary')}" ng-click="changeState('summary')"><a>Summary</a></li>
+                        <li ng-class="{active:isState('comparing')}" ng-click="changeState('comparing')"><a>
+                            Comparing</a></li>
+                        <hr>
+                        <li ng-click="deleteAll()"><a>Delete All</a></li>
+                    </ul>
 
-                </ul>
+                </div>
+                <div class="col-sm-10 col-sm-offset-2 col-md-10 col-md-offset-2 col-lg-10 col-lg-offset-2 main" ng-controller="visualisation">
+                    <div class="main-content">
+                        <div class="visualisation-tab" ng-show="isState('file')">
+                            <ul class="nav nav-pills nav-visualisation">
+                                <li ng-click="setActiveTab('V-J Usage')" ng-class="{active:isActiveTab('V-J Usage')}"><a>
+                                    VJ-Usage</a></li>
+                                <li ng-click="setActiveTab('Spectrotype')" ng-class="{active:isActiveTab('Spectrotype')}"><a>
+                                    Spectrotype</a></li>
+                                <li ng-click="setActiveTab('SpectrotypeV')" ng-class="{active:isActiveTab('SpectrotypeV')}"><a>
+                                    SpectrotypeV</a></li>
+                                <li ng-click="setActiveTab('Kernel Density')" ng-class="{active:isActiveTab('Kernel Density')}"><a>
+                                    Kernel Density</a></li>
+                                <li ng-click="setActiveTab('Annotation')" ng-class="{active:isActiveTab('Annotation')}"><a>
+                                    Annotation</a></li>
+                            </ul>
+                            <div class="col-lg-12" ng-repeat="file in files">
+                                <div id="id{{ file.uid }}" ng-show="isFile(file.fileName)" class="visualisation-results">
+                                    <h3>
+                                        {{ tab }}
+                                        <button class="btn btn-default pull-right" ng-click="exportPng(file)" ng-hide="isActiveTab('Annotation')">Export to png</button>
+                                    </h3>
+                                    <hr>
+                                    <div class="visualisation-results visualisation-results-vjusage" ng-show="isActiveTab('V-J Usage')">
+
+                                    </div>
+                                    <div class="visualisation-results visualisation-results-spectrotype" ng-show="isActiveTab('Spectrotype')">
+
+                                    </div>
+                                    <div class="visualisation-results visualisation-results-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
+
+                                    </div>
+                                    <div class="visualisation-results visualisation-results-kernelDensity" ng-show="isActiveTab('Kernel Density')">
+
+                                    </div>
+                                    <div class="visualisation-results visualisation-results-annotation" ng-show="isActiveTab('Annotation')">
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="visualisation-description-vjusage" ng-show="isActiveTab('V-J Usage')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    V-J Usage description placeholder
+                                </div>
+                                <div class="visualisation-description-spectrotype" ng-show="isActiveTab('Spectrotype')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    Spectrotype description placeholder
+                                </div>
+                                <div class="visualisation-description-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    SpectrotypeV description placeholder
+                                </div>
+                                <div class="visualisation-description-kernelDensity" ng-show="isActiveTab('Kernel Density')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    Kernel Density description placeholder
+                                </div>
+                                <div class="visualisation-description-annotation" ng-show="isActiveTab('Annotation')">
+                                    <h2>Description</h2>
+                                    <hr>
+                                    Annotation description placeholder
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <div class="account-information-tab" ng-show="isState('accountInformation')">
+                            Account Information
+                        </div>
+                        <div class="diversity-tab" ng-show="isState('diversity')">
+                            <h3>Diversity</h3>
+                            <hr>
+                            <div class="diversity-visualisation-tab">
+
+                            </div>
+                        </div>
+                        <div class="summary-tab" ng-show="isState('summary')">
+                            <h3>Summary</h3>
+                            <hr>
+                            <div class="summary-visualisation-tab">
+
+                            </div>
+                        </div>
+                        <div class="comparing-tab" ng-show="isState('comparing')">
+                            <div class="comparing-tab-header">
+                                <button class="btn btn-default" href="#comparing-files-table" role="button" data-toggle="modal">Add</button>
+                            </div>
+                            <div class="comparing-tab-body col-lg-12">
+                                <div ng-repeat="file in files">
+                                    <div class="comparing-tab comparing-vjusage col-lg-12" id="id{{ file.uid }}" ng-show="file.meta.vjusage.comparing">
+                                        <h2>{{file.fileName}} V-J Usage</h2>
+                                        <hr>
+                                        <div class="comparing-vjusage-tab">
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div ng-repeat="file in files">
+                                        <div class="comparing-tab comparing-spectrotype col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotype.comparing">
+                                            <h2>{{file.fileName}} Spectrotype</h2>
+                                            <hr>
+                                            <div class="comparing-spectrotype-tab">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div ng-repeat="file in files">
+                                        <div class="comparing-tab comparing-spectrotypev col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotypeV.comparing">
+                                            <h2>{{file.fileName}} SpectrotypeV</h2>
+                                            <hr>
+                                            <div class="comparing-spectrotypev-tab">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div ng-repeat="file in files">
+                                        <div class="comparing-tab comparing-kerneldensity col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.kernelDensity.comparing">
+                                            <h2>{{file.fileName}} Kernel Density</h2>
+                                            <hr>
+                                            <div class="comparing-kerneldensity-tab">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-                <div class="hero-unit">
-                    <div class="mainContent">
 
+            <div class="modal fade" id="new-files-table" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="fileUpload">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="choose-files-button btn btn-primary" ng-click="addNewButton()">Add</div>
+                            <div class="upload-all-button btn btn-primary" ng-click="uploadAll()" ng-show="isNewFilesEmpty()">Upload All</div>
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                                Close</span></button>
+                        </div>
+                        <div class="modal-body fade well" id="new-files-dropzone">
+                            <div ng-hide="isNewFilesEmpty()">
+                                <text>You can drag and drop your files</text>
+                                <br>
+                                <i class="fa fa-4x fa-file-text-o drag-and-drop-icon"></i>
+                            </div>
+                            <table class="table modal-file-table" ng-show="isNewFilesEmpty()">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Software Type</th>
+                                        <th>Progress</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="main-tbody-files">
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <select id="common-software-type" ng-model="commonSoftwareType" ng-change="changeCommonSoftwareType()">
+                                                <option value="mitcr" >MiTcr</option>
+                                                <option value="migec" >MiGec</option>
+                                                <option value="simple" >Simple</option>
+                                                <option value="igblast" >IgBlast</option>
+                                            </select>
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr ng-repeat="file in newFiles" ng-class="{'success':isSuccess(file), 'danger':isError(file)}">
+                                        <td class="name-td">
+                                            <input ng-model="file.fileName" type="text" value="file.fileName" ng-show="file.wait"/>
+                                            <text ng-hide="file.wait">{{ file.fileName }}</text>
+                                        </td>
+                                        <td class="select-td">
+                                            <select id="new-file-software-type" ng-model="file.softwareTypeName" ng-show="file.wait">
+                                                <option value="mitcr" selected>MiTcr</option>
+                                                <option value="migec" >MiGec</option>
+                                                <option value="simple" >Simple</option>
+                                                <option value="igblast" >IgBlast</option>
+                                            </select>
+                                            <text ng-hide="file.wait">{{ file.softwareTypeName }}</text>
+                                        </td>
+                                        <td class="progress-td">
+                                            <div class="progress progress-striped active" ng-show="isOk(file)">
+                                                <div class="progress-bar" ng-class="{'progress-bar-success':isSuccess(file)}" style="width : {{ file.progress }}% ;">
+
+                                                </div>
+                                            </div>
+                                            <div class="computation-result-message" ng-hide="isOk(file)">
+                                                {{ file.resultTooltip }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button ng-show="file.wait" class="btn btn-default" ng-click="uploadFile(file)">
+                                                Upload
+                                            </button>
+                                            <div class="upload-tooltip" ng-show="isOk(file)">
+                                                {{ file.tooltip }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div ng-show="uploadedFiles.length">
+                                <h2>Recently uploaded</h2>
+                                <hr>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Software Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="file in uploadedFiles">
+                                            <td>{{ file.fileName }}</td>
+                                            <td>{{ file.softwareTypeName }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                        <div class="upload-files-footer">
+                            <button type="button" class="btn btn-default footer-close-button" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
-
             </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="new-files-table" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="choose-files-button btn btn-primary">Add</div>
-                    <div class="upload-all-button btn btn-primary">Upload All</div>
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table modal-file-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Software Type</th>
-                                <th>Progress</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody class="main-tbody-files">
-                            <tr>
-                                <td></td>
-                                <td>
-                                    <select id="common-software-type">
-                                        <option value="mitcr" >MiTcr</option>
-                                        <option value="migec" >MiGec</option>
-                                        <option value="simple" >Simple</option>
-                                        <option value="igblast" >IgBlast</option>
-                                    </select>
-                                </td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+            <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="comparingTable">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                                Close</span></button>
+                            <div>Comparing</div>
 
-    <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <table class="table modal-file-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Types</th>
-                            </tr>
-                        </thead>
-                        <tbody class="main-tbody-comparing-files">
-                        </tbody>
-                    </table>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table modal-file-table">
+                                <tbody class="main-tbody-comparing-files">
+                                    <tr>
+                                        <td>Show all</td>
+                                        <td>
+                                            <ul class="nav nav-pills nav-comparing">
+                                                <li ng-click="showAllItems('vjusage')"><a>V-J Usage</a></li>
+                                                <li ng-click="showAllItems('spectrotype')"><a>Spectrotype</a></li>
+                                                <li ng-click="showAllItems('spectrotypeV')"><a>SpectrotypeV</a></li>
+                                                <li ng-click="showAllItems('kernelDensity')"><a>Kernel Density</a></li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr ng-repeat="file in files">
+                                        <td>{{ file.fileName }}</td>
+                                        <td>
+                                            <div ng-show="file.state == 'rendering'">File is rendering</div>
+                                            <ul class="nav nav-pills nav-comparing" ng-hide="file.state == 'rendering'">
+                                                <li ng-click="showItem(file, 'vjusage')" ng-class="{'active':file.meta.vjusage.comparing}"><a>
+                                                    V-J Usage</a></li>
+                                                <li ng-click="showItem(file, 'spectrotype')" ng-class="{'active':file.meta.spectrotype.comparing}"><a>
+                                                    Spectrotype</a></li>
+                                                <li ng-click="showItem(file, 'spectrotypeV')" ng-class="{'active':file.meta.spectrotypeV.comparing}"><a>
+                                                    SpectrotypeV</a></li>
+                                                <li ng-click="showItem(file, 'kernelDensity')" ng-class="{'active':file.meta.kernelDensity.comparing}"><a>
+                                                    Kernel Density</a></li>
+                                            </ul>
+                                        </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility : hidden">
+                <input type="file" name="files[]" multiple />
+            </form>
         </div>
     </div>
-
-    <form id="fileupload" method="POST" action="" enctype="multipart/form-data" style="visibility: hidden">
-        <input type="file" name="files[]" multiple />
-    </form>
 }

@@ -162,7 +162,7 @@ public class ComputationUtil {
 
     public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
 
-        CdrDatabase cdrDatabase = new CdrDatabase("trdb");
+        CdrDatabase cdrDatabase = new CdrDatabase();
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
 
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);

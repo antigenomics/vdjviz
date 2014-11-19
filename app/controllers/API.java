@@ -102,6 +102,11 @@ public class API extends Controller {
              * Creation the UserFile class
              */
 
+            File accountDir = new File(account.userDirPath);
+            if (!accountDir.exists()) {
+                accountDir.mkdir();
+            }
+
             File uploadedFile = file.getFile();
             String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
             File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
@@ -240,10 +245,7 @@ public class API extends Controller {
             }
             files.add(fileInformation);
         }
-        HashMap<String, Object> serverResponse = new HashMap<>();
-        serverResponse.put("data", files);
-        serverResponse.put("names", names);
-        return ok(Json.toJson(serverResponse));
+        return ok(Json.toJson(files));
     }
 
     public static Result accountInformation() {
@@ -295,7 +297,7 @@ public class API extends Controller {
                 return cache(file, "kernelDensity", account);
             case "annotation" :
                 return cache(file, "annotation", account);
-            case "basicStats" :
+            case "summary" :
                 return basicStats(account);
             case "diversity" :
                 return diversity(account);
