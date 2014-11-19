@@ -11,6 +11,13 @@ create table account (
   constraint pk_account primary key (id))
 ;
 
+create table clonotype_color (
+  id                        bigint auto_increment not null,
+  color_key                 varchar(255),
+  color                     varchar(255),
+  constraint pk_clonotype_color primary key (id))
+;
+
 create table local_token (
   uuid                      varchar(255) not null,
   email                     varchar(255),
@@ -47,6 +54,13 @@ create table user_file (
   constraint pk_user_file primary key (id))
 ;
 
+create table v_color (
+  id                        bigint auto_increment not null,
+  color_key                 varchar(255),
+  color                     varchar(255),
+  constraint pk_v_color primary key (id))
+;
+
 alter table account add constraint fk_account_user_1 foreign key (user_id) references local_user (id) on delete restrict on update restrict;
 create index ix_account_user_1 on account (user_id);
 alter table local_user add constraint fk_local_user_account_2 foreign key (account_id) references account (id) on delete restrict on update restrict;
@@ -62,11 +76,15 @@ SET FOREIGN_KEY_CHECKS=0;
 
 drop table account;
 
+drop table clonotype_color;
+
 drop table local_token;
 
 drop table local_user;
 
 drop table user_file;
+
+drop table v_color;
 
 SET FOREIGN_KEY_CHECKS=1;
 

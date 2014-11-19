@@ -11,21 +11,28 @@ import com.antigenomics.vdjtools.diversity.DiversityEstimator;
 import com.antigenomics.vdjtools.diversity.DownSampler;
 import com.antigenomics.vdjtools.diversity.FrequencyTable;
 import com.antigenomics.vdjtools.intersection.IntersectionType;
+import com.antigenomics.vdjtools.join.ClonotypeKeyGen;
+import com.antigenomics.vdjtools.join.key.ClonotypeKey;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
+import models.ClonotypeColor;
+import models.vColor;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
+import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
 import utils.ArrayUtils.Data;
 import utils.ArrayUtils.xyValues;
 
+import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.List;
 
 public class ComputationUtil {
 
@@ -99,10 +106,9 @@ public class ComputationUtil {
         for (int i = 0; i < x_coordinates.length; i++) {
             commonValues.addValue(x_coordinates[i], y_coordinates[i]);
         }
-        Data commonData = new Data(new String[]{"values", "key"});
-        commonData.addData(new Object[]{commonValues.getValues(), "Other"});
+        Data commonData = new Data(new String[]{"values", "key", "color"});
+        commonData.addData(new Object[]{commonValues.getValues(), "Other", "#DCDCDC"});
         data.add(commonData.getData());
-
         int count = 1;
         for (Clonotype topclone : topclones) {
             Data topCloneNode = new Data(new String[]{"values", "key", "name", "v", "j", "cdr3aa"});
@@ -111,13 +117,15 @@ public class ComputationUtil {
             for (int i = x_min; i <= x_max; i++) {
                 values.addValue(i, i != top_clone_x ? 0 : topclone.getFreq());
             }
+
             topCloneNode.addData(new Object[]{
                     values.getValues(),
                     count++,
                     topclone.getCdr3nt(),
                     topclone.getV(),
                     topclone.getJ(),
-                    topclone.getCdr3aa()});
+                    topclone.getCdr3aa(),
+            });
             data.add(topCloneNode.getData());
         }
 
@@ -138,16 +146,35 @@ public class ComputationUtil {
 
         List<Object> data = new ArrayList<>();
 
+
         for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
             xyValues values = new xyValues();
-            Data node = new Data(new String[]{"values", "key"});
+            Data node = new Data(new String[]{"values", "key", "color"});
             int x_coordinates[] = spectratype.getLengths();
             double y_coordinates[] = spectratype.getHistogram();
             for (int i = 0; i < x_coordinates.length; i++) {
                 values.addValue(x_coordinates[i], y_coordinates[i]);
             }
-            node.addData(new Object[]{values.getValues(), key});
+
+            List<vColor> vcolor = vColor.findByKey(key);
+            String color;
+            if (!Objects.equals(key, "other")) {
+                if (vcolor.size() == 0) {
+                    vColor newColor = new vColor(key, "");
+                    Ebean.save(newColor);
+                    Long id = vColor.getColorId(key);
+                    newColor.color = CommonUtil.getVGeneColor(id);
+                    color = newColor.color;
+                    Ebean.update(newColor);
+                } else {
+                    color = vcolor.get(0).color;
+                }
+            } else {
+                color = "#DCDCDC";
+            }
+
+            node.addData(new Object[]{values.getValues(), key, color});
             data.add(node.getData());
         }
 
@@ -162,13 +189,13 @@ public class ComputationUtil {
 
     public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
 
-        CdrDatabase cdrDatabase = new CdrDatabase();
+        CdrDatabase cdrDatabase = new CdrDatabase(null);
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
 
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
         Data data = new Data(new String[]{"data", "header"});
         List<HashMap<String, Object>> annotationData = new ArrayList<>();
-        String[] header = cdrDatabase.header;
+        String[] header = cdrDatabase.annotationHeader;
         for (CdrDatabaseMatch cdrDatabaseMatch : browserResult) {
             Data annotationDataNode = new Data(new String[]{"query_cdr3aa", "query_V", "query_J", "freq", "count"});
             Data v = new Data(new String[]{"v", "match"});

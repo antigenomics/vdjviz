@@ -761,9 +761,13 @@ function spectrotypeV(data, param) {
                 .height(param.height)
                 .stacked(true)
                 .tooltip(function (key, x, y, e, graph) {
-                    return '<h3>' + key + '</h3>' +
-                        '<p>Length : ' + x + '</p>' +
-                        '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
+                    if (e.series.values[e.pointIndex].y != 0) {
+                        return '<h3>' + key + '</h3>' +
+                            '<p>Length : ' + x + '</p>' +
+                            '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
+                    } else {
+                        return null;
+                    }
                 })
             ;
 

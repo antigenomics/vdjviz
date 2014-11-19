@@ -1,12 +1,17 @@
 package utils;
 
+import com.antigenomics.vdjtools.intersection.IntersectionType;
+import com.antigenomics.vdjtools.join.ClonotypeKeyGen;
+import com.antigenomics.vdjtools.join.key.ClonotypeKey;
 import com.avaje.ebean.Ebean;
 import models.Account;
 import models.UserFile;
 import play.Logger;
 
+import java.awt.*;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.HashMap;
 
 public class CommonUtil {
 
@@ -74,5 +79,11 @@ public class CommonUtil {
         } else {
             Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + file.fileName);
         }
+    }
+
+    public static String getVGeneColor(Long i) {
+        ColorBrewer[] colorBrewers = ColorBrewer.getQualitativeColorPalettes(false);
+        Integer colorInt = colorBrewers[(int)(i / 10)].getColorPalette(10)[(int)(i % 10)].getRGB();
+        return "#" + Integer.toHexString(colorInt & 0xffffff);
     }
 }
