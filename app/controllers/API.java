@@ -295,6 +295,8 @@ public class API extends Controller {
                 return cache(file, "spectrotypeV", account);
             case "kernelDensity" :
                 return cache(file, "kernelDensity", account);
+            case "sizeClassifying":
+                return cache(file, "sizeClassifying",account);
             case "annotation" :
                 return cache(file, "annotation", account);
             case "summary" :

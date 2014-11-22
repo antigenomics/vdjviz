@@ -45,46 +45,33 @@ public class ComputationUtil {
         double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
 
         List<List<Object>> data = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
         String[] vVector = segmentUsage.vUsageHeader();
         String[] jVector = segmentUsage.jUsageHeader();
+
+        double[][] matrix = new double[vVector.length + jVector.length][];
+        for (int i = 0; i < vVector.length + jVector.length; i++) {
+            matrix[i] = new double[vVector.length + jVector.length];
+        }
         for (int i = 0; i < jVector.length; i++) {
             for (int j = 0; j < vVector.length; j++) {
-                List<Object> dataNode = new ArrayList<>();
-                vjMatrix[i][j] = Math.round(vjMatrix[i][j] * 100000);
-                dataNode.add(vVector[j]);
-                dataNode.add(jVector[i]);
-                dataNode.add(vjMatrix[i][j]);
-                data.add(dataNode);
+                matrix[i][j + jVector.length] = vjMatrix[i][j];
+                matrix[j + jVector.length][i] = vjMatrix[i][j];
             }
         }
 
-        /**
-         * Optimization data
-         * sort descending
-         * and take first "optimization value" elements
-         */
-
-        Integer optimization_value = 35;
-        List<List<Object>> opt_data = new ArrayList<>();
-        Collections.sort(data, new Comparator<List<Object>>() {
-            public int compare(List<Object> c1, List<Object> c2) {
-                if ((double) c1.get(2) > (double) c2.get(2)) return -1;
-                if ((double) c1.get(2) < (double) c2.get(2)) return 1;
-                return 0;
-            }
-        });
-        if (optimization_value > data.size()) {
-            optimization_value = data.size();
-        }
-        for (int i = 0; i < optimization_value; i++) {
-            opt_data.add(data.get(i));
-        }
+        Collections.addAll(labels, jVector);
+        Collections.addAll(labels, vVector);
 
 
         File cache = new File(file.fileDirPath + "/vjUsage.cache");
 
+        HashMap<String, Object> newdata = new HashMap<>();
+        newdata.put("matrix", matrix);
+        newdata.put("labels", labels);
+
         PrintWriter jsonWriter = new PrintWriter(cache.getAbsoluteFile());
-        jsonWriter.write(Json.stringify(Json.toJson(opt_data)));
+        jsonWriter.write(Json.stringify(Json.toJson(newdata)));
         jsonWriter.close();
 
         serverResponse.changeValue("progress", 20);
@@ -187,9 +174,55 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
+    public static void clonotypeSizeClassifying(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+        Spectratype spectratype = new Spectratype(false, false);
+        int rare = 0, small = 0, medium = 0, large = 0, hyperexpanded = 0;
+        for (Clonotype clonotype: sample) {
+            if (clonotype.getCount() == 1) {
+                rare++;
+            } else  {
+                double freq = clonotype.getFreq();
+                if (freq < 0.001) small++;
+                    else if (freq >= 0.001 && freq < 0.01) medium++;
+                        else if (freq >= 0.01 && freq < 1) large++;
+                            else if (freq >= 1) hyperexpanded++;
+            }
+        }
+        List<HashMap<String, Object>> data = new ArrayList<>();
+        HashMap<String, Object> rareData = new HashMap<>();
+        rareData.put("label", "Rare");
+        rareData.put("value", rare);
+        HashMap<String, Object> mediumData = new HashMap<>();
+        mediumData.put("label", "Medium");
+        mediumData.put("value", medium);
+        HashMap<String, Object> smallData = new HashMap<>();
+        smallData.put("label", "Small");
+        smallData.put("value", small);
+        HashMap<String, Object> largeData = new HashMap<>();
+        largeData.put("label", "Large");
+        largeData.put("value", large);
+        HashMap<String, Object> hyperexpandedData = new HashMap<>();
+        hyperexpandedData.put("label", "HyperExpanded");
+        hyperexpandedData.put("value", hyperexpanded);
+        data.add(rareData);
+        data.add(mediumData);
+        data.add(smallData);
+        data.add(largeData);
+        data.add(hyperexpandedData);
+
+        File cache = new File(file.fileDirPath + "/sizeClassifying.cache");
+        PrintWriter jsonWriter = new PrintWriter(cache.getAbsoluteFile());
+        jsonWriter.write(Json.stringify(Json.toJson(data)));
+        jsonWriter.close();
+
+        serverResponse.changeValue("progress", 100);
+        out.write(Json.toJson(serverResponse.getData()));
+
+    }
+
     public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
 
-        CdrDatabase cdrDatabase = new CdrDatabase(null);
+        CdrDatabase cdrDatabase = new CdrDatabase();
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
 
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
@@ -344,7 +377,8 @@ public class ComputationUtil {
             annotation(sample, file, out, serverResponse);
             basicStats(sample, file, out, serverResponse);
             diversity(sample, file, out, serverResponse);
-            kernelDensity(sample, file, out, serverResponse);
+            clonotypeSizeClassifying(sample, file, out, serverResponse);
+            //kernelDensity(sample, file, out, serverResponse);
             file.rendering = false;
             file.rendered = true;
             serverResponse.changeValue("progress", "end");

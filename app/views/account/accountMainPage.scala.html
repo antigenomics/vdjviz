@@ -51,8 +51,8 @@
                                     Spectrotype</a></li>
                                 <li ng-click="setActiveTab('SpectrotypeV')" ng-class="{active:isActiveTab('SpectrotypeV')}"><a>
                                     SpectrotypeV</a></li>
-                                <li ng-click="setActiveTab('Kernel Density')" ng-class="{active:isActiveTab('Kernel Density')}"><a>
-                                    Kernel Density</a></li>
+                                <li ng-click="setActiveTab('Size Classifying')" ng-class="{active:isActiveTab('Size Classifying')}"><a>
+                                    Size Classifying</a></li>
                                 <li ng-click="setActiveTab('Annotation')" ng-class="{active:isActiveTab('Annotation')}"><a>
                                     Annotation</a></li>
                             </ul>
@@ -72,7 +72,7 @@
                                     <div class="visualisation-results visualisation-results-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
 
                                     </div>
-                                    <div class="visualisation-results visualisation-results-kernelDensity" ng-show="isActiveTab('Kernel Density')">
+                                    <div class="visualisation-results visualisation-results-sizeClassifying" ng-show="isActiveTab('Size Classifying')">
 
                                     </div>
                                     <div class="visualisation-results visualisation-results-annotation" ng-show="isActiveTab('Annotation')">
@@ -96,7 +96,7 @@
                                     <hr>
                                     SpectrotypeV description placeholder
                                 </div>
-                                <div class="visualisation-description-kernelDensity" ng-show="isActiveTab('Kernel Density')">
+                                <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab('Size Classifying')">
                                     <h2>Description</h2>
                                     <hr>
                                     Kernel Density description placeholder
@@ -132,7 +132,7 @@
                             </div>
                             <div class="comparing-tab-body col-lg-12">
                                 <div ng-repeat="file in files">
-                                    <div class="comparing-tab comparing-vjusage col-lg-12" id="id{{ file.uid }}" ng-show="file.meta.vjusage.comparing">
+                                    <div class="comparing-tab comparing-vjusage col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.vjusage.comparing">
                                         <h2>{{file.fileName}} V-J Usage</h2>
                                         <hr>
                                         <div class="comparing-vjusage-tab">
@@ -164,10 +164,10 @@
                                 </div>
                                 <div class="col-lg-12">
                                     <div ng-repeat="file in files">
-                                        <div class="comparing-tab comparing-kerneldensity col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.kernelDensity.comparing">
-                                            <h2>{{file.fileName}} Kernel Density</h2>
+                                        <div class="comparing-tab comparing-sizeClassifying col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.sizeClassifying.comparing">
+                                            <h2>{{file.fileName}} sizeClassifying</h2>
                                             <hr>
-                                            <div class="comparing-kerneldensity-tab">
+                                            <div class="comparing-sizeClassifying-tab">
 
                                             </div>
                                         </div>
@@ -300,7 +300,7 @@
                                                 <li ng-click="showAllItems('vjusage')"><a>V-J Usage</a></li>
                                                 <li ng-click="showAllItems('spectrotype')"><a>Spectrotype</a></li>
                                                 <li ng-click="showAllItems('spectrotypeV')"><a>SpectrotypeV</a></li>
-                                                <li ng-click="showAllItems('kernelDensity')"><a>Kernel Density</a></li>
+                                                <li ng-click="showAllItems('sizeClassifying')"><a>Size Classifying</a></li>
                                             </ul>
                                         </td>
                                     </tr>
@@ -315,8 +315,8 @@
                                                     Spectrotype</a></li>
                                                 <li ng-click="showItem(file, 'spectrotypeV')" ng-class="{'active':file.meta.spectrotypeV.comparing}"><a>
                                                     SpectrotypeV</a></li>
-                                                <li ng-click="showItem(file, 'kernelDensity')" ng-class="{'active':file.meta.kernelDensity.comparing}"><a>
-                                                    Kernel Density</a></li>
+                                                <li ng-click="showItem(file, 'sizeClassifying')" ng-class="{'active':file.meta.sizeClassifying.comparing}"><a>
+                                                    Size Classifying</a></li>
                                             </ul>
                                         </td>
 
