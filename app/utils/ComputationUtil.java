@@ -175,17 +175,17 @@ public class ComputationUtil {
     }
 
     public static void clonotypeSizeClassifying(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
-        Spectratype spectratype = new Spectratype(false, false);
-        int rare = 0, small = 0, medium = 0, large = 0, hyperexpanded = 0;
+        double rare = 0, small = 0, medium = 0, large = 0, hyperexpanded = 0;
         for (Clonotype clonotype: sample) {
+            double freq = clonotype.getFreq();
             if (clonotype.getCount() == 1) {
-                rare++;
+                rare += freq;
             } else  {
-                double freq = clonotype.getFreq();
-                if (freq < 0.001) small++;
-                    else if (freq >= 0.001 && freq < 0.01) medium++;
-                        else if (freq >= 0.01 && freq < 1) large++;
-                            else if (freq >= 1) hyperexpanded++;
+
+                if (freq < 0.001) small += freq;
+                    else if (freq >= 0.001 && freq < 0.01) medium += freq;
+                        else if (freq >= 0.01 && freq < 1) large += freq;
+                            else if (freq >= 1) hyperexpanded += freq;
             }
         }
         List<HashMap<String, Object>> data = new ArrayList<>();
@@ -205,8 +205,8 @@ public class ComputationUtil {
         hyperexpandedData.put("label", "HyperExpanded");
         hyperexpandedData.put("value", hyperexpanded);
         data.add(rareData);
-        data.add(mediumData);
         data.add(smallData);
+        data.add(mediumData);
         data.add(largeData);
         data.add(hyperexpandedData);
 

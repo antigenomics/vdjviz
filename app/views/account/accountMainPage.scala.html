@@ -99,7 +99,7 @@
                                 <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab('Size Classifying')">
                                     <h2>Description</h2>
                                     <hr>
-                                    Kernel Density description placeholder
+                                    Size classifying description placeholder
                                 </div>
                                 <div class="visualisation-description-annotation" ng-show="isActiveTab('Annotation')">
                                     <h2>Description</h2>
@@ -113,7 +113,10 @@
                             Account Information
                         </div>
                         <div class="diversity-tab" ng-show="isState('diversity')">
-                            <h3>Diversity</h3>
+                            <h3>
+                                Diversity
+                                    <button class="btn btn-default pull-right" ng-click="exportDiversityPng()" ng-show="isState('diversity')">Export to png</button>
+                            </h3>
                             <hr>
                             <div class="diversity-visualisation-tab">
 

@@ -28,6 +28,7 @@ html, body {
 
 .visualisation-results {
     min-height: 600px;
+    overflow: visible;
 }
 
 .comparing-tab {

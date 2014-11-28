@@ -163,8 +163,7 @@
                             if (!file.meta.vjusage.cached) {
                                 param.type = 'vjusage';
                                 param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
-                                param.svg_width = '70%';
-                                param.width = 400;
+                                param.width = 500;
                                 getData(vjUsage, param);
                                 file.meta.vjusage.cached = true;
                             }
@@ -303,6 +302,10 @@
                     break;
             }
 
+        };
+
+        $scope.exportDiversityPng = function() {
+            saveSvgAsPng(document.getElementById("diversity-png-export"), "diversity.png", 3);
         }
 
     }]);
@@ -611,8 +614,12 @@
                 switch (item) {
                     case 'vjusage':
                         param.place = '#id' + file.uid + ' .comparing-vjusage-tab';
-                        param.svg_width = '70%';
-                        param.width = 400;
+                        if (window.innerWidth < 1400) {
+                            param.width = 300;
+                            param.height = 320;
+                        } else {
+                            param.width = 400;
+                        }
                         getData(vjUsage, param);
                         break;
                     case 'spectrotype':
@@ -635,9 +642,18 @@
         };
 
         $scope.showAllItems = function(item) {
+            var shown = 0;
             angular.forEach(account.getFilesList(), function(file) {
-                $scope.showItem(file, item);
-            })
+                if (!file.meta[item].comparing) {
+                    $scope.showItem(file, item);
+                    shown++;
+                }
+            });
+            if (shown == 0) {
+               angular.forEach(account.getFilesList(), function(file) {
+                   $scope.showItem(file, item);
+               })
+            }
         }
     }])
 
@@ -797,46 +813,6 @@ function spectrotypeV(data, param) {
     });
 }
 
-function kernelDensity(data, param) {
-    nv.addGraph(function () {
-
-        d3.select(param.place).html("");
-
-        var svg = d3.select(param.place)
-            .append("div")
-            .attr("id", "chart")
-            .append("svg")
-            .attr("id", "svg_kernelDensity_" + param.id)
-            .style("height", param.height + "px");
-
-        var chart = nv.models.lineChart()
-            .useInteractiveGuideline(false)
-            .transitionDuration(350)
-            .showLegend(true)
-            .showYAxis(true)
-            .showXAxis(true)
-            .height(param.height)
-            .xScale(d3.scale.log())
-            .yScale(d3.scale.log());
-
-        chart.xAxis
-            .axisLabel('Clonotype frequency')
-            .tickFormat(d3.format('.2s'));
-
-        chart.yAxis
-            .axisLabel('1-CDF')
-            .tickFormat(d3.format('.02e'));
-
-        svg.datum(data)
-            .call(chart);
-
-        nv.utils.windowResize(function () {
-            chart.update()
-        });
-        return chart;
-    });
-}
-
 function sizeClassifying(data, param) {
     nv.addGraph(function() {
         d3.select(param.place).html("");
@@ -992,7 +968,7 @@ function vjUsage(data, param) {
         .sortSubgroups(d3.descending)
         .matrix(data.matrix);
 
-    var width = param.height,
+    var width = param.width,
         height = param.height,
         r1 = height / 2,
         innerRadius = Math.min(width, height) * .41,
@@ -1001,10 +977,13 @@ function vjUsage(data, param) {
 
     var svg = d3.select(param.place)
         .append("svg")
+        .attr("width", width + 200)
+        .attr("height", height + 200)
         .style("width", width+200)
         .style("height", height+200)
         .style("display", "block")
         .style("margin", "auto")
+        .attr("id", "svg_vjusage_" + param.id)
         .append("g")
         .attr("transform", "translate(" + (width+200) / 2 + "," + (height+200) / 2 + ")");
 
@@ -1059,7 +1038,7 @@ function diversityStats(data, param) {
 
         var svg = d3.select(param.place)
             .append("svg")
-            .attr("id", "svgtopng")
+            .attr("id", "diversity-png-export")
             .style("height", "900px")
             .style("margin-top", "50px");
 
