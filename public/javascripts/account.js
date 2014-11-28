@@ -164,24 +164,21 @@
                                 param.type = 'vjusage';
                                 param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
                                 param.width = 500;
-                                getData(vjUsage, param);
-                                file.meta.vjusage.cached = true;
+                                getData(vjUsage, param, file);
                             }
                             break;
                         case "Spectrotype":
                             if (!file.meta.spectrotype.cached) {
                                 param.type = 'spectrotype';
                                 param.place = '#id' + file.uid + ' .visualisation-results-spectrotype';
-                                getData(spectrotype, param);
-                                file.meta.spectrotype.cached = true;
+                                getData(spectrotype, param, file);
                             }
                             break;
                         case "SpectrotypeV":
                             if (!file.meta.spectrotypeV.cached) {
                                 param.type = 'spectrotypeV';
                                 param.place = '#id' + file.uid + ' .visualisation-results-spectrotypeV';
-                                getData(spectrotypeV, param);
-                                file.meta.spectrotypeV.cached = true;
+                                getData(spectrotypeV, param, file);
                             }
                             break;
                         case "Size Classifying":
@@ -189,16 +186,14 @@
                                 //todo !!
                                 param.type = 'sizeClassifying';
                                 param.place = '#id' + file.uid + ' .visualisation-results-sizeClassifying';
-                                getData(sizeClassifying, param);
-                                file.meta.sizeClassifying.cached = true;
+                                getData(sizeClassifying, param, file);
                             }
                             break;
                         case "Annotation":
                             if (!file.meta.annotation.cached) {
                                 param.type = 'annotation';
                                 param.place = '#id' + file.uid + ' .visualisation-results-annotation';
-                                getData(annotationTable, param);
-                                file.meta.annotation.cached = true;
+                                getData(annotationTable, param, file);
                             }
                             break;
                         default:
@@ -620,19 +615,19 @@
                         } else {
                             param.width = 400;
                         }
-                        getData(vjUsage, param);
+                        getData(vjUsage, param, file);
                         break;
                     case 'spectrotype':
                         param.place = '#id' + file.uid + ' .comparing-spectrotype-tab';
-                        getData(spectrotype, param);
+                        getData(spectrotype, param, file);
                         break;
                     case 'spectrotypeV':
                         param.place = '#id' + file.uid + ' .comparing-spectrotypev-tab';
-                        getData(spectrotypeV, param);
+                        getData(spectrotypeV, param, file);
                         break;
                     case 'sizeClassifying':
                         param.place = '#id' + file.uid + ' .comparing-sizeClassifying-tab';
-                        getData(sizeClassifying, param);
+                        getData(sizeClassifying, param, file);
                         break;
                     default:
                         break;
@@ -661,38 +656,45 @@
 
 
 
-function getData(handleData, param) {
-    loading(param.place);
-    $.ajax({
-        url: "/api/data",
-        type: "post",
-        contentType: 'application/json; charset=utf-8',
-        data: JSON.stringify({
-            "action": "data",
-            "fileName": param.fileName,
-            "type": param.type
-        }),
-        success: function (data) {
-            loaded(param.place);
-            if (!data) {
+function getData(handleData, param, file) {
+    if (typeof file != 'undefined' && file.meta[param.type].data.length != 0) {
+        handleData(file.meta[param.type].data, param);
+    } else {
+        loading(param.place);
+        $.ajax({
+            url: "/api/data",
+            type: "post",
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({
+                "action": "data",
+                "fileName": param.fileName,
+                "type": param.type
+            }),
+            success: function (data) {
+                loaded(param.place);
+                if (!data) {
+                    location.reload();
+                }
+                switch (data["result"]) {
+                    case "success" :
+                        handleData(data.data, param);
+                        if (typeof file != 'undefined') {
+                            file.meta[param.type].data = data.data;
+                        }
+                        break;
+                    case "error" :
+                        d3.select(param.place).html("No data available");
+                        break;
+                    default :
+                        d3.select(param.place).html("No data available");
+                        break;
+                }
+            },
+            error: function () {
                 location.reload();
             }
-            switch (data["result"]) {
-                case "success" :
-                    handleData(data.data, param);
-                    break;
-                case "error" :
-                    d3.select(param.place).html("No data available");
-                    break;
-                default :
-                    d3.select(param.place).html("No data available");
-                    break;
-            }
-        },
-        error: function () {
-            location.reload();
-        }
-    });
+        });
+    }
 }
 
 function spectrotype(data, param) {

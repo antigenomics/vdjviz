@@ -7,6 +7,7 @@ GET         /                              controllers.Application.index()
 GET         /account                       controllers.Application.account()
 GET         /contacts                      controllers.Application.contacts()
 GET         /about                         controllers.Application.about()
+GET         /noscript                      controllers.Application.noScriptPage()
 GET         /test                          controllers.Application.test()
 
 # Map static resources from the /public folder to the /assets URL path
