@@ -165,6 +165,7 @@
                                 param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
                                 param.width = 500;
                                 getData(vjUsage, param, file);
+                                file.meta.vjusage.cached = true;
                             }
                             break;
                         case "Spectrotype":
@@ -172,6 +173,7 @@
                                 param.type = 'spectrotype';
                                 param.place = '#id' + file.uid + ' .visualisation-results-spectrotype';
                                 getData(spectrotype, param, file);
+                                file.meta.spectrotype.cached = true;
                             }
                             break;
                         case "SpectrotypeV":
@@ -179,6 +181,7 @@
                                 param.type = 'spectrotypeV';
                                 param.place = '#id' + file.uid + ' .visualisation-results-spectrotypeV';
                                 getData(spectrotypeV, param, file);
+                                file.meta.spectrotypeV.cached = true;
                             }
                             break;
                         case "Size Classifying":
@@ -187,6 +190,7 @@
                                 param.type = 'sizeClassifying';
                                 param.place = '#id' + file.uid + ' .visualisation-results-sizeClassifying';
                                 getData(sizeClassifying, param, file);
+                                file.meta.sizeClassifying.cached = true;
                             }
                             break;
                         case "Annotation":
@@ -194,6 +198,7 @@
                                 param.type = 'annotation';
                                 param.place = '#id' + file.uid + ' .visualisation-results-annotation';
                                 getData(annotationTable, param, file);
+                                file.meta.annotation.cached = true;
                             }
                             break;
                         default:
