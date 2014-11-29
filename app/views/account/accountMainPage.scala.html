@@ -31,11 +31,9 @@
                             </a>
                         </li>
                         <hr>
-                        <li ng-class="{active:isState('diversity')}" ng-click="changeState('diversity')"><a>
-                            Diversity</a></li>
-                        <li ng-class="{active:isState('summary')}" ng-click="changeState('summary')"><a>Summary</a></li>
-                        <li ng-class="{active:isState('comparing')}" ng-click="changeState('comparing')"><a>
-                            Comparing</a></li>
+                        <li ng-class="{active:isState('diversity')}" ng-click="changeState('diversity')"><a>Diversity<i class="fa fa-area-chart pull-right"></i></a></li>
+                        <li ng-class="{active:isState('summary')}" ng-click="changeState('summary')"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
+                        <li ng-class="{active:isState('comparing')}" ng-click="changeState('comparing')"><a>Comparing</a></li>
                         <hr>
                         <li ng-click="deleteAll()"><a>Delete All</a></li>
                     </ul>
@@ -45,16 +43,21 @@
                     <div class="main-content">
                         <div class="visualisation-tab" ng-show="isState('file')">
                             <ul class="nav nav-pills nav-visualisation">
-                                <li ng-click="setActiveTab('V-J Usage')" ng-class="{active:isActiveTab('V-J Usage')}"><a>
-                                    VJ-Usage</a></li>
-                                <li ng-click="setActiveTab('Spectrotype')" ng-class="{active:isActiveTab('Spectrotype')}"><a>
-                                    Spectrotype</a></li>
-                                <li ng-click="setActiveTab('SpectrotypeV')" ng-class="{active:isActiveTab('SpectrotypeV')}"><a>
-                                    SpectrotypeV</a></li>
-                                <li ng-click="setActiveTab('Size Classifying')" ng-class="{active:isActiveTab('Size Classifying')}"><a>
-                                    Size Classifying</a></li>
-                                <li ng-click="setActiveTab('Annotation')" ng-class="{active:isActiveTab('Annotation')}"><a>
-                                    Annotation</a></li>
+                                <li ng-click="setActiveTab('V-J Usage')" ng-class="{active:isActiveTab('V-J Usage')}">
+                                    <a>VJ-Usage<i class="fa fa-circle-o pull-right"></i></a>
+                                </li>
+                                <li ng-click="setActiveTab('Spectrotype')" ng-class="{active:isActiveTab('Spectrotype')}">
+                                    <a>Spectrotype<i class="fa fa-bar-chart pull-right"></i></a>
+                                </li>
+                                <li ng-click="setActiveTab('SpectrotypeV')" ng-class="{active:isActiveTab('SpectrotypeV')}">
+                                    <a>SpectrotypeV<i class="fa fa-bar-chart pull-right"></i></a>
+                                </li>
+                                <li ng-click="setActiveTab('Size Classifying')" ng-class="{active:isActiveTab('Size Classifying')}">
+                                    <a>Size Classifying<i class="fa fa-pie-chart pull-right"></i></a>
+                                </li>
+                                <li ng-click="setActiveTab('Annotation')" ng-class="{active:isActiveTab('Annotation')}">
+                                    <a>Annotation<i class="fa fa-list pull-right"></i></a>
+                                </li>
                             </ul>
                             <div class="col-lg-12" ng-repeat="file in files">
                                 <div id="id{{ file.uid }}" ng-show="isFile(file.fileName)" class="visualisation-results">
