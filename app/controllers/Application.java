@@ -79,7 +79,6 @@ public class Application extends Controller {
         return ok(views.html.commonPages.noScriptPage.render());
     }
 
-    @SecureSocial.SecuredAction
     public static Result test() {
         return ok(views.html.test.render());
     }

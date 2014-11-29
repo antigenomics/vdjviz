@@ -710,6 +710,7 @@ function spectrotype(data, param) {
             .append("svg")
             .attr("id", "svg_spectrotype_" + param.id)
             .style("height", param.height + "px")
+            .style("width", "100%")
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
@@ -774,10 +775,11 @@ function spectrotypeV(data, param) {
             .append("svg")
             .attr("id", "svg_spectrotypeV_" + param.id)
             .style("height", param.height + "px")
+            .style("width", "100%")
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
-                .transitionDuration(350)
+                .duration(1000)
                 .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
                 .rotateLabels(0)      //Angle to rotate x-axis labels.
                 .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
@@ -828,6 +830,7 @@ function sizeClassifying(data, param) {
             .append("svg")
             .attr("id", "svg_kernelDensity_" + param.id)
             .style("height", param.height + "px")
+            .style("width", "100%")
             .style("overflow", "visible");
 
 
@@ -1047,6 +1050,7 @@ function diversityStats(data, param) {
             .append("svg")
             .attr("id", "diversity-png-export")
             .style("height", "900px")
+            .style("width", "100%")
             .style("margin-top", "50px");
 
         var chart = nv.models.lineChart()

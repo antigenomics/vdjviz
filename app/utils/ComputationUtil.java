@@ -11,24 +11,18 @@ import com.antigenomics.vdjtools.diversity.DiversityEstimator;
 import com.antigenomics.vdjtools.diversity.DownSampler;
 import com.antigenomics.vdjtools.diversity.FrequencyTable;
 import com.antigenomics.vdjtools.intersection.IntersectionType;
-import com.antigenomics.vdjtools.join.ClonotypeKeyGen;
-import com.antigenomics.vdjtools.join.key.ClonotypeKey;
+import com.antigenomics.vdjtools.pwm.CdrPwmGrid;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
-import models.Account;
-import models.ClonotypeColor;
-import models.vColor;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
-import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
 import utils.ArrayUtils.Data;
 import utils.ArrayUtils.xyValues;
-
-import java.awt.*;
+import utils.VColor.VColor;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
@@ -143,26 +137,13 @@ public class ComputationUtil {
             for (int i = 0; i < x_coordinates.length; i++) {
                 values.addValue(x_coordinates[i], y_coordinates[i]);
             }
-
-            List<vColor> vcolor = vColor.findByKey(key);
-            String color;
-            if (!Objects.equals(key, "other")) {
-                if (vcolor.size() == 0) {
-                    vColor newColor = new vColor(key, "");
-                    Ebean.save(newColor);
-                    Long id = vColor.getColorId(key);
-                    newColor.color = CommonUtil.getVGeneColor(id);
-                    color = newColor.color;
-                    Ebean.update(newColor);
-                } else {
-                    color = vcolor.get(0).color;
-                }
+            VColor vColor = new VColor(key);
+            node.addData(new Object[]{values.getValues(), key, vColor.getHexVColor()});
+            if (key == "other") {
+                data.add(0, node.getData());
             } else {
-                color = "#DCDCDC";
+                data.add(node.getData());
             }
-
-            node.addData(new Object[]{values.getValues(), key, color});
-            data.add(node.getData());
         }
 
         File cache = new File(file.fileDirPath + "/spectrotypeV.cache");
@@ -218,6 +199,11 @@ public class ComputationUtil {
         serverResponse.changeValue("progress", 100);
         out.write(Json.toJson(serverResponse.getData()));
 
+    }
+
+    public static void seqLogo(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+        CdrPwmGrid cdrPwmGrid = new CdrPwmGrid();
+        cdrPwmGrid.update(sample);
     }
 
     public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
@@ -371,12 +357,13 @@ public class ComputationUtil {
         serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
         out.write(Json.toJson(serverResponse.getData()));
         try {
-            vjUsageData(sampleCollection, file, out, serverResponse);
-            spectrotype(sample, file, out, serverResponse);
+            //vjUsageData(sampleCollection, file, out, serverResponse);
+            //spectrotype(sample, file, out, serverResponse);
             spectrotypeV(sample, file, out, serverResponse);
-            annotation(sample, file, out, serverResponse);
-            basicStats(sample, file, out, serverResponse);
-            diversity(sample, file, out, serverResponse);
+            //annotation(sample, file, out, serverResponse);
+            //basicStats(sample, file, out, serverResponse);
+            //diversity(sample, file, out, serverResponse);
+            //seqLogo(sample, file, out, serverResponse);
             clonotypeSizeClassifying(sample, file, out, serverResponse);
             //kernelDensity(sample, file, out, serverResponse);
             file.rendering = false;
@@ -389,6 +376,7 @@ public class ComputationUtil {
             serverResponse.changeValue("progress", "end");
             serverResponse.changeValue("message", "Computation error");
             out.write(Json.toJson(serverResponse.getData()));
+            CommonUtil.deleteFile(file, file.account);
             e.printStackTrace();
         }
     }

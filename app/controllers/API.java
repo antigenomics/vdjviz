@@ -427,6 +427,7 @@ public class API extends Controller {
                                 Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
                                 serverResponse.addData(new Object[]{"error", "render", "", "Unknown Action"});
                                 out.write(Json.toJson(serverResponse.getData()));
+                                out.close();
                         }
                     }
                 });

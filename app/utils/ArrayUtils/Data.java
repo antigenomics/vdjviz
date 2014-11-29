@@ -17,6 +17,7 @@ public class Data {
         }
     }
 
+
     public HashMap<String, Object> getData() {
         return data;
     }
