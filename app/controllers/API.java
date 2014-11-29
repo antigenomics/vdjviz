@@ -411,16 +411,15 @@ public class API extends Controller {
                                 file.rendering = true;
                                 Ebean.update(file);
                                 try {
-                                    ComputationUtil.createSampleCache(file, out);
-                                    file.rendered = true;
-                                    file.rendering = false;
-                                    Ebean.update(file);
+                                    ComputationUtil computationUtil = new ComputationUtil(file, out);
+                                    computationUtil.createSampleCache();
                                     return;
                                 } catch (Exception e) {
                                     Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
                                     serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
                                     out.write(Json.toJson(serverResponse.getData()));
-                                    CommonUtil.deleteFile(file, account);
+                                    CommonUtil.deleteFile(file);
+                                    e.printStackTrace();
                                     return;
                                 }
                             default:

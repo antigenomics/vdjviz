@@ -30,12 +30,50 @@ import java.util.List;
 
 public class ComputationUtil {
 
-    public static void vjUsageData(SampleCollection sampleCollection, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private Sample sample;
+    private SampleCollection sampleCollection;
+    private UserFile file;
+    private WebSocket.Out<JsonNode> out;
+    private Data serverResponse;
+
+    public ComputationUtil(UserFile file, WebSocket.Out<JsonNode> out) {
+        Software software = file.softwareType;
+        List<String> sampleFileNames = new ArrayList<>();
+        sampleFileNames.add(file.filePath);
+        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
+        this.sample = sampleCollection.getAt(0);
+        this.sampleCollection = sampleCollection;
+        this.file = file;
+        this.out = out;
+        this.serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
+    }
+
+    public Sample getSample() {
+        return this.sample;
+    }
+
+    public SampleCollection getSampleCollection() {
+        return this.sampleCollection;
+    }
+
+    public UserFile getFile() {
+        return this.file;
+    }
+
+    public WebSocket.Out<JsonNode> getWebSocketOut() {
+        return this.out;
+    }
+
+    public Data getServerResponse() {
+        return this.serverResponse;
+    }
+
+    private void vjUsageData() throws Exception {
 
         SegmentUsage segmentUsage = new SegmentUsage(sampleCollection, false);
         segmentUsage.vUsageHeader();
         segmentUsage.jUsageHeader();
-        String sampleId = sampleCollection.getAt(0).getSampleMetadata().getSampleId();
+        String sampleId = sample.getSampleMetadata().getSampleId();
         double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
 
         List<List<Object>> data = new ArrayList<>();
@@ -73,7 +111,7 @@ public class ComputationUtil {
 
     }
 
-    public static void spectrotype(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void spectrotype() throws Exception {
 
         Spectratype sp = new Spectratype(false, false);
         List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
@@ -119,7 +157,7 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void spectrotypeV(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void spectrotypeV() throws Exception {
         SpectratypeV spectratypeV = new SpectratypeV(false, false);
         spectratypeV.addAll(sample);
         int default_top = 12;
@@ -139,7 +177,7 @@ public class ComputationUtil {
             }
             VColor vColor = new VColor(key);
             node.addData(new Object[]{values.getValues(), key, vColor.getHexVColor()});
-            if (key == "other") {
+            if (Objects.equals(key, "other")) {
                 data.add(0, node.getData());
             } else {
                 data.add(node.getData());
@@ -155,7 +193,7 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void clonotypeSizeClassifying(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void clonotypeSizeClassifying() throws Exception {
         double rare = 0, small = 0, medium = 0, large = 0, hyperexpanded = 0;
         for (Clonotype clonotype: sample) {
             double freq = clonotype.getFreq();
@@ -201,14 +239,14 @@ public class ComputationUtil {
 
     }
 
-    public static void seqLogo(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void seqLogo() throws Exception {
         CdrPwmGrid cdrPwmGrid = new CdrPwmGrid();
         cdrPwmGrid.update(sample);
     }
 
-    public static void annotation(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void annotation() throws Exception {
 
-        CdrDatabase cdrDatabase = new CdrDatabase();
+        CdrDatabase cdrDatabase = new CdrDatabase(null);
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
 
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
@@ -239,12 +277,11 @@ public class ComputationUtil {
         PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
         fileWriter.write(Json.stringify(Json.toJson(data.getData())));
         fileWriter.close();
-
         serverResponse.changeValue("progress", 60);
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void basicStats(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+   private void basicStats() throws Exception {
         BasicStats basicStats = new BasicStats(sample);
         String[] header = BasicStats.getHEADER().split("\t");
         HashMap<String, String> basicStatsCache = new HashMap<>();
@@ -263,7 +300,7 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void diversity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void diversity() throws Exception {
         DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         Data data = new Data(new String[]{"values", "key"});
@@ -293,7 +330,7 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void kernelDensity(Sample sample, UserFile file, WebSocket.Out<JsonNode> out, Data serverResponse) throws Exception {
+    private void kernelDensity() throws Exception {
 
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         xyValues binValues = new xyValues();
@@ -334,49 +371,30 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public static void createSampleCache(UserFile file, WebSocket.Out<JsonNode> out) {
-
-        /**
-         * Getting Sample from text file
-         */
-
-
-        Software software = file.softwareType;
-        List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(file.filePath);
-        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-        Sample sample = sampleCollection.getAt(0);
-        Data serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
-
-        /**
-         * Creating all cache files
-         */
+    public void createSampleCache() throws Exception {
 
         file.rendering = true;
         Ebean.update(file);
         serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
         out.write(Json.toJson(serverResponse.getData()));
+        vjUsageData();
+        spectrotype();
+        spectrotypeV();
+        annotation();
+        basicStats();
+        diversity();
+        //seqLogo(sample, file, out, serverResponse);
+        clonotypeSizeClassifying();
+        //kernelDensity(sample, file, out, serverResponse);
+        file.rendering = false;
+        file.rendered = true;
+        serverResponse.changeValue("progress", "end");
+        out.write(Json.toJson(serverResponse.getData()));
         try {
-            vjUsageData(sampleCollection, file, out, serverResponse);
-            spectrotype(sample, file, out, serverResponse);
-            spectrotypeV(sample, file, out, serverResponse);
-            annotation(sample, file, out, serverResponse);
-            basicStats(sample, file, out, serverResponse);
-            diversity(sample, file, out, serverResponse);
-            //seqLogo(sample, file, out, serverResponse);
-            clonotypeSizeClassifying(sample, file, out, serverResponse);
-            //kernelDensity(sample, file, out, serverResponse);
-            file.rendering = false;
-            file.rendered = true;
-            serverResponse.changeValue("progress", "end");
-            out.write(Json.toJson(serverResponse.getData()));
+
             Ebean.update(file);
         } catch (Exception e) {
-            serverResponse.changeValue("result", "error");
-            serverResponse.changeValue("progress", "end");
-            serverResponse.changeValue("message", "Computation error");
-            out.write(Json.toJson(serverResponse.getData()));
-            CommonUtil.deleteFile(file, file.account);
+            CommonUtil.deleteFile(file);
             e.printStackTrace();
         }
     }

@@ -553,7 +553,7 @@
                                     socket.close();
                                     account.deleteFileFromList(file.fileName);
                                     $scope.updateResult(file, 'error');
-                                    $scope.updateResultTooltip(file, "Error while computation");
+                                    $scope.updateResultTooltip(file, event["message"]);
                                     break;
                                 default:
                                     account.deleteFileFromList(file.fileName);

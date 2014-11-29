@@ -111,7 +111,6 @@ public class VColor {
         }
         if (vGene.contains("-")) {
             Integer scale = Integer.parseInt(vGene.substring(vGene.indexOf("-") + 1));
-            System.out.println(vGene.substring(vGene.indexOf("-") + 1) + " " + scale);
             hexColor = vColorDarker(hexColor, scale);
         }
         return hexColor;

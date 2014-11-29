@@ -46,9 +46,10 @@ public class CommonUtil {
         }
     }
 
-    public static void deleteFile(UserFile file, Account account) {
+    public static void deleteFile(UserFile file) {
 
         File fileDir = new File(file.fileDirPath);
+        Account account = file.account;
         File[] files = fileDir.listFiles();
         if (files == null) {
             if (fileDir.delete()) {
