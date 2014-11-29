@@ -75,8 +75,6 @@ public class ComputationUtil {
         segmentUsage.jUsageHeader();
         String sampleId = sample.getSampleMetadata().getSampleId();
         double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
-
-        List<List<Object>> data = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         String[] vVector = segmentUsage.vUsageHeader();
         String[] jVector = segmentUsage.jUsageHeader();
@@ -94,18 +92,10 @@ public class ComputationUtil {
 
         Collections.addAll(labels, jVector);
         Collections.addAll(labels, vVector);
-
-
-        File cache = new File(file.fileDirPath + "/vjUsage.cache");
-
-        HashMap<String, Object> newdata = new HashMap<>();
-        newdata.put("matrix", matrix);
-        newdata.put("labels", labels);
-
-        PrintWriter jsonWriter = new PrintWriter(cache.getAbsoluteFile());
-        jsonWriter.write(Json.stringify(Json.toJson(newdata)));
-        jsonWriter.close();
-
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("matrix", matrix);
+        data.put("labels", labels);
+        saveCache("vjUsage", data);
         serverResponse.changeValue("progress", 20);
         out.write(Json.toJson(serverResponse.getData()));
 
@@ -147,12 +137,7 @@ public class ComputationUtil {
             });
             data.add(topCloneNode.getData());
         }
-
-        File cache = new File(file.fileDirPath + "/spectrotype.cache");
-        PrintWriter jsonWriter = new PrintWriter(cache.getAbsoluteFile());
-        jsonWriter.write(Json.stringify(Json.toJson(data)));
-        jsonWriter.close();
-
+        saveCache("spectrotype", data);
         serverResponse.changeValue("progress", 30);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -183,12 +168,7 @@ public class ComputationUtil {
                 data.add(node.getData());
             }
         }
-
-        File cache = new File(file.fileDirPath + "/spectrotypeV.cache");
-        PrintWriter jsonWriter = new PrintWriter(cache.getAbsoluteFile());
-        jsonWriter.write(Json.stringify(Json.toJson(data)));
-        jsonWriter.close();
-
+        saveCache("spectrotypeV", data);
         serverResponse.changeValue("progress", 40);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -228,12 +208,7 @@ public class ComputationUtil {
         data.add(mediumData);
         data.add(largeData);
         data.add(hyperexpandedData);
-
-        File cache = new File(file.fileDirPath + "/sizeClassifying.cache");
-        PrintWriter jsonWriter = new PrintWriter(cache.getAbsoluteFile());
-        jsonWriter.write(Json.stringify(Json.toJson(data)));
-        jsonWriter.close();
-
+        saveCache("sizeClassifying", data);
         serverResponse.changeValue("progress", 100);
         out.write(Json.toJson(serverResponse.getData()));
 
@@ -246,7 +221,7 @@ public class ComputationUtil {
 
     private void annotation() throws Exception {
 
-        CdrDatabase cdrDatabase = new CdrDatabase(null);
+        CdrDatabase cdrDatabase = new CdrDatabase();
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
 
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
@@ -272,11 +247,7 @@ public class ComputationUtil {
             annotationData.add(annotationDataNode.getData());
         }
         data.addData(new Object[]{annotationData, header});
-
-        File cache = new File(file.fileDirPath + "/annotation.cache");
-        PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
-        fileWriter.write(Json.stringify(Json.toJson(data.getData())));
-        fileWriter.close();
+        saveCache("annotation", data.getData());
         serverResponse.changeValue("progress", 60);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -290,12 +261,7 @@ public class ComputationUtil {
         for (int i = 0; i < header.length; i++) {
             basicStatsCache.put(header[i], basicStatsValues[i]);
         }
-
-        File cache = new File(file.fileDirPath + "/basicStats.cache");
-        PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
-        fileWriter.write(Json.stringify(Json.toJson(basicStatsCache)));
-        fileWriter.close();
-
+        saveCache("basicStats", basicStatsCache);
         serverResponse.changeValue("progress", 60);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -320,12 +286,7 @@ public class ComputationUtil {
             values.addValue(x[i], z[i]);
         }
         data.addData(new Object[]{values.getValues(), file.fileName});
-
-        File cache = new File(file.fileDirPath + "/diversity.cache");
-        PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
-        fileWriter.write(Json.stringify(Json.toJson(data.getData())));
-        fileWriter.close();
-
+        saveCache("diversity", data.getData());
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -371,8 +332,14 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    public void createSampleCache() throws Exception {
+    private void saveCache(String cacheName, Object data) throws Exception {
+        File cache = new File(file.fileDirPath + "/" + cacheName + ".cache");
+        PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
+        fileWriter.write(Json.stringify(Json.toJson(data)));
+        fileWriter.close();
+    }
 
+    public void createSampleCache() throws Exception {
         file.rendering = true;
         Ebean.update(file);
         serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
@@ -390,12 +357,6 @@ public class ComputationUtil {
         file.rendered = true;
         serverResponse.changeValue("progress", "end");
         out.write(Json.toJson(serverResponse.getData()));
-        try {
-
-            Ebean.update(file);
-        } catch (Exception e) {
-            CommonUtil.deleteFile(file);
-            e.printStackTrace();
-        }
+        Ebean.update(file);
     }
 }
