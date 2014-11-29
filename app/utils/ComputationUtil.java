@@ -357,12 +357,12 @@ public class ComputationUtil {
         serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
         out.write(Json.toJson(serverResponse.getData()));
         try {
-            //vjUsageData(sampleCollection, file, out, serverResponse);
-            //spectrotype(sample, file, out, serverResponse);
+            vjUsageData(sampleCollection, file, out, serverResponse);
+            spectrotype(sample, file, out, serverResponse);
             spectrotypeV(sample, file, out, serverResponse);
-            //annotation(sample, file, out, serverResponse);
-            //basicStats(sample, file, out, serverResponse);
-            //diversity(sample, file, out, serverResponse);
+            annotation(sample, file, out, serverResponse);
+            basicStats(sample, file, out, serverResponse);
+            diversity(sample, file, out, serverResponse);
             //seqLogo(sample, file, out, serverResponse);
             clonotypeSizeClassifying(sample, file, out, serverResponse);
             //kernelDensity(sample, file, out, serverResponse);
