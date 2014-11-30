@@ -147,10 +147,7 @@ public class ComputationUtil {
         spectratypeV.addAll(sample);
         int default_top = 12;
         Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(default_top);
-
         List<Object> data = new ArrayList<>();
-
-
         for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
             xyValues values = new xyValues();

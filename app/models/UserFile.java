@@ -2,6 +2,8 @@ package models;
 
 
 import com.antigenomics.vdjtools.Software;
+import com.avaje.ebean.Ebean;
+import play.Logger;
 import play.data.validation.Constraints;
 import play.mvc.PathBindable;
 import play.db.ebean.Model;
@@ -9,6 +11,8 @@ import play.db.ebean.Model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +69,27 @@ public class UserFile extends Model implements PathBindable<UserFile> {
 
     public static Model.Finder<Long, UserFile> find() {
         return new Model.Finder<>(Long.class, UserFile.class);
+    }
+
+    public static void deleteFile(UserFile file) {
+        File fileDir = new File(file.fileDirPath);
+        File[] files = fileDir.listFiles();
+        if (files == null) {
+            if (fileDir.delete()) {
+                Ebean.delete(file);
+            }
+            return;
+        }
+        for (File cache : files) {
+            try {
+                Files.deleteIfExists(cache.toPath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (fileDir.delete()) {
+            Ebean.delete(file);
+        }
     }
 
     /**

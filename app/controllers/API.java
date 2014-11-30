@@ -185,11 +185,7 @@ public class API extends Controller {
                     return ok(Json.toJson(serverResponse.getData()));
                 }
                 try {
-                    for (File cache : files) {
-                        Files.deleteIfExists(cache.toPath());
-                    }
-                    fileDir.delete();
-                    Ebean.delete(file);
+                    UserFile.deleteFile(file);
                     serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
                     return ok(Json.toJson(serverResponse.getData()));
                 } catch (Exception e) {
@@ -199,26 +195,18 @@ public class API extends Controller {
                     return ok(Json.toJson(serverResponse.getData()));
                 }
             case "deleteAll":
-                for (UserFile f: UserFile.findByAccount(account)) {
-                    fileDir = new File(f.fileDirPath);
-                    files = fileDir.listFiles();
-                    try {
-                        if (files != null) {
-                            for (File cache : files) {
-                                Files.deleteIfExists(cache.toPath());
-                            }
-                        }
-                        fileDir.delete();
-                        Ebean.delete(f);
-                    } catch (Exception e) {
-                        Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting file " + f.fileName);
-                        e.printStackTrace();
-                        serverResponse.addData(new Object[]{"error", "Error while deleting file " + f.fileName});
-                        return ok(Json.toJson(serverResponse.getData()));
+                try {
+                    for (UserFile f : account.userfiles) {
+                        UserFile.deleteFile(f);
                     }
+                    serverResponse.addData(new Object[]{"ok", ""});
+                    return ok(Json.toJson(serverResponse.getData()));
+                } catch (Exception e) {
+                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting files for  " + account.userName);
+                    e.printStackTrace();
+                    serverResponse.addData(new Object[]{"error", "Error while deleting files"});
+                    return ok(Json.toJson(serverResponse.getData()));
                 }
-                serverResponse.addData(new Object[]{"ok", ""});
-                return ok(Json.toJson(serverResponse.getData()));
             default:
                 serverResponse.addData(new Object[]{"error", "Invalid action"});
                 return badRequest(Json.toJson(serverResponse.getData()));
@@ -230,10 +218,8 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
         List<HashMap<String, Object>> files = new ArrayList<>();
-        List<String> names = new ArrayList<>();
         for (UserFile file: account.userfiles) {
             HashMap<String, Object> fileInformation = new HashMap<>();
-            names.add(file.fileName);
             fileInformation.put("fileName", file.fileName);
             fileInformation.put("softwareTypeName", file.softwareTypeName);
             if (file.rendered) {
@@ -257,7 +243,6 @@ public class API extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-        HashMap<String, Object> jsonResults = new HashMap<>();
         Data serverResponse = new Data(new String[]{"result", "data"});
         Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
         accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.userName, account.userfiles.size()});
@@ -316,7 +301,7 @@ public class API extends Controller {
         if (file == null) {
             Logger.of("user." + account.userName).error("User " + account.userName +
                     " have no requested file");
-            serverResponse.addData(new Object[]{"error", "You have no file named " + file.fileName, null});
+            serverResponse.addData(new Object[]{"error", "You have no this file", null});
             return forbidden(Json.toJson(serverResponse.getData()));
         }
         if (file.rendered) {
@@ -418,7 +403,7 @@ public class API extends Controller {
                                     Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
                                     serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
                                     out.write(Json.toJson(serverResponse.getData()));
-                                    CommonUtil.deleteFile(file);
+                                    UserFile.deleteFile(file);
                                     e.printStackTrace();
                                     return;
                                 }
