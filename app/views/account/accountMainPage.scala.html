@@ -43,68 +43,42 @@
                     <div class="main-content">
                         <div class="visualisation-tab" ng-show="isState('file')">
                             <ul class="nav nav-pills nav-visualisation">
-                                <li ng-click="setActiveTab('V-J Usage')" ng-class="{active:isActiveTab('V-J Usage')}">
-                                    <a>VJ-Usage<i class="fa fa-circle-o pull-right"></i></a>
-                                </li>
-                                <li ng-click="setActiveTab('Spectrotype')" ng-class="{active:isActiveTab('Spectrotype')}">
-                                    <a>Spectrotype<i class="fa fa-bar-chart pull-right"></i></a>
-                                </li>
-                                <li ng-click="setActiveTab('SpectrotypeV')" ng-class="{active:isActiveTab('SpectrotypeV')}">
-                                    <a>SpectrotypeV<i class="fa fa-bar-chart pull-right"></i></a>
-                                </li>
-                                <li ng-click="setActiveTab('Size Classifying')" ng-class="{active:isActiveTab('Size Classifying')}">
-                                    <a>Size Classifying<i class="fa fa-pie-chart pull-right"></i></a>
-                                </li>
-                                <li ng-click="setActiveTab('Annotation')" ng-class="{active:isActiveTab('Annotation')}">
-                                    <a>Annotation<i class="fa fa-list pull-right"></i></a>
+                                <li ng-repeat="tab in visualisationTabs" ng-click="setActiveTab(tab)" ng-class="{active:isActiveTab(tab)}">
+                                    <a>{{ tab.tabName }}</a>
                                 </li>
                             </ul>
                             <div class="col-lg-12" ng-repeat="file in files">
                                 <div id="id{{ file.uid }}" ng-show="isFile(file.fileName)" class="visualisation-results">
                                     <h3>
-                                        {{ tab }}
-                                        <button class="btn btn-default pull-right" ng-click="exportPng(file)" ng-hide="isActiveTab('Annotation')">Export to png</button>
+                                        {{ tabName }}
                                     </h3>
                                     <hr>
-                                    <div class="visualisation-results visualisation-results-vjusage" ng-show="isActiveTab('V-J Usage')">
-
-                                    </div>
-                                    <div class="visualisation-results visualisation-results-spectrotype" ng-show="isActiveTab('Spectrotype')">
-
-                                    </div>
-                                    <div class="visualisation-results visualisation-results-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
-
-                                    </div>
-                                    <div class="visualisation-results visualisation-results-sizeClassifying" ng-show="isActiveTab('Size Classifying')">
-
-                                    </div>
-                                    <div class="visualisation-results visualisation-results-annotation" ng-show="isActiveTab('Annotation')">
-
+                                    <div ng-repeat="tab in visualisationTabs" class="viusalisation-results {{ tab.mainPlace }}" ng-show="isActiveTab(tab)">
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-12">
-                                <div class="visualisation-description-vjusage" ng-show="isActiveTab('V-J Usage')">
+                                <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
                                     <h2>Description</h2>
                                     <hr>
                                     V-J Usage description placeholder
                                 </div>
-                                <div class="visualisation-description-spectrotype" ng-show="isActiveTab('Spectrotype')">
+                                <div class="visualisation-description-spectrotype" ng-show="isActiveTab(visualisationTabs.spectrotype)">
                                     <h2>Description</h2>
                                     <hr>
                                     Spectrotype description placeholder
                                 </div>
-                                <div class="visualisation-description-spectrotypeV" ng-show="isActiveTab('SpectrotypeV')">
+                                <div class="visualisation-description-spectrotypeV" ng-show="isActiveTab(visualisationTabs.spectrotypev)">
                                     <h2>Description</h2>
                                     <hr>
                                     SpectrotypeV description placeholder
                                 </div>
-                                <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab('Size Classifying')">
+                                <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab(visualisationTabs.sizeclassifying)">
                                     <h2>Description</h2>
                                     <hr>
                                     Size classifying description placeholder
                                 </div>
-                                <div class="visualisation-description-annotation" ng-show="isActiveTab('Annotation')">
+                                <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
                                     <h2>Description</h2>
                                     <hr>
                                     Annotation description placeholder
@@ -303,10 +277,9 @@
                                         <td>Show all</td>
                                         <td>
                                             <ul class="nav nav-pills nav-comparing">
-                                                <li ng-click="showAllItems('vjusage')"><a>V-J Usage</a></li>
-                                                <li ng-click="showAllItems('spectrotype')"><a>Spectrotype</a></li>
-                                                <li ng-click="showAllItems('spectrotypeV')"><a>SpectrotypeV</a></li>
-                                                <li ng-click="showAllItems('sizeClassifying')"><a>Size Classifying</a></li>
+                                                <li ng-repeat="tab in comparingTabs" ng-click="showAllItems(tab)">
+                                                    <a>{{ tab.tabName }}</a>
+                                                </li>
                                             </ul>
                                         </td>
                                     </tr>
@@ -315,14 +288,9 @@
                                         <td>
                                             <div ng-show="file.state == 'rendering'">File is rendering</div>
                                             <ul class="nav nav-pills nav-comparing" ng-hide="file.state == 'rendering'">
-                                                <li ng-click="showItem(file, 'vjusage')" ng-class="{'active':file.meta.vjusage.comparing}"><a>
-                                                    V-J Usage</a></li>
-                                                <li ng-click="showItem(file, 'spectrotype')" ng-class="{'active':file.meta.spectrotype.comparing}"><a>
-                                                    Spectrotype</a></li>
-                                                <li ng-click="showItem(file, 'spectrotypeV')" ng-class="{'active':file.meta.spectrotypeV.comparing}"><a>
-                                                    SpectrotypeV</a></li>
-                                                <li ng-click="showItem(file, 'sizeClassifying')" ng-class="{'active':file.meta.sizeClassifying.comparing}"><a>
-                                                    Size Classifying</a></li>
+                                                <li ng-repeat="tab in comparingTabs" ng-click="showItem(file, tab)" ng-class="{'active':file.meta[tab.type].comparing}">
+                                                    <a>{{tab.tabName}}</a>
+                                                </li>
                                             </ul>
                                         </td>
 

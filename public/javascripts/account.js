@@ -10,7 +10,14 @@
         $rootScope.files = {};
         $rootScope.state = 'accountInformation';
         $rootScope.activeFileName = '';
-        $rootScope.filesTab = 'V-J Usage';
+        $rootScope.visualisationTabs = {
+            vjusage: { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', dataHandler: vjUsage},
+            spectrotype: { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', dataHandler: spectrotype},
+            spectrotypev: { tabName: 'SpectrtypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', dataHandler: spectrotypeV},
+            sizeclassifying: { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', dataHandler: sizeClassifying },
+            annotation: { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', dataHandler: annotationTable}
+        };
+        $rootScope.activeTab = $rootScope.visualisationTabs.vjusage;
 
         var uid = 0;
 
@@ -140,8 +147,21 @@
             return $rootScope.activeFileName;
         }
 
+        function findVisualisationTabByType(type) {
+            angular.forEach($rootScope.visualisationTabs, function(tab) {
+                if (tab.type == type) {
+                    return tab;
+                }
+            });
+            return null;
+        }
+
+        function getActiveTab() {
+            return $rootScope.activeTab;
+        }
+
         function setVisualisationTab(tab) {
-            $rootScope.filesTab = tab;
+            $rootScope.activeTab = tab;
             updateVisualisationTab();
         }
 
@@ -150,59 +170,19 @@
 
             switch ($rootScope.state) {
                 case 'file':
-                    var tab = $rootScope.filesTab;
                     var file = $rootScope.files[getActiveFileName()];
+                    var tab = getActiveTab();
                     param = {
-                        fileName: getActiveFileName(),
-                        type: '',
+                        fileName: file.fileName,
+                        type: tab.type,
                         id: file.uid,
-                        height: 500
+                        height: 500,
+                        width: 500
                     };
-                    switch (tab) {
-                        case "V-J Usage":
-                            if (!file.meta.vjusage.cached) {
-                                param.type = 'vjusage';
-                                param.place = '#id' + file.uid + ' .visualisation-results-vjusage';
-                                param.width = 500;
-                                getData(vjUsage, param, file);
-                                file.meta.vjusage.cached = true;
-                            }
-                            break;
-                        case "Spectrotype":
-                            if (!file.meta.spectrotype.cached) {
-                                param.type = 'spectrotype';
-                                param.place = '#id' + file.uid + ' .visualisation-results-spectrotype';
-                                getData(spectrotype, param, file);
-                                file.meta.spectrotype.cached = true;
-                            }
-                            break;
-                        case "SpectrotypeV":
-                            if (!file.meta.spectrotypeV.cached) {
-                                param.type = 'spectrotypeV';
-                                param.place = '#id' + file.uid + ' .visualisation-results-spectrotypeV';
-                                getData(spectrotypeV, param, file);
-                                file.meta.spectrotypeV.cached = true;
-                            }
-                            break;
-                        case "Size Classifying":
-                            if (!file.meta.sizeClassifying.cached) {
-                                //todo !!
-                                param.type = 'sizeClassifying';
-                                param.place = '#id' + file.uid + ' .visualisation-results-sizeClassifying';
-                                getData(sizeClassifying, param, file);
-                                file.meta.sizeClassifying.cached = true;
-                            }
-                            break;
-                        case "Annotation":
-                            if (!file.meta.annotation.cached) {
-                                param.type = 'annotation';
-                                param.place = '#id' + file.uid + ' .visualisation-results-annotation';
-                                getData(annotationTable, param, file);
-                                file.meta.annotation.cached = true;
-                            }
-                            break;
-                        default:
-                            break;
+                    if (!file.meta[tab.type].cached) {
+                        param.place = '#id' + file.uid + ' .' + tab.mainPlace;
+                        getData(tab.dataHandler, param, file);
+                        file.meta[tab.type].cached = true;
                     }
                     break;
                 case 'diversity':
@@ -231,9 +211,9 @@
 
         }
 
-        function changeComparingItem(fileName, item) {
-            $rootScope.files[fileName].meta[item].comparing = !$rootScope.files[fileName].meta[item].comparing;
-            $rootScope.files[fileName].meta[item].comparingCache = true;
+        function changeComparingItem(fileName, tab) {
+            $rootScope.files[fileName].meta[tab.type].comparing = !$rootScope.files[fileName].meta[tab.type].comparing;
+            $rootScope.files[fileName].meta[tab.type].comparingCache = true;
         }
 
         function getFileMeta(fileName) {
@@ -256,7 +236,9 @@
             changeFileState: changeFileState,
             deleteAllFiles: deleteAllFiles,
             changeComparingItem: changeComparingItem,
-            getFileMeta: getFileMeta
+            getFileMeta: getFileMeta,
+            getActiveTab: getActiveTab,
+            findVisualisationTabByType: findVisualisationTabByType
         }
 
     }]);
@@ -265,15 +247,15 @@
 
     app.controller('visualisation', ['$rootScope', '$scope', '$log', 'account', function ($rootScope, $scope, $log, account) {
 
-        $scope.tab = 'V-J Usage';
+        $scope.tabName = 'V-J Usage';
 
         $scope.isActiveTab = function (tab) {
-            return $scope.tab === tab;
+            return account.getActiveTab() === tab;
         };
 
         $scope.setActiveTab = function (tab) {
             account.setVisualisationTab(tab);
-            $scope.tab = tab;
+            $scope.tabName = tab.tabName;
         };
 
         $scope.isState = function (state) {
@@ -603,55 +585,40 @@
     // Comparing tab controller
 
     app.controller('comparingTable', ['$scope', 'account', function($scope, account) {
-        $scope.showItem = function(file, item) {
-            if (!account.getFileMeta(file.fileName)[item].comparingCache) {
+
+        $scope.comparingTabs = {
+            vjusage: {tabName: 'V-J Usage ', type: 'vjusage', comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
+            spectrotype: {tabName: 'Spectrotype ', type: 'spectrotype', comparingPlace: 'comparing-spectrotype-tab', dataHandler: spectrotype},
+            spectrotypev: {tabName: 'SpectrotypeV ', type: 'spectrotypeV', comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
+            sizeclassifying: {tabName: 'Size Classifying ', type: 'sizeClassifying', comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying}
+        };
+
+        $scope.showItem = function(file, tab) {
+            if (!account.getFileMeta(file.fileName)[tab.type].comparingCache) {
                 var param = {
                     fileName: file.fileName,
                     id: file.uid + '_comparing',
-                    height: 400,
-                    type: item
+                    height: (window.innerWidth < 1400) ? 320 : 400,
+                    width: (window.innerWidth < 1400) ? 300 : 400,
+                    type: tab.type,
+                    place: '#id' + file.uid + ' .' + tab.comparingPlace
                 };
-                switch (item) {
-                    case 'vjusage':
-                        param.place = '#id' + file.uid + ' .comparing-vjusage-tab';
-                        if (window.innerWidth < 1400) {
-                            param.width = 300;
-                            param.height = 320;
-                        } else {
-                            param.width = 400;
-                        }
-                        getData(vjUsage, param, file);
-                        break;
-                    case 'spectrotype':
-                        param.place = '#id' + file.uid + ' .comparing-spectrotype-tab';
-                        getData(spectrotype, param, file);
-                        break;
-                    case 'spectrotypeV':
-                        param.place = '#id' + file.uid + ' .comparing-spectrotypev-tab';
-                        getData(spectrotypeV, param, file);
-                        break;
-                    case 'sizeClassifying':
-                        param.place = '#id' + file.uid + ' .comparing-sizeClassifying-tab';
-                        getData(sizeClassifying, param, file);
-                        break;
-                    default:
-                        break;
-                }
+                getData(tab.dataHandler, param, file);
             }
-            account.changeComparingItem(file.fileName, item);
+            account.changeComparingItem(file.fileName, tab);
         };
 
-        $scope.showAllItems = function(item) {
+        $scope.showAllItems = function(tab) {
             var shown = 0;
             angular.forEach(account.getFilesList(), function(file) {
-                if (!file.meta[item].comparing) {
-                    $scope.showItem(file, item);
+                if (!file.meta[tab.type].comparing) {
+                    $scope.showItem(file, tab);
                     shown++;
                 }
             });
             if (shown == 0) {
                angular.forEach(account.getFilesList(), function(file) {
-                   $scope.showItem(file, item);
+                   $scope.showItem(file, tab);
                })
             }
         }
@@ -709,12 +676,12 @@ function spectrotype(data, param) {
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_spectrotype_" + param.id)
-            .style("height", param.height + "px")
+            .style("height", param.height)
             .style("width", "100%")
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
-                .transitionDuration(350)
+                .duration(1000)
                 .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
                 .rotateLabels(0)      //Angle to rotate x-axis labels.
                 .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
