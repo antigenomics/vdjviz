@@ -112,45 +112,10 @@
                             </div>
                             <div class="comparing-tab-body col-lg-12">
                                 <div ng-repeat="file in files">
-                                    <div class="comparing-tab comparing-vjusage col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.vjusage.comparing">
-                                        <h2>{{file.fileName}} V-J Usage</h2>
+                                    <div ng-repeat="tab in comparingTabs" class="comparing-tab comparing-{{ tab.type }} col-lg-6" ng-show="file.meta[tab.type].comparing" id="id{{ file.uid }}">
+                                        <h2>{{ file.fileName }} {{ tab.tabName }}</h2>
                                         <hr>
-                                        <div class="comparing-vjusage-tab">
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <div ng-repeat="file in files">
-                                        <div class="comparing-tab comparing-spectrotype col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotype.comparing">
-                                            <h2>{{file.fileName}} Spectrotype</h2>
-                                            <hr>
-                                            <div class="comparing-spectrotype-tab">
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <div ng-repeat="file in files">
-                                        <div class="comparing-tab comparing-spectrotypev col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.spectrotypeV.comparing">
-                                            <h2>{{file.fileName}} SpectrotypeV</h2>
-                                            <hr>
-                                            <div class="comparing-spectrotypev-tab">
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <div ng-repeat="file in files">
-                                        <div class="comparing-tab comparing-sizeClassifying col-lg-6" id="id{{ file.uid }}" ng-show="file.meta.sizeClassifying.comparing">
-                                            <h2>{{file.fileName}} sizeClassifying</h2>
-                                            <hr>
-                                            <div class="comparing-sizeClassifying-tab">
-
-                                            </div>
-                                        </div>
+                                        <div class="{{ tab.comparingPlace }}"></div>
                                     </div>
                                 </div>
                             </div>

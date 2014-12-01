@@ -17,6 +17,12 @@
             sizeclassifying: { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', dataHandler: sizeClassifying },
             annotation: { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', dataHandler: annotationTable}
         };
+        $rootScope.comparingTabs = {
+            vjusage: {tabName: 'V-J Usage ', type: 'vjusage', comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
+            spectrotype: {tabName: 'Spectrotype ', type: 'spectrotype', comparingPlace: 'comparing-spectrotype-tab', dataHandler: spectrotype},
+            spectrotypev: {tabName: 'SpectrotypeV ', type: 'spectrotypeV', comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
+            sizeclassifying: {tabName: 'Size Classifying ', type: 'sizeClassifying', comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying}
+        };
         $rootScope.activeTab = $rootScope.visualisationTabs.vjusage;
 
         var uid = 0;
@@ -586,13 +592,6 @@
 
     app.controller('comparingTable', ['$scope', 'account', function($scope, account) {
 
-        $scope.comparingTabs = {
-            vjusage: {tabName: 'V-J Usage ', type: 'vjusage', comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
-            spectrotype: {tabName: 'Spectrotype ', type: 'spectrotype', comparingPlace: 'comparing-spectrotype-tab', dataHandler: spectrotype},
-            spectrotypev: {tabName: 'SpectrotypeV ', type: 'spectrotypeV', comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
-            sizeclassifying: {tabName: 'Size Classifying ', type: 'sizeClassifying', comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying}
-        };
-
         $scope.showItem = function(file, tab) {
             if (!account.getFileMeta(file.fileName)[tab.type].comparingCache) {
                 var param = {
@@ -671,7 +670,10 @@ function getData(handleData, param, file) {
 
 function spectrotype(data, param) {
     nv.addGraph(function () {
-        d3.select(param.place).html("");
+
+        var place = d3.select(param.place).html("");
+        console.log(place);
+        console.log(param.place);
         var svg = d3.select(param.place).append("div")
             .attr("id", "chart")
             .append("svg")
