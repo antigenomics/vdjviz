@@ -75,9 +75,8 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         File fileDir = new File(file.fileDirPath);
         File[] files = fileDir.listFiles();
         if (files == null) {
-            if (fileDir.delete()) {
-                Ebean.delete(file);
-            }
+            fileDir.delete();
+            Ebean.delete(file);
             return;
         }
         for (File cache : files) {

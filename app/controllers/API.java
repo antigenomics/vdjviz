@@ -12,12 +12,11 @@ import play.mvc.*;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ArrayUtils.Data;
+import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
-import java.nio.file.Files;
 import java.io.FileInputStream;
 import java.util.*;
 
@@ -271,28 +270,27 @@ public class API extends Controller {
 
         String fileName = request.findValue("fileName").asText();
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-        switch (request.findValue("type").asText()) {
-            case "vjusage" :
-                return cache(file, "vjUsage", account);
-            case "spectrotype" :
-                return cache(file, "spectrotype", account);
-            case "spectrotypeV" :
-                return cache(file, "spectrotypeV", account);
-            case "kernelDensity" :
-                return cache(file, "kernelDensity", account);
-            case "sizeClassifying":
-                return cache(file, "sizeClassifying",account);
-            case "annotation" :
-                return cache(file, "annotation", account);
-            case "summary" :
-                return basicStats(account);
-            case "diversity" :
-                return diversity(account);
-            default:
-                Logger.of("user." + account.userName).error("User " + account.userName +
-                        ": unknown type: " + request.findValue("type").asText());
-                serverResponse.addData(new Object[]{"error", "Unknown type"});
-                return badRequest(Json.toJson(serverResponse.getData()));
+        String type = request.findValue("type").asText();
+        try {
+            CacheType cacheType = CacheType.findByType(type);
+            if (cacheType.getSingle()) {
+                return cache(file, cacheType.getCacheFileName(), account);
+            } else {
+                switch (type) {
+                    case "summary":
+                        return basicStats(account);
+                    case "diversity":
+                        return diversity(account);
+                    default:
+                        throw new IllegalArgumentException();
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            Logger.of("user." + account.userName).error("User " + account.userName +
+                    ": unknown type: " + request.findValue("type").asText());
+            serverResponse.addData(new Object[]{"error", "Unknown type"});
+            return badRequest(Json.toJson(serverResponse.getData()));
         }
     }
 

@@ -22,6 +22,7 @@ import models.UserFile;
 import play.libs.Json;
 import utils.ArrayUtils.Data;
 import utils.ArrayUtils.xyValues;
+import utils.CacheType.CacheType;
 import utils.VColor.VColor;
 import java.io.File;
 import java.io.PrintWriter;
@@ -137,7 +138,7 @@ public class ComputationUtil {
             });
             data.add(topCloneNode.getData());
         }
-        saveCache("spectrotype", data);
+        saveCache(CacheType.spectrotype.getCacheFileName(), data);
         serverResponse.changeValue("progress", 30);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -165,7 +166,7 @@ public class ComputationUtil {
                 data.add(node.getData());
             }
         }
-        saveCache("spectrotypeV", data);
+        saveCache(CacheType.spectrotypeV.getCacheFileName(), data);
         serverResponse.changeValue("progress", 40);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -205,7 +206,7 @@ public class ComputationUtil {
         data.add(mediumData);
         data.add(largeData);
         data.add(hyperexpandedData);
-        saveCache("sizeClassifying", data);
+        saveCache(CacheType.sizeClassifying.getCacheFileName(), data);
         serverResponse.changeValue("progress", 100);
         out.write(Json.toJson(serverResponse.getData()));
 
@@ -244,7 +245,7 @@ public class ComputationUtil {
             annotationData.add(annotationDataNode.getData());
         }
         data.addData(new Object[]{annotationData, header});
-        saveCache("annotation", data.getData());
+        saveCache(CacheType.annotation.getCacheFileName(), data.getData());
         serverResponse.changeValue("progress", 60);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -258,7 +259,7 @@ public class ComputationUtil {
         for (int i = 0; i < header.length; i++) {
             basicStatsCache.put(header[i], basicStatsValues[i]);
         }
-        saveCache("basicStats", basicStatsCache);
+        saveCache(CacheType.summary.getCacheFileName(), basicStatsCache);
         serverResponse.changeValue("progress", 60);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -283,7 +284,7 @@ public class ComputationUtil {
             values.addValue(x[i], z[i]);
         }
         data.addData(new Object[]{values.getValues(), file.fileName});
-        saveCache("diversity", data.getData());
+        saveCache(CacheType.diversity.getCacheFileName(), data.getData());
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -347,7 +348,7 @@ public class ComputationUtil {
         annotation();
         basicStats();
         diversity();
-        //seqLogo(sample, file, out, serverResponse);
+        seqLogo();
         clonotypeSizeClassifying();
         //kernelDensity(sample, file, out, serverResponse);
         file.rendering = false;
