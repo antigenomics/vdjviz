@@ -61,6 +61,7 @@ public class Application extends Controller {
         }
     }
 
+
     @SecureSocial.UserAwareAction
     public static Result about() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);

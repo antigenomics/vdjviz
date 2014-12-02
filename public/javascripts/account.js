@@ -5,24 +5,36 @@
 (function () {
     var app = angular.module('accountPage', []);
 
+    app.filter('comparingTabs', function(visualisationTabs) {
+        var comparingTabs = [];
+        angular.forEach(visualisationTabs, function(tab) {
+            if (tab.comparing) {
+                comparingTabs.push(tab);
+            }
+        });
+        console.log(comparingTabs);
+        return comparingTabs;
+    });
+
+    app.directive('filesSidebar', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/filesSidebar'
+        }
+    });
+
     app.factory('account', ['$http', '$rootScope', function ($http, $rootScope) {
 
         $rootScope.files = {};
         $rootScope.state = 'accountInformation';
         $rootScope.activeFileName = '';
-        $rootScope.visualisationTabs = {
-            vjusage: { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', dataHandler: vjUsage},
-            spectrotype: { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', dataHandler: spectrotype},
-            spectrotypev: { tabName: 'SpectrtypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', dataHandler: spectrotypeV},
-            sizeclassifying: { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', dataHandler: sizeClassifying },
-            annotation: { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', dataHandler: annotationTable}
-        };
-        $rootScope.comparingTabs = {
-            vjusage: {tabName: 'V-J Usage ', type: 'vjusage', comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
-            spectrotype: {tabName: 'Spectrotype ', type: 'spectrotype', comparingPlace: 'comparing-spectrotype-tab', dataHandler: spectrotype},
-            spectrotypev: {tabName: 'SpectrotypeV ', type: 'spectrotypeV', comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
-            sizeclassifying: {tabName: 'Size Classifying ', type: 'sizeClassifying', comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying}
-        };
+        $rootScope.visualisationTabs = [
+            { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', comparing: true, comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
+            { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', comparing: true, comparingPlace: 'comparing-spectrotype-tab',  dataHandler: spectrotype},
+            { tabName: 'SpectrtypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', comparing: true, comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
+            { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', comparing: true, comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying },
+            { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', comparing: false, dataHandler: annotationTable}
+        ];
         $rootScope.activeTab = $rootScope.visualisationTabs.vjusage;
 
         var uid = 0;
