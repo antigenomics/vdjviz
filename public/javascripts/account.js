@@ -5,158 +5,91 @@
 (function () {
     var app = angular.module('accountPage', []);
 
-    app.directive('filesSidebar', function() {
+    //Main Directive
+    app.directive('accountPage', function() {
         return {
             restrict: 'E',
-            templateUrl: '/account/filesSidebar',
-            controller: ['$scope', '$log', '$http', 'account', function ($scope, $log, $http, account) {
-                $scope.changeState = account.changeState;
-                $scope.setActiveFile = account.setActiveFile;
-                $scope.isFilesEmpty = account.isFilesEmpty;
+            controller: ['$scope', '$http', function($scope, $http) {
+                //private parameters
+                var uid = 0;
 
-                account.updateFilesList();
-
-                $scope.isState = function (state) {
-                    return account.getState() === state;
-                };
-
-                $scope.isFile = function (fileName) {
-                    return account.getActiveFileName() === fileName;
-                };
-
-                $scope.isState = function (state) {
-                    return account.getState() === state;
-                };
-
-                $scope.deleteAll = function () {
-                    $http.post('/api/delete', {action: 'deleteAll'})
-                        .success(function () {
-                            account.deleteAllFiles();
-                            account.changeState('accountInformation');
-                        });
-                };
-
-                $scope.deleteFile = function(file) {
-                    $http.post('/api/delete', {
-                        action: 'delete',
-                        fileName: file.fileName
-                    }).success(function() {
-                        if (file.fileName == account.getActiveFileName(file.fileName)) {
-                            account.changeState('accountInformation');
-                        } else if (account.getState() != 'file') {
-                            account.updateVisualisationTab();
-                        }
-                        account.deleteFileFromList(file.fileName);
-                    });
-                };
-
-                $scope.isRendering = function(file) {
-                    return file.state === 'rendering';
+                //public parameters
+                $scope.files = {};
+                $scope.state = 'accountInformation';
+                $scope.activeFileName = '';
+                $scope.visualisationTabs = {
+                    vjusage: { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', comparing: true, comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
+                    spectrotype: { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', comparing: true, comparingPlace: 'comparing-spectrotype-tab',  dataHandler: spectrotype},
+                    spectrotypev: { tabName: 'SpectrotypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', comparing: true, comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
+                    sizeclassifying: { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', comparing: true, comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying },
+                    annotation: { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', comparing: false, dataHandler: annotationTable}
                 }
-        }]
-    }});
+                ;
+                $scope.activeTab = $scope.visualisationTabs.vjusage;
 
-    app.directive('test', function() {
-        return {
-            restrict: 'E',
-            template: '<div><test-directive></test-directive></div>',
-            controller: function($scope) {
-                $scope.testFunc = function() {
-                    console.log();
+                $scope.updateFilesList = function() {
+                    $http({method: 'GET', url: '/api/files'}).success(function (data) {
+                        angular.forEach(data, function(file) {
+                            $scope.files[file.fileName] = {
+                                uid: uid++,
+                                fileName: file.fileName,
+                                state: file.state,
+                                softwareTypeName: file.softwareTypeName,
+                                meta: {
+                                    vjusage: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    spectrotype: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    spectrotypeV: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    sizeClassifying: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    annotation: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    }
+                                }
+                            }
+                        })
+                    })
                 };
-                $scope.testVar = [
-                    1, 2
-                ];
-            }
-        }
-    });
 
-    app.directive('testDirective', function() {
-        return {
-            restrict: 'E',
-            templateUrl: '/account/testDirective',
-            require: '^test',
-            transclude: true
-        }
-    });
+                $scope.getActiveFile = function() {
+                    return $scope.files[$scope.activeFileName];
+                };
 
-    app.directive('mainVisualisationContent', function() {
-        return {
-            restrict: 'E',
-            templateUrl: '/account/mainVisualisationContent'
-        }
-    });
+                $scope.isContain = function(file) {
+                    angular.forEach($scope.files, function(f) {
+                        if (file.fileName === f.fileName) {
+                            return true;
+                        }
+                    })
+                    return false;
+                };
 
-    app.controller('visualisation', ['$rootScope', '$scope', '$log', 'account', function ($rootScope, $scope, $log, account) {
-
-        $scope.tabName = 'V-J Usage';
-
-        $scope.isActiveTab = function (tab) {
-            return account.getActiveTab() === tab;
-        };
-
-        $scope.setActiveTab = function (tab) {
-            account.setVisualisationTab(tab);
-            $scope.tabName = tab.tabName;
-        };
-
-        $scope.isState = function (state) {
-            return account.getState() === state;
-        };
-
-        $scope.isFile = function(fileName) {
-            return fileName === account.getActiveFileName();
-        };
-
-        $scope.exportPng = function(file) {
-            switch ($scope.tab) {
-                case 'V-J Usage':
-                    saveSvgAsPng(document.getElementById("svg_vjusage_" + file.uid), file.fileName + "_vjusage.png", 3);
-                    break;
-                case 'Spectrotype':
-                    saveSvgAsPng(document.getElementById("svg_spectrotype_" + file.uid), file.fileName + "_spectrotype.png", 3);
-                    break;
-                case 'SpectrotypeV':
-                    saveSvgAsPng(document.getElementById("svg_spectrotypeV_" + file.uid), file.fileName + "_spectrotypeV.png", 3);
-                    break;
-                case 'Kernel Density':
-                    saveSvgAsPng(document.getElementById("svg_kernelDensity_" + file.uid), file.fileName + "_kernelDensity.png", 3);
-                    break;
-                default:
-                    break;
-            }
-
-        };
-
-        $scope.exportDiversityPng = function() {
-            saveSvgAsPng(document.getElementById("diversity-png-export"), "diversity.png", 3);
-        }
-
-    }])
-;
-    app.factory('account', ['$http', '$rootScope', function ($http, $rootScope) {
-
-        $rootScope.files = {};
-        $rootScope.state = 'accountInformation';
-        $rootScope.activeFileName = '';
-        $rootScope.visualisationTabs = [
-            { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', comparing: true, comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
-            { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', comparing: true, comparingPlace: 'comparing-spectrotype-tab',  dataHandler: spectrotype},
-            { tabName: 'SpectrtypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', comparing: true, comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
-            { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', comparing: true, comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying },
-            { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', comparing: false, dataHandler: annotationTable}
-        ];
-        $rootScope.activeTab = $rootScope.visualisationTabs[0];
-
-        var uid = 0;
-
-        function updateFilesList() {
-            $http({method: 'GET', url: '/api/files'}).success(function (data) {
-                angular.forEach(data, function(file) {
-                    $rootScope.files[file.fileName] = {
+                $scope.addFileToList = function addFileToList(file) {
+                    $scope.files[file.fileName] = {
                         uid: uid++,
                         fileName: file.fileName,
-                        state: file.state,
+                        state: 'rendering',
                         softwareTypeName: file.softwareTypeName,
                         meta: {
                             vjusage: {
@@ -191,462 +124,494 @@
                             }
                         }
                     }
-                })
-            })
-        }
-
-        function deleteAllFiles() {
-            $rootScope.files = {};
-        }
-
-        function deleteFileFromList(fileName) {
-            delete $rootScope.files[fileName];
-        }
-
-        function addFileToList(file) {
-            $rootScope.files[file.fileName] = {
-                uid: uid++,
-                fileName: file.fileName,
-                state: 'rendering',
-                softwareTypeName: file.softwareTypeName,
-                meta: {
-                    vjusage: {
-                        cached: false,
-                        comparingCache: false,
-                        data: [],
-                        comparing: false
-                    },
-                    spectrotype: {
-                        cached: false,
-                        comparingCache: false,
-                        data: [],
-                        comparing: false
-                    },
-                    spectrotypeV: {
-                        cached: false,
-                        comparingCache: false,
-                        data: [],
-                        comparing: false
-                    },
-                    sizeClassifying: {
-                        cached: false,
-                        comparingCache: false,
-                        data: [],
-                        comparing: false
-                    },
-                    annotation: {
-                        cached: false,
-                        comparingCache: false,
-                        data: [],
-                        comparing: false
-                    }
-                }
-            }
-        }
-
-        function changeFileState(file, state) {
-            $rootScope.files[file.fileName].state = state;
-        }
-
-        function isFilesEmpty() {
-            return Object.keys($rootScope.files).length;
-        }
-
-        function changeState(state) {
-            if (state != 'file') {
-                $rootScope.activeFileName = '';
-            }
-            $rootScope.state = state;
-            updateVisualisationTab();
-        }
-
-        function getState() {
-            return $rootScope.state;
-        }
-
-        function setActiveFile(file) {
-            if (file.state === 'rendered') {
-                $rootScope.state = 'file';
-                $rootScope.activeFileName = file.fileName;
-                updateVisualisationTab();
-            }
-        }
-
-        function getActiveFileName() {
-            return $rootScope.activeFileName;
-        }
-
-        function findVisualisationTabByType(type) {
-            angular.forEach($rootScope.visualisationTabs, function(tab) {
-                if (tab.type == type) {
-                    return tab;
-                }
-            });
-            return null;
-        }
-
-        function getActiveTab() {
-            return $rootScope.activeTab;
-        }
-
-        function setVisualisationTab(tab) {
-            $rootScope.activeTab = tab;
-            updateVisualisationTab();
-        }
-
-        function updateVisualisationTab() {
-            var param = {};
-
-            switch ($rootScope.state) {
-                case 'file':
-                    var file = $rootScope.files[getActiveFileName()];
-                    var tab = getActiveTab();
-                    param = {
-                        fileName: file.fileName,
-                        type: tab.type,
-                        id: file.uid,
-                        height: 500,
-                        width: 500
-                    };
-                    if (!file.meta[tab.type].cached) {
-                        param.place = '#id' + file.uid + ' .' + tab.mainPlace;
-                        getData(tab.dataHandler, param, file);
-                        file.meta[tab.type].cached = true;
-                    }
-                    break;
-                case 'diversity':
-                    param.place = '.diversity-visualisation-tab';
-                    param.fileName = 'all';
-                    param.type = 'diversity';
-                    getData(diversityStats, param);
-                    break;
-                case 'summary':
-                    param.place = '.summary-visualisation-tab';
-                    param.fileName = 'all';
-                    param.type = 'summary';
-                    getData(summaryStats, param);
-                    break;
-                default:
-                    break
-            }
-        }
-
-        function getFilesList() {
-            return $rootScope.files;
-        }
-
-        function isContain(fileName) {
-            return !!(fileName in $rootScope.files);
-
-        }
-
-        function changeComparingItem(fileName, tab) {
-            $rootScope.files[fileName].meta[tab.type].comparing = !$rootScope.files[fileName].meta[tab.type].comparing;
-            $rootScope.files[fileName].meta[tab.type].comparingCache = true;
-        }
-
-        function getFileMeta(fileName) {
-            return $rootScope.files[fileName].meta;
-        }
-
-        return {
-            updateFilesList: updateFilesList,
-            changeState: changeState,
-            getState: getState,
-            setActiveFile: setActiveFile,
-            getActiveFileName: getActiveFileName,
-            setVisualisationTab: setVisualisationTab,
-            updateVisualisationTab: updateVisualisationTab,
-            getFilesList: getFilesList,
-            isContain: isContain,
-            isFilesEmpty: isFilesEmpty,
-            deleteFileFromList: deleteFileFromList,
-            addFileToList: addFileToList,
-            changeFileState: changeFileState,
-            deleteAllFiles: deleteAllFiles,
-            changeComparingItem: changeComparingItem,
-            getFileMeta: getFileMeta,
-            getActiveTab: getActiveTab,
-            findVisualisationTabByType: findVisualisationTabByType
-        }
-
-    }]);
-
-    // Uploading controller
-
-    app.controller('fileUpload', ['$scope', '$http', '$log', 'account', function ($scope, $http, $log, account) {
-
-        var uid = 0;
-
-        $scope.newFiles = {};
-        $scope.uploadedFiles = [];
-        $scope.commonSoftwareType = 'mitcr';
-
-
-        $scope.isNewFilesEmpty = function() {
-            return Object.keys($scope.newFiles).length;
-        };
-
-        $scope.addNewButton = function() {
-            $("form input[type=file]").click();
-        };
-
-        $scope.addNew = function(uid, fileName, fileExtension, data) {
-            $scope.$apply(function() {
-                $scope.newFiles[uid] = {
-                    uid: uid,
-                    fileName: fileName,
-                    softwareTypeName: 'mitcr',
-                    fileExtension: fileExtension,
-                    wait: true,
-                    tooltip: '',
-                    progress: 0,
-                    result: 'ok',
-                    resultTooltip: '',
-                    data: data
                 };
-            })
-        };
 
-        $scope.addNewError = function(uid, fileName, error) {
-            switch (error) {
-                case 0:
-                    $scope.$apply(function() {
-                        $scope.newFiles[uid] = {
-                            uid: uid,
-                            fileName: fileName,
-                            softwareTypeName: '',
-                            wait: false,
-                            result: 'error',
-                            resultTooltip: 'You have exceeded limit of files'
-                        };
-                    });
-                    break;
-                case 1:
-                    $scope.$apply(function() {
-                        $scope.newFiles[uid] = {
-                            uid: uid,
-                            fileName: fileName,
-                            softwareTypeName: '',
-                            wait: false,
-                            result: 'error',
-                            resultTooltip: 'You should use unique names for your files'
-                        };
-                    });
-                    break;
-                default :
-                    break;
-            }
-        };
+                $scope.updateFilesList();
 
-        $scope.updateTooltip = function(file, tooltip) {
-            $scope.$apply(function() {
-                file.tooltip = tooltip;
-            })
-        };
+                $scope.updateVisualisationTab = function () {
+                    var param = {};
 
-        $scope.updateProgress = function(file, progress) {
-            $scope.$apply(function() {
-                file.progress = progress;
-            })
-        };
-
-        $scope.updateResult = function(file, result) {
-            $scope.$apply(function() {
-                file.result = result;
-            })
-        };
-
-        $scope.updateResultTooltip = function(file, resultTooltip) {
-            $scope.$apply(function() {
-                file.resultTooltip = resultTooltip;
-            })
-        };
-
-        $scope.changeCommonSoftwareType = function() {
-            angular.forEach($scope.newFiles, function(file, key) {
-                file.softwareTypeName = $scope.commonSoftwareType;
-            });
-        };
-
-        $scope.uploadAll = function () {
-            angular.forEach($scope.newFiles, function(file, key) {
-                $scope.uploadFile(file);
-            })
-        };
-
-        $scope.uploadFile = function(file) {
-            if (file.wait) {
-                file.data.formData = {
-                    softwareTypeName: file.softwareTypeName,
-                    fileName: file.fileName,
-                    fileExtension: file.fileExtension,
-                    uid: file.uid
-                };
-                file.wait = false;
-                file.data.submit();
-            }
-        };
-
-        $scope.isOk = function(file) {
-            return file.result === 'ok' || file.result === 'success';
-        };
-
-        $scope.isSuccess = function(file) {
-            return file.result === 'success';
-        };
-
-        $scope.isError = function(file) {
-            return file.result === 'error';
-        };
-
-
-        $('#fileupload').fileupload({
-            url: '/api/upload',
-            dataType: 'json',
-            sequentialUploads: true,
-            dropZone: $('#new-files-dropzone'),
-            add: function (e, data) {
-                var originalFileName = data.files[0].name;
-                var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
-                var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
-                if (fileExtension != 'txt' && fileExtension != 'gz') {
-                    fileName += fileExtension;
-                    fileExtension = 'txt';
-                }
-                if (account.getFilesList().length >= 25) {
-                    $scope.addNewError(uid++, fileName, 0);
-                } else if (account.isContain(fileName)) {
-                    $scope.addNewError(uid++, fileName, 1);
-                } else {
-                    $scope.addNew(uid++, fileName, fileExtension, data);
-                }
-            },
-            progress: function (e, data) {
-                var file = $scope.newFiles[data.formData.uid];
-                $scope.updateTooltip(file, "Uploading");
-                $scope.updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
-            },
-            done: function (e, data) {
-                var file = $scope.newFiles[data.formData.uid];
-                switch (data.result["result"]) {
-                    case "success" :
-                        var socket = new WebSocket("ws://" + location.host + "/api/ws");
-                        socket.onopen = function () {
-                            var msg = {
-                                type: "message",
-                                action: "render",
-                                data: {
-                                    fileName: data.formData.fileName
-                                }
+                    switch ($scope.state) {
+                        case 'file':
+                            var file = $scope.files[$scope.activeFileName];
+                            param = {
+                                fileName: file.fileName,
+                                type: $scope.activeTab.type,
+                                id: file.uid,
+                                height: 500,
+                                width: 500
                             };
-                            socket.send(JSON.stringify(msg));
+                            if (!file.meta[$scope.activeTab.type].cached) {
+                                param.place = '#id' + file.uid + ' .' + $scope.activeTab.mainPlace;
+                                getData($scope.activeTab.dataHandler, param, file);
+                                file.meta[$scope.activeTab.type].cached = true;
+                            }
+                            break;
+                        case 'diversity':
+                            param.place = '.diversity-visualisation-tab';
+                            param.fileName = 'all';
+                            param.type = 'diversity';
+                            getData(diversityStats, param);
+                            break;
+                        case 'summary':
+                            param.place = '.summary-visualisation-tab';
+                            param.fileName = 'all';
+                            param.type = 'summary';
+                            getData(summaryStats, param);
+                            break;
+                        default:
+                            break
+                    }
+                };
+
+                $scope.deleteFileFromList = function(fileName) {
+                    delete $scope.files[fileName];
+                };
+
+                $scope.changeFileState = function(file, state) {
+                    $scope.files[file.fileName].state = state;
+                }
+            }]
+        }
+    });
+
+    //Sidebar Directive
+    app.directive('filesSidebar', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/filesSidebar',
+            tranclude: true,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
+
+                $scope.setActiveState = function(state) {
+                    $rootScope.state = state;
+                    $rootScope.updateVisualisationTab();
+                };
+
+                $scope.setActiveFile = function(file) {
+                    $rootScope.activeFileName = file.fileName;
+                    $scope.setActiveState('file');
+                };
+
+                $scope.isRendering = function(file) {
+                    return file.state === 'rendering';
+                };
+
+                $scope.isActiveState = function(state) {
+                    return $rootScope.state === state;
+                };
+
+                $scope.isActiveFile = function(file) {
+                    return file.fileName === $rootScope.activeFileName && $rootScope.isActiveState('file');
+                };
+
+                $scope.isFilesEmpty = function() {
+                    var size = 0;
+                    angular.forEach($rootScope.files, function(file) {
+                        size++;
+                    });
+                    return size;
+                };
+
+                $scope.deleteFile = function(file) {
+                    $http.post('/api/delete', {
+                        action: 'delete',
+                        fileName: file.fileName
+                    }).success(function() {
+                        if (file.fileName === $rootScope.activeFileName) {
+                            $rootScope.state = 'accountInformation'
+                        } else if ($rootScope.state != 'file') {
+                            $rootScope.updateVisualisationTab();
+                        }
+                        $rootScope.deleteFileFromList(file.fileName);
+                    });
+                };
+
+                $scope.deleteAll = function () {
+                    $http.post('/api/delete', {action: 'deleteAll'})
+                        .success(function () {
+                            $rootScope.files = {};
+                            $rootScope.state = 'accountInformation';
+                        });
+                };
+            }]
+        }});
+
+    app.directive('mainVisualisationContent', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/mainVisualisationContent',
+            tranclude: true,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+
+                $scope.setActiveTab = function(tab) {
+                    $rootScope.activeTab = tab;
+                    $rootScope.updateVisualisationTab();
+                };
+
+                $scope.isActiveTab = function(tab) {
+                    return $rootScope.activeTab === tab;
+                };
+
+                $scope.showTab = function() {
+                    return $rootScope.state === 'file';
+                };
+
+                $scope.showFile = function(file) {
+                    return file.fileName === $rootScope.activeFileName;
+                }
+            }]
+        }
+    });
+
+    app.directive('accountInformation', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/accountInformation',
+            transclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.showAccountInformation = function() {
+                    return $rootScope.state === 'accountInformation';
+                }
+            }]
+        }
+    });
+
+    app.directive('diversityContent', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/diversityContent',
+            transclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.showDiversity = function() {
+                    return $rootScope.state === 'diversity';
+                }
+            }]
+        }
+    });
+
+    app.directive('summaryContent', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/summaryContent',
+            tranclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.showSummary = function() {
+                    return $rootScope.state === 'summary';
+                }
+            }]
+        }
+    });
+
+    app.directive('fileUpload', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/fileUpload',
+            tranclude: true,
+            require: '^accountPage',
+            controller: ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
+
+                var uid = 0;
+
+                $scope.newFiles = {};
+                $scope.uploadedFiles = [];
+                $scope.commonSoftwareType = 'mitcr';
+
+
+                $scope.isNewFilesEmpty = function() {
+                    return Object.keys($scope.newFiles).length;
+                };
+
+                $scope.addNewButton = function() {
+                    $("form input[type=file]").click();
+                };
+
+                $scope.addNew = function(uid, fileName, fileExtension, data) {
+                    $scope.$apply(function() {
+                        $scope.newFiles[uid] = {
+                            uid: uid,
+                            fileName: fileName,
+                            softwareTypeName: 'mitcr',
+                            fileExtension: fileExtension,
+                            wait: true,
+                            tooltip: '',
+                            progress: 0,
+                            result: 'ok',
+                            resultTooltip: '',
+                            data: data
                         };
-                        socket.onmessage = function (message) {
-                            var event = JSON.parse(message["data"]);
-                            switch (event["result"]) {
-                                case "ok" :
-                                    switch (event["progress"]) {
-                                        case "start" :
-                                            $scope.updateTooltip(file, "Computation");
-                                            account.addFileToList(file);
+                    })
+                };
+
+                $scope.addNewError = function(uid, fileName, error) {
+                    switch (error) {
+                        case 0:
+                            $scope.$apply(function() {
+                                $scope.newFiles[uid] = {
+                                    uid: uid,
+                                    fileName: fileName,
+                                    softwareTypeName: '',
+                                    wait: false,
+                                    result: 'error',
+                                    resultTooltip: 'You have exceeded limit of files'
+                                };
+                            });
+                            break;
+                        case 1:
+                            $scope.$apply(function() {
+                                $scope.newFiles[uid] = {
+                                    uid: uid,
+                                    fileName: fileName,
+                                    softwareTypeName: '',
+                                    wait: false,
+                                    result: 'error',
+                                    resultTooltip: 'You should use unique names for your files'
+                                };
+                            });
+                            break;
+                        default :
+                            break;
+                    }
+                };
+
+                $scope.updateTooltip = function(file, tooltip) {
+                    $scope.$apply(function() {
+                        file.tooltip = tooltip;
+                    })
+                };
+
+                $scope.updateProgress = function(file, progress) {
+                    $scope.$apply(function() {
+                        file.progress = progress;
+                    })
+                };
+
+                $scope.updateResult = function(file, result) {
+                    $scope.$apply(function() {
+                        file.result = result;
+                    })
+                };
+
+                $scope.updateResultTooltip = function(file, resultTooltip) {
+                    $scope.$apply(function() {
+                        file.resultTooltip = resultTooltip;
+                    })
+                };
+
+                $scope.changeCommonSoftwareType = function() {
+                    angular.forEach($scope.newFiles, function(file) {
+                        file.softwareTypeName = $scope.commonSoftwareType;
+                    });
+                };
+
+                $scope.uploadAll = function () {
+                    angular.forEach($scope.newFiles, function(file) {
+                        $scope.uploadFile(file);
+                    })
+                };
+
+                $scope.uploadFile = function(file) {
+                    if (file.wait) {
+                        file.data.formData = {
+                            softwareTypeName: file.softwareTypeName,
+                            fileName: file.fileName,
+                            fileExtension: file.fileExtension,
+                            uid: file.uid
+                        };
+                        file.wait = false;
+                        file.data.submit();
+                    }
+                };
+
+                $scope.isOk = function(file) {
+                    return file.result === 'ok' || file.result === 'success';
+                };
+
+                $scope.isSuccess = function(file) {
+                    return file.result === 'success';
+                };
+
+                $scope.isError = function(file) {
+                    return file.result === 'error';
+                };
+
+
+                $('#fileupload').fileupload({
+                    url: '/api/upload',
+                    dataType: 'json',
+                    sequentialUploads: true,
+                    dropZone: $('#new-files-dropzone'),
+                    add: function (e, data) {
+                        var originalFileName = data.files[0].name;
+                        var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
+                        var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
+                        if (fileExtension != 'txt' && fileExtension != 'gz') {
+                            fileName += fileExtension;
+                            fileExtension = 'txt';
+                        }
+                        if ($rootScope.files.length >= 25) {
+                            $scope.addNewError(uid++, fileName, 0);
+                        } else if ($rootScope.isContain(fileName)) {
+                            $scope.addNewError(uid++, fileName, 1);
+                        } else {
+                            $scope.addNew(uid++, fileName, fileExtension, data);
+                        }
+                    },
+                    progress: function (e, data) {
+                        var file = $scope.newFiles[data.formData.uid];
+                        $scope.updateTooltip(file, "Uploading");
+                        $scope.updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
+                    },
+                    done: function (e, data) {
+                        var file = $scope.newFiles[data.formData.uid];
+                        switch (data.result["result"]) {
+                            case "success" :
+                                var socket = new WebSocket("ws://" + location.host + "/api/ws");
+                                socket.onopen = function () {
+                                    var msg = {
+                                        type: "message",
+                                        action: "render",
+                                        data: {
+                                            fileName: data.formData.fileName
+                                        }
+                                    };
+                                    socket.send(JSON.stringify(msg));
+                                };
+                                socket.onmessage = function (message) {
+                                    var event = JSON.parse(message["data"]);
+                                    switch (event["result"]) {
+                                        case "ok" :
+                                            switch (event["progress"]) {
+                                                case "start" :
+                                                    $scope.updateTooltip(file, "Computation");
+                                                    $rootScope.addFileToList(file);
+                                                    break;
+                                                case "end" :
+                                                    $rootScope.changeFileState(file, 'rendered')
+                                                    $rootScope.updateVisualisationTab();
+                                                    $scope.updateTooltip(file, "Success");
+                                                    $scope.updateResult(file, 'success');
+                                                    socket.close();
+                                                    break;
+                                                default:
+                                                    $scope.updateProgress(file, 50 + (event.progress / 2));
+                                            }
                                             break;
-                                        case "end" :
-                                            account.changeFileState(file, 'rendered');
-                                            account.updateVisualisationTab();
-                                            $scope.updateTooltip(file, "Success");
-                                            $scope.updateResult(file, 'success');
+                                        case "error" :
                                             socket.close();
+                                            $rootScope.deleteFileFromList(file.fileName);
+                                            $scope.updateResult(file, 'error');
+                                            $scope.updateResultTooltip(file, event["message"]);
                                             break;
                                         default:
-                                            $scope.updateProgress(file, 50 + (event.progress / 2));
+                                            $rootScope.deleteFileFromList(file.fileName);
+                                            $scope.updateTooltip(file, "Server unavailable");
+                                            break;
                                     }
-                                    break;
-                                case "error" :
-                                    socket.close();
-                                    account.deleteFileFromList(file.fileName);
-                                    $scope.updateResult(file, 'error');
-                                    $scope.updateResultTooltip(file, event["message"]);
-                                    break;
-                                default:
-                                    account.deleteFileFromList(file.fileName);
-                                    $scope.updateTooltip(file, "Server unavailable");
-                                    break;
-                            }
 
-                        };
-                        break;
-                    case "error" :
-                        $scope.updateResult(file, 'error');
-                        $scope.updateResultTooltip(file, data.result.message);
-                        break;
-                    default:
-                        $scope.updateResult(file, 'error');
-                        $scope.updateResultTooltip(file, "Server unavailable");
-                }
+                                };
+                                break;
+                            case "error" :
+                                $scope.updateResult(file, 'error');
+                                $scope.updateResultTooltip(file, data.result.message);
+                                break;
+                            default:
+                                $scope.updateResult(file, 'error');
+                                $scope.updateResultTooltip(file, "Server unavailable");
+                        }
 
-            }
-        });
+                    }
+                });
 
-        $('#new-files-table').on('hidden.bs.modal', function () {
-            angular.forEach($scope.newFiles, function(file) {
-                switch(file.result) {
-                    case 'success':
-                        $scope.$apply(function() {
-                            $scope.uploadedFiles.push({
-                                fileName: file.fileName,
-                                softwareTypeName: file.softwareTypeName
-                            });
-                            delete $scope.newFiles[file.uid];
-                        });
-                        break;
-                    case 'error':
-                        $scope.$apply(function() {
-                            delete $scope.newFiles[file.uid];
-                        });
-                        break;
-                    default :
-                        break;
-                }
-            })
-        });
+                $('#new-files-table').on('hidden.bs.modal', function () {
+                    angular.forEach($scope.newFiles, function(file) {
+                        switch(file.result) {
+                            case 'success':
+                                $scope.$apply(function() {
+                                    $scope.uploadedFiles.push({
+                                        fileName: file.fileName,
+                                        softwareTypeName: file.softwareTypeName
+                                    });
+                                    delete $scope.newFiles[file.uid];
+                                });
+                                break;
+                            case 'error':
+                                $scope.$apply(function() {
+                                    delete $scope.newFiles[file.uid];
+                                });
+                                break;
+                            default :
+                                break;
+                        }
+                    })
+                });
 
-    }]);
+            }]
 
-    // Comparing tab controller
-
-    app.controller('comparingTable', ['$scope', 'account', function($scope, account) {
-
-        $scope.showItem = function(file, tab) {
-            if (!account.getFileMeta(file.fileName)[tab.type].comparingCache) {
-                var param = {
-                    fileName: file.fileName,
-                    id: file.uid + '_comparing',
-                    height: (window.innerWidth < 1400) ? 320 : 400,
-                    width: (window.innerWidth < 1400) ? 300 : 400,
-                    type: tab.type,
-                    place: '#id' + file.uid + ' .' + tab.comparingPlace
-                };
-                getData(tab.dataHandler, param, file);
-            }
-            account.changeComparingItem(file.fileName, tab);
-        };
-
-        $scope.showAllItems = function(tab) {
-            var shown = 0;
-            angular.forEach(account.getFilesList(), function(file) {
-                if (!file.meta[tab.type].comparing) {
-                    $scope.showItem(file, tab);
-                    shown++;
-                }
-            });
-            if (shown == 0) {
-               angular.forEach(account.getFilesList(), function(file) {
-                   $scope.showItem(file, tab);
-               })
-            }
         }
-    }])
+    });
+
+    app.directive('comparingContent', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/comparingContent',
+            tranclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+
+                $scope.showComparing = function() {
+                    return $rootScope.state === 'comparing';
+                };
+
+                $scope.showItem = function(file, tab) {
+                    if (!$rootScope.files[file.fileName].meta[tab.type].comparingCache) {
+                        var param = {
+                            fileName: file.fileName,
+                            id: file.uid + '_comparing',
+                            height:  (tab.type === 'vjusage') ? 320 : 520,
+                            width: 300,
+                            type: tab.type,
+                            place: '#id' + file.uid + ' .' + tab.comparingPlace
+                        };
+                        getData(tab.dataHandler, param, file);
+                    }
+                    $rootScope.files[file.fileName].meta[tab.type].comparing = !$rootScope.files[file.fileName].meta[tab.type].comparing;
+                    $rootScope.files[file.fileName].meta[tab.type].comparingCache = true;
+                };
+
+                $scope.showAllItems = function(tab) {
+                    var shown = 0;
+                    angular.forEach($rootScope.files, function(file) {
+                        if (!file.meta[tab.type].comparing) {
+                            $scope.showItem(file, tab);
+                            shown++;
+                        }
+                    });
+                    if (shown == 0) {
+                        angular.forEach($rootScope.files, function(file) {
+                            $scope.showItem(file, tab);
+                        })
+                    }
+                }
+            }]
+        }
+    });
+
+    app.filter('comparingFilter', function() {
+        return function(input) {
+            var filteredInput = [];
+            angular.forEach(input, function(element) {
+                if (element.comparing)
+                    filteredInput.push(element);
+            });
+            return filteredInput;
+        };
+    });
 
 })();
 
@@ -1043,13 +1008,13 @@ function diversityStats(data, param) {
         var svg = d3.select(param.place)
             .append("svg")
             .attr("id", "diversity-png-export")
-            .style("height", "900px")
+            .style("height", "500px")
             .style("width", "100%")
             .style("margin-top", "50px");
 
         var chart = nv.models.lineChart()
             .useInteractiveGuideline(true)
-            .transitionDuration(350)
+            .duration(1000)
             .showLegend(true)
             .showYAxis(true)
             .showXAxis(true)

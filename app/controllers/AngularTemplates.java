@@ -1,20 +1,8 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Software;
-import com.antigenomics.vdjtools.db.*;
-import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
-import models.LocalUser;
-import models.UserFile;
-import play.Logger;
-import play.libs.Json;
+
 import play.mvc.*;
 
-import securesocial.core.Identity;
-import securesocial.core.java.SecureSocial;
-import views.html.*;
-
-import java.util.*;
 
 public class AngularTemplates extends Controller {
 
@@ -24,10 +12,6 @@ public class AngularTemplates extends Controller {
 
     public static Result filesSidebar() {
         return ok(views.html.account.filesSidebar.render());
-    }
-
-    public static Result accountPage() {
-        return ok(views.html.account.accountPage.render());
     }
 
     public static Result accountInformation() {
@@ -44,6 +28,10 @@ public class AngularTemplates extends Controller {
 
     public static Result fileUpload() {
         return ok(views.html.account.fileUpload.render());
+    }
+
+    public static Result comparingContent() {
+        return ok(views.html.account.comparingContent.render());
     }
 
 }
