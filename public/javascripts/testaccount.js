@@ -5,135 +5,229 @@
 (function () {
     var app = angular.module('accountPage', []);
 
+    app.directive('accountPage', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/accountPage',
+            controller: ['$scope', '$http', function($scope, $http) {
+                //private parameters
+                var uid = 0;
+
+                //public parameters
+                $scope.files = {};
+                $scope.state = 'accountInformation';
+                $scope.activeFileName = '';
+                $scope.visualisationTabs = {
+                    vjusage: { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', comparing: true, comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
+                    spectrotype: { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', comparing: true, comparingPlace: 'comparing-spectrotype-tab',  dataHandler: spectrotype},
+                    spectrotypev: { tabName: 'SpectrtypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', comparing: true, comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
+                    sizeclassifying: { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', comparing: true, comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying },
+                    annotation: { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', comparing: false, dataHandler: annotationTable}
+                }
+                ;
+                $scope.activeTab = $scope.visualisationTabs.vjusage;
+
+                $scope.updateFilesList = function() {
+                    $http({method: 'GET', url: '/api/files'}).success(function (data) {
+                        angular.forEach(data, function(file) {
+                            $scope.files[file.fileName] = {
+                                uid: uid++,
+                                fileName: file.fileName,
+                                state: file.state,
+                                softwareTypeName: file.softwareTypeName,
+                                meta: {
+                                    vjusage: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    spectrotype: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    spectrotypeV: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    sizeClassifying: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    },
+                                    annotation: {
+                                        cached: false,
+                                        comparingCache: false,
+                                        data: [],
+                                        comparing: false
+                                    }
+                                }
+                            }
+                        })
+                    })
+                };
+
+                $scope.getActiveFile = function() {
+                    return $scope.files[$scope.activeFileName];
+                };
+
+                $scope.updateFilesList();
+
+                $scope.updateVisualisationTab = function () {
+                    var param = {};
+
+                    switch ($scope.state) {
+                        case 'file':
+                            var file = $scope.files[$scope.activeFileName];
+                            param = {
+                                fileName: file.fileName,
+                                type: $scope.activeTab.type,
+                                id: file.uid,
+                                height: 500,
+                                width: 500
+                            };
+                            if (!file.meta[$scope.activeTab.type].cached) {
+                                param.place = '#id' + file.uid + ' .' + $scope.activeTab.mainPlace;
+                                getData($scope.activeTab.dataHandler, param, file);
+                                file.meta[$scope.activeTab.type].cached = true;
+                            }
+                            break;
+                        case 'diversity':
+                            param.place = '.diversity-visualisation-tab';
+                            param.fileName = 'all';
+                            param.type = 'diversity';
+                            getData(diversityStats, param);
+                            break;
+                        case 'summary':
+                            param.place = '.summary-visualisation-tab';
+                            param.fileName = 'all';
+                            param.type = 'summary';
+                            getData(summaryStats, param);
+                            break;
+                        default:
+                            break
+                    }
+                };
+            }]
+        }
+    });
+
     app.directive('filesSidebar', function() {
         return {
             restrict: 'E',
             templateUrl: '/account/filesSidebar',
-            controller: ['$scope', '$log', '$http', 'account', function ($scope, $log, $http, account) {
-                $scope.changeState = account.changeState;
-                $scope.setActiveFile = account.setActiveFile;
-                $scope.isFilesEmpty = account.isFilesEmpty;
+            tranclude: true,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
-                account.updateFilesList();
-
-                $scope.isState = function (state) {
-                    return account.getState() === state;
+                $scope.setActiveState = function(state) {
+                    $rootScope.state = state;
+                    $rootScope.updateVisualisationTab();
                 };
 
-                $scope.isFile = function (fileName) {
-                    return account.getActiveFileName() === fileName;
-                };
-
-                $scope.isState = function (state) {
-                    return account.getState() === state;
-                };
-
-                $scope.deleteAll = function () {
-                    $http.post('/api/delete', {action: 'deleteAll'})
-                        .success(function () {
-                            account.deleteAllFiles();
-                            account.changeState('accountInformation');
-                        });
-                };
-
-                $scope.deleteFile = function(file) {
-                    $http.post('/api/delete', {
-                        action: 'delete',
-                        fileName: file.fileName
-                    }).success(function() {
-                        if (file.fileName == account.getActiveFileName(file.fileName)) {
-                            account.changeState('accountInformation');
-                        } else if (account.getState() != 'file') {
-                            account.updateVisualisationTab();
-                        }
-                        account.deleteFileFromList(file.fileName);
-                    });
+                $scope.setActiveFile = function(file) {
+                    $rootScope.activeFileName = file.fileName;
+                    $scope.setActiveState('file');
                 };
 
                 $scope.isRendering = function(file) {
                     return file.state === 'rendering';
-                }
-        }]
-    }});
-
-    app.directive('test', function() {
-        return {
-            restrict: 'E',
-            template: '<div><test-directive></test-directive></div>',
-            controller: function($scope) {
-                $scope.testFunc = function() {
-                    console.log();
                 };
-                $scope.testVar = [
-                    1, 2
-                ];
-            }
-        }
-    });
 
-    app.directive('testDirective', function() {
-        return {
-            restrict: 'E',
-            templateUrl: '/account/testDirective',
-            require: '^test',
-            transclude: true
-        }
-    });
+                $scope.isActiveState = function(state) {
+                    return $rootScope.state === state;
+                };
+
+                $scope.isActiveFile = function(file) {
+                    return file.fileName === $rootScope.activeFileName && $rootScope.isActiveState('file');
+                };
+
+                $scope.isFilesEmpty = function() {
+                    var size = 0;
+                    angular.forEach($rootScope.files, function(file) {
+                        size++;
+                    });
+                    return size;
+                };
+            }]
+        }});
 
     app.directive('mainVisualisationContent', function() {
         return {
             restrict: 'E',
-            templateUrl: '/account/mainVisualisationContent'
+            templateUrl: '/account/mainVisualisationContent',
+            tranclude: true,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+
+                $scope.setActiveTab = function(tab) {
+                    $rootScope.activeTab = tab;
+                    $rootScope.updateVisualisationTab();
+                };
+
+                $scope.isActiveTab = function(tab) {
+                    return $rootScope.activeTab === tab;
+                };
+
+                $scope.showTab = function() {
+                    return $rootScope.state === 'file';
+                };
+
+                $scope.showFile = function(file) {
+                    return file.fileName === $rootScope.activeFileName;
+                }
+            }]
         }
     });
 
-    app.controller('visualisation', ['$rootScope', '$scope', '$log', 'account', function ($rootScope, $scope, $log, account) {
-
-        $scope.tabName = 'V-J Usage';
-
-        $scope.isActiveTab = function (tab) {
-            return account.getActiveTab() === tab;
-        };
-
-        $scope.setActiveTab = function (tab) {
-            account.setVisualisationTab(tab);
-            $scope.tabName = tab.tabName;
-        };
-
-        $scope.isState = function (state) {
-            return account.getState() === state;
-        };
-
-        $scope.isFile = function(fileName) {
-            return fileName === account.getActiveFileName();
-        };
-
-        $scope.exportPng = function(file) {
-            switch ($scope.tab) {
-                case 'V-J Usage':
-                    saveSvgAsPng(document.getElementById("svg_vjusage_" + file.uid), file.fileName + "_vjusage.png", 3);
-                    break;
-                case 'Spectrotype':
-                    saveSvgAsPng(document.getElementById("svg_spectrotype_" + file.uid), file.fileName + "_spectrotype.png", 3);
-                    break;
-                case 'SpectrotypeV':
-                    saveSvgAsPng(document.getElementById("svg_spectrotypeV_" + file.uid), file.fileName + "_spectrotypeV.png", 3);
-                    break;
-                case 'Kernel Density':
-                    saveSvgAsPng(document.getElementById("svg_kernelDensity_" + file.uid), file.fileName + "_kernelDensity.png", 3);
-                    break;
-                default:
-                    break;
-            }
-
-        };
-
-        $scope.exportDiversityPng = function() {
-            saveSvgAsPng(document.getElementById("diversity-png-export"), "diversity.png", 3);
+    app.directive('accountInformation', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/accountInformation',
+            transclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.showAccountInformation = function() {
+                    return $rootScope.state === 'accountInformation';
+                }
+            }]
         }
+    });
 
-    }])
-;
+    app.directive('diversityContent', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/diversityContent',
+            transclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.showDiversity = function() {
+                    return $rootScope.state === 'diversity';
+                }
+            }]
+        }
+    });
+
+    app.directive('summaryContent', function() {
+        return {
+            restrict: 'E',
+            templateUrl: '/account/summaryContent',
+            tranclude: false,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.showSummary = function() {
+                    return $rootScope.state === 'summary';
+                }
+            }]
+        }
+    });
+
+
     app.factory('account', ['$http', '$rootScope', function ($http, $rootScope) {
 
         $rootScope.files = {};
@@ -641,9 +735,9 @@
                 }
             });
             if (shown == 0) {
-               angular.forEach(account.getFilesList(), function(file) {
-                   $scope.showItem(file, tab);
-               })
+                angular.forEach(account.getFilesList(), function(file) {
+                    $scope.showItem(file, tab);
+                })
             }
         }
     }])
@@ -1049,7 +1143,7 @@ function diversityStats(data, param) {
 
         var chart = nv.models.lineChart()
             .useInteractiveGuideline(true)
-            .transitionDuration(350)
+            .duration(1000)
             .showLegend(true)
             .showYAxis(true)
             .showXAxis(true)

@@ -44,7 +44,7 @@ public class Application extends Controller {
     public static Result account() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        return ok(views.html.account.accountMainPage.render(localUser.account));
+        return ok(views.html.account.testaccountMainPage.render(localUser.account));
     }
 
     @SecureSocial.UserAwareAction

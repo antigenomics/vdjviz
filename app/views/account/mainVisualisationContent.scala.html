@@ -1,0 +1,43 @@
+<div class="visualisation-tab" ng-show="showTab()">
+    <ul class="nav nav-pills nav-visualisation">
+        <li ng-repeat="tab in visualisationTabs" ng-click="setActiveTab(tab)" ng-class="{active:isActiveTab(tab)}">
+            <a>{{ tab.tabName }}</a>
+        </li>
+    </ul>
+    <div class="col-lg-12" ng-repeat="file in files">
+        <div id="id{{ file.uid }}" ng-show="showFile(file)" class="visualisation-results">
+            <h3>{{ tabName }}</h3>
+            <hr>
+            <div ng-repeat="tab in visualisationTabs" class="viusalisation-results {{ tab.mainPlace }}" ng-show="isActiveTab(tab)"></div>
+        </div>
+    </div>
+    <div class="col-lg-12">
+        <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
+            <h2>Description</h2>
+            <hr>
+
+            V-J Usage description placeholder
+        </div>
+        <div class="visualisation-description-spectrotype" ng-show="isActiveTab(visualisationTabs.spectrotype)">
+            <h2>Description</h2>
+            <hr>
+            Spectrotype description placeholder
+        </div>
+        <div class="visualisation-description-spectrotypeV" ng-show="isActiveTab(visualisationTabs.spectrotypev)">
+            <h2>Description</h2>
+            <hr>
+            SpectrotypeV description placeholder
+        </div>
+        <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab(visualisationTabs.sizeclassifying)">
+            <h2>Description</h2>
+            <hr>
+            Size classifying description placeholder
+        </div>
+        <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
+            <h2>Description</h2>
+            <hr>
+            Annotation description placeholder
+        </div>
+    </div>
+    <hr>
+</div>

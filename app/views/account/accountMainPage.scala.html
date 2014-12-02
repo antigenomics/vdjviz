@@ -10,82 +10,20 @@
     <div ng-app="accountPage">
         <div class="container-fluid" >
             <div class="row">
-                <div class="col-sm-2 col-md-2 col-lg-2 sidebar user-files-list" ng-controller="filePanel">
-                    <ul class="nav nav-sidebar">
-                        <li class="active">
-                            <a href="#new-files-table" role="button" class="btn" data-toggle="modal">
-                                Your Files<i class="fa fa-plus add-new-files-button pull-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                    <ul class="nav nav-sidebar" ng-hide="isFilesEmpty()">
-                        <li>
-                            <a>You have no files</a>
-                        </li>
-                    </ul>
-                    <ul class="nav nav-sidebar" ng-show="isFilesEmpty()">
-                        <li ng-repeat="file in files" ng-class="{active:isFile(file.fileName), disabled:isRendering(file)}" ng-click="setActiveFile(file)" ng-mouseenter="hover=true" ng-mouseleave="hover=false">
-                            <a>
-                                {{ file.fileName }} <text ng-show="isRendering(file)">| Rendering</text>
-                                <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>
-                            </a>
-                        </li>
-                        <hr>
-                        <li ng-class="{active:isState('diversity')}" ng-click="changeState('diversity')"><a>Diversity<i class="fa fa-area-chart pull-right"></i></a></li>
-                        <li ng-class="{active:isState('summary')}" ng-click="changeState('summary')"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
-                        <li ng-class="{active:isState('comparing')}" ng-click="changeState('comparing')"><a>Comparing</a></li>
-                        <hr>
-                        <li ng-click="deleteAll()"><a>Delete All</a></li>
-                    </ul>
 
-                </div>
+                <files-sidebar></files-sidebar>
+
                 <div class="col-sm-10 col-sm-offset-2 col-md-10 col-md-offset-2 col-lg-10 col-lg-offset-2 main" ng-controller="visualisation">
                     <div class="main-content">
-                        <div class="visualisation-tab" ng-show="isState('file')">
-                            <ul class="nav nav-pills nav-visualisation">
-                                <li ng-repeat="tab in visualisationTabs" ng-click="setActiveTab(tab)" ng-class="{active:isActiveTab(tab)}">
-                                    <a>{{ tab.tabName }}</a>
-                                </li>
-                            </ul>
-                            <div class="col-lg-12" ng-repeat="file in files">
-                                <div id="id{{ file.uid }}" ng-show="isFile(file.fileName)" class="visualisation-results">
-                                    <h3>
-                                        {{ tabName }}
-                                    </h3>
-                                    <hr>
-                                    <div ng-repeat="tab in visualisationTabs" class="viusalisation-results {{ tab.mainPlace }}" ng-show="isActiveTab(tab)">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-12">
-                                <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
-                                    <h2>Description</h2>
-                                    <hr>
-                                    V-J Usage description placeholder
-                                </div>
-                                <div class="visualisation-description-spectrotype" ng-show="isActiveTab(visualisationTabs.spectrotype)">
-                                    <h2>Description</h2>
-                                    <hr>
-                                    Spectrotype description placeholder
-                                </div>
-                                <div class="visualisation-description-spectrotypeV" ng-show="isActiveTab(visualisationTabs.spectrotypev)">
-                                    <h2>Description</h2>
-                                    <hr>
-                                    SpectrotypeV description placeholder
-                                </div>
-                                <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab(visualisationTabs.sizeclassifying)">
-                                    <h2>Description</h2>
-                                    <hr>
-                                    Size classifying description placeholder
-                                </div>
-                                <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
-                                    <h2>Description</h2>
-                                    <hr>
-                                    Annotation description placeholder
-                                </div>
-                            </div>
-                            <hr>
-                        </div>
+                        <test>
+
+                        </test>
+
+
+                        <main-visualisation-content>
+
+                        </main-visualisation-content>
+
                         <div class="account-information-tab" ng-show="isState('accountInformation')">
                             Account Information
                         </div>
