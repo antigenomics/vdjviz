@@ -19,6 +19,7 @@ GET         /account/mainVisualisationContent        controllers.AngularTemplate
 GET         /account/accountInformation              controllers.AngularTemplates.accountInformation()
 GET         /account/diversityContent                controllers.AngularTemplates.diversityContent()
 GET         /account/summaryContent                  controllers.AngularTemplates.summaryContent()
+GET         /account/fileUpload                      controllers.AngularTemplates.fileUpload()
 
 
 # Map static resources from the /public folder to the /assets URL path

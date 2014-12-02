@@ -42,4 +42,8 @@ public class AngularTemplates extends Controller {
         return ok(views.html.account.summaryContent.render());
     }
 
+    public static Result fileUpload() {
+        return ok(views.html.account.fileUpload.render());
+    }
+
 }
