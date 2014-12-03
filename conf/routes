@@ -35,7 +35,9 @@ POST        /api/data                                controllers.API.data()
 GET         /api/data                                controllers.Application.account()
 GET         /api/files                               controllers.API.files()
 
+# Robots.txt route
 
+GET         /robots.txt                              controllers.Assets.at(path="/public", file="robots.txt")
 
 # Auth routes
 GET         /signin                                  securesocial.controllers.LoginPage.login

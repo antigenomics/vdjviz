@@ -10,6 +10,7 @@ import com.antigenomics.vdjtools.db.*;
 import com.antigenomics.vdjtools.diversity.DiversityEstimator;
 import com.antigenomics.vdjtools.diversity.DownSampler;
 import com.antigenomics.vdjtools.diversity.FrequencyTable;
+import com.antigenomics.vdjtools.diversity.QuantileStats;
 import com.antigenomics.vdjtools.intersection.IntersectionType;
 import com.antigenomics.vdjtools.pwm.CdrPwmGrid;
 import com.antigenomics.vdjtools.sample.Sample;
@@ -212,9 +213,17 @@ public class ComputationUtil {
 
     }
 
-    private void seqLogo() throws Exception {
-        CdrPwmGrid cdrPwmGrid = new CdrPwmGrid();
-        cdrPwmGrid.update(sample);
+    private void quantileStats() throws Exception {
+        QuantileStats quantileStats = new QuantileStats(sample, 5);
+        List<HashMap<String, Object>> data = new ArrayList<>();
+        for (int i = 0; i < quantileStats.getNumberOfQuantiles(); i++) {
+            HashMap<String, Object> qData = new HashMap<>();
+            qData.put("label", "Q" + (i + 1));
+            qData.put("value", quantileStats.getFrequency(i));
+            qData.put("tooltip", "Quantile #" + (i + 1));
+            data.add(qData);
+        }
+        saveCache(CacheType.quantileStats.getCacheFileName(), data);
     }
 
     private void annotation() throws Exception {
@@ -289,47 +298,6 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    private void kernelDensity() throws Exception {
-
-        FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
-        xyValues binValues = new xyValues();
-        xyValues stdValues = new xyValues();
-        int count = 0;
-        for (FrequencyTable.BinInfo binInfo : frequencyTable.getBins()) {
-            if (binInfo.getComplementaryCdf() == 0) {
-                break;
-            }
-            binValues.addValue(binInfo.getClonotypeFreq(), binInfo.getComplementaryCdf());
-            if (count >= 1) {
-                stdValues.addValueToPosition(0, binInfo.getClonotypeFreq() - binInfo.getClonotypeFreqStd(), binInfo.getComplementaryCdf());
-            } else {
-                stdValues.addValueToPosition(0, frequencyTable.getBins().get(1).getClonotypeFreq() - frequencyTable.getBins().get(1).getClonotypeFreqStd(), binInfo.getComplementaryCdf());
-            }
-            count++;
-        }
-        for (FrequencyTable.BinInfo binInfo : frequencyTable.getBins()) {
-            if (binInfo.getComplementaryCdf() == 0) {
-                break;
-            }
-            stdValues.addValue(binInfo.getClonotypeFreq() + binInfo.getClonotypeFreqStd(), binInfo.getComplementaryCdf());
-        }
-        List<HashMap<String, Object>> data = new ArrayList<>();
-        Data binData = new Data(new String[]{"values", "key"});
-        Data stdData = new Data(new String[]{"values", "key", "area"});
-        binData.addData(new Object[]{binValues.getValues(), "bin"});
-        stdData.addData(new Object[]{stdValues.getValues(), "std", true});
-        data.add(binData.getData());
-        data.add(stdData.getData());
-
-        File cache = new File(file.fileDirPath + "/kernelDensity.cache");
-        PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
-        fileWriter.write(Json.stringify(Json.toJson(data)));
-        fileWriter.close();
-
-        serverResponse.changeValue("progress", 100);
-        out.write(Json.toJson(serverResponse.getData()));
-    }
-
     private void saveCache(String cacheName, Object data) throws Exception {
         File cache = new File(file.fileDirPath + "/" + cacheName + ".cache");
         PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
@@ -346,11 +314,10 @@ public class ComputationUtil {
         spectrotype();
         spectrotypeV();
         annotation();
+        quantileStats();
         basicStats();
         diversity();
-        seqLogo();
         clonotypeSizeClassifying();
-        //kernelDensity(sample, file, out, serverResponse);
         file.rendering = false;
         file.rendered = true;
         serverResponse.changeValue("progress", "end");

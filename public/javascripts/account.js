@@ -34,7 +34,8 @@
                     spectrotype: createTab('Spectrotype', 'spectrotype', spectrotype, 'visualisation-results-spectrotype', true, true, 'comparing-spectrotype-tab'),
                     spectrotypev: createTab('SpectrotypeV', 'spectrotypeV', spectrotypeV, 'visualisation-results-spectrotypeV', true, true, 'comparing-spectrotypeV-tab'),
                     sizeclassifying: createTab('Size Classifying', 'sizeClassifying', sizeClassifying, 'visualisation-results-sizeClassifying', true, true, 'comparing-sizeClassifying-tab'),
-                    annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false),
+                    quantilestats: createTab('Quantile Stats', 'quantileStats', quantileStats, 'visualisation-results-quantiles', true, true, 'comparing-quantileStats-tab'),
+                    annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
 
@@ -85,6 +86,12 @@
                                 comparing: false
                             },
                             sizeClassifying: {
+                                cached: false,
+                                comparingCache: false,
+                                data: [],
+                                comparing: false
+                            },
+                            quantileStats: {
                                 cached: false,
                                 comparingCache: false,
                                 data: [],
@@ -816,12 +823,52 @@ function sizeClassifying(data, param) {
                 .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
                 .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
                 .donutRatio(0.35)     //Configure how big you want the donut hole size to be.
+                .duration(500)
             ;
 
         svg
             .datum(data)
             .transition().duration(350)
             .call(chart);
+
+        return chart;
+    });
+
+}
+
+function quantileStats(data, param) {
+    nv.addGraph(function() {
+        var place = d3.select(param.place);
+        place.html("");
+        var width = place.style('width');
+        var height = param.height;
+        var svg = place.append("div")
+            .attr("id", "chart")
+            .append("svg")
+            .attr("id", "svg_quantileStats_" + param.id)
+            .style("height", height)
+            .style("width", width)
+            .attr('height', height) //fix for Firefox browser
+            .attr('width', width)   //fix for Firefox browser
+            .style("overflow", "visible");
+
+        var chart = nv.models.pieChart()
+                .x(function(d) { return d.label })
+                .y(function(d) { return d.value })
+                .showLabels(true)     //Display pie labels
+                .labelThreshold(.05)  //Configure the minimum slice size for labels to show up
+                .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
+                .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
+                .donutRatio(0.35)     //Configure how big you want the donut hole size to be.
+                .duration(500)
+                .color(["#d7191c", "#fdae61", "#ffffbf", "#abd9e9", "#2c7bb6"])
+                .tooltipContent(function(key, y, e, graph) {
+                    return '<h3>' + e.point.tooltip + '</h3>'
+                        + '<p>' +  y + '</p>';
+                })
+            ;
+
+        svg.datum(data).transition().duration(350).call(chart);
 
         return chart;
     });

@@ -9,6 +9,7 @@ public enum CacheType {
     spectrotypeV("spectrotypev", true, "spectrotypeV"),
     sizeClassifying("sizeclassifying", true, "sizeClassifying"),
     annotation("annotation", true,  "annotation"),
+    quantileStats("quantilestats", true, "quantileStats"),
     diversity("diversity", false, "diversity"),
     summary("summary", false, "basicStats");
 
