@@ -1,0 +1,25 @@
+
+    <ul class="nav nav-sidebar">
+        <li class="active">
+            <a href="#new-files-table" role="button" class="btn" data-toggle="modal">Your Files<i class="fa fa-plus add-new-files-button pull-right"></i></a>
+        </li>
+    </ul>
+    <ul class="nav nav-sidebar" ng-hide="isFilesEmpty()">
+        <li>
+            <a>You have no files</a>
+        </li>
+    </ul>
+    <ul class="nav nav-sidebar" ng-show="isFilesEmpty()">
+        <li ng-repeat="file in files" ng-class="{active:isActiveFile(file), disabled:isRendering(file)}" ng-click="setActiveFile(file)" ng-mouseenter="hover=true" ng-mouseleave="hover=false">
+            <a>
+                {{ file.fileName }} <text ng-show="isRendering(file)">| Rendering</text>
+                <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>
+            </a>
+        </li>
+        <hr>
+        <li ng-class="{active:isActiveState('diversity')}" ng-click="setActiveState('diversity')"><a>Diversity<i class="fa fa-area-chart pull-right"></i></a></li>
+        <li ng-class="{active:isActiveState('summary')}" ng-click="setActiveState('summary')"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
+        <li ng-class="{active:isActiveState('comparing')}" ng-click="setActiveState('comparing')"><a>Comparing</a></li>
+        <hr>
+        <li ng-click="deleteAll()"><a>Delete All</a></li>
+    </ul>
