@@ -8,7 +8,7 @@
         <div id="id{{ file.uid }}" ng-show="showFile(file)" class="visualisation-results">
             <div ng-repeat="tab in visualisationTabs" ng-show="isActiveTab(tab)">
                 <h3>{{ tab.tabName }}
-                    <button class="btn btn-default pull-right" ng-click="exportChartPng(file, tab)">Export to PNG</button>
+                    <button class="btn btn-default pull-right" ng-click="exportChartPng(file, tab)" ng-show="tab.exportPng">Export to PNG</button>
                 </h3>
                 <hr>
                 <div class="viusalisation-results {{ tab.mainPlace }}"></div>

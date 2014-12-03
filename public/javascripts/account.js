@@ -12,62 +12,36 @@
             controller: ['$scope', '$http', function($scope, $http) {
                 //private parameters
                 var uid = 0;
+                var createTab = function(tabName, type, dataHandler, mainPlace, comparing, exportPng, comparingPlace) {
+                    return {
+                        tabName: tabName,
+                        type: type,
+                        dataHandler: dataHandler,
+                        mainPlace: mainPlace,
+                        comparing: comparing,
+                        exportPng: exportPng,
+                        comparingPlace: comparingPlace
+                    }
+                };
+
 
                 //public parameters
                 $scope.files = {};
                 $scope.state = 'accountInformation';
                 $scope.activeFileName = '';
                 $scope.visualisationTabs = {
-                    vjusage: { tabName: 'V-J Usage ', type: 'vjusage', mainPlace: 'visualisation-results-vjusage', comparing: true, comparingPlace: 'comparing-vjusage-tab', dataHandler: vjUsage},
-                    spectrotype: { tabName: 'Spectrotype ', type: 'spectrotype', mainPlace: 'visualisation-results-spectrotype', comparing: true, comparingPlace: 'comparing-spectrotype-tab',  dataHandler: spectrotype},
-                    spectrotypev: { tabName: 'SpectrotypeV', type: 'spectrotypeV', mainPlace: 'visualisation-results-spectrotypeV', comparing: true, comparingPlace: 'comparing-spectrotypeV-tab', dataHandler: spectrotypeV},
-                    sizeclassifying: { tabName: 'Size Classifying', type: 'sizeClassifying', mainPlace: 'visualisation-results-sizeClassifying', comparing: true, comparingPlace: 'comparing-sizeClassifying-tab', dataHandler: sizeClassifying },
-                    annotation: { tabName: 'Annotation', type: 'annotation', mainPlace: 'visualisation-results-annotation', comparing: false, dataHandler: annotationTable}
-                }
-                ;
+                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, false, 'comparing-vjusage-tab'),
+                    spectrotype: createTab('Spectrotype', 'spectrotype', spectrotype, 'visualisation-results-spectrotype', true, true, 'comparing-spectrotype-tab'),
+                    spectrotypev: createTab('SpectrotypeV', 'spectrotypeV', spectrotypeV, 'visualisation-results-spectrotypeV', true, true, 'comparing-spectrotypeV-tab'),
+                    sizeclassifying: createTab('Size Classifying', 'sizeClassifying', sizeClassifying, 'visualisation-results-sizeClassifying', true, true, 'comparing-sizeClassifying-tab'),
+                    annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false),
+                };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
 
                 $scope.updateFilesList = function() {
                     $http({method: 'GET', url: '/api/files'}).success(function (data) {
                         angular.forEach(data, function(file) {
-                            $scope.files[file.fileName] = {
-                                uid: uid++,
-                                fileName: file.fileName,
-                                state: file.state,
-                                softwareTypeName: file.softwareTypeName,
-                                meta: {
-                                    vjusage: {
-                                        cached: false,
-                                        comparingCache: false,
-                                        data: [],
-                                        comparing: false
-                                    },
-                                    spectrotype: {
-                                        cached: false,
-                                        comparingCache: false,
-                                        data: [],
-                                        comparing: false
-                                    },
-                                    spectrotypeV: {
-                                        cached: false,
-                                        comparingCache: false,
-                                        data: [],
-                                        comparing: false
-                                    },
-                                    sizeClassifying: {
-                                        cached: false,
-                                        comparingCache: false,
-                                        data: [],
-                                        comparing: false
-                                    },
-                                    annotation: {
-                                        cached: false,
-                                        comparingCache: false,
-                                        data: [],
-                                        comparing: false
-                                    }
-                                }
-                            }
+                            $scope.addFileToList(file);
                         })
                     })
                 };
@@ -85,11 +59,11 @@
                     return false;
                 };
 
-                $scope.addFileToList = function addFileToList(file) {
+                $scope.addFileToList = function(file) {
                     $scope.files[file.fileName] = {
                         uid: uid++,
                         fileName: file.fileName,
-                        state: 'rendering',
+                        state: file.state,
                         softwareTypeName: file.softwareTypeName,
                         meta: {
                             vjusage: {
@@ -223,7 +197,7 @@
                         action: 'delete',
                         fileName: file.fileName
                     }).success(function() {
-                        if (file.fileName === $rootScope.activeFileName) {
+                        if (file.fileName === $rootScope.activeFileName || Object.keys($rootScope.files).length == 1) {
                             $rootScope.state = 'accountInformation'
                         } else if ($rootScope.state != 'file') {
                             $rootScope.updateVisualisationTab();
@@ -388,6 +362,7 @@
                             fileName: fileName,
                             softwareTypeName: 'mitcr',
                             fileExtension: fileExtension,
+                            state: 'rendering',
                             wait: true,
                             tooltip: '',
                             progress: 0,
@@ -1040,7 +1015,7 @@ function diversityStats(data, param) {
         var svg = d3.select(param.place)
             .append("svg")
             .attr("id", "diversity-png-export")
-            .style("height", 600)
+            .style("height", "600px")
             .style("width", width)
             .style("margin-top", "50px");
 
