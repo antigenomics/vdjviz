@@ -128,6 +128,10 @@
 
                 $scope.updateFilesList();
 
+                $scope.isContain = function(fileName) {
+                    return !!(fileName in $scope.files);
+                };
+
                 $scope.updateVisualisationTab = function () {
                     var param = {};
 
@@ -331,78 +335,6 @@
                     $("form input[type=file]").click();
                 };
 
-                $scope.addNew = function(uid, fileName, fileExtension, data) {
-                    $scope.$apply(function() {
-                        $scope.newFiles[uid] = {
-                            uid: uid,
-                            fileName: fileName,
-                            softwareTypeName: 'mitcr',
-                            fileExtension: fileExtension,
-                            wait: true,
-                            tooltip: '',
-                            progress: 0,
-                            result: 'ok',
-                            resultTooltip: '',
-                            data: data
-                        };
-                    })
-                };
-
-                $scope.addNewError = function(uid, fileName, error) {
-                    switch (error) {
-                        case 0:
-                            $scope.$apply(function() {
-                                $scope.newFiles[uid] = {
-                                    uid: uid,
-                                    fileName: fileName,
-                                    softwareTypeName: '',
-                                    wait: false,
-                                    result: 'error',
-                                    resultTooltip: 'You have exceeded limit of files'
-                                };
-                            });
-                            break;
-                        case 1:
-                            $scope.$apply(function() {
-                                $scope.newFiles[uid] = {
-                                    uid: uid,
-                                    fileName: fileName,
-                                    softwareTypeName: '',
-                                    wait: false,
-                                    result: 'error',
-                                    resultTooltip: 'You should use unique names for your files'
-                                };
-                            });
-                            break;
-                        default :
-                            break;
-                    }
-                };
-
-                $scope.updateTooltip = function(file, tooltip) {
-                    $scope.$apply(function() {
-                        file.tooltip = tooltip;
-                    })
-                };
-
-                $scope.updateProgress = function(file, progress) {
-                    $scope.$apply(function() {
-                        file.progress = progress;
-                    })
-                };
-
-                $scope.updateResult = function(file, result) {
-                    $scope.$apply(function() {
-                        file.result = result;
-                    })
-                };
-
-                $scope.updateResultTooltip = function(file, resultTooltip) {
-                    $scope.$apply(function() {
-                        file.resultTooltip = resultTooltip;
-                    })
-                };
-
                 $scope.changeCommonSoftwareType = function() {
                     angular.forEach($scope.newFiles, function(file) {
                         file.softwareTypeName = $scope.commonSoftwareType;
@@ -440,6 +372,86 @@
                     return file.result === 'error';
                 };
 
+                var addNew = function(uid, fileName, fileExtension, data) {
+                    $scope.$apply(function() {
+                        $scope.newFiles[uid] = {
+                            uid: uid,
+                            fileName: fileName,
+                            softwareTypeName: 'mitcr',
+                            fileExtension: fileExtension,
+                            wait: true,
+                            tooltip: '',
+                            progress: 0,
+                            result: 'ok',
+                            resultTooltip: '',
+                            data: data
+                        };
+                    })
+                };
+
+                var updateTooltip = function(file, tooltip) {
+                    $scope.$apply(function() {
+                        file.tooltip = tooltip;
+                    })
+                };
+
+                var updateProgress = function(file, progress) {
+                    $scope.$apply(function() {
+                        file.progress = progress;
+                    })
+                };
+
+                var updateResult = function(file, result) {
+                    $scope.$apply(function() {
+                        file.result = result;
+                    })
+                };
+
+                var updateResultTooltip = function(file, resultTooltip) {
+                    $scope.$apply(function() {
+                        file.resultTooltip = resultTooltip;
+                    })
+                };
+
+                var addNewError = function(uid, fileName, error) {
+                    switch (error) {
+                        case 0:
+                            $scope.$apply(function() {
+                                $scope.newFiles[uid] = {
+                                    uid: uid,
+                                    fileName: fileName,
+                                    softwareTypeName: '',
+                                    wait: false,
+                                    result: 'error',
+                                    resultTooltip: 'You have exceeded limit of files'
+                                };
+                            });
+                            break;
+                        case 1:
+                            $scope.$apply(function() {
+                                $scope.newFiles[uid] = {
+                                    uid: uid,
+                                    fileName: fileName,
+                                    softwareTypeName: '',
+                                    wait: false,
+                                    result: 'error',
+                                    resultTooltip: 'You should use unique names for your files'
+                                };
+                            });
+                            break;
+                        default :
+                            break;
+                    }
+                };
+
+                var isContain = function(fileName) {
+                    var contain = false;
+                    angular.forEach($scope.newFiles, function (file) {
+                       if (file.fileName == fileName) contain = true;
+                    });
+                    return $rootScope.isContain(fileName) || contain;
+                };
+
 
                 $('#fileupload').fileupload({
                     url: '/api/upload',
@@ -454,18 +466,18 @@
                             fileName += fileExtension;
                             fileExtension = 'txt';
                         }
-                        if ($rootScope.files.length >= 25) {
-                            $scope.addNewError(uid++, fileName, 0);
-                        } else if ($rootScope.isContain(fileName)) {
-                            $scope.addNewError(uid++, fileName, 1);
+                        if ($rootScope.files.length + $scope.newFiles.length >= 25) {
+                            addNewError(uid++, fileName, 0);
+                        } else if (isContain(fileName)) {
+                            addNewError(uid++, fileName, 1);
                         } else {
-                            $scope.addNew(uid++, fileName, fileExtension, data);
+                            addNew(uid++, fileName, fileExtension, data);
                         }
                     },
                     progress: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
-                        $scope.updateTooltip(file, "Uploading");
-                        $scope.updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
+                        updateTooltip(file, "Uploading");
+                        updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
                     },
                     done: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
@@ -488,41 +500,41 @@
                                         case "ok" :
                                             switch (event["progress"]) {
                                                 case "start" :
-                                                    $scope.updateTooltip(file, "Computation");
+                                                    updateTooltip(file, "Computation");
                                                     $rootScope.addFileToList(file);
                                                     break;
                                                 case "end" :
                                                     $rootScope.changeFileState(file, 'rendered')
                                                     $rootScope.updateVisualisationTab();
-                                                    $scope.updateTooltip(file, "Success");
-                                                    $scope.updateResult(file, 'success');
+                                                    updateTooltip(file, "Success");
+                                                    updateResult(file, 'success');
                                                     socket.close();
                                                     break;
                                                 default:
-                                                    $scope.updateProgress(file, 50 + (event.progress / 2));
+                                                    updateProgress(file, 50 + (event.progress / 2));
                                             }
                                             break;
                                         case "error" :
                                             socket.close();
                                             $rootScope.deleteFileFromList(file.fileName);
-                                            $scope.updateResult(file, 'error');
-                                            $scope.updateResultTooltip(file, event["message"]);
+                                            updateResult(file, 'error');
+                                            updateResultTooltip(file, event["message"]);
                                             break;
                                         default:
                                             $rootScope.deleteFileFromList(file.fileName);
-                                            $scope.updateTooltip(file, "Server unavailable");
+                                            updateTooltip(file, "Server unavailable");
                                             break;
                                     }
 
                                 };
                                 break;
                             case "error" :
-                                $scope.updateResult(file, 'error');
-                                $scope.updateResultTooltip(file, data.result.message);
+                                updateResult(file, 'error');
+                                updateResultTooltip(file, data.result.message);
                                 break;
                             default:
-                                $scope.updateResult(file, 'error');
-                                $scope.updateResultTooltip(file, "Server unavailable");
+                                updateResult(file, 'error');
+                                updateResultTooltip(file, "Server unavailable");
                         }
 
                     }
@@ -569,19 +581,21 @@
                 };
 
                 $scope.showItem = function(file, tab) {
-                    if (!$rootScope.files[file.fileName].meta[tab.type].comparingCache) {
-                        var param = {
-                            fileName: file.fileName,
-                            id: file.uid + '_comparing',
-                            height:  (tab.type === 'vjusage') ? 320 : 520,
-                            width: 300,
-                            type: tab.type,
-                            place: '#id' + file.uid + ' .' + tab.comparingPlace
-                        };
-                        getData(tab.dataHandler, param, file);
+                    if (file.state != 'rendering') {
+                        if (!$rootScope.files[file.fileName].meta[tab.type].comparingCache) {
+                            var param = {
+                                fileName: file.fileName,
+                                id: file.uid + '_comparing',
+                                height: (tab.type === 'vjusage') ? 320 : 520,
+                                width: 300,
+                                type: tab.type,
+                                place: '#id' + file.uid + ' .' + tab.comparingPlace
+                            };
+                            getData(tab.dataHandler, param, file);
+                        }
+                        $rootScope.files[file.fileName].meta[tab.type].comparing = !$rootScope.files[file.fileName].meta[tab.type].comparing;
+                        $rootScope.files[file.fileName].meta[tab.type].comparingCache = true;
                     }
-                    $rootScope.files[file.fileName].meta[tab.type].comparing = !$rootScope.files[file.fileName].meta[tab.type].comparing;
-                    $rootScope.files[file.fileName].meta[tab.type].comparingCache = true;
                 };
 
                 $scope.showAllItems = function(tab) {

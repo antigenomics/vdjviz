@@ -2,8 +2,9 @@ package controllers;
 
 
 import play.mvc.*;
+import securesocial.core.java.SecureSocial;
 
-
+@SecureSocial.SecuredAction
 public class AngularTemplates extends Controller {
 
     public static Result mainVisualisationContent() {
