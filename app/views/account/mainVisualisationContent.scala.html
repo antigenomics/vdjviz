@@ -6,9 +6,13 @@
     </ul>
     <div class="col-lg-12" ng-repeat="file in files">
         <div id="id{{ file.uid }}" ng-show="showFile(file)" class="visualisation-results">
-            <h3>{{ tabName }}</h3>
-            <hr>
-            <div ng-repeat="tab in visualisationTabs" class="viusalisation-results {{ tab.mainPlace }}" ng-show="isActiveTab(tab)"></div>
+            <div ng-repeat="tab in visualisationTabs" ng-show="isActiveTab(tab)">
+                <h3>{{ tab.tabName }}
+                    <button class="btn btn-default pull-right" ng-click="exportChartPng(file, tab)">Export to PNG</button>
+                </h3>
+                <hr>
+                <div class="viusalisation-results {{ tab.mainPlace }}"></div>
+            </div>
         </div>
     </div>
     <div class="col-lg-12">

@@ -250,6 +250,11 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function($scope, $rootScope) {
 
+                $scope.exportChartPng = function(file, tab) {
+                    console.log(document.getElementById('svg_' + tab.type + '_' + file.uid));
+                    saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type + ".png", 3);
+                };
+
                 $scope.setActiveTab = function(tab) {
                     $rootScope.activeTab = tab;
                     $rootScope.updateVisualisationTab();
@@ -293,6 +298,10 @@
             controller: ['$scope', '$rootScope', function($scope, $rootScope) {
                 $scope.showDiversity = function() {
                     return $rootScope.state === 'diversity';
+                }
+
+                $scope.exportDiversity = function() {
+                    saveSvgAsPng(document.getElementById('diversity-png-export'), 'diversity.png', 3);
                 }
             }]
         }
@@ -675,15 +684,15 @@ function getData(handleData, param, file) {
 function spectrotype(data, param) {
     nv.addGraph(function () {
 
-        var place = d3.select(param.place).html("");
-        console.log(place);
-        console.log(param.place);
+        var place = d3.select(param.place);
+            place.html("");
+        var width = place.style('width');
         var svg = d3.select(param.place).append("div")
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_spectrotype_" + param.id)
             .style("height", param.height)
-            .style("width", "100%")
+            .style("width", width)
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
@@ -740,7 +749,9 @@ function spectrotype(data, param) {
 
 function spectrotypeV(data, param) {
     nv.addGraph(function () {
-        d3.select(param.place).html("");
+        var place = d3.select(param.place);
+            place.html("");
+        var width = place.style('width');
         var svg = d3.select(param.place).append("div")
             .style("margin-left", "auto")
             .style("margin-right", "auto")
@@ -748,7 +759,7 @@ function spectrotypeV(data, param) {
             .append("svg")
             .attr("id", "svg_spectrotypeV_" + param.id)
             .style("height", param.height + "px")
-            .style("width", "100%")
+            .style("width", width)
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
@@ -797,13 +808,15 @@ function spectrotypeV(data, param) {
 
 function sizeClassifying(data, param) {
     nv.addGraph(function() {
-        d3.select(param.place).html("");
+        var place = d3.select(param.place);
+            place.html("");
+        var width = place.style('width');
         var svg = d3.select(param.place).append("div")
             .attr("id", "chart")
             .append("svg")
-            .attr("id", "svg_kernelDensity_" + param.id)
+            .attr("id", "svg_sizeClassifying_" + param.id)
             .style("height", param.height + "px")
-            .style("width", "100%")
+            .style("width", width)
             .style("overflow", "visible");
 
 
@@ -962,8 +975,8 @@ function vjUsage(data, param) {
         .append("svg")
         .attr("width", width + 200)
         .attr("height", height + 200)
-        .style("width", width+200)
-        .style("height", height+200)
+        .style("width", width + 200)
+        .style("height", height + 200)
         .style("display", "block")
         .style("margin", "auto")
         .attr("id", "svg_vjusage_" + param.id)
@@ -1017,13 +1030,18 @@ function vjUsage(data, param) {
 
 function diversityStats(data, param) {
     nv.addGraph(function () {
-        d3.select(param.place).html("");
+        var place = d3.select(param.place);
+            place.html(""); //cleanup old chart
+
+        var width = place.style('width');
+
+
 
         var svg = d3.select(param.place)
             .append("svg")
             .attr("id", "diversity-png-export")
-            .style("height", "500px")
-            .style("width", "100%")
+            .style("height", 600)
+            .style("width", width)
             .style("margin-top", "50px");
 
         var chart = nv.models.lineChart()
