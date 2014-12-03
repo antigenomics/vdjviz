@@ -1,3 +1,10 @@
+@(localUser: LocalUser)
 <div class="account-information-tab" ng-show="showAccountInformation()">
-    Account Information asd
+    Account Information
+    <hr>
+    Email: @localUser.email
+    <br>
+    First Name: @localUser.firstName
+    <br>
+    Last Name: @localUser.lastName
 </div>
