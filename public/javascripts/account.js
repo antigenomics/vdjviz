@@ -355,6 +355,10 @@
                     return file.result === 'error';
                 };
 
+                $scope.deleteFromQuery = function(file) {
+                    delete $scope.newFiles[file.uid];
+                };
+
                 var addNew = function(uid, fileName, fileExtension, data) {
                     $scope.$apply(function() {
                         $scope.newFiles[uid] = {
@@ -663,7 +667,7 @@ function spectrotype(data, param) {
             place.html("");
         var width = place.style('width');
         var height = param.height;
-        var svg = d3.select(param.place).append("div")
+        var svg = place.append("div")
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_spectrotype_" + param.id)
@@ -731,7 +735,7 @@ function spectrotypeV(data, param) {
             place.html("");
         var width = place.style('width');
         var height = param.height;
-        var svg = d3.select(param.place).append("div")
+        var svg = place.append("div")
             .style("margin-left", "auto")
             .style("margin-right", "auto")
             .attr("id", "chart")
@@ -793,7 +797,7 @@ function sizeClassifying(data, param) {
             place.html("");
         var width = place.style('width');
         var height = param.height;
-        var svg = d3.select(param.place).append("div")
+        var svg = place.append("div")
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_sizeClassifying_" + param.id)

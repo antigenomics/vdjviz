@@ -60,10 +60,11 @@
                                                 {{ file.resultTooltip }}
                                 </div>
                             </td>
-                            <td>
+                            <td class="button-td">
                                 <button ng-show="file.wait" class="btn btn-default" ng-click="uploadFile(file)">
                                                 Upload
                                 </button>
+                                <button ng-show="file.wait" class="btn btn-default" ng-click="deleteFromQuery(file)">&times;</button>
                                 <div class="upload-tooltip" ng-show="isOk(file)">
                                                 {{ file.tooltip }}
                                 </div>

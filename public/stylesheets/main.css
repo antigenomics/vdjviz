@@ -20,6 +20,10 @@ html, body {
     width: 50%;
 }
 
+.main-tbody-files .button-td {
+    width: 20%;
+}
+
 .comparing-tab-header {
     position: fixed;
     margin: 20px;
