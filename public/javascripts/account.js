@@ -662,12 +662,15 @@ function spectrotype(data, param) {
         var place = d3.select(param.place);
             place.html("");
         var width = place.style('width');
+        var height = param.height;
         var svg = d3.select(param.place).append("div")
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_spectrotype_" + param.id)
-            .style("height", param.height)
+            .style("height", height)
             .style("width", width)
+            .attr('height', height) //fix for Firefox browser
+            .attr('width', width) // fix for Firefox browser
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
@@ -677,7 +680,7 @@ function spectrotype(data, param) {
                 .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                 .showLegend(true)
                 .groupSpacing(0.1)    //Distance between each group of bars.
-                .height(param.height)
+                .height(height)
                 .stacked(true)
                 .tooltip(function (key, x, y, e, graph) {
                     if (key != "Other") {
@@ -727,14 +730,17 @@ function spectrotypeV(data, param) {
         var place = d3.select(param.place);
             place.html("");
         var width = place.style('width');
+        var height = param.height;
         var svg = d3.select(param.place).append("div")
             .style("margin-left", "auto")
             .style("margin-right", "auto")
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_spectrotypeV_" + param.id)
-            .style("height", param.height + "px")
+            .style("height", height)
             .style("width", width)
+            .attr('height', height) //fix for Firefox browser
+            .attr('width', width)   // fix for Firefox browser
             .style("overflow", "visible");
 
         var chart = nv.models.multiBarChart()
@@ -744,7 +750,7 @@ function spectrotypeV(data, param) {
                 .showControls(false)   //Allow user to switch between 'Grouped' and 'Stacked' mode.
                 .showLegend(true)
                 .groupSpacing(0.1)    //Distance between each group of bars.
-                .height(param.height)
+                .height(height)
                 .stacked(true)
                 .tooltip(function (key, x, y, e, graph) {
                     if (e.series.values[e.pointIndex].y != 0) {
@@ -786,12 +792,15 @@ function sizeClassifying(data, param) {
         var place = d3.select(param.place);
             place.html("");
         var width = place.style('width');
+        var height = param.height;
         var svg = d3.select(param.place).append("div")
             .attr("id", "chart")
             .append("svg")
             .attr("id", "svg_sizeClassifying_" + param.id)
-            .style("height", param.height + "px")
+            .style("height", height)
             .style("width", width)
+            .attr('height', height) //fix for Firefox browser
+            .attr('width', width)   //fix for Firefox browser
             .style("overflow", "visible");
 
 
@@ -948,10 +957,10 @@ function vjUsage(data, param) {
 
     var svg = d3.select(param.place)
         .append("svg")
-        .attr("width", width + 200)
-        .attr("height", height + 200)
         .style("width", width + 200)
         .style("height", height + 200)
+        .attr("width", width + 200)     //fix for Firefox browser
+        .attr("height", height + 200)   //fix for Firefox browser
         .style("display", "block")
         .style("margin", "auto")
         .attr("id", "svg_vjusage_" + param.id)
