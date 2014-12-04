@@ -25,6 +25,15 @@ public class xyValues {
         values.add(pos, value);
     }
 
+    public static Double getSumY(Object values) {
+        List<HashMap<String, Object>> val = (List<HashMap<String, Object>>) values;
+        double sumY = 0;
+        for (HashMap<String, Object> map: val) {
+            sumY += (double) map.get("y");
+        }
+        return sumY;
+    }
+
     public List<HashMap<String, Object>> getValues() {
         return values;
     }

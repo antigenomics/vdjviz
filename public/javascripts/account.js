@@ -31,10 +31,10 @@
                 $scope.activeFileName = '';
                 $scope.visualisationTabs = {
                     vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, false, 'comparing-vjusage-tab'),
-                    spectrotype: createTab('Spectrotype', 'spectrotype', spectrotype, 'visualisation-results-spectrotype', true, true, 'comparing-spectrotype-tab'),
-                    spectrotypev: createTab('SpectrotypeV', 'spectrotypeV', spectrotypeV, 'visualisation-results-spectrotypeV', true, true, 'comparing-spectrotypeV-tab'),
-                    sizeclassifying: createTab('Size Classifying', 'sizeClassifying', sizeClassifying, 'visualisation-results-sizeClassifying', true, true, 'comparing-sizeClassifying-tab'),
-                    quantilestats: createTab('Quantile Stats', 'quantileStats', quantileStats, 'visualisation-results-quantiles', true, true, 'comparing-quantileStats-tab'),
+                    spectrotype: createTab('Spectratype', 'spectrotype', spectrotype, 'visualisation-results-spectrotype', true, true, 'comparing-spectrotype-tab'),
+                    spectrotypev: createTab('V Spectratype ', 'spectrotypeV', spectrotypeV, 'visualisation-results-spectrotypeV', true, true, 'comparing-spectrotypeV-tab'),
+                    //sizeclassifying: createTab('Size Classifying', 'sizeClassifying', sizeClassifying, 'visualisation-results-sizeClassifying', true, true, 'comparing-sizeClassifying-tab'),
+                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileStats, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
                     annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
@@ -316,7 +316,6 @@
                 $scope.uploadedFiles = [];
                 $scope.commonSoftwareType = 'mitcr';
 
-
                 $scope.isNewFilesEmpty = function() {
                     return Object.keys($scope.newFiles).length;
                 };
@@ -446,7 +445,6 @@
                     });
                     return $rootScope.isContain(fileName) || contain;
                 };
-
 
                 $('#fileupload').fileupload({
                     url: '/api/upload',
@@ -876,8 +874,9 @@ function quantileStats(data, param) {
 }
 
 function annotationTable(data, param) {
-    d3.select(param.place).html("");
-    var svg = d3.select(param.place)
+    var place = d3.select(param.place);
+        place.html("");
+    var svg = place
         .append("div")
         .attr("class", "svg");
 
@@ -922,11 +921,7 @@ function annotationTable(data, param) {
         "columnDefs": [
             {
                 "width": "6%",
-                "targets": 0
-            },
-            {
-                "width": "6%",
-                "targets": 1
+                "targets": [0, 1]
             },
             {
                 "render": function (data) {
@@ -1107,25 +1102,41 @@ function diversityStats(data, param) {
 }
 
 function summaryStats(data, param) {
-    var header = Object.keys(data[0]);
-    d3.select(param.place).html("");
-    var table = d3.select(param.place)
-            .append("table")
+
+    var place = d3.select(param.place);
+        place.html("");
+
+    var table = place.append("table")
             .attr("id", "basicStatsTable")
-            .attr("class", "table table-striped table-hover"),
-        thead = table.append("thead")
-            .append("tr")
-            .selectAll("th")
-            .data(header)
-            .enter()
-            .append("th")
-            .html(function (d) {
-                return d;
-            });
-    var column = [];
-    for (var i = 0; i < header.length; i++) {
-        column.push({"data": header[i.toString()]});
-    }
+            .attr("class", "table table-striped table-hover");
+
+    var thead = table.append("thead").append("tr");
+
+        thead.append("th").html("Sample");
+        thead.append("th").html("Reads");
+        thead.append("th").html("Diversity");
+        thead.append("th").html("Mean clone fraction");
+        thead.append("th").html("Median clone fraction");
+        thead.append("th").html("Out of frame count");
+        thead.append("th").html("Out of frame fraction");
+        thead.append("th").html("Mean insert size");
+        thead.append("th").html("Mean N(D)N size");
+        thead.append("th").html("Mean CDR3 length");
+
+
+    var column = [
+        { "data" : "Name" },                  //Sample
+        { "data" : "cells" },                 //Reads
+        { "data" : "diversity" },             //Rarefaction
+        { "data" : "mean_clone_fraction" },    //Mean clone fraction
+        { "data" : "median_clone_fraction" }, //Median clone fraction
+        { "data" : "oof_count" },             //Out of frame count
+        { "data" : "oof_fraction" },          //Out of frame fraction
+        { "data" : "mean_insert_size" },      //Mean insert size
+        { "data" : "mean_ndn_size" },         //Mean N(d)N size
+        { "data" : "mean_cdr3nt_length" }    //Mean CDR3 length
+    ];
+
     $('#basicStatsTable').dataTable({
         dom: 'T<"clear">lfrtip',
         tableTools: {
@@ -1141,31 +1152,25 @@ function summaryStats(data, param) {
                 "render": function (data) {
                     return parseFloat(data).toExponential(2);
                 },
-                "targets": 4
+                "targets": [3, 4]
             },
             {
-                "render": function (data) {
-                    return parseFloat(data).toExponential(2);
+                "render" : function(data) {
+                    return data;
                 },
                 "targets": 5
             },
             {
-                "render": function (data) {
-                    return parseFloat(data).toFixed(2);
+                "render" : function(data) {
+                    return parseFloat(data).toFixed(2) * 100 + "%";
                 },
                 "targets": 6
             },
             {
-                "render": function (data) {
-                    return parseFloat(data).toFixed(2);
+                "render" : function(data) {
+                    return parseFloat(data).toFixed(2)
                 },
-                "targets": 7
-            },
-            {
-                "render": function (data) {
-                    return parseFloat(data).toExponential(2);
-                },
-                "targets": 8
+                "targets": [7,8,9]
             }
         ],
         "columns": column,
@@ -1178,8 +1183,9 @@ function summaryStats(data, param) {
 }
 
 function loading(place) {
-    d3.select(place).style("display", "block");
-    var loading = d3.select(place).append("div").attr("class", "loading");
+    var d3Place = d3.select(place);
+        d3Place.style("display", "block");
+    var loading = d3Place.append("div").attr("class", "loading");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");

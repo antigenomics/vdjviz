@@ -40,14 +40,14 @@ html, body {
 }
 
 .nav-visualisation > li {
-    width: 16%;
+    width: 19%;
     text-align: center;
     cursor: pointer;
 }
 
 .nav-comparing > li {
     cursor: pointer;
-    width: 19%;
+    width: 24%;
 }
 
 .container-width-fixed {

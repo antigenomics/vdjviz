@@ -119,7 +119,6 @@ public class ComputationUtil {
         }
         Data commonData = new Data(new String[]{"values", "key", "color"});
         commonData.addData(new Object[]{commonValues.getValues(), "Other", "#DCDCDC"});
-        data.add(commonData.getData());
         int count = 1;
         for (Clonotype topclone : topclones) {
             Data topCloneNode = new Data(new String[]{"values", "key", "name", "v", "j", "cdr3aa"});
@@ -138,6 +137,22 @@ public class ComputationUtil {
                     topclone.getCdr3aa(),
             });
             data.add(topCloneNode.getData());
+        }
+        data.add(commonData.getData());
+        Collections.sort(data, new Comparator<HashMap<String, Object>>() {
+            @Override
+            public int compare(HashMap<String, Object> s1, HashMap<String, Object> s2) {
+                if (s1.get("key").equals("Other")) return -1;
+                if (s2.get("key").equals("Other")) return 1;
+                if (xyValues.getSumY(s1.get("values")) > xyValues.getSumY(s2.get("values"))) return 1;
+                if (xyValues.getSumY(s1.get("values")) < xyValues.getSumY(s2.get("values"))) return -1;
+                return 0;
+            }
+        });
+        String[] colors = new String[]{"#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf", "#74add1", "#abd9e9", "#e0f3f8", "#bababa", "#DCDCDC"};
+        int index = 10;
+        for (HashMap<String, Object> map: data) {
+            map.put("color", colors[index--]);
         }
         saveCache(CacheType.spectrotype.getCacheFileName(), data);
         serverResponse.changeValue("progress", 30);
