@@ -8,6 +8,10 @@ html, body {
     cursor: pointer;
 }
 
+.invalid-name-input {
+    border-color: red;
+}
+
 .main-tbody-files .name-td {
     width: 15%;
 }

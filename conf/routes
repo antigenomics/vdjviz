@@ -16,7 +16,7 @@ GET         /test                                    controllers.Application.tes
 GET         /account/filesSidebar                    controllers.AngularTemplates.filesSidebar()
 GET         /account/mainVisualisationContent        controllers.AngularTemplates.mainVisualisationContent()
 GET         /account/accountInformation              controllers.AngularTemplates.accountInformation()
-GET         /account/diversityContent                controllers.AngularTemplates.diversityContent()
+GET         /account/rarefactionContent              controllers.AngularTemplates.rarefactionContent()
 GET         /account/summaryContent                  controllers.AngularTemplates.summaryContent()
 GET         /account/fileUpload                      controllers.AngularTemplates.fileUpload()
 GET         /account/comparingContent                controllers.AngularTemplates.comparingContent()
@@ -32,7 +32,6 @@ GET         /api/ws                                  controllers.API.ws()
 POST        /api/upload                              controllers.API.upload()
 POST        /api/delete                              controllers.API.delete()
 POST        /api/data                                controllers.API.data()
-GET         /api/data                                controllers.Application.account()
 GET         /api/files                               controllers.API.files()
 
 # Robots.txt route

@@ -31,9 +31,8 @@
                 $scope.activeFileName = '';
                 $scope.visualisationTabs = {
                     vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, false, 'comparing-vjusage-tab'),
-                    spectrotype: createTab('Spectratype', 'spectrotype', spectrotype, 'visualisation-results-spectrotype', true, true, 'comparing-spectrotype-tab'),
-                    spectrotypev: createTab('V Spectratype ', 'spectrotypeV', spectrotypeV, 'visualisation-results-spectrotypeV', true, true, 'comparing-spectrotypeV-tab'),
-                    //sizeclassifying: createTab('Size Classifying', 'sizeClassifying', sizeClassifying, 'visualisation-results-sizeClassifying', true, true, 'comparing-sizeClassifying-tab'),
+                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, 'comparing-spectratype-tab'),
+                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, 'comparing-spectratypeV-tab'),
                     quantilestats: createTab('Quantile Plot', 'quantileStats', quantileStats, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
                     annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
@@ -73,19 +72,13 @@
                                 data: [],
                                 comparing: false
                             },
-                            spectrotype: {
+                            spectratype: {
                                 cached: false,
                                 comparingCache: false,
                                 data: [],
                                 comparing: false
                             },
-                            spectrotypeV: {
-                                cached: false,
-                                comparingCache: false,
-                                data: [],
-                                comparing: false
-                            },
-                            sizeClassifying: {
+                            spectratypeV: {
                                 cached: false,
                                 comparingCache: false,
                                 data: [],
@@ -132,11 +125,11 @@
                                 file.meta[$scope.activeTab.type].cached = true;
                             }
                             break;
-                        case 'diversity':
-                            param.place = '.diversity-visualisation-tab';
+                        case 'rarefaction':
+                            param.place = '.rarefaction-visualisation-tab';
                             param.fileName = 'all';
-                            param.type = 'diversity';
-                            getData(diversityStats, param);
+                            param.type = 'rarefaction';
+                            getData(rarefactionPlot, param);
                             break;
                         case 'summary':
                             param.place = '.summary-visualisation-tab';
@@ -270,19 +263,19 @@
         }
     });
 
-    app.directive('diversityContent', function() {
+    app.directive('rarefactionContent', function() {
         return {
             restrict: 'E',
-            templateUrl: '/account/diversityContent',
+            templateUrl: '/account/rarefactionContent',
             transclude: false,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function($scope, $rootScope) {
-                $scope.showDiversity = function() {
-                    return $rootScope.state === 'diversity';
-                }
+                $scope.showRarefaction = function() {
+                    return $rootScope.state === 'rarefaction';
+                };
 
-                $scope.exportDiversity = function() {
-                    saveSvgAsPng(document.getElementById('diversity-png-export'), 'diversity.png', 3);
+                $scope.exportRarefaction = function() {
+                    saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction.png', 3);
                 }
             }]
         }
@@ -316,6 +309,11 @@
                 $scope.uploadedFiles = [];
                 $scope.commonSoftwareType = 'mitcr';
 
+                $scope.isNameValid = function(fileName) {
+                    var regexp = /^[a-zA-Z0-9_.-]{1,20}$/;
+                    return regexp.test(fileName)
+                };
+
                 $scope.isNewFilesEmpty = function() {
                     return Object.keys($scope.newFiles).length;
                 };
@@ -337,7 +335,7 @@
                 };
 
                 $scope.uploadFile = function(file) {
-                    if (file.wait) {
+                    if ((filesCount() <= 25) && file.wait && $scope.isNameValid(file.fileName)) {
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
                             fileName: file.fileName,
@@ -363,6 +361,15 @@
 
                 $scope.deleteFromQuery = function(file) {
                     delete $scope.newFiles[file.uid];
+                };
+
+                var filesCount = function() {
+                    var added = Object.keys($rootScope.files).length;
+                    var waiting = 0;
+                    angular.forEach($scope.newFiles, function(file) {
+                       if (file.wait) waiting++;
+                    });
+                    return added + waiting;
                 };
 
                 var addNew = function(uid, fileName, fileExtension, data) {
@@ -459,7 +466,7 @@
                             fileName += fileExtension;
                             fileExtension = 'txt';
                         }
-                        if ($rootScope.files.length + $scope.newFiles.length >= 25) {
+                        if (filesCount() >= 25) {
                             addNewError(uid++, fileName, 0);
                         } else if (isContain(fileName)) {
                             addNewError(uid++, fileName, 1);
@@ -665,7 +672,7 @@ function getData(handleData, param, file) {
     }
 }
 
-function spectrotype(data, param) {
+function spectratype(data, param) {
     nv.addGraph(function () {
 
         var place = d3.select(param.place);
@@ -675,7 +682,7 @@ function spectrotype(data, param) {
         var svg = place.append("div")
             .attr("id", "chart")
             .append("svg")
-            .attr("id", "svg_spectrotype_" + param.id)
+            .attr("id", "svg_spectratype_" + param.id)
             .style("height", height)
             .style("width", width)
             .attr('height', height) //fix for Firefox browser
@@ -734,7 +741,7 @@ function spectrotype(data, param) {
     });
 }
 
-function spectrotypeV(data, param) {
+function spectratypeV(data, param) {
     nv.addGraph(function () {
         var place = d3.select(param.place);
             place.html("");
@@ -794,44 +801,6 @@ function spectrotypeV(data, param) {
         nv.utils.windowResize(chart.update);
         return chart;
     });
-}
-
-function sizeClassifying(data, param) {
-    nv.addGraph(function() {
-        var place = d3.select(param.place);
-            place.html("");
-        var width = place.style('width');
-        var height = param.height;
-        var svg = place.append("div")
-            .attr("id", "chart")
-            .append("svg")
-            .attr("id", "svg_sizeClassifying_" + param.id)
-            .style("height", height)
-            .style("width", width)
-            .attr('height', height) //fix for Firefox browser
-            .attr('width', width)   //fix for Firefox browser
-            .style("overflow", "visible");
-
-
-        var chart = nv.models.pieChart()
-                .x(function(d) { return d.label })
-                .y(function(d) { return d.value })
-                .showLabels(true)     //Display pie labels
-                .labelThreshold(.05)  //Configure the minimum slice size for labels to show up
-                .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
-                .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
-                .donutRatio(0.35)     //Configure how big you want the donut hole size to be.
-                .duration(500)
-            ;
-
-        svg
-            .datum(data)
-            .transition().duration(350)
-            .call(chart);
-
-        return chart;
-    });
-
 }
 
 function quantileStats(data, param) {
@@ -913,7 +882,7 @@ function annotationTable(data, param) {
             [0, "decs"]
         ],
         "scrollY": "600px",
-        dom: 'T<"clear">frtiS',
+        dom: '<"pull-left"f><"clear">TrtS',
         responsive: true,
         tableTools: {
             "sSwfPath": "../../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
@@ -926,34 +895,68 @@ function annotationTable(data, param) {
             {
                 "render": function (data) {
                     var cdr3aa = data["cdr3aa"];
-                    var vend = data["vend"] / 3;
-                    var jstart = data["jstart"] / 3;
+                    var vend = Math.floor(data["vend"] / 3);
+                    var dstart = Math.floor(data["dstart"] / 3);
+                    var dend = Math.floor(data["dend"] / 3);
+                    var jstart = Math.floor(data["jstart"] / 3);
                     var pos = data["pos"];
-                    if (vend >= 0 && jstart >= 0) {
-                        var str = [
-                            data["cdr3aa"].substring(0, vend + 1),
-                            data["cdr3aa"].substring(vend + 1, jstart),
-                            data["cdr3aa"].substring(jstart, data["cdr3aa"].length),
-                        ];
-                        if (pos != -1) {
-                            if (pos <= vend) {
-                                str[0] = str[0].substring(0, pos) + "<b><u>" + str[0].substring(pos, pos + 1) + "</u></b>" + str[0].substring(pos + 1, str[0].length);
-                            } else if (pos > vend && pos < jstart) {
-                                str[1] = str[1].substring(0, pos - vend) + "<b><u>" + str[1].substring(pos - vend, pos - vend + 1) + "</u></b>" + str[1].substring(pos - vend + 1, str[1].length);
-                            } else if (pos >= jstart) {
-                                str[2] = str[2].substring(0, pos - jstart) + "<b><u>" + str[2].substring(pos - jstart, pos - jstart + 1) + "</u></b>" + str[2].substring(pos - jstart + 1, str[2].length);
-                            }
+                    jstart = (jstart < 0) ? 10000 : jstart;
+                    dstart = (dstart < 0) ? vend + 1 : dstart;
+                    dend = (dend < 0) ? vend : dend;
+                    while (vend >= jstart) jstart++;
+                    while (dstart <= vend) dstart++;
+                    while (dend >= jstart) dend--;
+                    var createSubString = function(start, end, color) {
+                        return {
+                            start: start,
+                            end: end,
+                            color: color,
+                            substring: cdr3aa.substring(start, end + 1)
                         }
-                        str[0] = "<text style='color : #31a354'>" + str[0] + "</text>";
-                        str[2] = "<text style='color : #3182bd'>" + str[2] + "</text>";
-                        return str.join("")
-                    } else {
-                        if (pos != -1) {
-                            return data["cdr3aa"].substring(0, pos) + "<b><u>" + data["cdr3aa"].substring(pos, pos + 1) + "</u></b>" + data["cdr3aa"].substring(pos + 1, data["cdr3aa"].length)
-                        } else {
-                            return data["cdr3aa"];
-                        }
+                    };
+
+                    var insert = function (index, str, insertString) {
+                        if (index > 0)
+                            return str.substring(0, index) + insertString + str.substring(index, str.length);
+                        else
+                            return insertString + str;
+                    };
+
+                    var arr = [];
+
+                    if (vend >= 0) {
+                        arr.push(createSubString(0, vend, "#4daf4a"));
                     }
+
+                    if (dstart - vend > 1) {
+                        arr.push(createSubString(vend + 1, dstart - 1, "black"));
+                    }
+
+                    if (dstart > 0 && dend > 0 && dend >= dstart) {
+                        arr.push(createSubString(dstart, dend, "#ec7014"));
+                    }
+
+                    if (jstart - dend > 1) {
+                        arr.push(createSubString(dend + 1, jstart - 1, "black"));
+                    }
+
+                    if (jstart > 0) {
+                        arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
+                    }
+
+                    var result = "";
+                    for (var i = 0; i < arr.length; i++) {
+                        var element = arr[i];
+                        if (pos >= element.start && pos <= element.end) {
+                            var newPos = pos - element.start;
+                            element.substring = insert(newPos + 1, element.substring, '</u></b>');
+                            element.substring = insert(newPos, element.substring, '<b><u>');
+                        }
+                        result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+                    }
+                    return result;
+
+
                 },
                 "width": "20%",
                 "targets": 2
@@ -1058,18 +1061,16 @@ function vjUsage(data, param) {
     }
 }
 
-function diversityStats(data, param) {
+function rarefactionPlot(data, param) {
     nv.addGraph(function () {
         var place = d3.select(param.place);
             place.html(""); //cleanup old chart
 
         var width = place.style('width');
 
-
-
         var svg = d3.select(param.place)
             .append("svg")
-            .attr("id", "diversity-png-export")
+            .attr("id", "rarefaction-png-export")
             .style("height", "600px")
             .style("width", width)
             .style("margin-top", "50px");
@@ -1138,7 +1139,7 @@ function summaryStats(data, param) {
     ];
 
     $('#basicStatsTable').dataTable({
-        dom: 'T<"clear">lfrtip',
+        dom: '<"pull-left"f><"clear">TrtS',
         tableTools: {
             "sSwfPath": "../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
         },

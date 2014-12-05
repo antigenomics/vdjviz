@@ -103,7 +103,7 @@ public class ComputationUtil {
 
     }
 
-    private void spectrotype() throws Exception {
+    private void spectratype() throws Exception {
 
         Spectratype sp = new Spectratype(false, false);
         List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
@@ -154,12 +154,12 @@ public class ComputationUtil {
         for (HashMap<String, Object> map: data) {
             map.put("color", colors[index--]);
         }
-        saveCache(CacheType.spectrotype.getCacheFileName(), data);
+        saveCache(CacheType.spectratype.getCacheFileName(), data);
         serverResponse.changeValue("progress", 30);
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    private void spectrotypeV() throws Exception {
+    private void spectratypeV() throws Exception {
         SpectratypeV spectratypeV = new SpectratypeV(false, false);
         spectratypeV.addAll(sample);
         int default_top = 12;
@@ -182,50 +182,9 @@ public class ComputationUtil {
                 data.add(node.getData());
             }
         }
-        saveCache(CacheType.spectrotypeV.getCacheFileName(), data);
+        saveCache(CacheType.spectratypeV.getCacheFileName(), data);
         serverResponse.changeValue("progress", 40);
         out.write(Json.toJson(serverResponse.getData()));
-    }
-
-    private void clonotypeSizeClassifying() throws Exception {
-        double rare = 0, small = 0, medium = 0, large = 0, hyperexpanded = 0;
-        for (Clonotype clonotype: sample) {
-            double freq = clonotype.getFreq();
-            if (clonotype.getCount() == 1) {
-                rare += freq;
-            } else  {
-
-                if (freq < 0.001) small += freq;
-                    else if (freq >= 0.001 && freq < 0.01) medium += freq;
-                        else if (freq >= 0.01 && freq < 1) large += freq;
-                            else if (freq >= 1) hyperexpanded += freq;
-            }
-        }
-        List<HashMap<String, Object>> data = new ArrayList<>();
-        HashMap<String, Object> rareData = new HashMap<>();
-        rareData.put("label", "Rare");
-        rareData.put("value", rare);
-        HashMap<String, Object> mediumData = new HashMap<>();
-        mediumData.put("label", "Medium");
-        mediumData.put("value", medium);
-        HashMap<String, Object> smallData = new HashMap<>();
-        smallData.put("label", "Small");
-        smallData.put("value", small);
-        HashMap<String, Object> largeData = new HashMap<>();
-        largeData.put("label", "Large");
-        largeData.put("value", large);
-        HashMap<String, Object> hyperexpandedData = new HashMap<>();
-        hyperexpandedData.put("label", "HyperExpanded");
-        hyperexpandedData.put("value", hyperexpanded);
-        data.add(rareData);
-        data.add(smallData);
-        data.add(mediumData);
-        data.add(largeData);
-        data.add(hyperexpandedData);
-        saveCache(CacheType.sizeClassifying.getCacheFileName(), data);
-        serverResponse.changeValue("progress", 100);
-        out.write(Json.toJson(serverResponse.getData()));
-
     }
 
     private void quantileStats() throws Exception {
@@ -239,6 +198,8 @@ public class ComputationUtil {
             data.add(qData);
         }
         saveCache(CacheType.quantileStats.getCacheFileName(), data);
+        serverResponse.changeValue("progress", 100);
+        out.write(Json.toJson(serverResponse.getData()));
     }
 
     private void annotation() throws Exception {
@@ -254,13 +215,15 @@ public class ComputationUtil {
             Data annotationDataNode = new Data(new String[]{"query_cdr3aa", "query_V", "query_J", "freq", "count"});
             Data v = new Data(new String[]{"v", "match"});
             Data j = new Data(new String[]{"j", "match"});
-            Data cdr3aa = new Data(new String[]{"cdr3aa", "pos", "vend", "jstart"});
+            Data cdr3aa = new Data(new String[]{"cdr3aa", "pos", "vend", "jstart", "dstart", "dend"});
             v.addData(new Object[]{cdrDatabaseMatch.query.getV(), cdrDatabaseMatch.vMatch});
             j.addData(new Object[]{cdrDatabaseMatch.query.getJ(), cdrDatabaseMatch.jMatch});
             cdr3aa.addData(new Object[]{cdrDatabaseMatch.query.getCdr3aa(),
                                         cdrDatabaseMatch.getSubstitutions().size() > 0 ? cdrDatabaseMatch.getSubstitutions().get(0).pos : -1,
                                         cdrDatabaseMatch.query.getVEnd(),
-                                        cdrDatabaseMatch.query.getJStart()});
+                                        cdrDatabaseMatch.query.getJStart(),
+                                        cdrDatabaseMatch.query.getDStart(),
+                                        cdrDatabaseMatch.query.getDEnd()});
             annotationDataNode.addData(new Object[]{cdr3aa.getData(), v.getData(), j.getData(), cdrDatabaseMatch.query.getFreq(), cdrDatabaseMatch.query.getCount()});
             String[] annotations = cdrDatabaseMatch.subject.getAnnotation();
             for (int i = 0; i < header.length; i++) {
@@ -288,7 +251,7 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    private void diversity() throws Exception {
+    private void rarefaction() throws Exception {
         DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         Data data = new Data(new String[]{"values", "key"});
@@ -308,7 +271,7 @@ public class ComputationUtil {
             values.addValue(x[i], z[i]);
         }
         data.addData(new Object[]{values.getValues(), file.fileName});
-        saveCache(CacheType.diversity.getCacheFileName(), data.getData());
+        saveCache(CacheType.rarefaction.getCacheFileName(), data.getData());
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -326,13 +289,12 @@ public class ComputationUtil {
         serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
         out.write(Json.toJson(serverResponse.getData()));
         vjUsageData();
-        spectrotype();
-        spectrotypeV();
+        spectratype();
+        spectratypeV();
         annotation();
-        quantileStats();
         basicStats();
-        diversity();
-        clonotypeSizeClassifying();
+        rarefaction();
+        quantileStats();
         file.rendering = false;
         file.rendered = true;
         serverResponse.changeValue("progress", "end");

@@ -279,8 +279,8 @@ public class API extends Controller {
                 switch (type) {
                     case "summary":
                         return basicStats(account);
-                    case "diversity":
-                        return diversity(account);
+                    case "rarefaction":
+                        return rarefaction(account);
                     default:
                         throw new IllegalArgumentException();
                 }
@@ -311,7 +311,7 @@ public class API extends Controller {
                 return ok(Json.toJson(serverResponse.getData()));
             } catch (Exception e) {
                 Logger.of("user." + account.userName).error("User " + account.userName +
-                        ": cache file does not exists");
+                        ": cache file does not exists [" + file.fileName + "," + cacheName + "]");
                 serverResponse.addData(new Object[]{"error", "Cache file does not exist", null});
                 return ok(Json.toJson(serverResponse.getData()));
             }
@@ -343,23 +343,23 @@ public class API extends Controller {
         return ok(Json.toJson(serverResponse.getData()));
     }
 
-    public static Result diversity(Account account) {
-        List<JsonNode> diversityData = new ArrayList<>();
+    public static Result rarefaction(Account account) {
+        List<JsonNode> rarefactionData = new ArrayList<>();
         Data serverResponse = new Data(new String[]{"result", "errors", "data"});
         int errors = 0;
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
-                File diversityCache = new File(file.fileDirPath + "/diversity.cache");
+                File rarefactionCache = new File(file.fileDirPath + "/rarefaction.cache");
                 try {
-                    FileInputStream cacheFile = new FileInputStream(diversityCache);
-                    JsonNode diversityNode = Json.parse(cacheFile);
-                    diversityData.add(diversityNode);
+                    FileInputStream cacheFile = new FileInputStream(rarefactionCache);
+                    JsonNode rarefactionNode = Json.parse(cacheFile);
+                    rarefactionData.add(rarefactionNode);
                 } catch (Exception e) {
                     errors++;
                 }
             }
         }
-        serverResponse.addData(new Object[]{"success", errors, diversityData});
+        serverResponse.addData(new Object[]{"success", errors, rarefactionData});
         return ok(Json.toJson(serverResponse.getData()));
     }
 

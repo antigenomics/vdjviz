@@ -5,12 +5,11 @@ import java.util.Objects;
 public enum CacheType {
 
     vjUsage("vjusage", true, "vjUsage"),
-    spectrotype("spectrotype", true, "spectrotype"),
-    spectrotypeV("spectrotypev", true, "spectrotypeV"),
-    sizeClassifying("sizeclassifying", true, "sizeClassifying"),
+    spectratype("spectratype", true, "spectratype"),
+    spectratypeV("spectratypev", true, "spectratypeV"),
     annotation("annotation", true,  "annotation"),
     quantileStats("quantilestats", true, "quantileStats"),
-    diversity("diversity", false, "diversity"),
+    rarefaction("rarefaction", false, "rarefaction"),
     summary("summary", false, "basicStats");
 
     private final String type;

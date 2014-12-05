@@ -1,9 +1,13 @@
-@main("Test") {
-    <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
-    <div ng-app="accountPage">
-        <files-sidebar>
-
-        </files-sidebar>
-    </div>
+@main("test") {
+    <script src="@routes.Assets.at("javascripts/test.js")"></script>
+<input type="text" name="string" id="string" value="CASAPSGAVLTF"/>
+<input type="text" name="vend" id="vend" value="10"/>
+<input type="text" name="dstart" id="dstart" value="11"/>
+<input type="text" name="dend" id="dend" value="14"/>
+<input type="text" name="jstart" id="jstart" value="15"/>
+<input type="text" name="pos" id="pos" value="3"/>
+<button id="button" class="btn btn-default">render</button>
+<br>
+<br>
+<div id="result">Wait</div>
 }

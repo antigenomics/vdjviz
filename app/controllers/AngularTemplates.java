@@ -24,8 +24,8 @@ public class AngularTemplates extends Controller {
         return ok(views.html.account.accountInformation.render(localUser));
     }
 
-    public static Result diversityContent() {
-        return ok(views.html.account.diversityContent.render());
+    public static Result rarefactionContent() {
+        return ok(views.html.account.rarefactionContent.render());
     }
 
     public static Result summaryContent() {
