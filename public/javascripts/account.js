@@ -6,13 +6,13 @@
     var app = angular.module('accountPage', []);
 
     //Main Directive
-    app.directive('accountPage', function() {
+    app.directive('accountPage', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', function($scope, $http) {
+            controller: ['$scope', '$http', function ($scope, $http) {
                 //private parameters
                 var uid = 0;
-                var createTab = function(tabName, type, dataHandler, mainPlace, comparing, exportPng, comparingPlace) {
+                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, comparingPlace) {
                     return {
                         tabName: tabName,
                         type: type,
@@ -33,25 +33,25 @@
                     vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, false, 'comparing-vjusage-tab'),
                     spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, 'comparing-spectratype-tab'),
                     spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, 'comparing-spectratypeV-tab'),
-                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileStats, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
+                    quantilestats: createTab('Quantile Plot', 'quantileStats', testQuantile, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
                     annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
 
-                $scope.updateFilesList = function() {
+                $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/api/files'}).success(function (data) {
-                        angular.forEach(data, function(file) {
+                        angular.forEach(data, function (file) {
                             $scope.addFileToList(file);
                         })
                     })
                 };
 
-                $scope.getActiveFile = function() {
+                $scope.getActiveFile = function () {
                     return $scope.files[$scope.activeFileName];
                 };
 
-                $scope.isContain = function(file) {
-                    angular.forEach($scope.files, function(f) {
+                $scope.isContain = function (file) {
+                    angular.forEach($scope.files, function (f) {
                         if (file.fileName === f.fileName) {
                             return true;
                         }
@@ -59,7 +59,7 @@
                     return false;
                 };
 
-                $scope.addFileToList = function(file) {
+                $scope.addFileToList = function (file) {
                     $scope.files[file.fileName] = {
                         uid: uid++,
                         fileName: file.fileName,
@@ -102,7 +102,7 @@
 
                 $scope.updateFilesList();
 
-                $scope.isContain = function(fileName) {
+                $scope.isContain = function (fileName) {
                     return !!(fileName in $scope.files);
                 };
 
@@ -142,11 +142,11 @@
                     }
                 };
 
-                $scope.deleteFileFromList = function(fileName) {
+                $scope.deleteFileFromList = function (fileName) {
                     delete $scope.files[fileName];
                 };
 
-                $scope.changeFileState = function(file, state) {
+                $scope.changeFileState = function (file, state) {
                     $scope.files[file.fileName].state = state;
                 }
             }]
@@ -154,7 +154,7 @@
     });
 
     //Sidebar Directive
-    app.directive('filesSidebar', function() {
+    app.directive('filesSidebar', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/filesSidebar',
@@ -162,41 +162,41 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
 
-                $scope.setActiveState = function(state) {
+                $scope.setActiveState = function (state) {
                     $rootScope.state = state;
                     $rootScope.updateVisualisationTab();
                 };
 
-                $scope.setActiveFile = function(file) {
+                $scope.setActiveFile = function (file) {
                     $rootScope.activeFileName = file.fileName;
                     $scope.setActiveState('file');
                 };
 
-                $scope.isRendering = function(file) {
+                $scope.isRendering = function (file) {
                     return file.state === 'rendering';
                 };
 
-                $scope.isActiveState = function(state) {
+                $scope.isActiveState = function (state) {
                     return $rootScope.state === state;
                 };
 
-                $scope.isActiveFile = function(file) {
+                $scope.isActiveFile = function (file) {
                     return file.fileName === $rootScope.activeFileName && $rootScope.isActiveState('file');
                 };
 
-                $scope.isFilesEmpty = function() {
+                $scope.isFilesEmpty = function () {
                     var size = 0;
-                    angular.forEach($rootScope.files, function(file) {
+                    angular.forEach($rootScope.files, function (file) {
                         size++;
                     });
                     return size;
                 };
 
-                $scope.deleteFile = function(file) {
+                $scope.deleteFile = function (file) {
                     $http.post('/api/delete', {
                         action: 'delete',
                         fileName: file.fileName
-                    }).success(function() {
+                    }).success(function () {
                         if (file.fileName === $rootScope.activeFileName || Object.keys($rootScope.files).length == 1) {
                             $rootScope.state = 'accountInformation'
                         } else if ($rootScope.state != 'file') {
@@ -214,88 +214,89 @@
                         });
                 };
             }]
-        }});
+        }
+    });
 
-    app.directive('mainVisualisationContent', function() {
+    app.directive('mainVisualisationContent', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/mainVisualisationContent',
             tranclude: true,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
-                $scope.exportChartPng = function(file, tab) {
+                $scope.exportChartPng = function (file, tab) {
                     console.log(document.getElementById('svg_' + tab.type + '_' + file.uid));
                     saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type + ".png", 3);
                 };
 
-                $scope.setActiveTab = function(tab) {
+                $scope.setActiveTab = function (tab) {
                     $rootScope.activeTab = tab;
                     $rootScope.updateVisualisationTab();
                 };
 
-                $scope.isActiveTab = function(tab) {
+                $scope.isActiveTab = function (tab) {
                     return $rootScope.activeTab === tab;
                 };
 
-                $scope.showTab = function() {
+                $scope.showTab = function () {
                     return $rootScope.state === 'file';
                 };
 
-                $scope.showFile = function(file) {
+                $scope.showFile = function (file) {
                     return file.fileName === $rootScope.activeFileName;
                 }
             }]
         }
     });
 
-    app.directive('accountInformation', function() {
+    app.directive('accountInformation', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/accountInformation',
             transclude: false,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
-                $scope.showAccountInformation = function() {
+            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+                $scope.showAccountInformation = function () {
                     return $rootScope.state === 'accountInformation';
                 }
             }]
         }
     });
 
-    app.directive('rarefactionContent', function() {
+    app.directive('rarefactionContent', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/rarefactionContent',
             transclude: false,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
-                $scope.showRarefaction = function() {
+            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+                $scope.showRarefaction = function () {
                     return $rootScope.state === 'rarefaction';
                 };
 
-                $scope.exportRarefaction = function() {
+                $scope.exportRarefaction = function () {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction.png', 3);
                 }
             }]
         }
     });
 
-    app.directive('summaryContent', function() {
+    app.directive('summaryContent', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/summaryContent',
             tranclude: false,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
-                $scope.showSummary = function() {
+            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+                $scope.showSummary = function () {
                     return $rootScope.state === 'summary';
                 }
             }]
         }
     });
 
-    app.directive('fileUpload', function() {
+    app.directive('fileUpload', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/fileUpload',
@@ -309,32 +310,32 @@
                 $scope.uploadedFiles = [];
                 $scope.commonSoftwareType = 'mitcr';
 
-                $scope.isNameValid = function(fileName) {
+                $scope.isNameValid = function (fileName) {
                     var regexp = /^[a-zA-Z0-9_.-]{1,20}$/;
                     return regexp.test(fileName)
                 };
 
-                $scope.isNewFilesEmpty = function() {
+                $scope.isNewFilesEmpty = function () {
                     return Object.keys($scope.newFiles).length;
                 };
 
-                $scope.addNewButton = function() {
+                $scope.addNewButton = function () {
                     $("form input[type=file]").click();
                 };
 
-                $scope.changeCommonSoftwareType = function() {
-                    angular.forEach($scope.newFiles, function(file) {
+                $scope.changeCommonSoftwareType = function () {
+                    angular.forEach($scope.newFiles, function (file) {
                         file.softwareTypeName = $scope.commonSoftwareType;
                     });
                 };
 
                 $scope.uploadAll = function () {
-                    angular.forEach($scope.newFiles, function(file) {
+                    angular.forEach($scope.newFiles, function (file) {
                         $scope.uploadFile(file);
                     })
                 };
 
-                $scope.uploadFile = function(file) {
+                $scope.uploadFile = function (file) {
                     if ((filesCount() <= 25) && file.wait && $scope.isNameValid(file.fileName)) {
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
@@ -347,33 +348,33 @@
                     }
                 };
 
-                $scope.isOk = function(file) {
+                $scope.isOk = function (file) {
                     return file.result === 'ok' || file.result === 'success';
                 };
 
-                $scope.isSuccess = function(file) {
+                $scope.isSuccess = function (file) {
                     return file.result === 'success';
                 };
 
-                $scope.isError = function(file) {
+                $scope.isError = function (file) {
                     return file.result === 'error';
                 };
 
-                $scope.deleteFromQuery = function(file) {
+                $scope.deleteFromQuery = function (file) {
                     delete $scope.newFiles[file.uid];
                 };
 
-                var filesCount = function() {
+                var filesCount = function () {
                     var added = Object.keys($rootScope.files).length;
                     var waiting = 0;
-                    angular.forEach($scope.newFiles, function(file) {
-                       if (file.wait) waiting++;
+                    angular.forEach($scope.newFiles, function (file) {
+                        if (file.wait) waiting++;
                     });
                     return added + waiting;
                 };
 
-                var addNew = function(uid, fileName, fileExtension, data) {
-                    $scope.$apply(function() {
+                var addNew = function (uid, fileName, fileExtension, data) {
+                    $scope.$apply(function () {
                         $scope.newFiles[uid] = {
                             uid: uid,
                             fileName: fileName,
@@ -390,34 +391,34 @@
                     })
                 };
 
-                var updateTooltip = function(file, tooltip) {
-                    $scope.$apply(function() {
+                var updateTooltip = function (file, tooltip) {
+                    $scope.$apply(function () {
                         file.tooltip = tooltip;
                     })
                 };
 
-                var updateProgress = function(file, progress) {
-                    $scope.$apply(function() {
+                var updateProgress = function (file, progress) {
+                    $scope.$apply(function () {
                         file.progress = progress;
                     })
                 };
 
-                var updateResult = function(file, result) {
-                    $scope.$apply(function() {
+                var updateResult = function (file, result) {
+                    $scope.$apply(function () {
                         file.result = result;
                     })
                 };
 
-                var updateResultTooltip = function(file, resultTooltip) {
-                    $scope.$apply(function() {
+                var updateResultTooltip = function (file, resultTooltip) {
+                    $scope.$apply(function () {
                         file.resultTooltip = resultTooltip;
                     })
                 };
 
-                var addNewError = function(uid, fileName, error) {
+                var addNewError = function (uid, fileName, error) {
                     switch (error) {
                         case 0:
-                            $scope.$apply(function() {
+                            $scope.$apply(function () {
                                 $scope.newFiles[uid] = {
                                     uid: uid,
                                     fileName: fileName,
@@ -429,7 +430,7 @@
                             });
                             break;
                         case 1:
-                            $scope.$apply(function() {
+                            $scope.$apply(function () {
                                 $scope.newFiles[uid] = {
                                     uid: uid,
                                     fileName: fileName,
@@ -445,10 +446,10 @@
                     }
                 };
 
-                var isContain = function(fileName) {
+                var isContain = function (fileName) {
                     var contain = false;
                     angular.forEach($scope.newFiles, function (file) {
-                       if (file.fileName == fileName) contain = true;
+                        if (file.fileName == fileName) contain = true;
                     });
                     return $rootScope.isContain(fileName) || contain;
                 };
@@ -541,10 +542,10 @@
                 });
 
                 $('#new-files-table').on('hidden.bs.modal', function () {
-                    angular.forEach($scope.newFiles, function(file) {
-                        switch(file.result) {
+                    angular.forEach($scope.newFiles, function (file) {
+                        switch (file.result) {
                             case 'success':
-                                $scope.$apply(function() {
+                                $scope.$apply(function () {
                                     $scope.uploadedFiles.push({
                                         fileName: file.fileName,
                                         softwareTypeName: file.softwareTypeName
@@ -553,7 +554,7 @@
                                 });
                                 break;
                             case 'error':
-                                $scope.$apply(function() {
+                                $scope.$apply(function () {
                                     delete $scope.newFiles[file.uid];
                                 });
                                 break;
@@ -568,19 +569,19 @@
         }
     });
 
-    app.directive('comparingContent', function() {
+    app.directive('comparingContent', function () {
         return {
             restrict: 'E',
             templateUrl: '/account/comparingContent',
             tranclude: false,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
-                $scope.showComparing = function() {
+                $scope.showComparing = function () {
                     return $rootScope.state === 'comparing';
                 };
 
-                $scope.showItem = function(file, tab) {
+                $scope.showItem = function (file, tab) {
                     if (file.state != 'rendering') {
                         if (!$rootScope.files[file.fileName].meta[tab.type].comparingCache) {
                             var param = {
@@ -598,16 +599,16 @@
                     }
                 };
 
-                $scope.showAllItems = function(tab) {
+                $scope.showAllItems = function (tab) {
                     var shown = 0;
-                    angular.forEach($rootScope.files, function(file) {
+                    angular.forEach($rootScope.files, function (file) {
                         if (!file.meta[tab.type].comparing) {
                             $scope.showItem(file, tab);
                             shown++;
                         }
                     });
                     if (shown == 0) {
-                        angular.forEach($rootScope.files, function(file) {
+                        angular.forEach($rootScope.files, function (file) {
                             $scope.showItem(file, tab);
                         })
                     }
@@ -616,10 +617,10 @@
         }
     });
 
-    app.filter('comparingFilter', function() {
-        return function(input) {
+    app.filter('comparingFilter', function () {
+        return function (input) {
             var filteredInput = [];
-            angular.forEach(input, function(element) {
+            angular.forEach(input, function (element) {
                 if (element.comparing)
                     filteredInput.push(element);
             });
@@ -628,7 +629,6 @@
     });
 
 })();
-
 
 
 function getData(handleData, param, file) {
@@ -676,7 +676,7 @@ function spectratype(data, param) {
     nv.addGraph(function () {
 
         var place = d3.select(param.place);
-            place.html("");
+        place.html("");
         var width = place.style('width');
         var height = param.height;
         var svg = place.append("div")
@@ -744,7 +744,7 @@ function spectratype(data, param) {
 function spectratypeV(data, param) {
     nv.addGraph(function () {
         var place = d3.select(param.place);
-            place.html("");
+        place.html("");
         var width = place.style('width');
         var height = param.height;
         var svg = place.append("div")
@@ -804,7 +804,7 @@ function spectratypeV(data, param) {
 }
 
 function quantileStats(data, param) {
-    nv.addGraph(function() {
+    nv.addGraph(function () {
         var place = d3.select(param.place);
         place.html("");
         var width = place.style('width');
@@ -820,8 +820,12 @@ function quantileStats(data, param) {
             .style("overflow", "visible");
 
         var chart = nv.models.pieChart()
-                .x(function(d) { return d.label })
-                .y(function(d) { return d.value })
+                .x(function (d) {
+                    return d.label
+                })
+                .y(function (d) {
+                    return d.value
+                })
                 .showLabels(true)     //Display pie labels
                 .labelThreshold(.05)  //Configure the minimum slice size for labels to show up
                 .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
@@ -829,9 +833,9 @@ function quantileStats(data, param) {
                 .donutRatio(0.35)     //Configure how big you want the donut hole size to be.
                 .duration(500)
                 .color(["#d7191c", "#fdae61", "#ffffbf", "#abd9e9", "#2c7bb6"])
-                .tooltipContent(function(key, y, e, graph) {
+                .tooltipContent(function (key, y, e, graph) {
                     return '<h3>' + e.point.tooltip + '</h3>'
-                        + '<p>' +  y + '</p>';
+                        + '<p>' + y + '</p>';
                 })
             ;
 
@@ -840,6 +844,140 @@ function quantileStats(data, param) {
         return chart;
     });
 
+}
+
+function testQuantile(data, param) {
+    nv.addGraph(function () {
+
+        var width = param.width,
+            height = param.height,
+            radius = Math.min(width, height) / 2;
+
+        var x = d3.scale.linear()
+            .range([0, 2 * Math.PI]);
+
+        var y = d3.scale.sqrt()
+            .range([0, radius]);
+
+        var color = {
+            "data": "#ffffff",
+            "Singleton": "#9e9ac8",
+            "Doubleton": "#bcbddc",
+            "HighOrder": "#9ebcda",
+            "Q5": "#2171b5",
+            "Q4": "#4292c6",
+            "Q3": "#6baed6",
+            "Q2": "#9ecae1",
+            "Q1": "#c6dbef"
+        };
+
+        var place = d3.select(param.place);
+            place.html("");
+
+        var legendSvg = place.append("svg")
+            .attr("width", "100%")
+            .attr("height", 20)
+            .style("overflow", "visible");
+
+        var chart = nv.models.legend()
+            .width(100)
+            .height(20)
+            .margin({top: 0, left: 0, right: 0, bottom: 0})
+            .color(color);
+
+        var keys = [
+            {key: "Singleton", color: "#9e9ac8"},
+            {key: "Doubleton", color: "#bcbddc"},
+            {key: "HighOrder", color: "#9ebcda"},
+            {key: "Q5", color: "#2171b5"},
+            {key: "Q4", color: "#4292c6"},
+            {key: "Q3", color: "#6baed6"},
+            {key: "Q2", color: "#9ecae1"},
+            {key: "Q1", color: "#c6dbef"}
+        ];
+        legendSvg.datum(keys).call(chart);
+
+        var svg = place
+            .append("svg")
+            .attr("class", "sunbirst")
+            .style("display", "block")
+            .style("overflow", "visible")
+            .style("margin", "auto")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + (height / 2 + 10) + ")");
+
+        var partition = d3.layout.partition()
+            .value(function (d) {
+                return d.size;
+            });
+
+        var arc = d3.svg.arc()
+            .startAngle(function (d) {
+                return Math.max(0, Math.min(2 * Math.PI, x(d.x)));
+            })
+            .endAngle(function (d) {
+                return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx)));
+            })
+            .innerRadius(function (d) {
+                return Math.max(0, y(d.y));
+            })
+            .outerRadius(function (d) {
+                return Math.max(0, y(d.y + d.dy));
+            });
+
+        var path = svg.selectAll("path")
+            .data(partition.nodes(data))
+            .enter().append("path")
+            .attr("d", arc)
+            .style("fill", function(d) {
+                var name = d.name;
+                var color = "#ffffff";
+                keys.forEach(function(d, i) {
+                    if (d.key === name) color = d.color;
+                });
+                return color;
+            })
+            .style("cursor", function(d) {
+                if (d.children) {
+                    return "pointer"
+                }
+                return null;
+            })
+            .on("click", click);
+
+        function click(d) {
+            if (d.children) {
+                path.transition()
+                    .duration(750)
+                    .attrTween("d", arcTween(d));
+            }
+        }
+
+
+        d3.select(self.frameElement).style("height", height + "px");
+
+        // Interpolate the scales!
+        function arcTween(d) {
+            var xd = d3.interpolate(x.domain(), [d.x, d.x + d.dx]),
+                yd = d3.interpolate(y.domain(), [d.y, 1]),
+                yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
+            return function (d, i) {
+                return i
+                    ? function (t) {
+                    return arc(d);
+                }
+                    : function (t) {
+                    x.domain(xd(t));
+                    y.domain(yd(t)).range(yr(t));
+                    return arc(d);
+                };
+            };
+        }
+
+
+    });
 }
 
 function annotationTable(data, param) {
@@ -906,7 +1044,7 @@ function annotationTable(data, param) {
                     while (vend >= jstart) jstart++;
                     while (dstart <= vend) dstart++;
                     while (dend >= jstart) dend--;
-                    var createSubString = function(start, end, color) {
+                    var createSubString = function (start, end, color) {
                         return {
                             start: start,
                             end: end,
@@ -1014,13 +1152,13 @@ function vjUsage(data, param) {
         .style("margin", "auto")
         .attr("id", "svg_vjusage_" + param.id)
         .append("g")
-        .attr("transform", "translate(" + (width+200) / 2 + "," + (height+200) / 2 + ")");
+        .attr("transform", "translate(" + (width + 200) / 2 + "," + (height + 200) / 2 + ")");
 
     svg.append("g").selectAll("path")
         .data(chord.groups)
         .enter().append("path")
         .attr("class", "arc")
-        .style("fill", function(d) {
+        .style("fill", function (d) {
             return d.index < 4 ? '#444444' : fill(d.index);
         })
         .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
@@ -1033,28 +1171,34 @@ function vjUsage(data, param) {
         .data(chord.chords)
         .enter().append("path")
         .attr("d", d3.svg.chord().radius(innerRadius))
-        .style("fill", function(d) { return fill(d.target.index); })
+        .style("fill", function (d) {
+            return fill(d.target.index);
+        })
         .style("opacity", 0.7);
 
     svg.append("g").selectAll(".arc")
         .data(chord.groups)
         .enter().append("svg:text")
         .attr("dy", ".35em")
-        .attr("text-anchor", function(d) { return ((d.startAngle + d.endAngle) / 2) > Math.PI ? "end" : null; })
-        .attr("transform", function(d) {
+        .attr("text-anchor", function (d) {
+            return ((d.startAngle + d.endAngle) / 2) > Math.PI ? "end" : null;
+        })
+        .attr("transform", function (d) {
             return "rotate(" + (((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90) + ")"
                 + "translate(" + (r1 - 15) + ")"
                 + (((d.startAngle + d.endAngle) / 2) > Math.PI ? "rotate(180)" : "");
         })
-        .text(function(d) {
+        .text(function (d) {
             return data.labels[d.index];
         });
 
     // Returns an event handler for fading a given chord group.
     function fade(opacity) {
-        return function(g, i) {
+        return function (g, i) {
             svg.selectAll(".chord path")
-                .filter(function(d) { return d.source.index != i && d.target.index != i; })
+                .filter(function (d) {
+                    return d.source.index != i && d.target.index != i;
+                })
                 .transition()
                 .style("opacity", opacity);
         };
@@ -1064,7 +1208,7 @@ function vjUsage(data, param) {
 function rarefactionPlot(data, param) {
     nv.addGraph(function () {
         var place = d3.select(param.place);
-            place.html(""); //cleanup old chart
+        place.html(""); //cleanup old chart
 
         var width = place.style('width');
 
@@ -1105,37 +1249,37 @@ function rarefactionPlot(data, param) {
 function summaryStats(data, param) {
 
     var place = d3.select(param.place);
-        place.html("");
+    place.html("");
 
     var table = place.append("table")
-            .attr("id", "basicStatsTable")
-            .attr("class", "table table-striped table-hover");
+        .attr("id", "basicStatsTable")
+        .attr("class", "table table-striped table-hover");
 
     var thead = table.append("thead").append("tr");
 
-        thead.append("th").html("Sample");
-        thead.append("th").html("Reads");
-        thead.append("th").html("Diversity");
-        thead.append("th").html("Mean clone fraction");
-        thead.append("th").html("Median clone fraction");
-        thead.append("th").html("Out of frame count");
-        thead.append("th").html("Out of frame fraction");
-        thead.append("th").html("Mean insert size");
-        thead.append("th").html("Mean N(D)N size");
-        thead.append("th").html("Mean CDR3 length");
+    thead.append("th").html("Sample");
+    thead.append("th").html("Reads");
+    thead.append("th").html("Diversity");
+    thead.append("th").html("Mean clone fraction");
+    thead.append("th").html("Median clone fraction");
+    thead.append("th").html("Out of frame count");
+    thead.append("th").html("Out of frame fraction");
+    thead.append("th").html("Mean insert size");
+    thead.append("th").html("Mean N(D)N size");
+    thead.append("th").html("Mean CDR3 length");
 
 
     var column = [
-        { "data" : "Name" },                  //Sample
-        { "data" : "cells" },                 //Reads
-        { "data" : "diversity" },             //Rarefaction
-        { "data" : "mean_clone_fraction" },    //Mean clone fraction
-        { "data" : "median_clone_fraction" }, //Median clone fraction
-        { "data" : "oof_count" },             //Out of frame count
-        { "data" : "oof_fraction" },          //Out of frame fraction
-        { "data" : "mean_insert_size" },      //Mean insert size
-        { "data" : "mean_ndn_size" },         //Mean N(d)N size
-        { "data" : "mean_cdr3nt_length" }    //Mean CDR3 length
+        {"data": "Name"},                  //Sample
+        {"data": "cells"},                 //Reads
+        {"data": "diversity"},             //Rarefaction
+        {"data": "mean_clone_fraction"},    //Mean clone fraction
+        {"data": "median_clone_fraction"}, //Median clone fraction
+        {"data": "oof_count"},             //Out of frame count
+        {"data": "oof_fraction"},          //Out of frame fraction
+        {"data": "mean_insert_size"},      //Mean insert size
+        {"data": "mean_ndn_size"},         //Mean N(d)N size
+        {"data": "mean_cdr3nt_length"}    //Mean CDR3 length
     ];
 
     $('#basicStatsTable').dataTable({
@@ -1156,22 +1300,22 @@ function summaryStats(data, param) {
                 "targets": [3, 4]
             },
             {
-                "render" : function(data) {
+                "render": function (data) {
                     return data;
                 },
                 "targets": 5
             },
             {
-                "render" : function(data) {
+                "render": function (data) {
                     return parseFloat(data).toFixed(2) * 100 + "%";
                 },
                 "targets": 6
             },
             {
-                "render" : function(data) {
+                "render": function (data) {
                     return parseFloat(data).toFixed(2)
                 },
-                "targets": [7,8,9]
+                "targets": [7, 8, 9]
             }
         ],
         "columns": column,
@@ -1185,7 +1329,7 @@ function summaryStats(data, param) {
 
 function loading(place) {
     var d3Place = d3.select(place);
-        d3Place.style("display", "block");
+    d3Place.style("display", "block");
     var loading = d3Place.append("div").attr("class", "loading");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");

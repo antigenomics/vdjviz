@@ -25,6 +25,7 @@ import utils.ArrayUtils.Data;
 import utils.ArrayUtils.xyValues;
 import utils.CacheType.CacheType;
 import utils.VColor.VColor;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
@@ -151,7 +152,7 @@ public class ComputationUtil {
         });
         String[] colors = new String[]{"#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf", "#74add1", "#abd9e9", "#e0f3f8", "#bababa", "#DCDCDC"};
         int index = 10;
-        for (HashMap<String, Object> map: data) {
+        for (HashMap<String, Object> map : data) {
             map.put("color", colors[index--]);
         }
         saveCache(CacheType.spectratype.getCacheFileName(), data);
@@ -189,14 +190,29 @@ public class ComputationUtil {
 
     private void quantileStats() throws Exception {
         QuantileStats quantileStats = new QuantileStats(sample, 5);
-        List<HashMap<String, Object>> data = new ArrayList<>();
+        HashMap<String, Object> data = new HashMap<>();
+        List<HashMap<String, Object>> mainChildrens = new ArrayList<>();
+        Data singleton = new Data(new String[]{"name", "size"});
+        singleton.addData(new Object[]{"Singleton", quantileStats.getSingletonFreq()});
+        Data doubleton = new Data(new String[]{"name", "size"});
+        doubleton.addData(new Object[]{"Doubleton", quantileStats.getDoubletonFreq()});
+        mainChildrens.add(singleton.getData());
+        mainChildrens.add(doubleton.getData());
+
+        Data highOrder = new Data(new String[]{"name", "children"});
+        List<HashMap<String, Object>> highOrderChildrens = new ArrayList<>();
         for (int i = 0; i < quantileStats.getNumberOfQuantiles(); i++) {
-            HashMap<String, Object> qData = new HashMap<>();
-            qData.put("label", "Q" + (i + 1));
-            qData.put("value", quantileStats.getFrequency(i));
-            qData.put("tooltip", "Quantile #" + (i + 1));
-            data.add(qData);
+            Data highOrderChild = new Data(new String[]{"name", "size"});
+            highOrderChild.addData(new Object[]{"Q" + (i + 1), quantileStats.getQuantileFrequency(i)});
+            highOrderChildrens.add(highOrderChild.getData());
         }
+
+        highOrder.addData(new Object[]{"HighOrder", highOrderChildrens});
+        mainChildrens.add(highOrder.getData());
+
+        data.put("name", "data");
+        data.put("children", mainChildrens);
+
         saveCache(CacheType.quantileStats.getCacheFileName(), data);
         serverResponse.changeValue("progress", 100);
         out.write(Json.toJson(serverResponse.getData()));
@@ -219,11 +235,11 @@ public class ComputationUtil {
             v.addData(new Object[]{cdrDatabaseMatch.query.getV(), cdrDatabaseMatch.vMatch});
             j.addData(new Object[]{cdrDatabaseMatch.query.getJ(), cdrDatabaseMatch.jMatch});
             cdr3aa.addData(new Object[]{cdrDatabaseMatch.query.getCdr3aa(),
-                                        cdrDatabaseMatch.getSubstitutions().size() > 0 ? cdrDatabaseMatch.getSubstitutions().get(0).pos : -1,
-                                        cdrDatabaseMatch.query.getVEnd(),
-                                        cdrDatabaseMatch.query.getJStart(),
-                                        cdrDatabaseMatch.query.getDStart(),
-                                        cdrDatabaseMatch.query.getDEnd()});
+                    cdrDatabaseMatch.getSubstitutions().size() > 0 ? cdrDatabaseMatch.getSubstitutions().get(0).pos : -1,
+                    cdrDatabaseMatch.query.getVEnd(),
+                    cdrDatabaseMatch.query.getJStart(),
+                    cdrDatabaseMatch.query.getDStart(),
+                    cdrDatabaseMatch.query.getDEnd()});
             annotationDataNode.addData(new Object[]{cdr3aa.getData(), v.getData(), j.getData(), cdrDatabaseMatch.query.getFreq(), cdrDatabaseMatch.query.getCount()});
             String[] annotations = cdrDatabaseMatch.subject.getAnnotation();
             for (int i = 0; i < header.length; i++) {
@@ -237,7 +253,7 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-   private void basicStats() throws Exception {
+    private void basicStats() throws Exception {
         BasicStats basicStats = new BasicStats(sample);
         String[] header = BasicStats.getHEADER().split("\t");
         HashMap<String, String> basicStatsCache = new HashMap<>();

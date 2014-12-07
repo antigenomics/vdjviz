@@ -4,6 +4,11 @@ html, body {
     padding-top: 0;
 }
 
+.sunbirst path {
+    stroke: #fff;
+    fill-rule: evenodd;
+}
+
 .nav-sidebar > li {
     cursor: pointer;
 }
