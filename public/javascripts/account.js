@@ -33,7 +33,7 @@
                     vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, false, 'comparing-vjusage-tab'),
                     spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, 'comparing-spectratype-tab'),
                     spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, 'comparing-spectratypeV-tab'),
-                    quantilestats: createTab('Quantile Plot', 'quantileStats', testQuantile, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
+                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
                     annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
@@ -846,7 +846,7 @@ function quantileStats(data, param) {
 
 }
 
-function testQuantile(data, param) {
+function quantileSunbirstChart(data, param) {
     nv.addGraph(function () {
 
         var width = param.width,
@@ -895,10 +895,12 @@ function testQuantile(data, param) {
             {key: "Q2", color: "#9ecae1"},
             {key: "Q1", color: "#c6dbef"}
         ];
+
         legendSvg.datum(keys).call(chart);
 
         var svg = place
             .append("svg")
+            .attr("id", "svg_quantileStats_" + param.id)
             .attr("class", "sunbirst")
             .style("display", "block")
             .style("overflow", "visible")
@@ -950,7 +952,7 @@ function testQuantile(data, param) {
         function click(d) {
             if (d.children) {
                 path.transition()
-                    .duration(750)
+                    .duration(500)
                     .attrTween("d", arcTween(d));
             }
         }
