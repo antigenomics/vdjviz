@@ -9,6 +9,14 @@ html, body {
     fill-rule: evenodd;
 }
 
+.sunbirst text {
+    font: 11px sans-serif;
+}
+
+.vjusage text {
+    font: 11px sans-serif;
+}
+
 .nav-sidebar > li {
     cursor: pointer;
 }

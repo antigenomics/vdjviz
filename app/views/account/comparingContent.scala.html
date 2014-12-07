@@ -4,7 +4,7 @@
     </div>
     <div class="comparing-tab-body col-lg-12">
         <div ng-repeat="file in files">
-            <div ng-repeat="tab in visualisationTabs|filter:{comparing:true}" class="col-lg-6 comparing-tab {{ tap.comparingPlace }}" ng-show="file.meta[tab.type].comparing" id="id{{ file.uid }}">
+            <div ng-repeat="tab in visualisationTabs|comparingFilter" class="col-lg-6 comparing-tab {{ tap.comparingPlace }}" ng-show="file.meta[tab.type].comparing" id="id{{ file.uid }}">
                 <h2>{{ file.fileName }} {{ tab.tabName }}</h2>
                 <hr>
                 <div class="{{ tab.comparingPlace }}"></div>

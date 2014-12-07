@@ -803,73 +803,19 @@ function spectratypeV(data, param) {
     });
 }
 
-function quantileStats(data, param) {
-    nv.addGraph(function () {
-        var place = d3.select(param.place);
-        place.html("");
-        var width = place.style('width');
-        var height = param.height;
-        var svg = place.append("div")
-            .attr("id", "chart")
-            .append("svg")
-            .attr("id", "svg_quantileStats_" + param.id)
-            .style("height", height)
-            .style("width", width)
-            .attr('height', height) //fix for Firefox browser
-            .attr('width', width)   //fix for Firefox browser
-            .style("overflow", "visible");
-
-        var chart = nv.models.pieChart()
-                .x(function (d) {
-                    return d.label
-                })
-                .y(function (d) {
-                    return d.value
-                })
-                .showLabels(true)     //Display pie labels
-                .labelThreshold(.05)  //Configure the minimum slice size for labels to show up
-                .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
-                .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
-                .donutRatio(0.35)     //Configure how big you want the donut hole size to be.
-                .duration(500)
-                .color(["#d7191c", "#fdae61", "#ffffbf", "#abd9e9", "#2c7bb6"])
-                .tooltipContent(function (key, y, e, graph) {
-                    return '<h3>' + e.point.tooltip + '</h3>'
-                        + '<p>' + y + '</p>';
-                })
-            ;
-
-        svg.datum(data).transition().duration(350).call(chart);
-
-        return chart;
-    });
-
-}
-
 function quantileSunbirstChart(data, param) {
     nv.addGraph(function () {
 
         var width = param.width,
             height = param.height,
-            radius = Math.min(width, height) / 2;
+            radius = Math.min(width, height) / 3,
+            padding = 5;
 
         var x = d3.scale.linear()
             .range([0, 2 * Math.PI]);
 
         var y = d3.scale.sqrt()
             .range([0, radius]);
-
-        var color = {
-            "data": "#ffffff",
-            "Singleton": "#9e9ac8",
-            "Doubleton": "#bcbddc",
-            "HighOrder": "#9ebcda",
-            "Q5": "#2171b5",
-            "Q4": "#4292c6",
-            "Q3": "#6baed6",
-            "Q2": "#9ecae1",
-            "Q1": "#c6dbef"
-        };
 
         var place = d3.select(param.place);
             place.html("");
@@ -882,18 +828,20 @@ function quantileSunbirstChart(data, param) {
         var chart = nv.models.legend()
             .width(100)
             .height(20)
-            .margin({top: 0, left: 0, right: 0, bottom: 0})
-            .color(color);
+            .key(function(d) {
+                return d.label;
+            })
+            .margin({top: 0, left: 0, right: 0, bottom: 0});
 
         var keys = [
-            {key: "Singleton", color: "#9e9ac8"},
-            {key: "Doubleton", color: "#bcbddc"},
-            {key: "HighOrder", color: "#9ebcda"},
-            {key: "Q5", color: "#2171b5"},
-            {key: "Q4", color: "#4292c6"},
-            {key: "Q3", color: "#6baed6"},
-            {key: "Q2", color: "#9ecae1"},
-            {key: "Q1", color: "#c6dbef"}
+            {key: "Singleton", color: "#9e9ac8", label: "Singleton"},
+            {key: "Doubleton", color: "#bcbddc", label: "Doubleton"},
+            {key: "HighOrder", color: "#9ebcda", label: "High Order"},
+            {key: "Q1", color: "#c6dbef", label: "Quantile #1"},
+            {key: "Q2", color: "#9ecae1", label: "Quantile #2"},
+            {key: "Q3", color: "#6baed6", label: "Quantile #3"},
+            {key: "Q4", color: "#4292c6", label: "Quantile #4"},
+            {key: "Q5", color: "#2171b5", label: "Quantile #5"}
         ];
 
         legendSvg.datum(keys).call(chart);
@@ -911,27 +859,23 @@ function quantileSunbirstChart(data, param) {
             .attr("transform", "translate(" + width / 2 + "," + (height / 2 + 10) + ")");
 
         var partition = d3.layout.partition()
+            .sort(null)
             .value(function (d) {
                 return d.size;
             });
 
         var arc = d3.svg.arc()
-            .startAngle(function (d) {
-                return Math.max(0, Math.min(2 * Math.PI, x(d.x)));
-            })
-            .endAngle(function (d) {
-                return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx)));
-            })
-            .innerRadius(function (d) {
-                return Math.max(0, y(d.y));
-            })
-            .outerRadius(function (d) {
-                return Math.max(0, y(d.y + d.dy));
-            });
+            .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x))); })
+            .endAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx))); })
+            .innerRadius(function(d) { return Math.max(0, d.y ? y(d.y) : d.y); })
+            .outerRadius(function(d) { return Math.max(0, y(d.y + d.dy)) + 50; });
+
+        var nodes = partition.nodes(data);
 
         var path = svg.selectAll("path")
-            .data(partition.nodes(data))
+            .data(nodes)
             .enter().append("path")
+            .attr("id", function(d, i) { return "path-" + i; })
             .attr("d", arc)
             .style("fill", function(d) {
                 var name = d.name;
@@ -949,14 +893,74 @@ function quantileSunbirstChart(data, param) {
             })
             .on("click", click);
 
+        var text = svg.selectAll("text").data(nodes);
+        var textEnter = text.enter().append("text")
+            .style("fill-opacity", 1)
+            .style("fill", function(d) {
+                return "black";
+                //return brightness(d3.rgb(colour(d))) < 125 ? "#eee" : "#000";
+            })
+            .attr("text-anchor", function(d) {
+                return x(d.x + d.dx / 2) > Math.PI ? "end" : "start";
+            })
+            .attr("dy", ".2em")
+            .attr("transform", function(d) {
+                var multiline = (d.name || "").split(" ").length > 1,
+                    angle = x(d.x + d.dx / 2) * 180 / Math.PI - 90,
+                    rotate = angle + (multiline ? -.5 : 0);
+                return "rotate(" + rotate + ")translate(" + (y(d.y) + padding) + ")rotate(" + (angle > 90 ? -180 : 0) + ")";
+            })
+            .on("click", click);
+        textEnter.append("tspan")
+            .attr("x", 0)
+            .text(function(d) {
+                if (d.name == "data") return null;
+                var label = d.name;
+                if (!d.children) {
+                    label += "  " + (d.size.toFixed(2) * 100) + "%";
+                }
+                return label;
+            });
+
         function click(d) {
             if (d.children) {
                 path.transition()
                     .duration(500)
                     .attrTween("d", arcTween(d));
+                text.style("visibility", function(e) {
+                    return isParentOf(d, e) ? null : d3.select(this).style("visibility");
+                })
+                    .transition()
+                    .duration(500)
+                    .attrTween("text-anchor", function(d) {
+                        return function() {
+                            return x(d.x + d.dx / 2) > Math.PI ? "end" : "start";
+                        };
+                    })
+                    .attrTween("transform", function(d) {
+                        var multiline = (d.name || "").split(" ").length > 1;
+                        return function() {
+                            var angle = x(d.x + d.dx / 2) * 180 / Math.PI - 90,
+                                rotate = angle + (multiline ? -.5 : 0);
+                            return "rotate(" + rotate + ")translate(" + (y(d.y) + padding) + ")rotate(" + (angle > 90 ? -180 : 0) + ")";
+                        };
+                    })
+                    .style("fill-opacity", function(e) { return isParentOf(d, e) ? 1 : 1e-6; })
+                    .each("end", function(e) {
+                        d3.select(this).style("visibility", isParentOf(d, e) ? null : "hidden");
+                    });
             }
         }
 
+        function isParentOf(p, c) {
+            if (p === c) return true;
+            if (p.children) {
+                return p.children.some(function(d) {
+                    return isParentOf(d, c);
+                });
+            }
+            return false;
+        }
 
         d3.select(self.frameElement).style("height", height + "px");
 
@@ -977,7 +981,6 @@ function quantileSunbirstChart(data, param) {
                 };
             };
         }
-
 
     });
 }
@@ -1146,6 +1149,7 @@ function vjUsage(data, param) {
 
     var svg = d3.select(param.place)
         .append("svg")
+        .attr("class", "vjusage")
         .style("width", width + 200)
         .style("height", height + 200)
         .attr("width", width + 200)     //fix for Firefox browser
@@ -1269,11 +1273,12 @@ function summaryStats(data, param) {
     thead.append("th").html("Mean insert size");
     thead.append("th").html("Mean N(D)N size");
     thead.append("th").html("Mean CDR3 length");
+    thead.append("th").html("Convergence");
 
 
     var column = [
         {"data": "Name"},                  //Sample
-        {"data": "cells"},                 //Reads
+        {"data": "count"},                 //Reads
         {"data": "diversity"},             //Rarefaction
         {"data": "mean_clone_fraction"},    //Mean clone fraction
         {"data": "median_clone_fraction"}, //Median clone fraction
@@ -1281,7 +1286,8 @@ function summaryStats(data, param) {
         {"data": "oof_fraction"},          //Out of frame fraction
         {"data": "mean_insert_size"},      //Mean insert size
         {"data": "mean_ndn_size"},         //Mean N(d)N size
-        {"data": "mean_cdr3nt_length"}    //Mean CDR3 length
+        {"data": "mean_cdr3nt_length"},    //Mean CDR3 length
+        {"data": "convergence"}            //Convergence
     ];
 
     $('#basicStatsTable').dataTable({
@@ -1299,13 +1305,7 @@ function summaryStats(data, param) {
                 "render": function (data) {
                     return parseFloat(data).toExponential(2);
                 },
-                "targets": [3, 4]
-            },
-            {
-                "render": function (data) {
-                    return data;
-                },
-                "targets": 5
+                "targets": [3, 4, 10]
             },
             {
                 "render": function (data) {
