@@ -12,7 +12,7 @@
             controller: ['$scope', '$http', function ($scope, $http) {
                 //private parameters
                 var uid = 0;
-                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, comparingPlace) {
+                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
                     return {
                         tabName: tabName,
                         type: type,
@@ -20,6 +20,7 @@
                         mainPlace: mainPlace,
                         comparing: comparing,
                         exportPng: exportPng,
+                        exportType: exportType,
                         comparingPlace: comparingPlace
                     }
                 };
@@ -30,10 +31,10 @@
                 $scope.state = 'accountInformation';
                 $scope.activeFileName = '';
                 $scope.visualisationTabs = {
-                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, false, 'comparing-vjusage-tab'),
-                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, 'comparing-spectratype-tab'),
-                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, 'comparing-spectratypeV-tab'),
-                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, 'comparing-quantileStats-tab'),
+                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
+                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
+                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
+                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
                     annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
@@ -225,9 +226,8 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
-                $scope.exportChartPng = function (file, tab) {
-                    console.log(document.getElementById('svg_' + tab.type + '_' + file.uid));
-                    saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type + ".png", 3);
+                $scope.exportChartPng = function (file, tab, exportType) {
+                    saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type, 3, exportType);
                 };
 
                 $scope.setActiveTab = function (tab) {
@@ -657,11 +657,13 @@ function getData(handleData, param, file) {
                             file.meta[param.type].data = data.data;
                         }
                         break;
-                    case "error" :
-                        d3.select(param.place).html("No data available");
-                        break;
                     default :
                         d3.select(param.place).html("No data available");
+                        if (typeof file != 'undefined') {
+                            file.meta[param.type].cached = false;
+                            file.meta[param.type].comparingCache = false;
+                            file.meta[param.type].data = [];
+                        }
                         break;
                 }
             },
@@ -727,6 +729,7 @@ function spectratype(data, param) {
         }
 
         chart.xAxis
+            .axisLabel('CDR3 length')
             .tickValues(xValues)
             .tickFormat(d3.format(',f'));
 
@@ -752,7 +755,7 @@ function spectratypeV(data, param) {
             .style("margin-right", "auto")
             .attr("id", "chart")
             .append("svg")
-            .attr("id", "svg_spectrotypeV_" + param.id)
+            .attr("id", "svg_spectratypeV_" + param.id)
             .style("height", height)
             .style("width", width)
             .attr('height', height) //fix for Firefox browser
@@ -787,6 +790,7 @@ function spectratypeV(data, param) {
         }
 
         chart.xAxis
+            .axisLabel('CDR3 length')
             .tickValues(xValues)
             .tickFormat(d3.format(',f'));
 
@@ -1132,18 +1136,18 @@ function annotationTable(data, param) {
 
 function vjUsage(data, param) {
 
-    var fill = d3.scale.category10();
+    var fill = d3.scale.category20c();
 
     // Visualize
     var chord = d3.layout.chord()
-        .padding(.05)
-        .sortSubgroups(d3.descending)
+        .padding(.03)
+        .sortGroups(d3.descending)
         .matrix(data.matrix);
 
     var width = param.width,
         height = param.height,
-        r1 = height / 2,
-        innerRadius = Math.min(width, height) * .41,
+        r1 = height / 1.7,
+        innerRadius = Math.min(width, height) * .49,
         outerRadius = innerRadius * 1.1,
         outer;
 
@@ -1234,11 +1238,11 @@ function rarefactionPlot(data, param) {
             .height(500);
 
         chart.xAxis
-            .axisLabel('Count')
+            .axisLabel('Sample size, TCM')
             .tickFormat(d3.format(',r'));
 
         chart.yAxis
-            .axisLabel('CDR3AA')
+            .axisLabel('Diversity, clonotypes')
             .tickFormat(d3.format('.02f'));
 
 

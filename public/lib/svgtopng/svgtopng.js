@@ -96,7 +96,7 @@
         });
     };
 
-    out$.saveSvgAsPng = function(el, name, scaleFactor) {
+    out$.saveSvgAsPng = function(el, name, scaleFactor, format) {
         out$.svgAsDataUri(el, scaleFactor, function(uri) {
             var image = new Image();
             image.src = uri;
@@ -105,11 +105,24 @@
                 canvas.width = image.width;
                 canvas.height = image.height;
                 var context = canvas.getContext('2d');
-                context.drawImage(image, 0, 0);
-
                 var a = document.createElement('a');
-                a.download = name;
-                a.href = canvas.toDataURL('image/png');
+                switch (format) {
+                    case 'JPEG':
+                        context.fillStyle = 'white';
+                        context.fillRect(0,0,image.width,image.height);
+                        context.drawImage(image, 0, 0);
+                        a.download = name + '.jpeg';
+                        a.href = canvas.toDataURL('image/jpeg');
+                        break;
+                    case 'PNG':
+                        context.drawImage(image, 0, 0);
+                        a.download = name + '.png';
+                        a.href = canvas.toDataURL('image/png');
+                        break;
+                    default:
+                        console.log('Unknown export type');
+                        return;
+                }
                 document.body.appendChild(a);
                 a.click();
                 a.parentNode.removeChild(a);

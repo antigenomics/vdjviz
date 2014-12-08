@@ -41,6 +41,14 @@ html, body {
     width: 20%;
 }
 
+.rarefaction-visualisation-tab {
+    min-height: 500px;
+}
+
+.summary-visualisation-tab {
+    min-height: 500px;
+}
+
 .comparing-tab-header {
     position: fixed;
     margin: 20px;
