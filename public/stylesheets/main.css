@@ -4,6 +4,11 @@ html, body {
     padding-top: 0;
 }
 
+.feature-img {
+    max-height: 500px;
+    max-width: 500px;
+}
+
 .sunbirst path {
     stroke: #fff;
     fill-rule: evenodd;

@@ -373,7 +373,7 @@
                     return added + waiting;
                 };
 
-                var addNew = function (uid, fileName, fileExtension, data) {
+                var addNew = function (uid, fileName, fileExtension, data)  {
                     $scope.$apply(function () {
                         $scope.newFiles[uid] = {
                             uid: uid,
@@ -441,6 +441,18 @@
                                 };
                             });
                             break;
+                        case 2:
+                            $scope.$apply(function () {
+                                $scope.newFiles[uid] = {
+                                    uid: uid,
+                                    fileName: fileName,
+                                    softwareTypeName: '',
+                                    wait: false,
+                                    result: 'error',
+                                    resultTooltip: 'File is too large'
+                                };
+                            });
+                            break;
                         default :
                             break;
                     }
@@ -460,7 +472,8 @@
                     sequentialUploads: true,
                     dropZone: $('#new-files-dropzone'),
                     add: function (e, data) {
-                        var originalFileName = data.files[0].name;
+                        var file = data.files[0];
+                        var originalFileName = file.name;
                         var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
                         var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
                         if (fileExtension != 'txt' && fileExtension != 'gz') {
@@ -471,6 +484,8 @@
                             addNewError(uid++, fileName, 0);
                         } else if (isContain(fileName)) {
                             addNewError(uid++, fileName, 1);
+                        } else if ((file.size  / 1024 ) > 1024) {
+                            addNewError(uid++, fileName, 2);
                         } else {
                             addNew(uid++, fileName, fileExtension, data);
                         }

@@ -17,7 +17,9 @@ import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import models.Account;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
+import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
@@ -27,6 +29,7 @@ import utils.CacheType.CacheType;
 import utils.VColor.VColor;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.List;
@@ -34,6 +37,7 @@ import java.util.List;
 public class ComputationUtil {
 
     private Sample sample;
+    private Account account;
     private SampleCollection sampleCollection;
     private UserFile file;
     private WebSocket.Out<JsonNode> out;
@@ -47,6 +51,7 @@ public class ComputationUtil {
         this.sample = sampleCollection.getAt(0);
         this.sampleCollection = sampleCollection;
         this.file = file;
+        this.account = file.account;
         this.out = out;
         this.serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
     }
@@ -292,11 +297,17 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    private void saveCache(String cacheName, Object data) throws Exception {
-        File cache = new File(file.fileDirPath + "/" + cacheName + ".cache");
-        PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
-        fileWriter.write(Json.stringify(Json.toJson(data)));
-        fileWriter.close();
+    private void saveCache(String cacheName, Object data) {
+        try {
+            File cache = new File(file.fileDirPath + "/" + cacheName + ".cache");
+            PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
+            fileWriter.write(Json.stringify(Json.toJson(data)));
+            fileWriter.close();
+        } catch (FileNotFoundException fnfe) {
+            Logger.of("user." + account.userName).error("User " + account.userName +
+                    ": save cache error [" + file.fileName + "," + cacheName + "]");
+            fnfe.printStackTrace();
+        }
     }
 
     public void createSampleCache() throws Exception {

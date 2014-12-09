@@ -6,6 +6,7 @@ import models.Account;
 import models.LocalUser;
 import models.UserFile;
 import play.Logger;
+import play.Play;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
@@ -18,6 +19,7 @@ import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 
@@ -26,10 +28,7 @@ public class API extends Controller {
 
     public static Result upload() {
 
-        /**
-         * Identifying user using the SecureSocial API
-         */
-
+        //Identifying user using the SecureSocial API
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
@@ -41,20 +40,14 @@ public class API extends Controller {
             return ok(Json.toJson(serverResponse.getData()));
         }
 
-        /**
-         * Checking files count
-         */
-
+        //Checking files count
         if (account.userfiles.size() >= 25) {
             serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
-            Logger.of("user." + account.userName).info("User" + account.userName + " exceeded  the limit of the number of files");
+            Logger.of("user." + account.userName).info("User " + account.userName + ": exceeded the limit of the number of files");
             return ok(Json.toJson(serverResponse.getData()));
         }
 
-        /**
-         * Getting the file from request body
-         */
-
+        //Getting the file from request body
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart file = body.getFile("files[]");
 
@@ -63,12 +56,16 @@ public class API extends Controller {
             return ok(Json.toJson(serverResponse.getData()));
         }
 
-        /**
-         * Getting fileName
-         * If User do not enter the name of file
-         * it will be fills automatically using current file name
-         */
+        Long sizeMB = file.getFile().length() / 1024;
+        if (sizeMB > Play.application().configuration().getLong("maxFileSize")) {
+            serverResponse.addData(new Object[]{"error", "File is too large"});
+            return ok(Json.toJson(serverResponse.getData()));
+        }
 
+
+        //Getting fileName
+        //If User do not enter the name of file
+        //it will be fills automatically using current file name
         String fileName;
         if (file.getFilename().equals("")) {
             fileName = FilenameUtils.removeExtension(file.getFilename());
@@ -91,29 +88,23 @@ public class API extends Controller {
             }
         }
 
-        /**
-         * Verification of the existence the account and the file
-         */
-
         try {
-
-            /**
-             * Creation the UserFile class
-             */
 
             File accountDir = new File(account.userDirPath);
             if (!accountDir.exists()) {
-                accountDir.mkdir();
+                Boolean accountDirCreated = accountDir.mkdir();;
+                if (!accountDirCreated) {
+                    serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
+                    Logger.of("user." + account.userName).error("Error creating main directory for user " + account.userName);
+                    return ok(Json.toJson(serverResponse.getData()));
+                }
             }
 
             File uploadedFile = file.getFile();
             String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
             File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
 
-            /**
-             * Trying to create file's directory
-             */
-
+            //Trying to create file directory
             if (!fileDir.exists()) {
                 Boolean created = fileDir.mkdir();
                 if (!created) {
@@ -136,11 +127,7 @@ public class API extends Controller {
                     account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension,
                     fileDir.getAbsolutePath(), fileExtension);
 
-            /**
-             * Database updating with relationships
-             * UserFile <-> Account
-             */
-
+            //Updating database UserFile <-> Account
             Ebean.save(newFile);
             serverResponse.addData(new Object[]{"success", ""});
             return ok(Json.toJson(serverResponse.getData()));
@@ -153,11 +140,7 @@ public class API extends Controller {
     }
 
     public static Result delete() {
-
-        /**
-         * Identifying User using the SecureSocial API
-         */
-
+        //Identifying user using the Secure Social API
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
@@ -169,6 +152,7 @@ public class API extends Controller {
         File[] files;
 
         switch (request.findValue("action").asText()) {
+            //Delete one file
             case "delete":
                 String fileName = request.findValue("fileName").asText();
                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
@@ -193,6 +177,7 @@ public class API extends Controller {
                     serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
                     return ok(Json.toJson(serverResponse.getData()));
                 }
+            //Delete all files
             case "deleteAll":
                 try {
                     for (UserFile f : account.userfiles) {
@@ -213,6 +198,8 @@ public class API extends Controller {
     }
 
     public static Result files() {
+        //Identifying user using the Secure Social API
+        //Return meta information about all files
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
@@ -234,11 +221,8 @@ public class API extends Controller {
     }
 
     public static Result accountInformation() {
-
-        /**
-         * Identifying user using the SecureSocial API
-         */
-
+        //Identifying user using the Secure Social API
+        //Return account information
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
@@ -250,11 +234,8 @@ public class API extends Controller {
     }
 
     public static Result data() {
-
-        /**
-         * Identifying user using the SecureSocial API
-         */
-
+        //Identifying user using the Secure Social API
+        //Return data for chart
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
@@ -285,16 +266,17 @@ public class API extends Controller {
                         throw new IllegalArgumentException();
                 }
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | FileNotFoundException e) {
             e.printStackTrace();
             Logger.of("user." + account.userName).error("User " + account.userName +
-                    ": unknown type: " + request.findValue("type").asText());
+                    ": error while requesting data");
             serverResponse.addData(new Object[]{"error", "Unknown type"});
             return badRequest(Json.toJson(serverResponse.getData()));
         }
     }
 
     public static Result cache(UserFile file, String cacheName, Account account) {
+        //Return cache file transformed into json format
         Data serverResponse = new Data(new String[]{"result", "message", "data"});
         if (file == null) {
             Logger.of("user." + account.userName).error("User " + account.userName +
@@ -313,61 +295,52 @@ public class API extends Controller {
                 Logger.of("user." + account.userName).error("User " + account.userName +
                         ": cache file does not exists [" + file.fileName + "," + cacheName + "]");
                 serverResponse.addData(new Object[]{"error", "Cache file does not exist", null});
-                return ok(Json.toJson(serverResponse.getData()));
+                return forbidden(Json.toJson(serverResponse.getData()));
             }
         } else {
             Logger.of("user." + account.userName).error("User: " + account.userName + " File: "
                     + file.fileName + " did not rendered");
             serverResponse.addData(new Object[]{"error", "File did not rendered", null});
-            return ok(Json.toJson(serverResponse.getData()));
+            return forbidden(Json.toJson(serverResponse.getData()));
         }
     }
 
-    public static Result basicStats(Account account) {
+    public static Result basicStats(Account account) throws FileNotFoundException {
+        //Return basicStats cache for all files in json format
         List<JsonNode> basicStatsData = new ArrayList<>();
-        Data serverResponse = new Data(new String[]{"result", "errors", "data"});
-        int errors = 0;
+        Data serverResponse = new Data(new String[]{"result", "data"});
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
                 File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
-                try {
-                    FileInputStream cacheFile = new FileInputStream(basicStatsCache);
-                    JsonNode basicStatsNode = Json.parse(cacheFile);
-                    basicStatsData.add(basicStatsNode);
-                } catch (Exception e) {
-                    errors++;
-                }
+                FileInputStream cacheFile = new FileInputStream(basicStatsCache);
+                JsonNode basicStatsNode = Json.parse(cacheFile);
+                basicStatsData.add(basicStatsNode);
             }
         }
-        serverResponse.addData(new Object[]{"success", errors, basicStatsData});
+        serverResponse.addData(new Object[]{"success", basicStatsData});
         return ok(Json.toJson(serverResponse.getData()));
     }
 
-    public static Result rarefaction(Account account) {
+    public static Result rarefaction(Account account) throws FileNotFoundException {
+        //Return rarefaction cache for all files in json format
         List<JsonNode> rarefactionData = new ArrayList<>();
-        Data serverResponse = new Data(new String[]{"result", "errors", "data"});
-        int errors = 0;
+        Data serverResponse = new Data(new String[]{"result", "data"});
         for (UserFile file : account.userfiles) {
             if (file.rendered && !file.rendering) {
                 File rarefactionCache = new File(file.fileDirPath + "/rarefaction.cache");
-                try {
-                    FileInputStream cacheFile = new FileInputStream(rarefactionCache);
-                    JsonNode rarefactionNode = Json.parse(cacheFile);
-                    rarefactionData.add(rarefactionNode);
-                } catch (Exception e) {
-                    errors++;
-                }
+                FileInputStream cacheFile = new FileInputStream(rarefactionCache);
+                JsonNode rarefactionNode = Json.parse(cacheFile);
+                rarefactionData.add(rarefactionNode);
             }
         }
-        serverResponse.addData(new Object[]{"success", errors, rarefactionData});
+        serverResponse.addData(new Object[]{"success", rarefactionData});
         return ok(Json.toJson(serverResponse.getData()));
     }
 
     public static WebSocket<JsonNode> ws() {
-
+        //Socket for updating information about computation progress
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
         final Account account = localUser.account;
-
         return new WebSocket<JsonNode>() {
 
             @Override
@@ -394,10 +367,12 @@ public class API extends Controller {
                                 file.rendering = true;
                                 Ebean.update(file);
                                 try {
+                                    //Trying to render cache files for sample
                                     ComputationUtil computationUtil = new ComputationUtil(file, out);
                                     computationUtil.createSampleCache();
                                     return;
                                 } catch (Exception e) {
+                                    //On exception delete file and inform user about fail
                                     Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
                                     serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
                                     out.write(Json.toJson(serverResponse.getData()));
