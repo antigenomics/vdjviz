@@ -1,23 +1,8 @@
 package models;
 
-import play.data.validation.Constraints;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.sql.Timestamp;
 import java.util.*;
-
-import play.libs.F;
 import play.mvc.PathBindable;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.Payload;
-
 import static play.data.validation.Constraints.*;
-
 import javax.persistence.*;
 import play.db.ebean.Model;
 

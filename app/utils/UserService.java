@@ -5,11 +5,9 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
-
 import com.avaje.ebean.Ebean;
 import models.Account;
 import org.joda.time.DateTime;
-
 import models.LocalToken;
 import models.LocalUser;
 import play.Application;

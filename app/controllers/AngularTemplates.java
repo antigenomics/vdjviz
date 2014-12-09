@@ -1,7 +1,5 @@
 package controllers;
 
-
-import models.Account;
 import models.LocalUser;
 import play.mvc.*;
 import securesocial.core.Identity;

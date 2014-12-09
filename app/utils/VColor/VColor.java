@@ -1,7 +1,6 @@
 package utils.VColor;
 
 import java.awt.*;
-import java.util.Objects;
 
 public class VColor {
     private String hexColor;

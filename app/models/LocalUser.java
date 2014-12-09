@@ -3,11 +3,8 @@ package models;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-
 import play.db.ebean.Model;
-
 import java.util.List;
-import java.util.logging.Logger;
 
 
 @Entity

@@ -3,20 +3,15 @@ package models;
 
 import com.antigenomics.vdjtools.Software;
 import com.avaje.ebean.Ebean;
-import play.Logger;
 import play.data.validation.Constraints;
 import play.mvc.PathBindable;
 import play.db.ebean.Model;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @Entity
 public class UserFile extends Model implements PathBindable<UserFile> {
@@ -35,8 +30,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
     public String fileExtension;
     public Boolean rendered;
     public Boolean rendering;
-
-    public UserFile() {}
 
     public UserFile(Account account, String fileName,
                     String uniqueName, String softwareTypeName,

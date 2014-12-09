@@ -1,20 +1,11 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Software;
-import com.antigenomics.vdjtools.db.*;
-import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import models.LocalUser;
-import models.UserFile;
-import play.Logger;
-import play.libs.Json;
 import play.mvc.*;
-
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import views.html.*;
 
-import java.util.*;
 
 public class Application extends Controller {
 
