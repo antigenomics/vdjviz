@@ -7,9 +7,11 @@ import models.LocalUser;
 import models.UserFile;
 import play.Logger;
 import play.Play;
+import play.libs.Akka;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
+import scala.concurrent.duration.Duration;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ArrayUtils.Data;
@@ -21,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 @SecureSocial.SecuredAction
@@ -41,10 +44,13 @@ public class API extends Controller {
         }
 
         //Checking files count
-        if (account.userfiles.size() >= 25) {
-            serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
-            Logger.of("user." + account.userName).info("User " + account.userName + ": exceeded the limit of the number of files");
-            return ok(Json.toJson(serverResponse.getData()));
+        Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
+        if (maxFilesCount > 0) {
+            if (account.userfiles.size() >= maxFilesCount) {
+                serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
+                Logger.of("user." + account.userName).info("User " + account.userName + ": exceeded the limit of the number of files");
+                return ok(Json.toJson(serverResponse.getData()));
+            }
         }
 
         //Getting the file from request body
@@ -55,11 +61,13 @@ public class API extends Controller {
             serverResponse.addData(new Object[]{"error", "You should upload file"});
             return ok(Json.toJson(serverResponse.getData()));
         }
-
-        Long sizeMB = file.getFile().length() / 1024;
-        if (sizeMB > Play.application().configuration().getLong("maxFileSize")) {
-            serverResponse.addData(new Object[]{"error", "File is too large"});
-            return ok(Json.toJson(serverResponse.getData()));
+        Long maxFileSize = Play.application().configuration().getLong("maxFileSize");
+        if (maxFileSize > 0) {
+            Long sizeMB = file.getFile().length() / 1024;
+            if (sizeMB > maxFileSize) {
+                serverResponse.addData(new Object[]{"error", "File is too large"});
+                return ok(Json.toJson(serverResponse.getData()));
+            }
         }
 
 
@@ -122,7 +130,7 @@ public class API extends Controller {
                 return ok(Json.toJson(serverResponse.getData()));
             }
 
-            UserFile newFile = new UserFile(account, fileName,
+            final UserFile newFile = new UserFile(account, fileName,
                     unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
                     account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension,
                     fileDir.getAbsolutePath(), fileExtension);
@@ -130,6 +138,18 @@ public class API extends Controller {
             //Updating database UserFile <-> Account
             Ebean.save(newFile);
             serverResponse.addData(new Object[]{"success", ""});
+            Integer deleteAfter = Play.application().configuration().getInt("deleteAfter");
+            if (deleteAfter > 0) {
+                Akka.system().scheduler().scheduleOnce(
+                        Duration.create(deleteAfter, TimeUnit.HOURS),
+                        new Runnable() {
+                            public void run() {
+                                UserFile.asyncDeleteFile(newFile);
+                            }
+                        },
+                        Akka.system().dispatcher()
+                );
+            }
             return ok(Json.toJson(serverResponse.getData()));
         } catch (Exception e) {
             serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
@@ -217,7 +237,11 @@ public class API extends Controller {
             }
             files.add(fileInformation);
         }
-        return ok(Json.toJson(files));
+        Data serverResponse = new Data(new String[]{"files", "maxFileSize", "maxFilesCount"});
+        Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
+        Integer maxFileSize = Play.application().configuration().getInt("maxFileSize");
+        serverResponse.addData(new Object[]{files, maxFileSize, maxFilesCount});
+        return ok(Json.toJson(serverResponse.getData()));
     }
 
     public static Result accountInformation() {

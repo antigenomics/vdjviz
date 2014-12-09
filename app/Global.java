@@ -10,12 +10,9 @@ import play.Logger;
 public class Global extends GlobalSettings {
 
     public void onStart(Application app) {
-        /**
-         * Create the app directory in appPath (application.conf)
-        **/
 
         Logger.info("Application started");
-
+        //Checking existence of main directory
         String usersFilesDir = Play.application().configuration().getString("uploadPath");
         File applicationDir = new File(usersFilesDir + "/users/");
         if (!applicationDir.exists()) {
@@ -25,13 +22,12 @@ public class Global extends GlobalSettings {
             } else {
                 Logger.info("Users directory created");
             }
-        } else {
-            Logger.info("App directory already exists");
         }
     }
 
     public void onStop(Application app) {
         Logger.info("Application stopped");
     }
+
 
 }

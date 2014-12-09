@@ -11,6 +11,9 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 @Entity
@@ -44,7 +47,6 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.rendered = false;
         this.rendering = false;
         this.fileExtension = fileExtension;
-
     }
 
     public static UserFile findById(Long id) {
@@ -82,6 +84,11 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         if (fileDir.delete()) {
             Ebean.delete(file);
         }
+    }
+
+    public static void asyncDeleteFile(UserFile file) {
+        UserFile f = UserFile.findById(file.id);
+        deleteFile(f);
     }
 
     /**

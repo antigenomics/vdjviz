@@ -12,6 +12,7 @@
             controller: ['$scope', '$http', function ($scope, $http) {
                 //private parameters
                 var uid = 0;
+
                 var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
                     return {
                         tabName: tabName,
@@ -27,6 +28,8 @@
 
 
                 //public parameters
+                $scope.maxFilesCount = 0;
+                $scope.maxFileSize = 0;
                 $scope.files = {};
                 $scope.state = 'accountInformation';
                 $scope.activeFileName = '';
@@ -41,7 +44,9 @@
 
                 $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/api/files'}).success(function (data) {
-                        angular.forEach(data, function (file) {
+                        $scope.maxFilesCount = data["maxFilesCount"];
+                        $scope.maxFileSize = data["maxFileSize"];
+                        angular.forEach(data["files"], function (file) {
                             $scope.addFileToList(file);
                         })
                     })
@@ -336,7 +341,7 @@
                 };
 
                 $scope.uploadFile = function (file) {
-                    if ((filesCount() <= 25) && file.wait && $scope.isNameValid(file.fileName)) {
+                    if ((filesCount() <= $rootScope.maxFilesCount) && file.wait && $scope.isNameValid(file.fileName)) {
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
                             fileName: file.fileName,
@@ -480,11 +485,11 @@
                             fileName += fileExtension;
                             fileExtension = 'txt';
                         }
-                        if (filesCount() >= 25) {
+                        if ($rootScope.maxFilesCount > 0 && filesCount() >= $rootScope.maxFilesCount) {
                             addNewError(uid++, fileName, 0);
                         } else if (isContain(fileName)) {
                             addNewError(uid++, fileName, 1);
-                        } else if ((file.size  / 1024 ) > 1024) {
+                        } else if ($rootScope.maxFileSize > 0 && (file.size  / 1024 ) > $rootScope.maxFileSize) {
                             addNewError(uid++, fileName, 2);
                         } else {
                             addNew(uid++, fileName, fileExtension, data);
@@ -673,17 +678,12 @@ function getData(handleData, param, file) {
                         }
                         break;
                     default :
-                        d3.select(param.place).html("No data available");
-                        if (typeof file != 'undefined') {
-                            file.meta[param.type].cached = false;
-                            file.meta[param.type].comparingCache = false;
-                            file.meta[param.type].data = [];
-                        }
+                        noDataAvailable(param, file);
                         break;
                 }
             },
             error: function () {
-                location.reload();
+                noDataAvailable(param, file);
             }
         });
     }
@@ -1363,6 +1363,23 @@ function loaded(place) {
     d3.select(place)
         .select(".loading")
         .remove();
+}
+
+function noDataAvailable(param, file) {
+    var place = d3.select(param.place);
+        place.html("");
+        place.append("div")
+            .style("width", "100%")
+            .style("height", "300px")
+            .style("text-align", "center")
+            .style("line-height", "300px")
+            .append("b")
+            .html("No Data Available");
+    if (typeof file != 'undefined') {
+        file.meta[param.type].cached = false;
+        file.meta[param.type].comparingCache = false;
+        file.meta[param.type].data = [];
+    }
 }
 
 $(document).bind('dragover', function (e) {
