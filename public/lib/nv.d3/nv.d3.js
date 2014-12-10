@@ -4987,6 +4987,7 @@ nv.models.legend = function() {
         , getKey = function(d) { return d.key }
         , color = nv.utils.defaultColor()
         , align = true
+        , oneColumn = false
         , rightAlign = true
         , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
         , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
@@ -4998,7 +4999,7 @@ nv.models.legend = function() {
 
     function chart(selection) {
         selection.each(function(data) {
-            var availableWidth = width - margin.left - margin.right,
+            var availableWidth = oneColumn ? 1 : width - margin.left - margin.right,
                 container = d3.select(this);
             nv.utils.initSVG(container);
 
@@ -5199,6 +5200,12 @@ nv.models.legend = function() {
         width = _;
         return chart;
     };
+
+    chart.oneColumn = function(_) {
+        if (!arguments.length) return oneColumn;
+        oneColumn = _;
+        return chart;
+    }
 
     chart.height = function(_) {
         if (!arguments.length) return height;
@@ -8413,6 +8420,7 @@ nv.models.multiBarChart = function() {
         , showLegend = true
         , showXAxis = true
         , showYAxis = true
+        , legendOnChart = false
         , rightAlignYAxis = false
         , reduceXTicks = true // if false a tick will show for every data point
         , staggerLabels = false
@@ -8600,7 +8608,8 @@ nv.models.multiBarChart = function() {
                     .call(legend);
 
                 if ( margin.top != legend.height()) {
-                    margin.top = legend.height();
+                    if (!legendOnChart)
+                        margin.top = legend.height();
                     availableHeight = (height || parseInt(container.style('height')) || 400)
                         - margin.top - margin.bottom;
                 }
@@ -8828,7 +8837,6 @@ nv.models.multiBarChart = function() {
     // expose chart's sub-components
     chart.dispatch = dispatch;
     chart.multibar = multibar;
-    chart.legend = legend;
     chart.xAxis = xAxis;
     chart.yAxis = yAxis;
     // DO NOT DELETE. This is currently overridden below
@@ -8839,6 +8847,13 @@ nv.models.multiBarChart = function() {
         'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing');
 
     chart.options = nv.utils.optionsFunc.bind(chart);
+
+    //chart.legend = legend;
+    chart.legend = function(_) {
+        if (!arguments.length) return legend;
+        legend = _;
+        return chart;
+    };
 
     chart.margin = function(_) {
         if (!arguments.length) return margin;
@@ -8854,6 +8869,12 @@ nv.models.multiBarChart = function() {
         width = _;
         return chart;
     };
+
+    chart.legendOnChart = function(_) {
+        if (!arguments.length) return legendOnChart;
+        legendOnChart = _;
+        return chart;
+    }
 
     chart.height = function(_) {
 

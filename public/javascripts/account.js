@@ -755,6 +755,17 @@ function spectratype(data, param) {
             .attr('width', width) // fix for Firefox browser
             .style("overflow", "visible");
 
+        var legend = nv.models.legend()
+            .key(function(d) {
+                if (d['cdr3aa'])
+                    return d['cdr3aa'];
+                return 'Other'
+            })
+            .oneColumn(true)
+            .margin({right: 100, top: 10})
+            .rightAlign(true);
+
+
         var chart = nv.models.multiBarChart()
                 .duration(1000)
                 .reduceXTicks(false)   //If 'false', every single x-axis tick label will be rendered.
@@ -763,14 +774,17 @@ function spectratype(data, param) {
                 .showLegend(true)
                 .groupSpacing(0.1)    //Distance between each group of bars.
                 .height(height)
+                .legend(legend)
                 .stacked(true)
+                .legendOnChart(true)
                 .tooltip(function (key, x, y, e, graph) {
                     if (key != "Other") {
                         if (e.series.values[e.pointIndex].y != 0) {
-                            return '<h3>' + e.series.name + '</h3>' +
+                            return '<h3>CDR3AA: ' + e.series.cdr3aa + '</h3>' +
+                                '<p>Top :' + e.series.key + '</p>' +
                                 '<p>Length : ' + x + '</p>' +
                                 '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>' +
-                                '<p>CDR3AA : ' + e.series.cdr3aa + '</p>' +
+                                '<p>CDR3NT : ' + e.series.name + '</p>' +
                                 '<p>V : ' + e.series.v + '</p>' +
                                 '<p>J : ' + e.series.j + '</p>';
                         } else {
@@ -784,6 +798,7 @@ function spectratype(data, param) {
                     }
                 })
             ;
+
 
         var xValues = [];
         for (var i = 1; i < 100; i++) {
@@ -800,8 +815,7 @@ function spectratype(data, param) {
         chart.yAxis
             .tickFormat(d3.format('%'));
 
-        svg.datum(data)
-            .call(chart);
+        svg.datum(data).call(chart);
 
         nv.utils.windowResize(chart.update);
         return chart;
@@ -1290,8 +1304,7 @@ function rarefactionPlot(data, param) {
             .append("svg")
             .attr("id", "rarefaction-png-export")
             .style("height", "600px")
-            .style("width", width)
-            .style("margin-top", "50px");
+            .style("width", width);
 
         var chart = nv.models.lineChart()
             .useInteractiveGuideline(true)
