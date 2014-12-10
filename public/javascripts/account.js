@@ -41,9 +41,11 @@
                     annotation: createTab('Annotation', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
+                $scope.initialized = false;
 
                 $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/api/files'}).success(function (data) {
+                        $scope.initialized = true;
                         $scope.maxFilesCount = data["maxFilesCount"];
                         $scope.maxFileSize = data["maxFileSize"];
                         angular.forEach(data["files"], function (file) {
@@ -223,6 +225,7 @@
         }
     });
 
+    //File visualisation Directive
     app.directive('mainVisualisationContent', function () {
         return {
             restrict: 'E',
@@ -255,6 +258,7 @@
         }
     });
 
+    //Account information Directive
     app.directive('accountInformation', function () {
         return {
             restrict: 'E',
@@ -269,6 +273,7 @@
         }
     });
 
+    //Rarefaction tab Directive
     app.directive('rarefactionContent', function () {
         return {
             restrict: 'E',
@@ -276,17 +281,21 @@
             transclude: false,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+
+                $scope.rarefactionExportTypes = ['PNG', 'JPEG'];
+
                 $scope.showRarefaction = function () {
                     return $rootScope.state === 'rarefaction';
                 };
 
-                $scope.exportRarefaction = function () {
-                    saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction.png', 3);
+                $scope.exportRarefaction = function (type) {
+                    saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
                 }
             }]
         }
     });
 
+    //Summary tab Directive
     app.directive('summaryContent', function () {
         return {
             restrict: 'E',
@@ -301,6 +310,7 @@
         }
     });
 
+    //Upload support Directive
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
@@ -589,6 +599,7 @@
         }
     });
 
+    //Comparing Directive
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
@@ -637,6 +648,44 @@
         }
     });
 
+    //Block account page Directive
+    app.directive('blockPage', function() {
+        return {
+            restrict: 'E',
+            template: '<div class="block-page" ng-show="blockPage()">' +
+                            '<div class="background"></div>' +
+                            '<div class="info">' +
+                                '<div class="text-info"><text>Initializing...</text></div>' +
+                                '<div class="loading">' +
+                                    '<div class="wBall" id="wBall_1">' +
+                                        '<div class="wInnerBall"></div>' +
+                                    '</div>' +
+                                    '<div class="wBall" id="wBall_2">' +
+                                        '<div class="wInnerBall"></div>' +
+                                    '</div>' +
+                                    '<div class="wBall" id="wBall_3">' +
+                                        '<div class="wInnerBall"></div>' +
+                                    '</div>' +
+                                    '<div class="wBall" id="wBall_4">' +
+                                        '<div class="wInnerBall"></div>' +
+                                    '</div>' +
+                                    '<div class="wBall" id="wBall_5">' +
+                                        '<div class="wInnerBall"></div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>',
+            transclude: true,
+            require: '^accountPage',
+            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+                $scope.blockPage = function() {
+                    return !$rootScope.initialized;
+                }
+            }]
+        }
+    });
+
+    //Filter for comparing files
     app.filter('comparingFilter', function () {
         return function (input) {
             var filteredInput = [];
@@ -650,7 +699,7 @@
 
 })();
 
-
+//Request data from server
 function getData(handleData, param, file) {
     if (typeof file != 'undefined' && file.meta[param.type].data.length != 0) {
         handleData(file.meta[param.type].data, param);

@@ -1,6 +1,6 @@
 <div class="rarefaction-tab" ng-show="showRarefaction()">
     <h3>Rarefaction
-    <button class="btn btn-default pull-right" ng-click="exportRarefaction()">Export to PNG</button>
+    <button ng-repeat="type in rarefactionExportTypes" class="btn btn-default pull-right" ng-click="exportRarefaction(type)">Export to {{ type }}</button>
     </h3>
     <hr>
     <div class="rarefaction-visualisation-tab"></div>

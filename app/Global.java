@@ -1,4 +1,6 @@
 
+import models.Account;
+import models.UserFile;
 import play.Application;
 import play.GlobalSettings;
 import play.Play;
@@ -21,6 +23,16 @@ public class Global extends GlobalSettings {
                 Logger.warn("Error while creating users directory");
             } else {
                 Logger.info("Users directory created");
+            }
+        }
+        //Deleting empty files
+        for (Account account: Account.findAll()) {
+            for (UserFile userFile: account.userfiles) {
+                File fileDir = new File(userFile.fileDirPath);
+                if (!fileDir.exists()) {
+                    UserFile.deleteFile(userFile);
+                    Logger.of("user." + account.userName).warn("Deleted empty file " + userFile.fileName + " for user : " + account.userName);
+                }
             }
         }
     }
