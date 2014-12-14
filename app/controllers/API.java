@@ -46,7 +46,7 @@ public class API extends Controller {
         //Checking files count
         Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
         if (maxFilesCount > 0) {
-            if (account.userfiles.size() >= maxFilesCount) {
+            if (account.getFilesCount() >= maxFilesCount) {
                 serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
                 Logger.of("user." + account.userName).info("User " + account.userName + ": exceeded the limit of the number of files");
                 return ok(Json.toJson(serverResponse.getData()));
@@ -90,7 +90,7 @@ public class API extends Controller {
 
         List<UserFile> allFiles = UserFile.findByAccount(account);
         for (UserFile userFile: allFiles) {
-            if (userFile.fileName.equals(fileName)) {
+            if (userFile.getFileName().equals(fileName)) {
                 serverResponse.addData(new Object[]{"error", "You should use unique names for your files"});
                 return ok(Json.toJson(serverResponse.getData()));
             }
@@ -98,9 +98,9 @@ public class API extends Controller {
 
         try {
 
-            File accountDir = new File(account.userDirPath);
+            File accountDir = new File(account.getDirectoryPath());
             if (!accountDir.exists()) {
-                Boolean accountDirCreated = accountDir.mkdir();;
+                Boolean accountDirCreated = accountDir.mkdir();
                 if (!accountDirCreated) {
                     serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                     Logger.of("user." + account.userName).error("Error creating main directory for user " + account.userName);
@@ -110,7 +110,7 @@ public class API extends Controller {
 
             File uploadedFile = file.getFile();
             String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
-            File fileDir = (new File(account.userDirPath + "/" + unique_name + "/"));
+            File fileDir = (new File(account.getDirectoryPath() + "/" + unique_name + "/"));
 
             //Trying to create file directory
             if (!fileDir.exists()) {
@@ -123,7 +123,7 @@ public class API extends Controller {
             }
 
             String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
-            Boolean uploaded = uploadedFile.renameTo(new File(account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension));
+            Boolean uploaded = uploadedFile.renameTo(new File(account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension));
             if (!uploaded) {
                 serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                 Logger.of("user." + account.userName).error("Error upload file for user " + account.userName);
@@ -132,7 +132,7 @@ public class API extends Controller {
 
             final UserFile newFile = new UserFile(account, fileName,
                     unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
-                    account.userDirPath + "/" + unique_name + "/" + fileName + "." + fileExtension,
+                    account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension,
                     fileDir.getAbsolutePath(), fileExtension);
 
             //Updating database UserFile <-> Account
@@ -181,7 +181,7 @@ public class API extends Controller {
                     serverResponse.addData(new Object[]{"error", "You have no file named " + fileName});
                     return forbidden(Json.toJson(serverResponse.getData()));
                 }
-                fileDir = new File(file.fileDirPath);
+                fileDir = new File(file.getDirectoryPath());
                 files = fileDir.listFiles();
                 if (files == null) {
                     serverResponse.addData(new Object[]{"error", "File does not exist"});
@@ -200,7 +200,7 @@ public class API extends Controller {
             //Delete all files
             case "deleteAll":
                 try {
-                    for (UserFile f : account.userfiles) {
+                    for (UserFile f : account.getUserfiles()) {
                         UserFile.deleteFile(f);
                     }
                     serverResponse.addData(new Object[]{"ok", ""});
@@ -224,13 +224,13 @@ public class API extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
         List<HashMap<String, Object>> files = new ArrayList<>();
-        for (UserFile file: account.userfiles) {
+        for (UserFile file: account.getUserfiles()) {
             HashMap<String, Object> fileInformation = new HashMap<>();
-            fileInformation.put("fileName", file.fileName);
-            fileInformation.put("softwareTypeName", file.softwareTypeName);
-            if (file.rendered) {
+            fileInformation.put("fileName", file.getFileName());
+            fileInformation.put("softwareTypeName", file.getSoftwareTypeName());
+            if (file.isRendered()) {
                 fileInformation.put("state", "rendered");
-            } else if (file.rendering) {
+            } else if (file.isRendering()) {
                 fileInformation.put("state", "rendering");
             } else {
                 fileInformation.put("state", "wait");
@@ -252,7 +252,7 @@ public class API extends Controller {
         Account account = localUser.account;
         Data serverResponse = new Data(new String[]{"result", "data"});
         Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
-        accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.userName, account.userfiles.size()});
+        accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.userName, account.getFilesCount()});
         serverResponse.addData(new Object[]{"ok", accountInformation.getData()});
         return ok(Json.toJson(serverResponse.getData()));
     }
@@ -308,22 +308,22 @@ public class API extends Controller {
             serverResponse.addData(new Object[]{"error", "You have no this file", null});
             return forbidden(Json.toJson(serverResponse.getData()));
         }
-        if (file.rendered) {
+        if (file.isRendered()) {
             try {
-                File jsonFile = new File(file.fileDirPath + "/" + cacheName + ".cache");
+                File jsonFile = new File(file.getDirectoryPath() + "/" + cacheName + ".cache");
                 FileInputStream fis = new FileInputStream(jsonFile);
                 JsonNode jsonData = Json.parse(fis);
                 serverResponse.addData(new Object[]{"success", "", jsonData});
                 return ok(Json.toJson(serverResponse.getData()));
             } catch (Exception e) {
                 Logger.of("user." + account.userName).error("User " + account.userName +
-                        ": cache file does not exists [" + file.fileName + "," + cacheName + "]");
+                        ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
                 serverResponse.addData(new Object[]{"error", "Cache file does not exist", null});
                 return forbidden(Json.toJson(serverResponse.getData()));
             }
         } else {
             Logger.of("user." + account.userName).error("User: " + account.userName + " File: "
-                    + file.fileName + " did not rendered");
+                    + file.getFileName() + " did not rendered");
             serverResponse.addData(new Object[]{"error", "File did not rendered", null});
             return forbidden(Json.toJson(serverResponse.getData()));
         }
@@ -333,9 +333,9 @@ public class API extends Controller {
         //Return basicStats cache for all files in json format
         List<JsonNode> basicStatsData = new ArrayList<>();
         Data serverResponse = new Data(new String[]{"result", "data"});
-        for (UserFile file : account.userfiles) {
-            if (file.rendered && !file.rendering) {
-                File basicStatsCache = new File(file.fileDirPath + "/basicStats.cache");
+        for (UserFile file : account.getUserfiles()) {
+            if (file.isRendered() && !file.isRendering()) {
+                File basicStatsCache = new File(file.getDirectoryPath() + "/basicStats.cache");
                 FileInputStream cacheFile = new FileInputStream(basicStatsCache);
                 JsonNode basicStatsNode = Json.parse(cacheFile);
                 basicStatsData.add(basicStatsNode);
@@ -349,9 +349,9 @@ public class API extends Controller {
         //Return rarefaction cache for all files in json format
         List<JsonNode> rarefactionData = new ArrayList<>();
         Data serverResponse = new Data(new String[]{"result", "data"});
-        for (UserFile file : account.userfiles) {
-            if (file.rendered && !file.rendering) {
-                File rarefactionCache = new File(file.fileDirPath + "/rarefaction.cache");
+        for (UserFile file : account.getUserfiles()) {
+            if (file.isRendered() && !file.isRendering()) {
+                File rarefactionCache = new File(file.getDirectoryPath() + "/rarefaction.cache");
                 FileInputStream cacheFile = new FileInputStream(rarefactionCache);
                 JsonNode rarefactionNode = Json.parse(cacheFile);
                 rarefactionData.add(rarefactionNode);
@@ -388,7 +388,7 @@ public class API extends Controller {
                                     out.write(Json.toJson(serverResponse.getData()));
                                     return;
                                 }
-                                file.rendering = true;
+                                file.changeRenderingState(true);
                                 Ebean.update(file);
                                 try {
                                     //Trying to render cache files for sample
@@ -397,7 +397,7 @@ public class API extends Controller {
                                     return;
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail
-                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.fileName);
+                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.getFileName());
                                     serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
                                     out.write(Json.toJson(serverResponse.getData()));
                                     UserFile.deleteFile(file);

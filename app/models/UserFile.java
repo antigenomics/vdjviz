@@ -20,19 +20,19 @@ import java.util.List;
 public class UserFile extends Model implements PathBindable<UserFile> {
 
     @Id
-    public Long id;
+    private Long id;
     @ManyToOne
-    public Account account;
-    public String fileName;
-    public String uniqueName;
-    public Software softwareType;
+    private Account account;
+    private String fileName;
+    private String uniqueName;
+    private Software softwareType;
     @Constraints.Required
-    public String softwareTypeName;
-    public String filePath;
-    public String fileDirPath;
-    public String fileExtension;
-    public Boolean rendered;
-    public Boolean rendering;
+    private String softwareTypeName;
+    private String filePath;
+    private String fileDirPath;
+    private String fileExtension;
+    private Boolean rendered;
+    private Boolean rendering;
 
     public UserFile(Account account, String fileName,
                     String uniqueName, String softwareTypeName,
@@ -47,6 +47,54 @@ public class UserFile extends Model implements PathBindable<UserFile> {
         this.rendered = false;
         this.rendering = false;
         this.fileExtension = fileExtension;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getPath() {
+        return filePath;
+    }
+
+    public String getDirectoryPath() {
+        return fileDirPath;
+    }
+
+    public Boolean isRendered() {
+        return rendered;
+    }
+
+    public Boolean isRendering() {
+        return rendering;
+    }
+
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
+    public Software getSoftwareType() {
+        return softwareType;
+    }
+
+    public String getSoftwareTypeName() {
+        return softwareTypeName;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void changeRenderedState(Boolean state) {
+        rendered = state;
+    }
+
+    public void changeRenderingState(Boolean state) {
+        rendering = state;
     }
 
     public static UserFile findById(Long id) {

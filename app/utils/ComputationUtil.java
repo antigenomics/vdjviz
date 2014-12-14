@@ -1,6 +1,8 @@
 package utils;
 
+import com.antigenomics.vdjdb.core.db.CdrDatabase;
 import com.antigenomics.vdjtools.Clonotype;
+import com.antigenomics.vdjtools.db.CdrMatch;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.BasicStats;
 import com.antigenomics.vdjtools.basic.SegmentUsage;
@@ -42,14 +44,14 @@ public class ComputationUtil {
     private Data serverResponse;
 
     public ComputationUtil(UserFile file, WebSocket.Out<JsonNode> out) {
-        Software software = file.softwareType;
+        Software software = file.getSoftwareType();
         List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(file.filePath);
+        sampleFileNames.add(file.getPath());
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         this.sample = sampleCollection.getAt(0);
         this.sampleCollection = sampleCollection;
         this.file = file;
-        this.account = file.account;
+        this.account = file.getAccount();
         this.out = out;
         this.serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
     }
@@ -225,28 +227,29 @@ public class ComputationUtil {
 
         CdrDatabase cdrDatabase = new CdrDatabase();
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
-
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
         Data data = new Data(new String[]{"data", "header"});
         List<HashMap<String, Object>> annotationData = new ArrayList<>();
         String[] header = cdrDatabase.annotationHeader;
-        for (CdrDatabaseMatch cdrDatabaseMatch : browserResult) {
+        for (CdrMatch cdrDatabaseMatch : browserResult) {
             Data annotationDataNode = new Data(new String[]{"query_cdr3aa", "query_V", "query_J", "freq", "count"});
             Data v = new Data(new String[]{"v", "match"});
             Data j = new Data(new String[]{"j", "match"});
             Data cdr3aa = new Data(new String[]{"cdr3aa", "pos", "vend", "jstart", "dstart", "dend"});
-            v.addData(new Object[]{cdrDatabaseMatch.query.getV(), cdrDatabaseMatch.vMatch});
-            j.addData(new Object[]{cdrDatabaseMatch.query.getJ(), cdrDatabaseMatch.jMatch});
-            cdr3aa.addData(new Object[]{cdrDatabaseMatch.query.getCdr3aa(),
-                    cdrDatabaseMatch.getSubstitutions().size() > 0 ? cdrDatabaseMatch.getSubstitutions().get(0).pos : -1,
-                    cdrDatabaseMatch.query.getVEnd(),
-                    cdrDatabaseMatch.query.getJStart(),
-                    cdrDatabaseMatch.query.getDStart(),
-                    cdrDatabaseMatch.query.getDEnd()});
-            annotationDataNode.addData(new Object[]{cdr3aa.getData(), v.getData(), j.getData(), cdrDatabaseMatch.query.getFreq(), cdrDatabaseMatch.query.getCount()});
-            String[] annotations = cdrDatabaseMatch.subject.getAnnotation();
+            v.addData(new Object[]{cdrDatabaseMatch.getQuery().getV(), cdrDatabaseMatch.getvMatch()});
+            j.addData(new Object[]{cdrDatabaseMatch.getQuery().getJ(), cdrDatabaseMatch.getjMatch()});
+            cdr3aa.addData(new Object[]{cdrDatabaseMatch.getQuery().getCdr3aa(),
+                    -1,
+                    //TODO
+                    //cdrDatabaseMatch.getSubstitutions().size() > 0 ? cdrDatabaseMatch.getSubstitutions().get(0).pos : -1,
+                    cdrDatabaseMatch.getQuery().getVEnd(),
+                    cdrDatabaseMatch.getQuery().getJStart(),
+                    cdrDatabaseMatch.getQuery().getDStart(),
+                    cdrDatabaseMatch.getQuery().getDEnd()});
+            annotationDataNode.addData(new Object[]{cdr3aa.getData(), v.getData(), j.getData(), cdrDatabaseMatch.getQuery().getFreq(), cdrDatabaseMatch.getQuery().getCount()});
+            List<String> annotations = cdrDatabaseMatch.getSubject().getAnnotation();
             for (int i = 0; i < header.length; i++) {
-                annotationDataNode.changeValue(header[i], annotations[i]);
+                annotationDataNode.changeValue(header[i], annotations.get(i));
             }
             annotationData.add(annotationDataNode.getData());
         }
@@ -261,7 +264,7 @@ public class ComputationUtil {
         String[] header = BasicStats.getHEADER().split("\t");
         HashMap<String, String> basicStatsCache = new HashMap<>();
         String[] basicStatsValues = basicStats.toString().split("\t");
-        basicStatsCache.put("Name", file.fileName);
+        basicStatsCache.put("Name", file.getFileName());
         for (int i = 0; i < header.length; i++) {
             basicStatsCache.put(header[i], basicStatsValues[i]);
         }
@@ -289,7 +292,7 @@ public class ComputationUtil {
         for (int i = 0; i <= j; i++) {
             values.addValue(x[i], z[i]);
         }
-        data.addData(new Object[]{values.getValues(), file.fileName});
+        data.addData(new Object[]{values.getValues(), file.getFileName()});
         saveCache(CacheType.rarefaction.getCacheFileName(), data.getData());
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
@@ -297,31 +300,31 @@ public class ComputationUtil {
 
     private void saveCache(String cacheName, Object data) {
         try {
-            File cache = new File(file.fileDirPath + "/" + cacheName + ".cache");
+            File cache = new File(file.getDirectoryPath() + "/" + cacheName + ".cache");
             PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
         } catch (FileNotFoundException fnfe) {
             Logger.of("user." + account.userName).error("User " + account.userName +
-                    ": save cache error [" + file.fileName + "," + cacheName + "]");
+                    ": save cache error [" + file.getFileName() + "," + cacheName + "]");
             fnfe.printStackTrace();
         }
     }
 
     public void createSampleCache() throws Exception {
-        file.rendering = true;
+        file.changeRenderingState(true);
         Ebean.update(file);
-        serverResponse.addData(new Object[]{"ok", "render", "start", file.fileName});
+        serverResponse.addData(new Object[]{"ok", "render", "start", file.getFileName()});
         out.write(Json.toJson(serverResponse.getData()));
         vjUsageData();
         spectratype();
         spectratypeV();
-        annotation();
+        //annotation();
         basicStats();
         rarefaction();
         quantileStats();
-        file.rendering = false;
-        file.rendered = true;
+        file.changeRenderingState(false);
+        file.changeRenderedState(true);
         serverResponse.changeValue("progress", "end");
         out.write(Json.toJson(serverResponse.getData()));
         Ebean.update(file);

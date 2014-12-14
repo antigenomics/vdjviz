@@ -11,14 +11,14 @@ import play.db.ebean.Model;
 public class Account implements PathBindable<Account> {
 
     @Id
-    public Long id;
+    private Long id;
     @Required
     public String userName;
     @OneToOne
-    public LocalUser user;
-    public String userDirPath;
+    private LocalUser user;
+    private String userDirPath;
     @OneToMany(mappedBy="account")
-    public List<UserFile> userfiles;
+    private List<UserFile> userfiles;
 
     /**
      * Overriding PathBindable functions
@@ -44,6 +44,29 @@ public class Account implements PathBindable<Account> {
         this.user = user;
         this.userName = userName;
         this.userDirPath = userDirPath;
+    }
+
+    public List<UserFile> getUserfiles() {
+        if (userfiles == null) {
+            userfiles = new ArrayList<>();
+        }
+        return userfiles;
+    }
+
+    public LocalUser getUser() {
+        return user;
+    }
+
+    public String getDirectoryPath() {
+        return userDirPath;
+    }
+
+    public Integer getFilesCount() {
+        return getUserfiles().size();
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String toString() {
