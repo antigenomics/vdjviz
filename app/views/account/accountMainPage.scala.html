@@ -2,11 +2,7 @@
 @main("Account") {
     <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
-    @if(account != null) {
-        @navbar(account.userName)
-    } else {
-        @navbar(null)
-    }
+    @navbar(account.userName)
     <account-page ng-app="accountPage">
         <block-page></block-page>
         <div class="container-fluid" >

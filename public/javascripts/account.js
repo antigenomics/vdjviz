@@ -44,7 +44,7 @@
                 $scope.initialized = false;
 
                 $scope.updateFilesList = function () {
-                    $http({method: 'GET', url: '/api/files'}).success(function (data) {
+                    $http({method: 'GET', url: '/account/api/files'}).success(function (data) {
                         $scope.initialized = true;
                         $scope.maxFilesCount = data["maxFilesCount"];
                         $scope.maxFileSize = data["maxFileSize"];
@@ -201,7 +201,7 @@
                 };
 
                 $scope.deleteFile = function (file) {
-                    $http.post('/api/delete', {
+                    $http.post('/account/api/delete', {
                         action: 'delete',
                         fileName: file.fileName
                     }).success(function () {
@@ -215,7 +215,7 @@
                 };
 
                 $scope.deleteAll = function () {
-                    $http.post('/api/delete', {action: 'deleteAll'})
+                    $http.post('/account/api/delete', {action: 'deleteAll'})
                         .success(function () {
                             $rootScope.files = {};
                             $rootScope.state = 'accountInformation';
@@ -482,7 +482,7 @@
                 };
 
                 $('#fileupload').fileupload({
-                    url: '/api/upload',
+                    url: '/account/api/upload',
                     dataType: 'json',
                     sequentialUploads: true,
                     dropZone: $('#new-files-dropzone'),
@@ -514,7 +514,7 @@
                         var file = $scope.newFiles[data.formData.uid];
                         switch (data.result["result"]) {
                             case "success" :
-                                var socket = new WebSocket("ws://" + location.host + "/api/ws");
+                                var socket = new WebSocket("ws://" + location.host + "/account/api/ws");
                                 socket.onopen = function () {
                                     var msg = {
                                         type: "message",
@@ -706,7 +706,7 @@ function getData(handleData, param, file) {
     } else {
         loading(param.place);
         $.ajax({
-            url: "/api/data",
+            url: "/account/api/data",
             type: "post",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({
@@ -999,7 +999,7 @@ function quantileSunbirstChart(data, param) {
                 if (d.name == "data") return null;
                 var label = d.name;
                 if (!d.children) {
-                    label += "  " + (d.size.toFixed(2) * 100) + "%";
+                    label += "  " + (d.size.toFixed(2) * 100).toFixed(0) + "%";
                 }
                 return label;
             });

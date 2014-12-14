@@ -12,36 +12,19 @@ public class Application extends Controller {
     @SecureSocial.UserAwareAction
     public static Result index() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = null;
         if (user != null) {
-            localUser = LocalUser.find.byId(user.identityId().userId());
+            return ok(index.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
         }
-        if (localUser != null) {
-            return ok(index.render(localUser.account.userName));
-        } else {
-            return ok(index.render(null));
-        }
-    }
-
-    @SecureSocial.SecuredAction
-    public static Result account() {
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        return ok(views.html.account.accountMainPage.render(localUser.account));
+        return ok(index.render(null));
     }
 
     @SecureSocial.UserAwareAction
     public static Result contacts() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = null;
         if (user != null) {
-            localUser = LocalUser.find.byId(user.identityId().userId());
+            return ok(views.html.commonPages.contacts.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
         }
-        if (localUser != null) {
-            return ok(views.html.commonPages.contacts.render(localUser.account.userName));
-        } else {
-            return ok(views.html.commonPages.contacts.render(null));
-        }
+        return ok(views.html.commonPages.contacts.render(null));
     }
 
 
@@ -50,13 +33,9 @@ public class Application extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = null;
         if (user != null) {
-            localUser = LocalUser.find.byId(user.identityId().userId());
+            return ok(views.html.commonPages.about.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
         }
-        if (localUser != null) {
-            return ok(views.html.commonPages.about.render(localUser.account.userName));
-        } else {
-            return ok(views.html.commonPages.about.render(null));
-        }
+        return ok(views.html.commonPages.about.render(null));
     }
 
     public static Result noScriptPage() {
@@ -66,6 +45,5 @@ public class Application extends Controller {
     public static Result test() {
         return ok(views.html.test.render());
     }
-
 
 }

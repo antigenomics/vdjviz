@@ -27,7 +27,13 @@ import java.util.concurrent.TimeUnit;
 
 
 @SecureSocial.SecuredAction
-public class API extends Controller {
+public class AccountAPI extends Controller {
+
+    public static Result account() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        return ok(views.html.account.accountMainPage.render(localUser.account));
+    }
 
     public static Result upload() {
 
@@ -299,7 +305,7 @@ public class API extends Controller {
         }
     }
 
-    public static Result cache(UserFile file, String cacheName, Account account) {
+    private static Result cache(UserFile file, String cacheName, Account account) {
         //Return cache file transformed into json format
         Data serverResponse = new Data(new String[]{"result", "message", "data"});
         if (file == null) {
@@ -329,7 +335,7 @@ public class API extends Controller {
         }
     }
 
-    public static Result basicStats(Account account) throws FileNotFoundException {
+    private static Result basicStats(Account account) throws FileNotFoundException {
         //Return basicStats cache for all files in json format
         List<JsonNode> basicStatsData = new ArrayList<>();
         Data serverResponse = new Data(new String[]{"result", "data"});
@@ -345,7 +351,7 @@ public class API extends Controller {
         return ok(Json.toJson(serverResponse.getData()));
     }
 
-    public static Result rarefaction(Account account) throws FileNotFoundException {
+    private static Result rarefaction(Account account) throws FileNotFoundException {
         //Return rarefaction cache for all files in json format
         List<JsonNode> rarefactionData = new ArrayList<>();
         Data serverResponse = new Data(new String[]{"result", "data"});

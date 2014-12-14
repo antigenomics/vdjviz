@@ -44,12 +44,10 @@ public class Account implements PathBindable<Account> {
         this.user = user;
         this.userName = userName;
         this.userDirPath = userDirPath;
+        this.userfiles = new ArrayList<>();
     }
 
     public List<UserFile> getUserfiles() {
-        if (userfiles == null) {
-            userfiles = new ArrayList<>();
-        }
         return userfiles;
     }
 
