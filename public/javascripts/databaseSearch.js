@@ -4,45 +4,73 @@
     app.directive('database', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', function($scope, $http) {
-                $scope.input = 'CASSLAPGATNEKLFF';
+            controller: ['$rootScope','$scope', '$http', '$location', function($rootScope, $scope, $http, $location) {
+
+                //public variables
+                $scope.showAdditionalInfo = showAdditionalInfo;
+                $scope.hideAdditionalInfo = hideAdditionalInfo;
+                $scope.isAdditionalInfo = isAdditionalInfo;
+                $scope.searchInput = searchInput;
+                $scope.isMainInfo = isMainInfo;
                 $scope.searchResult = [];
                 $scope.additionalInfo = {
                     data: null,
                     show: false
                 };
-                $scope.showAdditionalInfo = false;
-                $scope.searchInput = function() {
-                    //loading(".loading-place");
+
+                //private variables
+                var locationAttr = $location.search();
+                var input = locationAttr.input;
+                var info = locationAttr.info;
+
+                //Initializing
+                if (typeof input == 'string') {
+                    $scope.input = locationAttr.input;
+                    searchInput(info);
+                } else {
+                    $scope.input = 'CASSLAPGATNEKLFF';
+                }
+
+                $rootScope.$on('$locationChangeSuccess', function() {
+                    var newInfo = $location.search().info;
+                    if (typeof newInfo === 'undefined') {
+                        hideAdditionalInfo();
+                    }
+                });
+
+                function showAdditionalInfo(result) {
+                    $scope.additionalInfo.data = result;
+                    $location.search('info', result.hash);
+                    $scope.additionalInfo.show = true;
+                }
+
+                function searchInput(info) {
                     $http.post('/database/api/search', { input: $scope.input })
                         .success(function(data) {
-                            //loaded(".loading-place");
+                            $location.search('input', $scope.input);
                             $scope.searchResult = data;
+                            angular.forEach(data, function(result) {
+                                if (result.hash == info) {
+                                    showAdditionalInfo(result);
+                                }
+                            })
                         })
                         .error(function() {
-                            //loaded(".loading-place");
                         })
-                };
+                }
 
-                $scope.showAdditionalInfo = function(result) {
-                    $scope.additionalInfo.data = result;
-                    console.log(result);
-                    $scope.additionalInfo.show = true;
-                };
-
-                $scope.hideAdditionalInfo = function() {
+                function hideAdditionalInfo() {
+                    $location.search('info', null);
                     $scope.additionalInfo.show = false;
-                };
+                }
 
-                $scope.isAdditionalInfo = function() {
+                function isAdditionalInfo() {
                     return $scope.additionalInfo.show;
-                };
+                }
 
-                $scope.isMainInfo = function() {
+                function isMainInfo() {
                     return !$scope.additionalInfo.show;
-                };
-
-
+                }
             }]
         }
     })

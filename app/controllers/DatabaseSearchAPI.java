@@ -33,6 +33,7 @@ public class DatabaseSearchAPI extends Controller {
         if (input.equals("")) {
             return badRequest("Empty input field");
         }
+        int hash = 0;
         List<Object> data = new ArrayList<>();
         CdrDatabase cdrDatabase = new CdrDatabase();
         CdrDatabaseSearcher cdrDatabaseSearcher = new CdrDatabaseSearcher(cdrDatabase);
@@ -40,6 +41,8 @@ public class DatabaseSearchAPI extends Controller {
             HashMap<String, Object> dataNode = new HashMap<>();
             dataNode.put("alignment", cdrSearchResult.getAlignment().getAlignmentHelper().toString());
             dataNode.put("score", cdrSearchResult.getAlignment().getScore());
+            //TODO
+            dataNode.put("hash", hash++);
             List<List<String>> annotations = new ArrayList<>();
             for (CdrEntry cdrEntry : cdrSearchResult.getCdrEntrySet()) {
                 List<String> anNode = cdrEntry.getAnnotation();
