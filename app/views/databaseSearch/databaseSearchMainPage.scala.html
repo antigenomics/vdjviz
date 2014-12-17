@@ -9,19 +9,28 @@
             <div class="container">
                 <div class="row database-content">
                     <div class="header">
-                        <h2>Database</h2>
+                        <h2>Database
+                            <div class="spinner pull-right" ng-show="isLoading()">
+                                <div class="bounce1"></div>
+                                <div class="bounce2"></div>
+                                <div class="bounce3"></div>
+                            </div>
+                        </h2>
                         <hr>
                     </div>
-                    <div class="loading-place"></div>
                     <div class="main-info" ng-show="isMainInfo()">
                     <div class="input-place">
                         <label>
-                            <input type="text" ng-model="input" ng-class="{'invalid-input':!isValid()}">
+                            <input type="text" ng-model="input" ng-class="{'invalid-input':!isValid()}" ng-keyup="$event.keyCode == 13 && searchInput()">
+                            <text ng-hide="isValid()">Invalid characters</text>
                         </label>
-                        <button class="btn btn-default pull-right" ng-click="searchInput()" ng-class="{'disabled':!isValid()}">Find</button>
+                        <button class="btn btn-default pull-right" ng-click="searchInput()" ng-class="{'disabled':!isValid()}" ng-hide="isLoading()">Find</button>
                     </div>
                     <div class="database-table">
-                        <table class="table table-striped">
+                        <div class="no-data-info" ng-show="isNoData()">
+                            No data found
+                        </div>
+                        <table class="table table-striped" ng-hide="isNoData()">
                             <thead>
                                 <th>Score</th>
                                 <th>Result</th>
@@ -49,8 +58,8 @@
                                 <hr>
                             <table class="table">
                                 <thead class="additional-info-thead">
-                                    <th>V</th>
-                                    <th>J</th>
+                                    <th class="additional-info-th-v">V</th>
+                                    <th class="additional-info-th-j">J</th>
                                     <th ng-repeat="header in additionalInfo.data.annotationsHeader">{{ header }}</th>
                                 </thead>
                                 <tbody class="additional-info-tbody">

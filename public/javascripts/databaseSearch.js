@@ -7,17 +7,27 @@
             controller: ['$rootScope','$scope', '$http', '$location', function($rootScope, $scope, $http, $location) {
 
                 //public variables
+
+                //Functions
                 $scope.showAdditionalInfo = showAdditionalInfo;
                 $scope.hideAdditionalInfo = hideAdditionalInfo;
                 $scope.isAdditionalInfo = isAdditionalInfo;
                 $scope.searchInput = searchInput;
                 $scope.isMainInfo = isMainInfo;
                 $scope.isValid = isValid;
+                $scope.isNoData = isNoData;
+                $scope.isLoading = isLoading;
+
+                //Variables
+                $scope.noData = false;
+                $scope.loading = false;
                 $scope.searchResult = [];
                 $scope.additionalInfo = {
                     data: null,
                     show: false
                 };
+
+                //On location change
                 $rootScope.$on('$locationChangeSuccess', function() {
                     var newInfo = $location.search().info;
                     if (typeof newInfo === 'undefined') {
@@ -46,19 +56,28 @@
                 }
 
                 function searchInput() {
-                    $http.post('/database/api/search', { input: $scope.input })
-                        .success(function(data) {
-                            $location.search('input', $scope.input);
-                            var info = $location.search().info;
-                            $scope.searchResult = data;
-                            angular.forEach(data, function(result) {
-                                if (result.hash == info) {
-                                    showAdditionalInfo(result);
-                                }
+                    if (isValid() && !isLoading()) {
+                        $scope.loading = true;
+                        $http.post('/database/api/search', {input: $scope.input})
+                            .success(function (data) {
+                                $location.search('input', $scope.input);
+                                var info = $location.search().info;
+                                $scope.searchResult = data;
+                                $scope.noData = data.length == 0;
+                                angular.forEach(data, function (result) {
+                                    if (result.hash == info) {
+                                        showAdditionalInfo(result);
+                                    }
+                                });
+                                $scope.loading = false;
                             })
-                        })
-                        .error(function() {
-                        })
+                            .error(function () {
+                                $location.search('input', $scope.input);
+                                $scope.noData = true;
+                                $scope.loading = false;
+                            })
+
+                    }
                 }
 
                 function hideAdditionalInfo() {
@@ -73,24 +92,15 @@
                 function isMainInfo() {
                     return !$scope.additionalInfo.show;
                 }
+
+                function isNoData() {
+                    return $scope.noData;
+                }
+
+                function isLoading() {
+                    return $scope.loading;
+                }
             }]
         }
     })
 })();
-
-function loading(place) {
-    var d3Place = d3.select(place);
-    d3Place.style("display", "block");
-    var loading = d3Place.append("div").attr("class", "loading");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_4").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_5").append("div").attr("class", "wInnerBall");
-}
-
-function loaded(place) {
-    d3.select(place)
-        .select(".loading")
-        .remove();
-}

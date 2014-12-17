@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.antigenomics.vdjdb.core.db.CdrDatabase;
+import com.antigenomics.vdjdb.core.query.CdrDatabaseSearcher;
+import com.antigenomics.vdjdb.core.query.CdrSearchResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.*;
 
