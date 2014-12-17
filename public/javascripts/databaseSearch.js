@@ -17,8 +17,10 @@
                 $scope.isValid = isValid;
                 $scope.isNoData = isNoData;
                 $scope.isLoading = isLoading;
+                $scope.isInitialized = isInitialized;
 
                 //Variables
+                $scope.initialized = false;
                 $scope.noData = false;
                 $scope.loading = false;
                 $scope.searchResult = [];
@@ -30,7 +32,19 @@
                 //On location change
                 $rootScope.$on('$locationChangeSuccess', function() {
                     var newInfo = $location.search().info;
-                    if (typeof newInfo === 'undefined') {
+                    var input = $location.search().input;
+                    if (input && input != $scope.input) {
+                        $scope.initialized = false;
+                        $scope.input = input;
+                        searchInput();
+                    }
+                    if ($scope.searchResult.length > 0 && newInfo) {
+                        angular.forEach($scope.searchResult, function(result) {
+                            if (result.uid == newInfo) {
+                                showAdditionalInfo(result);
+                            }
+                        })
+                    } else if ($scope.searchResult.length > 0) {
                         hideAdditionalInfo();
                     }
                 });
@@ -51,12 +65,13 @@
 
                 function showAdditionalInfo(result) {
                     $scope.additionalInfo.data = result;
-                    $location.search('info', result.hash);
+                    $location.search('info', result.uid);
+                    $location.search('input', result.input);
                     $scope.additionalInfo.show = true;
                 }
 
                 function searchInput() {
-                    if (isValid() && !isLoading()) {
+                    if (isValid() && !isLoading() && isNew()) {
                         $scope.loading = true;
                         $http.post('/database/api/search', {input: $scope.input})
                             .success(function (data) {
@@ -65,11 +80,12 @@
                                 $scope.searchResult = data;
                                 $scope.noData = data.length == 0;
                                 angular.forEach(data, function (result) {
-                                    if (result.hash == info) {
+                                    if (result.uid == info) {
                                         showAdditionalInfo(result);
                                     }
                                 });
                                 $scope.loading = false;
+                                $scope.initialized = true;
                             })
                             .error(function () {
                                 $location.search('input', $scope.input);
@@ -99,6 +115,14 @@
 
                 function isLoading() {
                     return $scope.loading;
+                }
+
+                function isNew() {
+                    return !isInitialized() || $scope.input != $location.search().input;
+                }
+
+                function isInitialized() {
+                    return $scope.initialized;
                 }
             }]
         }

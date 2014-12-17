@@ -17,6 +17,7 @@ import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.milaboratory.core.tree.TreeSearchParameters;
 import models.Account;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
 import play.Logger;
@@ -226,7 +227,7 @@ public class ComputationUtil {
     private void annotation() throws Exception {
 
         CdrDatabase cdrDatabase = new CdrDatabase();
-        DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, true);
+        DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, new TreeSearchParameters(1, 0, 0, 1));
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
         Data data = new Data(new String[]{"data", "header"});
         List<HashMap<String, Object>> annotationData = new ArrayList<>();
@@ -239,9 +240,7 @@ public class ComputationUtil {
             v.addData(new Object[]{cdrDatabaseMatch.getQuery().getV(), cdrDatabaseMatch.getvMatch()});
             j.addData(new Object[]{cdrDatabaseMatch.getQuery().getJ(), cdrDatabaseMatch.getjMatch()});
             cdr3aa.addData(new Object[]{cdrDatabaseMatch.getQuery().getCdr3aa(),
-                    -1,
-                    //TODO
-                    //cdrDatabaseMatch.getSubstitutions().size() > 0 ? cdrDatabaseMatch.getSubstitutions().get(0).pos : -1,
+                    cdrDatabaseMatch.getAlignment().getAbsoluteMutations().firsMutationPosition(),
                     cdrDatabaseMatch.getQuery().getVEnd(),
                     cdrDatabaseMatch.getQuery().getJStart(),
                     cdrDatabaseMatch.getQuery().getDStart(),
@@ -319,7 +318,7 @@ public class ComputationUtil {
         vjUsageData();
         spectratype();
         spectratypeV();
-        annotation()    ;
+        annotation();
         basicStats();
         rarefaction();
         quantileStats();

@@ -26,7 +26,7 @@
                         </label>
                         <button class="btn btn-default pull-right" ng-click="searchInput()" ng-class="{'disabled':!isValid()}" ng-hide="isLoading()">Find</button>
                     </div>
-                    <div class="database-table">
+                    <div class="database-table" ng-show="isInitialized()">
                         <div class="no-data-info" ng-show="isNoData()">
                             No data found
                         </div>

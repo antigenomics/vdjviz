@@ -515,16 +515,6 @@
                         switch (data.result["result"]) {
                             case "success" :
                                 var socket = new WebSocket("ws://" + location.host + "/account/api/ws");
-                                socket.onopen = function () {
-                                    var msg = {
-                                        type: "message",
-                                        action: "render",
-                                        data: {
-                                            fileName: data.formData.fileName
-                                        }
-                                    };
-                                    socket.send(JSON.stringify(msg));
-                                };
                                 socket.onmessage = function (message) {
                                     var event = JSON.parse(message["data"]);
                                     switch (event["result"]) {
@@ -557,6 +547,16 @@
                                             break;
                                     }
 
+                                };
+                                socket.onopen = function () {
+                                    var msg = {
+                                        type: "message",
+                                        action: "render",
+                                        data: {
+                                            fileName: data.formData.fileName
+                                        }
+                                    };
+                                    socket.send(JSON.stringify(msg));
                                 };
                                 break;
                             case "error" :

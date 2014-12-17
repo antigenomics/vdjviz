@@ -388,7 +388,6 @@ public class AccountAPI extends Controller {
                                 }
 
                                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-
                                 if (file == null) {
                                     serverResponse.addData(new Object[]{"error", "render", fileName, "You have no file named " + fileName});
                                     out.write(Json.toJson(serverResponse.getData()));

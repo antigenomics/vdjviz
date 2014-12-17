@@ -11,6 +11,7 @@ import play.mvc.Controller;
 import play.mvc.Result;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
+import utils.ArrayUtils.Data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,16 +34,12 @@ public class DatabaseSearchAPI extends Controller {
         if (input.equals("")) {
             return badRequest("Empty input field");
         }
-        int hash = 0;
+        int uid = 1;
         List<Object> data = new ArrayList<>();
         CdrDatabase cdrDatabase = new CdrDatabase();
         CdrDatabaseSearcher cdrDatabaseSearcher = new CdrDatabaseSearcher(cdrDatabase);
         for (CdrSearchResult cdrSearchResult : cdrDatabaseSearcher.search(input)) {
-            HashMap<String, Object> dataNode = new HashMap<>();
-            dataNode.put("alignment", cdrSearchResult.getAlignment().getAlignmentHelper().toString());
-            dataNode.put("score", cdrSearchResult.getAlignment().getScore());
-            //TODO
-            dataNode.put("hash", hash++);
+            Data dataNode = new Data(new String[]{"input", "alignment", "score", "uid", "annotations", "annotationsHeader"});
             List<List<String>> annotations = new ArrayList<>();
             for (CdrEntry cdrEntry : cdrSearchResult.getCdrEntrySet()) {
                 List<String> anNode = cdrEntry.getAnnotation();
@@ -50,9 +47,15 @@ public class DatabaseSearchAPI extends Controller {
                 anNode.add(0, cdrEntry.v);
                 annotations.add(anNode);
             }
-            dataNode.put("annotations", annotations);
-            dataNode.put("annotationsHeader", cdrDatabase.annotationHeader);
-            data.add(dataNode);
+            dataNode.addData(new Object[]{
+                    input,                                                          //input
+                    cdrSearchResult.getAlignment().getAlignmentHelper().toString(), //alignment
+                    cdrSearchResult.getAlignment().getScore(),                      //score
+                    uid++,                                                          //uid
+                    annotations,                                                    //annotations
+                    cdrDatabase.annotationHeader                                    //header
+            });
+            data.add(dataNode.getData());
         }
         return ok(Json.toJson(data));
     }

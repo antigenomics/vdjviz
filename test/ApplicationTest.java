@@ -6,7 +6,12 @@ import java.util.Map;
 import com.antigenomics.vdjdb.core.db.CdrDatabase;
 import com.antigenomics.vdjdb.core.query.CdrDatabaseSearcher;
 import com.antigenomics.vdjdb.core.query.CdrSearchResult;
+import com.antigenomics.vdjtools.db.BrowserResult;
+import com.antigenomics.vdjtools.db.CdrMatch;
+import com.antigenomics.vdjtools.db.DatabaseBrowser;
+import com.antigenomics.vdjtools.sample.Sample;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.milaboratory.core.tree.TreeSearchParameters;
 import org.junit.*;
 
 import play.mvc.*;
@@ -32,7 +37,7 @@ public class ApplicationTest {
 
     @Test
     public void annotationTest() {
-        CdrDatabase cdrDatabase = new CdrDatabase();
+        
     }
 
 
