@@ -16,9 +16,9 @@
                     <div class="main-info" ng-show="isMainInfo()">
                     <div class="input-place">
                         <label>
-                            <input type="text" ng-model="input">
+                            <input type="text" ng-model="input" ng-class="{'invalid-input':!isValid()}">
                         </label>
-                        <button class="btn btn-default pull-right" ng-click="searchInput()">Find</button>
+                        <button class="btn btn-default pull-right" ng-click="searchInput()" ng-class="{'disabled':!isValid()}">Find</button>
                     </div>
                     <div class="database-table">
                         <table class="table table-striped">

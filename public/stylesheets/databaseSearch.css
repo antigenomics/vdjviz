@@ -46,3 +46,7 @@
 .additional-info-tbody td {
     text-align: center;
 }
+
+.invalid-input {
+    border-color: red;
+}
