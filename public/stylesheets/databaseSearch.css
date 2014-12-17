@@ -1,0 +1,50 @@
+.database-content .header {
+    width: 100%;
+    height: 80px;
+}
+
+.database-content .input-place {
+    width: 100%;
+    height: auto;
+}
+
+.database-table .result-score {
+    width: 10%;
+}
+
+.database-table .result-alignment {
+    width: 70%;
+    font-family: monospace;
+    white-space: pre;
+    letter-spacing: 30px;
+}
+
+.database-table .result-info {
+    cursor: pointer;
+}
+
+.additional-info .result {
+    width: 70%;
+    left: 15%;
+    position: relative;
+}
+
+.additional-info .result .result-alignment {
+    font-family: monospace;
+    white-space: pre;
+    letter-spacing: 30px;
+}
+
+
+
+.additional-info-back-button {
+    cursor: pointer;
+}
+
+.additional-info-thead th {
+    text-align: center;
+}
+
+.additional-info-tbody td {
+    text-align: center;
+}

@@ -33,7 +33,8 @@ POST        /account/api/data                        controllers.AccountAPI.data
 GET         /account/api/files                       controllers.AccountAPI.files()
 
 # Database Search API
-GET         /database                                controllers.DatabaseSearch.databaseSearchMainPage()
+GET         /database                                controllers.DatabaseSearchAPI.databaseSearchMainPage()
+POST        /database/api/search                     controllers.DatabaseSearchAPI.searchInput()
 
 # Robots.txt route
 

@@ -319,7 +319,7 @@ public class ComputationUtil {
         vjUsageData();
         spectratype();
         spectratypeV();
-        //annotation();
+        annotation()    ;
         basicStats();
         rarefaction();
         quantileStats();

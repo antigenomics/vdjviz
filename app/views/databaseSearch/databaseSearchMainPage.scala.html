@@ -1,6 +1,69 @@
 @(username: String)
 @main("Database") {
     <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/databaseSearch.js")" type="text/javascript"></script>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/databaseSearch.css")">
     @navbar(username)
-    Placeholder
+    <div ng-app="databaseSearch">
+        <database>
+            <div class="container">
+                <div class="row database-content">
+                    <div class="header">
+                        <h2>Database</h2>
+                        <hr>
+                    </div>
+                    <div class="loading-place"></div>
+                    <div class="main-info" ng-show="isMainInfo()">
+                    <div class="input-place">
+                        <label>
+                            <input type="text" ng-model="input">
+                        </label>
+                        <button class="btn btn-default pull-right" ng-click="searchInput()">Find</button>
+                    </div>
+                    <div class="database-table">
+                        <table class="table table-striped">
+                            <thead>
+                                <th>Score</th>
+                                <th>Result</th>
+                                <th>Info</th>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="result in searchResult">
+                                    <td class="results-score">{{ result.score }}</td>
+                                    <td class="result-alignment">{{ result.alignment }}</td>
+                                    <td class="result-info"><a ng-click="showAdditionalInfo(result)">Show</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                    <div class="additional-info" ng-show="isAdditionalInfo()">
+                        <a class="additional-info-back-button" ng-click="hideAdditionalInfo()"><- Back</a>
+                            <div class="additional-info-place">
+                                <div class="result">
+                                    <div class="result-alignment">{{ additionalInfo.data.alignment }}</div>
+                                </div>
+                                <br>
+                                <h2>Additional Info</h2>
+                                <hr>
+                            <table class="table">
+                                <thead class="additional-info-thead">
+                                    <th>V</th>
+                                    <th>J</th>
+                                    <th ng-repeat="header in additionalInfo.data.annotationsHeader">{{ header }}</th>
+                                </thead>
+                                <tbody class="additional-info-tbody">
+                                    <tr ng-repeat="row in additionalInfo.data.annotations">
+                                        <td ng-repeat="string in row">
+                                            {{ string }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </database>
+    </div>
 }
