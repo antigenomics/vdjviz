@@ -6,8 +6,6 @@
             restrict: 'E',
             controller: ['$rootScope','$scope', '$http', '$location', function($rootScope, $scope, $http, $location) {
 
-                //public variables
-
                 //Functions
                 $scope.showAdditionalInfo = showAdditionalInfo;
                 $scope.hideAdditionalInfo = hideAdditionalInfo;
@@ -20,9 +18,13 @@
                 $scope.isInitialized = isInitialized;
 
                 //Variables
-                $scope.initialized = false;
-                $scope.noData = false;
-                $scope.loading = false;
+
+                //private
+                var initialized = false;
+                var noData = false;
+                var loading = false;
+
+                //public
                 $scope.searchResult = [];
                 $scope.additionalInfo = {
                     data: null,
@@ -34,7 +36,7 @@
                     var newInfo = $location.search().info;
                     var input = $location.search().input;
                     if (input && input != $scope.input) {
-                        $scope.initialized = false;
+                        initialized = false;
                         $scope.input = input;
                         searchInput();
                     }
@@ -72,25 +74,32 @@
 
                 function searchInput() {
                     if (isValid() && !isLoading() && isNew()) {
-                        $scope.loading = true;
+                        loading = true;
                         $http.post('/database/api/search', {input: $scope.input})
                             .success(function (data) {
-                                $location.search('input', $scope.input);
-                                var info = $location.search().info;
                                 $scope.searchResult = data;
-                                $scope.noData = data.length == 0;
+                                //Show additional info
+                                var info = $location.search().info;
+                                var found = false;
                                 angular.forEach(data, function (result) {
                                     if (result.uid == info) {
                                         showAdditionalInfo(result);
+                                        found = true;
                                     }
                                 });
-                                $scope.loading = false;
-                                $scope.initialized = true;
+                                if (!found) {
+                                    $location.search('info', null);
+                                }
                             })
-                            .error(function () {
+                            .error(function() {
+                                $scope.searchResult = [];
+                                $location.search('info', null);
+                            })
+                            .finally(function() {
                                 $location.search('input', $scope.input);
-                                $scope.noData = true;
-                                $scope.loading = false;
+                                noData = $scope.searchResult.length == 0;
+                                loading = false;
+                                initialized = true;
                             })
 
                     }
@@ -110,11 +119,11 @@
                 }
 
                 function isNoData() {
-                    return $scope.noData;
+                    return noData;
                 }
 
                 function isLoading() {
-                    return $scope.loading;
+                    return loading;
                 }
 
                 function isNew() {
@@ -122,7 +131,7 @@
                 }
 
                 function isInitialized() {
-                    return $scope.initialized;
+                    return initialized;
                 }
             }]
         }
