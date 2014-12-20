@@ -299,7 +299,7 @@ public class AccountAPI extends Controller {
         } catch (IllegalArgumentException | FileNotFoundException e) {
             e.printStackTrace();
             Logger.of("user." + account.userName).error("User " + account.userName +
-                    ": error while requesting data");
+                    ": error while requesting " + type + " data");
             serverResponse.addData(new Object[]{"error", "Unknown type"});
             return badRequest(Json.toJson(serverResponse.getData()));
         }

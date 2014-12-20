@@ -9,7 +9,7 @@ import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.basic.SpectratypeV;
 import com.antigenomics.vdjtools.db.*;
-import com.antigenomics.vdjtools.diversity.DiversityEstimator;
+import com.antigenomics.vdjtools.diversity.DiversityEstimates;
 import com.antigenomics.vdjtools.diversity.DownSampler;
 import com.antigenomics.vdjtools.diversity.QuantileStats;
 import com.antigenomics.vdjtools.intersection.IntersectionType;
@@ -272,8 +272,10 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
+    //TODO
+    /*
     private void rarefaction() throws Exception {
-        DiversityEstimator diversityEstimator = new DiversityEstimator(sample, IntersectionType.Strict);
+        DiversityEstimates diversityEstimator = new DiversityEstimates(sample, IntersectionType.Strict, 1);
         DownSampler downSampler = diversityEstimator.getDownSampler();
         Data data = new Data(new String[]{"values", "key"});
         Integer step = Math.round(sample.getCount() / 100);
@@ -296,6 +298,7 @@ public class ComputationUtil {
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }
+    */
 
     private void saveCache(String cacheName, Object data) {
         try {
@@ -320,7 +323,8 @@ public class ComputationUtil {
         spectratypeV();
         annotation();
         basicStats();
-        rarefaction();
+        //TODO
+        //rarefaction();
         quantileStats();
         file.changeRenderingState(false);
         file.changeRenderedState(true);

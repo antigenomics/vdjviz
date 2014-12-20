@@ -170,57 +170,70 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
 
-                $scope.setActiveState = function (state) {
+
+                //Public functions
+                $scope.deleteFile = deleteFile;
+                $scope.deleteAll = deleteAll;
+                $scope.setActiveFile = setActiveFile;
+                $scope.setActiveState = setActiveState;
+                $scope.isFilesEmpty = isFilesEmpty;
+                $scope.isActiveFile = isActiveFile;
+                $scope.isActiveState = isActiveState;
+                $scope.isRendering = isRendering;
+
+                function setActiveState(state){
                     $rootScope.state = state;
                     $rootScope.updateVisualisationTab();
-                };
+                }
 
-                $scope.setActiveFile = function (file) {
+                function setActiveFile(file) {
                     $rootScope.activeFileName = file.fileName;
-                    $scope.setActiveState('file');
-                };
+                    setActiveState('file');
+                }
 
-                $scope.isRendering = function (file) {
+                function isRendering(file){
                     return file.state === 'rendering';
-                };
+                }
 
-                $scope.isActiveState = function (state) {
+                function isActiveState(state) {
                     return $rootScope.state === state;
-                };
+                }
 
-                $scope.isActiveFile = function (file) {
-                    return file.fileName === $rootScope.activeFileName && $rootScope.isActiveState('file');
-                };
+                function isActiveFile(file) {
+                    return file.fileName === $rootScope.activeFileName && isActiveState('file');
+                }
 
-                $scope.isFilesEmpty = function () {
-                    var size = 0;
-                    angular.forEach($rootScope.files, function (file) {
-                        size++;
-                    });
-                    return size;
-                };
+                function isFilesEmpty() {
+                    return Object.keys($rootScope.files).length;
+                }
 
-                $scope.deleteFile = function (file) {
+                function deleteFile(file) {
                     $http.post('/account/api/delete', {
                         action: 'delete',
                         fileName: file.fileName
                     }).success(function () {
                         if (file.fileName === $rootScope.activeFileName || Object.keys($rootScope.files).length == 1) {
                             $rootScope.state = 'accountInformation'
-                        } else if ($rootScope.state != 'file') {
+                        } else if (!isActiveState('file')) {
                             $rootScope.updateVisualisationTab();
                         }
-                        $rootScope.deleteFileFromList(file.fileName);
+                        $("#sidebar_file_" + file.uid).animate({
+                            right: "1000px"
+                        }, 500, function() {
+                            $scope.$apply(function () {
+                                $rootScope.deleteFileFromList(file.fileName);
+                            })
+                        });
                     });
-                };
+                }
 
-                $scope.deleteAll = function () {
+                function deleteAll() {
                     $http.post('/account/api/delete', {action: 'deleteAll'})
                         .success(function () {
                             $rootScope.files = {};
                             $rootScope.state = 'accountInformation';
                         });
-                };
+                }
             }]
         }
     });
@@ -318,40 +331,54 @@
             tranclude: true,
             require: '^accountPage',
             controller: ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
-
+                //Private var
                 var uid = 0;
 
+                //Public var
                 $scope.newFiles = {};
                 $scope.uploadedFiles = [];
                 $scope.commonSoftwareType = 'mitcr';
 
-                $scope.isNameValid = function (fileName) {
+                //Public Functions
+                $scope.isNameValid = isNameValid;
+                $scope.isNewFilesEmpty = isNewFilesEmpty;
+                $scope.addNewButton = addNewButton;
+                $scope.changeCommonSoftwareType = changeCommonSoftwareType;
+                $scope.uploadAll = uploadAll;
+                $scope.uploadFile = uploadFile;
+                $scope.isOk = isOk;
+                $scope.isSuccess = isSuccess;
+                $scope.isError = isError;
+                $scope.deleteFromQuery = deleteFromQuery;
+
+
+                function isNameValid(fileName){
                     var regexp = /^[a-zA-Z0-9_.-]{1,20}$/;
                     return regexp.test(fileName)
-                };
+                }
 
-                $scope.isNewFilesEmpty = function () {
+                function isNewFilesEmpty() {
                     return Object.keys($scope.newFiles).length;
-                };
+                }
 
-                $scope.addNewButton = function () {
+                function addNewButton() {
                     $("form input[type=file]").click();
-                };
+                }
 
-                $scope.changeCommonSoftwareType = function () {
+                function changeCommonSoftwareType() {
                     angular.forEach($scope.newFiles, function (file) {
                         file.softwareTypeName = $scope.commonSoftwareType;
                     });
-                };
+                }
 
-                $scope.uploadAll = function () {
+                function uploadAll() {
                     angular.forEach($scope.newFiles, function (file) {
                         $scope.uploadFile(file);
                     })
-                };
+                }
 
-                $scope.uploadFile = function (file) {
-                    if ((filesCount() <= $rootScope.maxFilesCount) && file.wait && $scope.isNameValid(file.fileName)) {
+                function uploadFile(file) {
+                    if (!isCountExceeded() && isWait(file) && isNameValid(file.fileName)) {
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
                             fileName: file.fileName,
@@ -361,34 +388,36 @@
                         file.wait = false;
                         file.data.submit();
                     }
-                };
+                }
 
-                $scope.isOk = function (file) {
+                function isOk(file) {
                     return file.result === 'ok' || file.result === 'success';
-                };
+                }
 
-                $scope.isSuccess = function (file) {
+                function isSuccess(file) {
                     return file.result === 'success';
-                };
+                }
 
-                $scope.isError = function (file) {
+                function isError(file) {
                     return file.result === 'error';
-                };
+                }
 
-                $scope.deleteFromQuery = function (file) {
+                function deleteFromQuery(file) {
                     delete $scope.newFiles[file.uid];
-                };
+                }
 
-                var filesCount = function () {
+
+                //Private Functions
+                function filesCount() {
                     var added = Object.keys($rootScope.files).length;
                     var waiting = 0;
                     angular.forEach($scope.newFiles, function (file) {
                         if (file.wait) waiting++;
                     });
                     return added + waiting;
-                };
+                }
 
-                var addNew = function (uid, fileName, fileExtension, data)  {
+                function addNew(uid, fileName, fileExtension, data)  {
                     $scope.$apply(function () {
                         $scope.newFiles[uid] = {
                             uid: uid,
@@ -404,82 +433,78 @@
                             data: data
                         };
                     })
-                };
+                }
 
-                var updateTooltip = function (file, tooltip) {
+                function updateTooltip(file, tooltip) {
                     $scope.$apply(function () {
                         file.tooltip = tooltip;
                     })
-                };
+                }
 
-                var updateProgress = function (file, progress) {
+                function updateProgress(file, progress) {
                     $scope.$apply(function () {
                         file.progress = progress;
                     })
-                };
+                }
 
-                var updateResult = function (file, result) {
+                function updateResult(file, result) {
                     $scope.$apply(function () {
                         file.result = result;
                     })
-                };
+                }
 
-                var updateResultTooltip = function (file, resultTooltip) {
+                function updateResultTooltip(file, resultTooltip) {
                     $scope.$apply(function () {
                         file.resultTooltip = resultTooltip;
                     })
-                };
+                }
 
-                var addNewError = function (uid, fileName, error) {
+                function addNewError(uid, fileName, error) {
+                    var resultTooltip;
                     switch (error) {
                         case 0:
-                            $scope.$apply(function () {
-                                $scope.newFiles[uid] = {
-                                    uid: uid,
-                                    fileName: fileName,
-                                    softwareTypeName: '',
-                                    wait: false,
-                                    result: 'error',
-                                    resultTooltip: 'You have exceeded limit of files'
-                                };
-                            });
+                            resultTooltip = 'You have exceeded limit of files';
                             break;
                         case 1:
-                            $scope.$apply(function () {
-                                $scope.newFiles[uid] = {
-                                    uid: uid,
-                                    fileName: fileName,
-                                    softwareTypeName: '',
-                                    wait: false,
-                                    result: 'error',
-                                    resultTooltip: 'You should use unique names for your files'
-                                };
-                            });
+                            resultTooltip = 'You should use unique names for your files';
                             break;
                         case 2:
-                            $scope.$apply(function () {
-                                $scope.newFiles[uid] = {
-                                    uid: uid,
-                                    fileName: fileName,
-                                    softwareTypeName: '',
-                                    wait: false,
-                                    result: 'error',
-                                    resultTooltip: 'File is too large'
-                                };
-                            });
+                            resultTooltip = 'File is too large';
                             break;
-                        default :
-                            break;
+                        default:
+                            resultTooltip = 'Server is unavailable';
                     }
-                };
+                    $scope.$apply(function() {
+                       $scope.newFiles[uid] = {
+                           uid: uid,
+                           fileName: fileName,
+                           softwareTypeName: '',
+                           wait: false,
+                           result: 'error',
+                           resultTooltip: resultTooltip
+                       }
+                    });
+                }
 
-                var isContain = function (fileName) {
+                function isContain(fileName) {
                     var contain = false;
                     angular.forEach($scope.newFiles, function (file) {
                         if (file.fileName == fileName) contain = true;
                     });
                     return $rootScope.isContain(fileName) || contain;
-                };
+                }
+
+                function isCountExceeded() {
+                    return $rootScope.maxFilesCount > 0 && filesCount() >= $rootScope.maxFilesCount;
+                }
+
+                function isSizeExceeded(file) {
+                    return $rootScope.maxFileSize > 0 && (file.size  / 1024 ) > $rootScope.maxFileSize;
+                }
+
+                function isWait(file) {
+                    return file.wait;
+                }
 
                 $('#fileupload').fileupload({
                     url: '/account/api/upload',
@@ -495,11 +520,11 @@
                             fileName += fileExtension;
                             fileExtension = 'txt';
                         }
-                        if ($rootScope.maxFilesCount > 0 && filesCount() >= $rootScope.maxFilesCount) {
+                        if (isCountExceeded()) {
                             addNewError(uid++, fileName, 0);
                         } else if (isContain(fileName)) {
                             addNewError(uid++, fileName, 1);
-                        } else if ($rootScope.maxFileSize > 0 && (file.size  / 1024 ) > $rootScope.maxFileSize) {
+                        } else if (isSizeExceeded(file)) {
                             addNewError(uid++, fileName, 2);
                         } else {
                             addNew(uid++, fileName, fileExtension, data);
@@ -525,7 +550,7 @@
                                                     $rootScope.addFileToList(file);
                                                     break;
                                                 case "end" :
-                                                    $rootScope.changeFileState(file, 'rendered')
+                                                    $rootScope.changeFileState(file, 'rendered');
                                                     $rootScope.updateVisualisationTab();
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
@@ -701,7 +726,7 @@
 
 //Request data from server
 function getData(handleData, param, file) {
-    if (typeof file != 'undefined' && file.meta[param.type].data.length != 0) {
+    if (file && file.meta[param.type].data.length != 0) {
         handleData(file.meta[param.type].data, param);
     } else {
         loading(param.place);
@@ -1437,7 +1462,7 @@ function noDataAvailable(param, file) {
             .style("line-height", "300px")
             .append("b")
             .html("No Data Available");
-    if (typeof file != 'undefined') {
+    if (file) {
         file.meta[param.type].cached = false;
         file.meta[param.type].comparingCache = false;
         file.meta[param.type].data = [];
