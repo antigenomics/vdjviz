@@ -1,5 +1,24 @@
 @(username: String)
 @main("Contacts") {
+    <link href="@routes.Assets.at("stylesheets/contacts.css")" rel="stylesheet">
     @navbar(username)
-    contacts place holder
+    <div class="container">
+        <div class="row">
+            <h2>Contacts</h2>
+            <hr>
+            <div class="person-place">
+                <div class="person-img">Image placeholder</div>
+                <div class="person-name">Name placeholder</div>
+                <hr class="delimiter">
+                <div class="person-description">Description placeholder</div>
+            </div>
+            <hr>
+            <div class="person-place">
+                <div class="person-img">Image placeholder</div>
+                <div class="person-name">Name placeholder</div>
+                <hr class="delimiter">
+                <div class="person-description">Description placeholder</div>
+            </div>
+        </div>
+    </div>
 }

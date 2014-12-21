@@ -1,0 +1,42 @@
+body {
+    background-color: #DCDCDC;
+}
+
+.content {
+    left: 25%;
+    top: 20%;
+    position: absolute;
+    background-color: #FFFFFF;
+    width: 50%;
+    height: 40%;
+}
+
+.content .header {
+    left: 0;
+    top: 0;
+    height: 10%;
+    width: 100%;
+    position: relative;
+    background-color: #007196;
+}
+
+.content .header .textplace {
+    top: 5%;
+    height: 90%;
+    left: 2%;
+    width: 96%;
+    /*
+    //todo vertical align
+    */
+    position: relative;
+    color: #FFFFFF;
+    font-size: large;
+}
+
+.content .descriptionplace {
+    left: 1%;
+    width: 98%;
+    top: 2%;
+    height: 86%;
+    position: relative;
+}

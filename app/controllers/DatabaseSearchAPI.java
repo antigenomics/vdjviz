@@ -57,6 +57,9 @@ public class DatabaseSearchAPI extends Controller {
             });
             data.add(dataNode.getData());
         }
+
+
+
         return ok(Json.toJson(data));
     }
 

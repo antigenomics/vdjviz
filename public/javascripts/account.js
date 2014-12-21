@@ -42,16 +42,21 @@
                 };
                 $scope.activeTab = $scope.visualisationTabs.vjusage;
                 $scope.initialized = false;
+                $scope.errorInit = false;
 
                 $scope.updateFilesList = function () {
-                    $http({method: 'GET', url: '/account/api/files'}).success(function (data) {
-                        $scope.initialized = true;
-                        $scope.maxFilesCount = data["maxFilesCount"];
-                        $scope.maxFileSize = data["maxFileSize"];
-                        angular.forEach(data["files"], function (file) {
+                    $http({method: 'GET', url: '/account/api/files'})
+                        .success(function (data) {
+                            $scope.initialized = true;
+                            $scope.maxFilesCount = data["maxFilesCount"];
+                            $scope.maxFileSize = data["maxFileSize"];
+                            angular.forEach(data["files"], function (file) {
                             $scope.addFileToList(file);
                         })
-                    })
+                        })
+                        .error(function() {
+                            $scope.errorInit = true;
+                        })
                 };
 
                 $scope.getActiveFile = function () {
@@ -116,7 +121,6 @@
 
                 $scope.updateVisualisationTab = function () {
                     var param = {};
-
                     switch ($scope.state) {
                         case 'file':
                             var file = $scope.files[$scope.activeFileName];
@@ -378,7 +382,7 @@
                 }
 
                 function uploadFile(file) {
-                    if (!isCountExceeded() && isWait(file) && isNameValid(file.fileName)) {
+                    if (isWait(file) && isNameValid(file.fileName)) {
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
                             fileName: file.fileName,
@@ -680,8 +684,11 @@
             template: '<div class="block-page" ng-show="blockPage()">' +
                             '<div class="background"></div>' +
                             '<div class="info">' +
-                                '<div class="text-info"><text>Initializing...</text></div>' +
-                                '<div class="loading">' +
+                                '<div class="text-info">' +
+                                    '<text ng-hide="error()">Initializing...</text>' +
+                                    '<text ng-show="error()">Error while initializing</text>' +
+                                '</div>' +
+                                '<div class="loading" ng-hide="error()">' +
                                     '<div class="wBall" id="wBall_1">' +
                                         '<div class="wInnerBall"></div>' +
                                     '</div>' +
@@ -705,7 +712,12 @@
             controller: ['$scope', '$rootScope', function($scope, $rootScope) {
                 $scope.blockPage = function() {
                     return !$rootScope.initialized;
+                };
+
+                $scope.error = function() {
+                    return $rootScope.errorInit;
                 }
+
             }]
         }
     });

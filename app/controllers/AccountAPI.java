@@ -293,14 +293,14 @@ public class AccountAPI extends Controller {
                     case "rarefaction":
                         return rarefaction(account);
                     default:
-                        throw new IllegalArgumentException();
+                        throw new IllegalArgumentException("Unknown type " + type);
                 }
             }
         } catch (IllegalArgumentException | FileNotFoundException e) {
             e.printStackTrace();
             Logger.of("user." + account.userName).error("User " + account.userName +
                     ": error while requesting " + type + " data");
-            serverResponse.addData(new Object[]{"error", "Unknown type"});
+            serverResponse.addData(new Object[]{"error", "Unknown type " + type});
             return badRequest(Json.toJson(serverResponse.getData()));
         }
     }

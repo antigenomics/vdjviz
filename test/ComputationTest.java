@@ -1,5 +1,9 @@
-/**
- * Created by bvdmitri on 14.10.14.
- */
+import org.junit.Test;
+
 public class ComputationTest {
+
+    @Test
+    public void softwareCheck() {
+    }
+
 }

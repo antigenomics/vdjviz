@@ -40,20 +40,20 @@
                         $scope.input = input;
                         searchInput();
                     }
-                    if ($scope.searchResult.length > 0 && newInfo) {
+                    if (!isNoData() && newInfo) {
                         angular.forEach($scope.searchResult, function(result) {
                             if (result.uid == newInfo) {
                                 showAdditionalInfo(result);
                             }
                         })
-                    } else if ($scope.searchResult.length > 0) {
+                    } else if (!isNoData()) {
                         hideAdditionalInfo();
                     }
                 });
 
                 //Initializing
                 var input = $location.search().input;
-                if (typeof input == 'string') {
+                if (input) {
                     $scope.input = input;
                     searchInput();
                 } else {
@@ -78,6 +78,10 @@
                         $http.post('/database/api/search', {input: $scope.input})
                             .success(function (data) {
                                 $scope.searchResult = data;
+                                /*
+                                //TODO sort
+                                var sortedData = [];
+                                */
                                 //Show additional info
                                 var info = $location.search().info;
                                 var found = false;
