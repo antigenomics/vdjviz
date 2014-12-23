@@ -307,7 +307,7 @@ public class ComputationUtil {
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
         } catch (FileNotFoundException fnfe) {
-            Logger.of("user." + account.userName).error("User " + account.userName +
+            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                     ": save cache error [" + file.getFileName() + "," + cacheName + "]");
             fnfe.printStackTrace();
         }

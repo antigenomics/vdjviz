@@ -13,7 +13,7 @@ public class Application extends Controller {
     public static Result index() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         if (user != null) {
-            return ok(index.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
+            return ok(index.render(LocalUser.find.byId(user.identityId().userId()).getAccountUserName()));
         }
         return ok(index.render(null));
     }
@@ -22,7 +22,7 @@ public class Application extends Controller {
     public static Result contacts() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         if (user != null) {
-            return ok(views.html.commonPages.contacts.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
+            return ok(views.html.commonPages.contacts.render(LocalUser.find.byId(user.identityId().userId()).getAccountUserName()));
         }
         return ok(views.html.commonPages.contacts.render(null));
     }
@@ -31,9 +31,8 @@ public class Application extends Controller {
     @SecureSocial.UserAwareAction
     public static Result about() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = null;
         if (user != null) {
-            return ok(views.html.commonPages.about.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
+            return ok(views.html.commonPages.about.render(LocalUser.find.byId(user.identityId().userId()).getAccountUserName()));
         }
         return ok(views.html.commonPages.about.render(null));
     }

@@ -216,7 +216,7 @@
                         action: 'delete',
                         fileName: file.fileName
                     }).success(function () {
-                        if (file.fileName === $rootScope.activeFileName || Object.keys($rootScope.files).length == 1) {
+                        if (($rootScope.state === 'file' && file.fileName === $rootScope.activeFileName) || Object.keys($rootScope.files).length == 1) {
                             $rootScope.state = 'accountInformation'
                         } else if (!isActiveState('file')) {
                             $rootScope.updateVisualisationTab();
@@ -383,6 +383,7 @@
 
                 function uploadFile(file) {
                     if (isWait(file) && isNameValid(file.fileName)) {
+                        updateTooltip(file, "Uploading");
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
                             fileName: file.fileName,
@@ -536,7 +537,6 @@
                     },
                     progress: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
-                        updateTooltip(file, "Uploading");
                         updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
                     },
                     done: function (e, data) {

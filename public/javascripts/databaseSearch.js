@@ -35,7 +35,7 @@
                 $rootScope.$on('$locationChangeSuccess', function() {
                     var newInfo = $location.search().info;
                     var input = $location.search().input;
-                    if (input && input != $scope.input) {
+                    if (input && input !== $scope.input) {
                         initialized = false;
                         $scope.input = input;
                         searchInput();
@@ -77,11 +77,8 @@
                         loading = true;
                         $http.post('/database/api/search', {input: $scope.input})
                             .success(function (data) {
-                                $scope.searchResult = data;
-                                /*
-                                //TODO sort
-                                var sortedData = [];
-                                */
+                                $scope.searchResult = sortByScore(data);
+
                                 //Show additional info
                                 var info = $location.search().info;
                                 var found = false;
@@ -136,6 +133,19 @@
 
                 function isInitialized() {
                     return initialized;
+                }
+
+                function sortByScore(data) {
+                    for (var i = 0; i < data.length; i++) {
+                        var max = i;
+                        for (var j = i + 1; j < data.length; j++) {
+                            if (data[j]["score"] > data[max]["score"]) max = j;
+                        }
+                        var s = data[i];
+                        data[i] = data[max];
+                        data[max] = s;
+                    }
+                    return data;
                 }
             }]
         }

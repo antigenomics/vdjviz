@@ -40,6 +40,13 @@ public class LocalUser extends Model  {
         return find.all();
     }
 
+    public String getAccountUserName() {
+        if (this.account != null) {
+            return this.account.getUserName();
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return this.id + " - " + this.firstName;

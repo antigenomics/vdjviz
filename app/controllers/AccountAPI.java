@@ -32,7 +32,7 @@ public class AccountAPI extends Controller {
     public static Result account() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        return ok(views.html.account.accountMainPage.render(localUser.account));
+        return ok(views.html.account.accountMainPage.render(localUser.getAccountUserName()));
     }
 
     public static Result upload() {
@@ -54,7 +54,7 @@ public class AccountAPI extends Controller {
         if (maxFilesCount > 0) {
             if (account.getFilesCount() >= maxFilesCount) {
                 serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
-                Logger.of("user." + account.userName).info("User " + account.userName + ": exceeded the limit of the number of files");
+                Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
                 return ok(Json.toJson(serverResponse.getData()));
             }
         }
@@ -88,7 +88,7 @@ public class AccountAPI extends Controller {
         }
 
         String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
-        if (!fileName.matches(pattern)) {
+        if (fileName == null || !fileName.matches(pattern)) {
             serverResponse.addData(new Object[]{"error", "Invalid name"});
             return ok(Json.toJson(serverResponse.getData()));
         }
@@ -109,7 +109,7 @@ public class AccountAPI extends Controller {
                 Boolean accountDirCreated = accountDir.mkdir();
                 if (!accountDirCreated) {
                     serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
-                    Logger.of("user." + account.userName).error("Error creating main directory for user " + account.userName);
+                    Logger.of("user." + account.getUserName()).error("Error creating main directory for user " + account.getUserName());
                     return ok(Json.toJson(serverResponse.getData()));
                 }
             }
@@ -123,7 +123,7 @@ public class AccountAPI extends Controller {
                 Boolean created = fileDir.mkdir();
                 if (!created) {
                     serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
-                    Logger.of("user." + account.userName).error("Error creating file directory for user " + account.userName);
+                    Logger.of("user." + account.getUserName()).error("Error creating file directory for user " + account.getUserName());
                     return ok(Json.toJson(serverResponse.getData()));
                 }
             }
@@ -132,7 +132,7 @@ public class AccountAPI extends Controller {
             Boolean uploaded = uploadedFile.renameTo(new File(account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension));
             if (!uploaded) {
                 serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
-                Logger.of("user." + account.userName).error("Error upload file for user " + account.userName);
+                Logger.of("user." + account.getUserName()).error("Error upload file for user " + account.getUserName());
                 return ok(Json.toJson(serverResponse.getData()));
             }
 
@@ -160,7 +160,7 @@ public class AccountAPI extends Controller {
         } catch (Exception e) {
             serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
             e.printStackTrace();
-            Logger.of("user." + account.userName).error("Error while uploading new file for user : " + account.userName);
+            Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
             return ok(Json.toJson(serverResponse.getData()));
         }
     }
@@ -183,7 +183,7 @@ public class AccountAPI extends Controller {
                 String fileName = request.findValue("fileName").asText();
                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
                 if (file == null) {
-                    Logger.of("user." + account.userName).error("User " + account.userName +" have no file named " + fileName);
+                    Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +" have no file named " + fileName);
                     serverResponse.addData(new Object[]{"error", "You have no file named " + fileName});
                     return forbidden(Json.toJson(serverResponse.getData()));
                 }
@@ -198,7 +198,7 @@ public class AccountAPI extends Controller {
                     serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
                     return ok(Json.toJson(serverResponse.getData()));
                 } catch (Exception e) {
-                    Logger.of("user." + account.userName).error("User: " + account.userName + "Error while deleting file " + fileName);
+                    Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + "Error while deleting file " + fileName);
                     e.printStackTrace();
                     serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
                     return ok(Json.toJson(serverResponse.getData()));
@@ -212,7 +212,7 @@ public class AccountAPI extends Controller {
                     serverResponse.addData(new Object[]{"ok", ""});
                     return ok(Json.toJson(serverResponse.getData()));
                 } catch (Exception e) {
-                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while deleting files for  " + account.userName);
+                    Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while deleting files for  " + account.getUserName());
                     e.printStackTrace();
                     serverResponse.addData(new Object[]{"error", "Error while deleting files"});
                     return ok(Json.toJson(serverResponse.getData()));
@@ -258,7 +258,7 @@ public class AccountAPI extends Controller {
         Account account = localUser.account;
         Data serverResponse = new Data(new String[]{"result", "data"});
         Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
-        accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.userName, account.getFilesCount()});
+        accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.getUserName(), account.getFilesCount()});
         serverResponse.addData(new Object[]{"ok", accountInformation.getData()});
         return ok(Json.toJson(serverResponse.getData()));
     }
@@ -298,7 +298,7 @@ public class AccountAPI extends Controller {
             }
         } catch (IllegalArgumentException | FileNotFoundException e) {
             e.printStackTrace();
-            Logger.of("user." + account.userName).error("User " + account.userName +
+            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                     ": error while requesting " + type + " data");
             serverResponse.addData(new Object[]{"error", "Unknown type " + type});
             return badRequest(Json.toJson(serverResponse.getData()));
@@ -309,7 +309,7 @@ public class AccountAPI extends Controller {
         //Return cache file transformed into json format
         Data serverResponse = new Data(new String[]{"result", "message", "data"});
         if (file == null) {
-            Logger.of("user." + account.userName).error("User " + account.userName +
+            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                     " have no requested file");
             serverResponse.addData(new Object[]{"error", "You have no this file", null});
             return forbidden(Json.toJson(serverResponse.getData()));
@@ -322,13 +322,13 @@ public class AccountAPI extends Controller {
                 serverResponse.addData(new Object[]{"success", "", jsonData});
                 return ok(Json.toJson(serverResponse.getData()));
             } catch (Exception e) {
-                Logger.of("user." + account.userName).error("User " + account.userName +
+                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                         ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
                 serverResponse.addData(new Object[]{"error", "Cache file does not exist", null});
                 return forbidden(Json.toJson(serverResponse.getData()));
             }
         } else {
-            Logger.of("user." + account.userName).error("User: " + account.userName + " File: "
+            Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " File: "
                     + file.getFileName() + " did not rendered");
             serverResponse.addData(new Object[]{"error", "File did not rendered", null});
             return forbidden(Json.toJson(serverResponse.getData()));
@@ -402,7 +402,7 @@ public class AccountAPI extends Controller {
                                     return;
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail
-                                    Logger.of("user." + account.userName).error("User: " + account.userName + " Error while rendering file " + file.getFileName());
+                                    Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while rendering file " + file.getFileName());
                                     serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
                                     out.write(Json.toJson(serverResponse.getData()));
                                     UserFile.deleteFile(file);
@@ -410,7 +410,7 @@ public class AccountAPI extends Controller {
                                     return;
                                 }
                             default:
-                                Logger.of("user." + account.userName).error("User: " + account.userName + " Render: unknown type");
+                                Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Render: unknown type");
                                 serverResponse.addData(new Object[]{"error", "render", "", "Unknown Action"});
                                 out.write(Json.toJson(serverResponse.getData()));
                                 out.close();

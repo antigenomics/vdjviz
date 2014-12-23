@@ -23,7 +23,7 @@ public class DatabaseSearchAPI extends Controller {
     public static Result databaseSearchMainPage() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         if (user != null) {
-            return ok(views.html.databaseSearch.databaseSearchMainPage.render(LocalUser.find.byId(user.identityId().userId()).account.userName));
+            return ok(views.html.databaseSearch.databaseSearchMainPage.render(LocalUser.find.byId(user.identityId().userId()).getAccountUserName()));
         }
         return ok(views.html.databaseSearch.databaseSearchMainPage.render(null));
     }
@@ -57,9 +57,6 @@ public class DatabaseSearchAPI extends Controller {
             });
             data.add(dataNode.getData());
         }
-
-
-
         return ok(Json.toJson(data));
     }
 

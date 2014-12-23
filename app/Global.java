@@ -31,7 +31,7 @@ public class Global extends GlobalSettings {
                 File fileDir = new File(userFile.getDirectoryPath());
                 if (!fileDir.exists()) {
                     UserFile.deleteFile(userFile);
-                    Logger.of("user." + account.userName).warn("Deleted empty file " + userFile.getFileName() + " for user : " + account.userName);
+                    Logger.of("user." + account.getUserName()).warn("Deleted empty file " + userFile.getFileName() + " for user : " + account.getUserName());
                 }
             }
         }

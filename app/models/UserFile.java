@@ -17,7 +17,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 @Entity
-public class UserFile extends Model implements PathBindable<UserFile> {
+public class UserFile extends Model {
 
     @Id
     private Long id;
@@ -129,33 +129,12 @@ public class UserFile extends Model implements PathBindable<UserFile> {
                 e.printStackTrace();
             }
         }
-        if (fileDir.delete()) {
-            Ebean.delete(file);
-        }
+        fileDir.delete();
+        Ebean.delete(file);
     }
 
     public static void asyncDeleteFile(UserFile file) {
         UserFile f = UserFile.findById(file.id);
         deleteFile(f);
-    }
-
-    /**
-     * Overriding PathBindable functions
-     * UseFile class using in routes with its id value
-     */
-
-    @Override
-    public UserFile bind(String key, String value) {
-        return findById(Long.parseLong(value));
-    }
-
-    @Override
-    public String unbind(String key) {
-        return this.id.toString();
-    }
-
-    @Override
-    public String javascriptUnbind() {
-        return this.id.toString();
     }
 }
