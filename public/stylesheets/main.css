@@ -4,6 +4,10 @@ html, body {
     padding-top: 0;
 }
 
+#add-new-file {
+    visibility: hidden;
+}
+
 .block-page {
     width: 100%;
     height: 100%;

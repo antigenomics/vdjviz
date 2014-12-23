@@ -1,7 +1,7 @@
 
     <ul class="nav nav-sidebar">
-        <li class="active">
-            <a href="#new-files-table" role="button" class="btn" data-toggle="modal">Your Files<i class="fa fa-plus add-new-files-button pull-right"></i></a>
+        <li class="active" ng-click="showNewFilesTable()">
+            <a>Your Files<i class="fa fa-plus add-new-files-button pull-right"></i></a>
         </li>
     </ul>
     <ul class="nav nav-sidebar" ng-hide="isFilesEmpty()">
@@ -23,3 +23,4 @@
         <hr>
         <li ng-click="deleteAll()"><a>Delete All</a></li>
     </ul>
+    <a href="#new-files-table" role="button" class="btn" data-toggle="modal" id="add-new-file"></a>

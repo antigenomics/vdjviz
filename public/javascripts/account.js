@@ -68,7 +68,7 @@
                         if (file.fileName === f.fileName) {
                             return true;
                         }
-                    })
+                    });
                     return false;
                 };
 
@@ -155,6 +155,7 @@
                 };
 
                 $scope.deleteFileFromList = function (fileName) {
+                    newFlag = true;
                     delete $scope.files[fileName];
                 };
 
@@ -176,6 +177,7 @@
 
 
                 //Public functions
+                $scope.showNewFilesTable = showNewFilesTable;
                 $scope.deleteFile = deleteFile;
                 $scope.deleteAll = deleteAll;
                 $scope.setActiveFile = setActiveFile;
@@ -184,6 +186,10 @@
                 $scope.isActiveFile = isActiveFile;
                 $scope.isActiveState = isActiveState;
                 $scope.isRendering = isRendering;
+
+                function showNewFilesTable() {
+                    $("#add-new-file").click();
+                }
 
                 function setActiveState(state){
                     $rootScope.state = state;
@@ -814,7 +820,7 @@ function spectratype(data, param) {
                 .legend(legend)
                 .stacked(true)
                 .legendOnChart(true)
-                .tooltip(function (key, x, y, e, graph) {
+                .tooltip(function (key, x, y, e) {
                     if (key != "Other") {
                         if (e.series.values[e.pointIndex].y != 0) {
                             return '<h3>CDR3AA: ' + e.series.cdr3aa + '</h3>' +
@@ -886,7 +892,7 @@ function spectratypeV(data, param) {
                 .groupSpacing(0.1)    //Distance between each group of bars.
                 .height(height)
                 .stacked(true)
-                .tooltip(function (key, x, y, e, graph) {
+                .tooltip(function (key, x, y, e) {
                     if (e.series.values[e.pointIndex].y != 0) {
                         return '<h3>' + key + '</h3>' +
                             '<p>Length : ' + x + '</p>' +
@@ -999,7 +1005,7 @@ function quantileSunbirstChart(data, param) {
             .style("fill", function(d) {
                 var name = d.name;
                 var color = "#ffffff";
-                keys.forEach(function(d, i) {
+                keys.forEach(function(d) {
                     if (d.key === name) color = d.color;
                 });
                 return color;
@@ -1015,7 +1021,7 @@ function quantileSunbirstChart(data, param) {
         var text = svg.selectAll("text").data(nodes);
         var textEnter = text.enter().append("text")
             .style("fill-opacity", 1)
-            .style("fill", function(d) {
+            .style("fill", function() {
                 return "black";
                 //return brightness(d3.rgb(colour(d))) < 125 ? "#eee" : "#000";
             })
@@ -1263,8 +1269,7 @@ function vjUsage(data, param) {
         height = param.height,
         r1 = height / 1.7,
         innerRadius = Math.min(width, height) * .49,
-        outerRadius = innerRadius * 1.1,
-        outer;
+        outerRadius = innerRadius * 1.1;
 
     var svg = d3.select(param.place)
         .append("svg")

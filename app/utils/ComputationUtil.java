@@ -122,7 +122,7 @@ public class ComputationUtil {
         List<HashMap<String, Object>> data = new ArrayList<>();
         xyValues commonValues = new xyValues();
         for (int i = 0; i < x_coordinates.length; i++) {
-            commonValues.addValue(x_coordinates[i], y_coordinates[i]);
+            commonValues.addValue((double) x_coordinates[i], y_coordinates[i]);
         }
         Data commonData = new Data(new String[]{"values", "key", "color"});
         commonData.addData(new Object[]{commonValues.getValues(), "Other", "#DCDCDC"});
@@ -132,7 +132,7 @@ public class ComputationUtil {
             xyValues values = new xyValues();
             int top_clone_x = topclone.getCdr3nt().length();
             for (int i = x_min; i <= x_max; i++) {
-                values.addValue(i, i != top_clone_x ? 0 : topclone.getFreq());
+                values.addValue((double) i, i != top_clone_x ? 0 : topclone.getFreq());
             }
 
             topCloneNode.addData(new Object[]{
@@ -179,7 +179,7 @@ public class ComputationUtil {
             int x_coordinates[] = spectratype.getLengths();
             double y_coordinates[] = spectratype.getHistogram();
             for (int i = 0; i < x_coordinates.length; i++) {
-                values.addValue(x_coordinates[i], y_coordinates[i]);
+                values.addValue((double) x_coordinates[i], y_coordinates[i]);
             }
             VColor vColor = new VColor(key);
             node.addData(new Object[]{values.getValues(), key, vColor.getHexVColor()});
@@ -272,33 +272,23 @@ public class ComputationUtil {
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-    //TODO
-    /*
+
     private void rarefaction() throws Exception {
-        DiversityEstimates diversityEstimator = new DiversityEstimates(sample, IntersectionType.Strict, 1);
-        DownSampler downSampler = diversityEstimator.getDownSampler();
+        DownSampler downSampler = new DownSampler(sample);
         Data data = new Data(new String[]{"values", "key"});
-        Integer step = Math.round(sample.getCount() / 100);
-        double[] x = new double[101], y = new double[101];
-        int j = 0;
-        for (Integer i = 0; j < 100; i += step, j++) {
-            x[j] = (double) i;
-            y[j] = (double) downSampler.reSample(i).getDiversity();
+        Integer stepCount = 100;
+        Integer step = Math.round(sample.getCount() / stepCount);
+        xyValues xyValues = new xyValues(stepCount);
+        for (int i = 0, j = 0; j < stepCount; i += step, ++j) {
+            xyValues.addValue((double) i, (double) downSampler.reSample(i).getDiversity());
         }
-        x[j] = (int) sample.getCount();
-        y[j] = downSampler.reSample((int) sample.getCount()).getDiversity();
-        LoessInterpolator interpolator = new LoessInterpolator();
-        double[] z = interpolator.smooth(x, y);
-        xyValues values = new xyValues();
-        for (int i = 0; i <= j; i++) {
-            values.addValue(x[i], z[i]);
-        }
-        data.addData(new Object[]{values.getValues(), file.getFileName()});
+        data.addData(new Object[]{xyValues.interpolate().getValues(), file.getFileName()});
         saveCache(CacheType.rarefaction.getCacheFileName(), data.getData());
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }
-    */
+
+
 
     private void saveCache(String cacheName, Object data) {
         try {
@@ -323,8 +313,7 @@ public class ComputationUtil {
         spectratypeV();
         annotation();
         basicStats();
-        //TODO
-        //rarefaction();
+        rarefaction();
         quantileStats();
         file.changeRenderingState(false);
         file.changeRenderedState(true);
