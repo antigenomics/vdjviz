@@ -398,13 +398,13 @@ public class AccountAPI extends Controller {
                     FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache1.freqTableCache);
                     Rarefaction rarefaction = new Rarefaction(frequencyTable);
                     ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount);
-                    Data data = new Data(new String[]{"values", "key", "color", "dash", "hideTooltip"});
+                    Data data = new Data(new String[]{"values", "key", "color", "dash", "hideTooltip", "x_start"});
                     xyValues additionalLine = new xyValues();
                     for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
                         additionalLine.addValue(rarefactionPoint.x, rarefactionPoint.mean);
                     }
                     rarefactionCache1.line.color = RarefactionColor.getColor(count++);
-                    data.addData(new Object[]{additionalLine.getValues(), file.getFileName() + "_add", rarefactionCache1.line.color, true, true});
+                    data.addData(new Object[]{additionalLine.getValues(), file.getFileName() + "_rarefaction_add_line", rarefactionCache1.line.color, true, true, extrapolate.get(0).x});
 
                     Data areaData = new Data(new String[]{"values", "key", "color", "area", "dash", "hideTooltip"});
                     xyValues areaXYValues = new xyValues();
@@ -417,7 +417,7 @@ public class AccountAPI extends Controller {
                         areaXYValues.addValue(extrapolate.get(i).x, extrapolate.get(i).ciU);
                     }
 
-                    areaData.addData(new Object[]{areaXYValues.getValues(), file.getFileName() + "_add_area", "#dcdcdc", true, true, true});
+                    areaData.addData(new Object[]{areaXYValues.getValues(), file.getFileName() + "_rarefaction_add_area", "#dcdcdc", true, true, true});
 
                     rarefactionData.add(Json.toJson(areaData.getData()));
                     rarefactionData.add(Json.toJson(data.getData()));

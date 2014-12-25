@@ -162,6 +162,14 @@
                 $scope.changeFileState = function (file, state) {
                     $scope.files[file.fileName].state = state;
                 }
+
+                $scope.isRenderingFilesExists = function() {
+                    var exist = false;
+                    angular.forEach($scope.files, function(file) {
+                        if (file.state === 'rendering') exist = true;
+                    });
+                    return exist;
+                }
             }]
         }
     });
@@ -563,7 +571,9 @@
                                                     break;
                                                 case "end" :
                                                     $rootScope.changeFileState(file, 'rendered');
-                                                    $rootScope.updateVisualisationTab();
+                                                    if (!$rootScope.isRenderingFilesExists()) {
+                                                        $rootScope.updateVisualisationTab();
+                                                    }
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
                                                     socket.close();

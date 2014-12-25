@@ -5851,6 +5851,16 @@ nv.models.lineChart = function() {
                 chart.update();
             });
 
+            function findInDataByKey(key) {
+                var element;
+                data.forEach(function(series) {
+                    if (series.key == key) {
+                        element = series;
+                    }
+                });
+                return element;
+            }
+
             interactiveLayer.dispatch.on('elementMousemove', function(e) {
                 lines.clearHighlights();
                 var singlePoint, pointIndex, pointXLocation, allData = [];
@@ -5866,9 +5876,17 @@ nv.models.lineChart = function() {
                         if (typeof point === 'undefined') return;
                         if (typeof singlePoint === 'undefined') singlePoint = point;
                         if (typeof pointXLocation === 'undefined') pointXLocation = chart.xScale()(chart.x()(point,pointIndex));
+
+                        var rarefactionAddLine = findInDataByKey(series.key + '_rarefaction_add_line');
+                        var value = chart.y()(point, pointIndex);
+                        if (rarefactionAddLine && chart.x()(point,pointIndex) >= rarefactionAddLine.x_start) {
+                            var addPointIndex = nv.interactiveBisect(rarefactionAddLine.values, e.pointXValue, chart.x());
+                            var addPoint = rarefactionAddLine.values[addPointIndex];
+                            value = chart.y()(addPoint, addPointIndex);
+                        }
                         allData.push({
                             key: series.key,
-                            value: chart.y()(point, pointIndex),
+                            value: value,
                             color: color(series,series.seriesIndex),
                             hideTooltip: series.hideTooltip
                         });
@@ -5914,12 +5932,22 @@ nv.models.lineChart = function() {
                     if (typeof point === 'undefined') return;
                     if (typeof pointXLocation === 'undefined') pointXLocation = chart.xScale()(chart.x()(point,pointIndex));
                     var yPos = chart.yScale()(chart.y()(point,pointIndex));
+
+                    var rarefactionAddLine = findInDataByKey(series.key + '_rarefaction_add_line');
+                    var value = chart.y()(point, pointIndex);
+                    if (rarefactionAddLine && chart.x()(point,pointIndex) >= rarefactionAddLine.x_start) {
+                        var addPointIndex = nv.interactiveBisect(rarefactionAddLine.values, e.pointXValue, chart.x());
+                        var addPoint = rarefactionAddLine.values[addPointIndex];
+                        value = chart.y()(addPoint, addPointIndex);
+                    }
+
                     allData.push({
                         point: point,
                         pointIndex: pointIndex,
                         pos: [pointXLocation, yPos],
                         seriesIndex: series.seriesIndex,
-                        series: series
+                        series: series,
+                        hideTooltip: series.hideTooltip
                     });
                 });
 
