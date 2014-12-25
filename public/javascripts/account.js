@@ -500,9 +500,9 @@
                 function isContain(fileName) {
                     var contain = false;
                     angular.forEach($scope.newFiles, function (file) {
-                        if (file.fileName == fileName) contain = true;
+                        if (file.fileName == fileName && file.wait) contain = true;
                     });
-                    return $rootScope.isContain(fileName) || contain;
+                    return $rootScope.isContain(fileName)|| contain;
                 }
 
                 function isCountExceeded() {

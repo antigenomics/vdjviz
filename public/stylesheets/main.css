@@ -142,6 +142,18 @@ html, body {
     text-align: right;
 }
 
+.comparing-table-footer {
+    margin: 10px;
+    width: 98%;
+    text-align: right;
+}
+
+.comparing-table-body {
+    background-color: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-right: 0;
+}
+
 .drag-and-drop-icon {
     margin-top: 40px;
 }
