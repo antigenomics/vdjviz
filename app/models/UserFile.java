@@ -2,6 +2,7 @@ package models;
 
 
 import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import play.data.validation.Constraints;
 import play.mvc.PathBindable;
@@ -11,10 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.*;
 
 @Entity
 public class UserFile extends Model {
@@ -25,6 +23,7 @@ public class UserFile extends Model {
     private Account account;
     private String fileName;
     private String uniqueName;
+    private Long sampleCount;
     private Software softwareType;
     @Constraints.Required
     private String softwareTypeName;
@@ -37,6 +36,7 @@ public class UserFile extends Model {
     public UserFile(Account account, String fileName,
                     String uniqueName, String softwareTypeName,
                     String filePath, String fileDirPath, String fileExtension) {
+
         this.account = account;
         this.fileName = fileName;
         this.uniqueName = uniqueName;
@@ -47,6 +47,13 @@ public class UserFile extends Model {
         this.rendered = false;
         this.rendering = false;
         this.fileExtension = fileExtension;
+
+
+        List<String> sampleFileNames = new ArrayList<>();
+        sampleFileNames.add(filePath);
+        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, softwareType, false);
+        this.sampleCount = sampleCollection.getAt(0).getCount();
+
     }
 
     public Account getAccount() {
@@ -56,6 +63,19 @@ public class UserFile extends Model {
     public String getFileName() {
         return fileName;
     }
+
+    public Long getSampleCount() {
+        return sampleCount;
+    }
+
+    public static Long getMaxSampleCount() {
+        Long max = 0L;
+        for (UserFile userFile : UserFile.find().all()) {
+            if (userFile.getSampleCount() > max) max = userFile.getSampleCount();
+        }
+        return max;
+    }
+
 
     public String getPath() {
         return filePath;

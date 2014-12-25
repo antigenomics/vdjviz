@@ -468,7 +468,6 @@ nv.nearestValueIndex = function (values, searchVal, threshold) {
                 return '';
             }
 
-
             var table = d3.select(document.createElement("table"));
             var theadEnter = table.selectAll("thead")
                 .data([d])
@@ -486,18 +485,10 @@ nv.nearestValueIndex = function (values, searchVal, threshold) {
                 .enter().append("tbody");
 
             var trowEnter = tbodyEnter.selectAll("tr")
-                    .data(function(p) { return p.series; })
+                    .data(function(p) { return p.series})
                     .enter()
                     .append("tr")
-                    .style("display", function(p) {
-                        if (p.hideTooltip) {
-                            return "none";
-                        }
-                        return "block";
-                    })
-                    .classed("highlight", function(p) {
-                        return p.highlight
-                    });
+                    .classed("highlight", function(p) { return p.highlight});
 
             trowEnter.append("td")
                 .classed("legend-color-guide",true)
@@ -5281,7 +5272,6 @@ nv.models.line = function() {
         , getY = function(d) { return d.y } // accessor to get the y value from a data point
         , defined = function(d,i) { return !isNaN(getY(d,i)) && getY(d,i) !== null } // allows a line to be not continuous when it is not defined
         , isArea = function(d) { return d.area } // decides if a line is an area or just a line
-        , isDash = function(d) { return d.dash }
         , clipEdge = false // if true, masks lines within x and y scale
         , x //can be accessed via chart.xScale()
         , y //can be accessed via chart.yScale()
@@ -5421,32 +5411,10 @@ nv.models.line = function() {
                         .apply(this, [d.values])
                 });
 
-            var dashedPaths = groups.selectAll('path.nv-dashed-line')
-                .data(function(d) {return isDash(d) ? [d.values] : []});
 
-            dashedPaths.enter().append('path')
-                .style('stroke-dasharray', ("3, 3"))
-                .attr('class', 'nv-line')
-                .attr('d',
-                d3.svg.line()
-                    .interpolate(interpolate)
-                    .defined(defined)
-                    .x(function(d,i) { return nv.utils.NaNtoZero(x0(getX(d,i))) })
-                    .y(function(d,i) { return nv.utils.NaNtoZero(y0(getY(d,i))) })
-            );
-
-            dashedPaths.watchTransition(renderWatch, 'line: linePaths')
-                .attr('d',
-                d3.svg.line()
-                    .interpolate(interpolate)
-                    .defined(defined)
-                    .x(function(d,i) { return nv.utils.NaNtoZero(x(getX(d,i))) })
-                    .y(function(d,i) { return nv.utils.NaNtoZero(y(getY(d,i))) })
-            );
 
             var linePaths = groups.selectAll('path.nv-line')
-                .data(function(d) { return isDash(d) ? [] : [d.values] });
-
+                .data(function(d) { return [d.values] });
             linePaths.enter().append('path')
                 .attr('class', 'nv-line')
                 .attr('d',
@@ -5626,7 +5594,6 @@ nv.models.lineChart = function() {
     //------------------------------------------------------------
 
     var showTooltip = function(e, offsetElement) {
-
         var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
             top = e.pos[1] + ( offsetElement.offsetTop || 0),
             x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
@@ -5869,8 +5836,7 @@ nv.models.lineChart = function() {
                         allData.push({
                             key: series.key,
                             value: chart.y()(point, pointIndex),
-                            color: color(series,series.seriesIndex),
-                            hideTooltip: series.hideTooltip
+                            color: color(series,series.seriesIndex)
                         });
                     });
                 //Highlight the tooltip entry based on which point the mouse is closest to.

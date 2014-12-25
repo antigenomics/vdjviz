@@ -197,8 +197,10 @@
                 }
 
                 function setActiveFile(file) {
-                    $rootScope.activeFileName = file.fileName;
-                    setActiveState('file');
+                    if (!isRendering(file)) {
+                        $rootScope.activeFileName = file.fileName;
+                        setActiveState('file');
+                    }
                 }
 
                 function isRendering(file){
@@ -1345,16 +1347,16 @@ function rarefactionPlot(data, param) {
         var svg = d3.select(param.place)
             .append("svg")
             .attr("id", "rarefaction-png-export")
-            .style("height", "600px")
+            .style("height", "900px")
             .style("width", width);
 
         var chart = nv.models.lineChart()
             .useInteractiveGuideline(true)
-            .duration(1000)
-            .showLegend(true)
+            .duration(500)
+            .showLegend(false)
             .showYAxis(true)
             .showXAxis(true)
-            .height(500);
+            .height(800);
 
         chart.xAxis
             .axisLabel('Sample size, TCM')

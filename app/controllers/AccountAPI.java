@@ -1,7 +1,13 @@
 package controllers;
 
+import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.diversity.FrequencyTable;
+import com.antigenomics.vdjtools.diversity.Rarefaction;
+import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
@@ -15,13 +21,17 @@ import scala.concurrent.duration.Duration;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ArrayUtils.Data;
+import utils.ArrayUtils.xyValues;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
+import utils.RarefactionColor.RarefactionColor;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -263,7 +273,7 @@ public class AccountAPI extends Controller {
         return ok(Json.toJson(serverResponse.getData()));
     }
 
-    public static Result data() {
+    public static Result data() throws IOException {
         //Identifying user using the Secure Social API
         //Return data for chart
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -351,16 +361,69 @@ public class AccountAPI extends Controller {
         return ok(Json.toJson(serverResponse.getData()));
     }
 
-    private static Result rarefaction(Account account) throws FileNotFoundException {
+    public static class Points {
+        public double x;
+        public double y;
+    }
+
+    public static class RarefactionLineCache {
+        public List<Points> values;
+        public String key;
+        public boolean area;
+        public boolean hideTooltip;
+        public String color;
+    }
+
+    public static class RarefactionCache {
+        public Map<Long, Long> freqTableCache;
+        public RarefactionLineCache line;
+        public RarefactionLineCache areaLine;
+    }
+
+    private static Result rarefaction(Account account) throws IOException {
         //Return rarefaction cache for all files in json format
         List<JsonNode> rarefactionData = new ArrayList<>();
         Data serverResponse = new Data(new String[]{"result", "data"});
+        Long maxCount = UserFile.getMaxSampleCount();
+        int count = 0;
         for (UserFile file : account.getUserfiles()) {
             if (file.isRendered() && !file.isRendering()) {
                 File rarefactionCache = new File(file.getDirectoryPath() + "/rarefaction.cache");
                 FileInputStream cacheFile = new FileInputStream(rarefactionCache);
-                JsonNode rarefactionNode = Json.parse(cacheFile);
-                rarefactionData.add(rarefactionNode);
+                ObjectMapper objectMapper = new ObjectMapper();
+                RarefactionCache rarefactionCache1 = objectMapper.readValue(cacheFile, RarefactionCache.class);
+
+                if (file.getSampleCount() < maxCount) {
+
+                    FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache1.freqTableCache);
+                    Rarefaction rarefaction = new Rarefaction(frequencyTable);
+                    ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount);
+                    Data data = new Data(new String[]{"values", "key", "color", "dash", "hideTooltip"});
+                    xyValues additionalLine = new xyValues();
+                    for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
+                        additionalLine.addValue(rarefactionPoint.x, rarefactionPoint.mean);
+                    }
+                    rarefactionCache1.line.color = RarefactionColor.getColor(count++);
+                    data.addData(new Object[]{additionalLine.getValues(), file.getFileName() + "_add", rarefactionCache1.line.color, true, true});
+
+                    Data areaData = new Data(new String[]{"values", "key", "color", "area", "dash", "hideTooltip"});
+                    xyValues areaXYValues = new xyValues();
+
+                    for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
+                        areaXYValues.addValue(rarefactionPoint.x, rarefactionPoint.ciL);
+                    }
+
+                    for (int i = extrapolate.size() - 1; i >= 0; --i) {
+                        areaXYValues.addValue(extrapolate.get(i).x, extrapolate.get(i).ciU);
+                    }
+
+                    areaData.addData(new Object[]{areaXYValues.getValues(), file.getFileName() + "_add_area", "#dcdcdc", true, true, true});
+
+                    rarefactionData.add(Json.toJson(areaData.getData()));
+                    rarefactionData.add(Json.toJson(data.getData()));
+                }
+                rarefactionData.add(Json.toJson(rarefactionCache1.areaLine));
+                rarefactionData.add(Json.toJson(rarefactionCache1.line));
             }
         }
         serverResponse.addData(new Object[]{"success", rarefactionData});

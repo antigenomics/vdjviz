@@ -9,9 +9,7 @@ import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.basic.SpectratypeV;
 import com.antigenomics.vdjtools.db.*;
-import com.antigenomics.vdjtools.diversity.DiversityEstimates;
-import com.antigenomics.vdjtools.diversity.DownSampler;
-import com.antigenomics.vdjtools.diversity.QuantileStats;
+import com.antigenomics.vdjtools.diversity.*;
 import com.antigenomics.vdjtools.intersection.IntersectionType;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
@@ -27,6 +25,7 @@ import play.libs.Json;
 import utils.ArrayUtils.Data;
 import utils.ArrayUtils.xyValues;
 import utils.CacheType.CacheType;
+import utils.RarefactionColor.RarefactionColor;
 import utils.VColor.VColor;
 
 import java.io.File;
@@ -274,16 +273,31 @@ public class ComputationUtil {
 
 
     private void rarefaction() throws Exception {
-        DownSampler downSampler = new DownSampler(sample);
-        Data data = new Data(new String[]{"values", "key"});
-        Integer stepCount = 100;
-        Integer step = Math.round(sample.getCount() / stepCount);
-        xyValues xyValues = new xyValues(stepCount);
-        for (int i = 0, j = 0; j < stepCount; i += step, ++j) {
-            xyValues.addValue((double) i, (double) downSampler.reSample(i).getDiversity());
+        FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
+        Rarefaction rarefaction = new Rarefaction(frequencyTable);
+        //max
+        ArrayList<Rarefaction.RarefactionPoint> rarefactionPoints = rarefaction.build(sample.getCount());
+        HashMap<String, Object> cacheData = new HashMap<>();
+        cacheData.put("freqTableCache", frequencyTable.getCache());
+        Data mainLine = new Data(new String[]{"values", "key", "area", "color", "hideTooltip"});
+        xyValues mainLineXYValues = new xyValues();
+        for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {
+            mainLineXYValues.addValue(rarefactionPoint.x, rarefactionPoint.mean);
         }
-        data.addData(new Object[]{xyValues.interpolate().getValues(), file.getFileName()});
-        saveCache(CacheType.rarefaction.getCacheFileName(), data.getData());
+
+        Data areaLine = new Data(new String[]{"values", "key", "area", "color", "hideTooltip"});
+        xyValues areaLineXYValues = new xyValues();
+        for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {
+            areaLineXYValues.addValue(rarefactionPoint.x, rarefactionPoint.ciL);
+        }
+        for (int i = rarefactionPoints.size() - 1; i >=0; --i) {
+            areaLineXYValues.addValue(rarefactionPoints.get(i).x, rarefactionPoints.get(i).ciU);
+        }
+        areaLine.addData(new Object[]{areaLineXYValues.getValues(), file.getFileName() + "_area", true, "#dcdcdc", true});
+        mainLine.addData(new Object[]{mainLineXYValues.getValues(), file.getFileName(), false, RarefactionColor.getColor(rarefaction.hashCode()), false});
+        cacheData.put("line", mainLine.getData());
+        cacheData.put("areaLine", areaLine.getData());
+        saveCache(CacheType.rarefaction.getCacheFileName(), cacheData);
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }

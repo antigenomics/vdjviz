@@ -468,7 +468,6 @@ nv.nearestValueIndex = function (values, searchVal, threshold) {
                 return '';
             }
 
-
             var table = d3.select(document.createElement("table"));
             var theadEnter = table.selectAll("thead")
                 .data([d])
@@ -486,18 +485,10 @@ nv.nearestValueIndex = function (values, searchVal, threshold) {
                 .enter().append("tbody");
 
             var trowEnter = tbodyEnter.selectAll("tr")
-                    .data(function(p) { return p.series; })
+                    .data(function(p) { return p.series})
                     .enter()
                     .append("tr")
-                    .style("display", function(p) {
-                        if (p.hideTooltip) {
-                            return "none";
-                        }
-                        return "block";
-                    })
-                    .classed("highlight", function(p) {
-                        return p.highlight
-                    });
+                    .classed("highlight", function(p) { return p.highlight});
 
             trowEnter.append("td")
                 .classed("legend-color-guide",true)
@@ -4996,7 +4987,6 @@ nv.models.legend = function() {
         , getKey = function(d) { return d.key }
         , color = nv.utils.defaultColor()
         , align = true
-        , oneColumn = false
         , rightAlign = true
         , updateState = true   //If true, legend will update data.disabled and trigger a 'stateChange' dispatch.
         , radioButtonMode = false   //If true, clicking legend items will cause it to behave like a radio button. (only one can be selected at a time)
@@ -5008,7 +4998,7 @@ nv.models.legend = function() {
 
     function chart(selection) {
         selection.each(function(data) {
-            var availableWidth = oneColumn ? 1 : width - margin.left - margin.right,
+            var availableWidth = width - margin.left - margin.right,
                 container = d3.select(this);
             nv.utils.initSVG(container);
 
@@ -5210,12 +5200,6 @@ nv.models.legend = function() {
         return chart;
     };
 
-    chart.oneColumn = function(_) {
-        if (!arguments.length) return oneColumn;
-        oneColumn = _;
-        return chart;
-    }
-
     chart.height = function(_) {
         if (!arguments.length) return height;
         height = _;
@@ -5281,7 +5265,6 @@ nv.models.line = function() {
         , getY = function(d) { return d.y } // accessor to get the y value from a data point
         , defined = function(d,i) { return !isNaN(getY(d,i)) && getY(d,i) !== null } // allows a line to be not continuous when it is not defined
         , isArea = function(d) { return d.area } // decides if a line is an area or just a line
-        , isDash = function(d) { return d.dash }
         , clipEdge = false // if true, masks lines within x and y scale
         , x //can be accessed via chart.xScale()
         , y //can be accessed via chart.yScale()
@@ -5421,32 +5404,10 @@ nv.models.line = function() {
                         .apply(this, [d.values])
                 });
 
-            var dashedPaths = groups.selectAll('path.nv-dashed-line')
-                .data(function(d) {return isDash(d) ? [d.values] : []});
 
-            dashedPaths.enter().append('path')
-                .style('stroke-dasharray', ("3, 3"))
-                .attr('class', 'nv-line')
-                .attr('d',
-                d3.svg.line()
-                    .interpolate(interpolate)
-                    .defined(defined)
-                    .x(function(d,i) { return nv.utils.NaNtoZero(x0(getX(d,i))) })
-                    .y(function(d,i) { return nv.utils.NaNtoZero(y0(getY(d,i))) })
-            );
-
-            dashedPaths.watchTransition(renderWatch, 'line: linePaths')
-                .attr('d',
-                d3.svg.line()
-                    .interpolate(interpolate)
-                    .defined(defined)
-                    .x(function(d,i) { return nv.utils.NaNtoZero(x(getX(d,i))) })
-                    .y(function(d,i) { return nv.utils.NaNtoZero(y(getY(d,i))) })
-            );
 
             var linePaths = groups.selectAll('path.nv-line')
-                .data(function(d) { return isDash(d) ? [] : [d.values] });
-
+                .data(function(d) { return [d.values] });
             linePaths.enter().append('path')
                 .attr('class', 'nv-line')
                 .attr('d',
@@ -5626,7 +5587,6 @@ nv.models.lineChart = function() {
     //------------------------------------------------------------
 
     var showTooltip = function(e, offsetElement) {
-
         var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
             top = e.pos[1] + ( offsetElement.offsetTop || 0),
             x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
@@ -5869,8 +5829,7 @@ nv.models.lineChart = function() {
                         allData.push({
                             key: series.key,
                             value: chart.y()(point, pointIndex),
-                            color: color(series,series.seriesIndex),
-                            hideTooltip: series.hideTooltip
+                            color: color(series,series.seriesIndex)
                         });
                     });
                 //Highlight the tooltip entry based on which point the mouse is closest to.
@@ -8046,7 +8005,7 @@ nv.models.multiBar = function() {
                 data[0].values.map(function(d,i) {
                     var posBase = 0, negBase = 0;
                     data.map(function(d) {
-                        var f = d.values[i]
+                        var f = d.values[i];
                         f.size = Math.abs(f.y);
                         if (f.y<0)  {
                             f.y1 = negBase;
@@ -8066,7 +8025,7 @@ nv.models.multiBar = function() {
             var seriesData = (xDomain && yDomain) ? [] : // if we know xDomain and yDomain, no need to calculate
                 data.map(function(d) {
                     return d.values.map(function(d,i) {
-                        return { x: getX(d,i), y: getY(d,i), y0: d.y0, y1: d.y1 }
+                        return { x: getX(d,i), y: getY(d,i), y0: d.y0, y1: d.y1}
                     })
                 });
 
@@ -8152,15 +8111,19 @@ nv.models.multiBar = function() {
             bars.exit().remove();
 
 
-            var barsEnter = bars.enter().append('rect')
-                    .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive'})
+            var barsEnter = bars.enter().append('text')
+                    .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar nv-seqlogo negative' : 'nv-bar nv-seqlogo positive'})
                     .attr('x', function(d,i,j) {
                         return stacked ? 0 : (j * x.rangeBand() / data.length )
                     })
                     .attr('y', function(d) { return y0(stacked ? d.y0 : 0) })
-                    .attr('height', 0)
-                    .attr('width', x.rangeBand() / (stacked ? 1 : data.length) )
+                    .style('cursor', 'pointer')
                     .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',0)'; })
+                    .attr('textLength', x.rangeBand() / (stacked ? 1 : data.length))
+                    .attr('lengthAdjust', 'spacingAndGlyphs')
+                    .text(function(d) {
+                        return d.key;
+                    })
                 ;
             bars
                 .style('fill', function(d,i,j){ return color(d, j, i);  })
@@ -8213,7 +8176,7 @@ nv.models.multiBar = function() {
                     d3.event.stopPropagation();
                 });
             bars
-                .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar negative' : 'nv-bar positive'})
+                .attr('class', function(d,i) { return getY(d,i) < 0 ? 'nv-bar nv-seqlogo negative' : 'nv-bar nv-seqlogo positive'})
                 .attr('transform', function(d,i) { return 'translate(' + x(getX(d,i)) + ',0)'; })
 
             if (barColor) {
@@ -8231,7 +8194,7 @@ nv.models.multiBar = function() {
             if (stacked)
                 barSelection
                     .attr('y', function(d,i) {
-                        return y((stacked ? d.y1 : 0));
+                        return y((stacked ? d.y1 : 0)) + Math.max(Math.abs(y(d.y + (stacked ? d.y0 : 0)) - y((stacked ? d.y0 : 0))),0);
                     })
                     .attr('height', function(d,i) {
                         return Math.max(Math.abs(y(d.y + (stacked ? d.y0 : 0)) - y((stacked ? d.y0 : 0))),0);
@@ -8239,7 +8202,11 @@ nv.models.multiBar = function() {
                     .attr('x', function(d,i) {
                         return stacked ? 0 : (d.series * x.rangeBand() / data.length )
                     })
-                    .attr('width', x.rangeBand() / (stacked ? 1 : data.length) );
+                    .attr('width', x.rangeBand() / (stacked ? 1 : data.length))
+                    .style('font-size', function(d, i) {
+                        return 1.37 * Math.max(Math.abs(y(d.y + (stacked ? d.y0 : 0)) - y((stacked ? d.y0 : 0))),0);
+                    })
+                ;
             else
                 barSelection
                     .attr('x', function(d,i) {
@@ -8247,14 +8214,17 @@ nv.models.multiBar = function() {
                     })
                     .attr('width', x.rangeBand() / data.length)
                     .attr('y', function(d,i) {
-                        return getY(d,i) < 0 ?
+                        return (getY(d,i) < 0 ?
                             y(0) :
                                 y(0) - y(getY(d,i)) < 1 ?
                             y(0) - 1 :
-                            y(getY(d,i)) || 0;
+                            y(getY(d,i)) || 0) + Math.max(Math.abs(y(getY(d,i)) - y(0)),1) || 0;
                     })
                     .attr('height', function(d,i) {
                         return Math.max(Math.abs(y(getY(d,i)) - y(0)),1) || 0;
+                    })
+                    .style('font-size', function(d, i) {
+                        return 1.37 * Math.max(Math.abs(y(getY(d,i)) - y(0)),1) || 0;
                     });
 
             //store old scales for use in transitions on update
@@ -8454,7 +8424,6 @@ nv.models.multiBarChart = function() {
         , showLegend = true
         , showXAxis = true
         , showYAxis = true
-        , legendOnChart = false
         , rightAlignYAxis = false
         , reduceXTicks = true // if false a tick will show for every data point
         , staggerLabels = false
@@ -8635,15 +8604,14 @@ nv.models.multiBarChart = function() {
                 if (multibar.barColor())
                     data.forEach(function(series,i) {
                         series.color = d3.rgb('#ccc').darker(i * 1.5).toString();
-                    })
+                    });
 
                 g.select('.nv-legendWrap')
                     .datum(data)
                     .call(legend);
 
                 if ( margin.top != legend.height()) {
-                    if (!legendOnChart)
-                        margin.top = legend.height();
+                    margin.top = legend.height();
                     availableHeight = (height || parseInt(container.style('height')) || 400)
                         - margin.top - margin.bottom;
                 }
@@ -8871,6 +8839,7 @@ nv.models.multiBarChart = function() {
     // expose chart's sub-components
     chart.dispatch = dispatch;
     chart.multibar = multibar;
+    chart.legend = legend;
     chart.xAxis = xAxis;
     chart.yAxis = yAxis;
     // DO NOT DELETE. This is currently overridden below
@@ -8881,13 +8850,6 @@ nv.models.multiBarChart = function() {
         'id', 'stacked', 'stackOffset', 'delay', 'barColor','groupSpacing');
 
     chart.options = nv.utils.optionsFunc.bind(chart);
-
-    //chart.legend = legend;
-    chart.legend = function(_) {
-        if (!arguments.length) return legend;
-        legend = _;
-        return chart;
-    };
 
     chart.margin = function(_) {
         if (!arguments.length) return margin;
@@ -8903,12 +8865,6 @@ nv.models.multiBarChart = function() {
         width = _;
         return chart;
     };
-
-    chart.legendOnChart = function(_) {
-        if (!arguments.length) return legendOnChart;
-        legendOnChart = _;
-        return chart;
-    }
 
     chart.height = function(_) {
 
