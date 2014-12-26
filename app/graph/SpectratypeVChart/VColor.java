@@ -1,4 +1,4 @@
-package utils.VColor;
+package graph.SpectratypeVChart;
 
 import java.awt.*;
 

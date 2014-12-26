@@ -16,17 +16,25 @@ import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import graph.QuantileStatsChart.Quantile;
+import graph.QuantileStatsChart.QuantileStatsChart;
+import graph.QuantileStatsChart.QuantileStatsChartCreator;
+import graph.RarefactionChart.RarefactionLine;
+import graph.RarefactionChart.RarefactionChart;
+import graph.SpectratypeChart.SpectratypeBar;
+import graph.SpectratypeChart.SpectratypeChart;
+import graph.SpectratypeChart.SpectratypeChartCreator;
+import graph.SpectratypeVChart.SpectratypeVBar;
+import graph.SpectratypeVChart.SpectratypeVChart;
 import models.Account;
-import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
 import play.Logger;
 import play.mvc.WebSocket;
 import models.UserFile;
 import play.libs.Json;
 import utils.ArrayUtils.Data;
-import utils.ArrayUtils.xyValues;
 import utils.CacheType.CacheType;
 import utils.RarefactionColor.RarefactionColor;
-import utils.VColor.VColor;
+import graph.SpectratypeVChart.VColor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -110,57 +118,8 @@ public class ComputationUtil {
     }
 
     private void spectratype() throws Exception {
-
-        Spectratype sp = new Spectratype(false, false);
-        List<Clonotype> topclones = sp.addAllFancy(sample, 10); //top 10 int
-        int[] x_coordinates = sp.getLengths();
-        double[] y_coordinates = sp.getHistogram();
-        int x_min = x_coordinates[0];
-        int x_max = x_coordinates[x_coordinates.length - 1];
-
-        List<HashMap<String, Object>> data = new ArrayList<>();
-        xyValues commonValues = new xyValues();
-        for (int i = 0; i < x_coordinates.length; i++) {
-            commonValues.addValue((double) x_coordinates[i], y_coordinates[i]);
-        }
-        Data commonData = new Data(new String[]{"values", "key", "color"});
-        commonData.addData(new Object[]{commonValues.getValues(), "Other", "#DCDCDC"});
-        int count = 1;
-        for (Clonotype topclone : topclones) {
-            Data topCloneNode = new Data(new String[]{"values", "key", "name", "v", "j", "cdr3aa"});
-            xyValues values = new xyValues();
-            int top_clone_x = topclone.getCdr3nt().length();
-            for (int i = x_min; i <= x_max; i++) {
-                values.addValue((double) i, i != top_clone_x ? 0 : topclone.getFreq());
-            }
-
-            topCloneNode.addData(new Object[]{
-                    values.getValues(),
-                    count++,
-                    topclone.getCdr3nt(),
-                    topclone.getV(),
-                    topclone.getJ(),
-                    topclone.getCdr3aa(),
-            });
-            data.add(topCloneNode.getData());
-        }
-        data.add(commonData.getData());
-        Collections.sort(data, new Comparator<HashMap<String, Object>>() {
-            @Override
-            public int compare(HashMap<String, Object> s1, HashMap<String, Object> s2) {
-                if (s1.get("key").equals("Other")) return -1;
-                if (s2.get("key").equals("Other")) return 1;
-                if (xyValues.getSumY(s1.get("values")) > xyValues.getSumY(s2.get("values"))) return 1;
-                if (xyValues.getSumY(s1.get("values")) < xyValues.getSumY(s2.get("values"))) return -1;
-                return 0;
-            }
-        });
-        String[] colors = new String[]{"#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf", "#74add1", "#abd9e9", "#e0f3f8", "#bababa", "#DCDCDC"};
-        int index = 10;
-        for (HashMap<String, Object> map : data) {
-            map.put("color", colors[index--]);
-        }
-        saveCache(CacheType.spectratype.getCacheFileName(), data);
+        SpectratypeChartCreator spectratypeChartCreator = new SpectratypeChartCreator(file, account, sample);
+        spectratypeChartCreator.create().saveCache();
         serverResponse.changeValue("progress", 30);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -170,55 +129,27 @@ public class ComputationUtil {
         spectratypeV.addAll(sample);
         int default_top = 12;
         Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(default_top);
-        List<Object> data = new ArrayList<>();
+        SpectratypeVChart spectratypeVChart = new SpectratypeVChart();
         for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
-            xyValues values = new xyValues();
-            Data node = new Data(new String[]{"values", "key", "color"});
+            SpectratypeVBar spectratypeVBar = new SpectratypeVBar(key, new VColor(key).getHexVColor());
             int x_coordinates[] = spectratype.getLengths();
             double y_coordinates[] = spectratype.getHistogram();
             for (int i = 0; i < x_coordinates.length; i++) {
-                values.addValue((double) x_coordinates[i], y_coordinates[i]);
+                spectratypeVBar.addPoint((double) x_coordinates[i], y_coordinates[i]);
             }
-            VColor vColor = new VColor(key);
-            node.addData(new Object[]{values.getValues(), key, vColor.getHexVColor()});
-            if (Objects.equals(key, "other")) {
-                data.add(0, node.getData());
-            } else {
-                data.add(node.getData());
-            }
+            spectratypeVChart.addBar(spectratypeVBar);
         }
-        saveCache(CacheType.spectratypeV.getCacheFileName(), data);
+        saveCache(CacheType.spectratypeV.getCacheFileName(), spectratypeVChart.getChart());
         serverResponse.changeValue("progress", 40);
         out.write(Json.toJson(serverResponse.getData()));
     }
 
+
+    //TODO
     private void quantileStats() throws Exception {
-        QuantileStats quantileStats = new QuantileStats(sample, 5);
-        HashMap<String, Object> data = new HashMap<>();
-        List<HashMap<String, Object>> mainChildrens = new ArrayList<>();
-        Data singleton = new Data(new String[]{"name", "size"});
-        singleton.addData(new Object[]{"Singleton", quantileStats.getSingletonFreq()});
-        Data doubleton = new Data(new String[]{"name", "size"});
-        doubleton.addData(new Object[]{"Doubleton", quantileStats.getDoubletonFreq()});
-        mainChildrens.add(singleton.getData());
-        mainChildrens.add(doubleton.getData());
-
-        Data highOrder = new Data(new String[]{"name", "children"});
-        List<HashMap<String, Object>> highOrderChildrens = new ArrayList<>();
-        for (int i = 0; i < quantileStats.getNumberOfQuantiles(); i++) {
-            Data highOrderChild = new Data(new String[]{"name", "size"});
-            highOrderChild.addData(new Object[]{"Q" + (i + 1), quantileStats.getQuantileFrequency(i)});
-            highOrderChildrens.add(highOrderChild.getData());
-        }
-
-        highOrder.addData(new Object[]{"HighOrder", highOrderChildrens});
-        mainChildrens.add(highOrder.getData());
-
-        data.put("name", "data");
-        data.put("children", mainChildrens);
-
-        saveCache(CacheType.quantileStats.getCacheFileName(), data);
+        QuantileStatsChartCreator quantileStatsChartCreator = new QuantileStatsChartCreator(file, account, sample);
+        quantileStatsChartCreator.create().saveCache();
         serverResponse.changeValue("progress", 100);
         out.write(Json.toJson(serverResponse.getData()));
     }
@@ -275,29 +206,20 @@ public class ComputationUtil {
     private void rarefaction() throws Exception {
         FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
         Rarefaction rarefaction = new Rarefaction(frequencyTable);
-        //max
         ArrayList<Rarefaction.RarefactionPoint> rarefactionPoints = rarefaction.build(sample.getCount());
-        HashMap<String, Object> cacheData = new HashMap<>();
-        cacheData.put("freqTableCache", frequencyTable.getCache());
-        Data mainLine = new Data(new String[]{"values", "key", "area", "color", "hideTooltip"});
-        xyValues mainLineXYValues = new xyValues();
+        RarefactionLine line = new RarefactionLine(file.getFileName(), RarefactionColor.getColor(rarefaction.hashCode()), false,  false);
+        RarefactionLine areaLine = new RarefactionLine(file.getFileName() + "_area", "#dcdcdc", true, true);
         for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {
-            mainLineXYValues.addValue(rarefactionPoint.x, rarefactionPoint.mean);
+            line.addPoint(rarefactionPoint.x, rarefactionPoint.mean);
         }
-
-        Data areaLine = new Data(new String[]{"values", "key", "area", "color", "hideTooltip"});
-        xyValues areaLineXYValues = new xyValues();
         for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {
-            areaLineXYValues.addValue(rarefactionPoint.x, rarefactionPoint.ciL);
+            areaLine.addPoint(rarefactionPoint.x, rarefactionPoint.ciL);
         }
         for (int i = rarefactionPoints.size() - 1; i >=0; --i) {
-            areaLineXYValues.addValue(rarefactionPoints.get(i).x, rarefactionPoints.get(i).ciU);
+            areaLine.addPoint(rarefactionPoints.get(i).x, rarefactionPoints.get(i).ciU);
         }
-        areaLine.addData(new Object[]{areaLineXYValues.getValues(), file.getFileName() + "_area", true, "#dcdcdc", true});
-        mainLine.addData(new Object[]{mainLineXYValues.getValues(), file.getFileName(), false, RarefactionColor.getColor(rarefaction.hashCode()), false});
-        cacheData.put("line", mainLine.getData());
-        cacheData.put("areaLine", areaLine.getData());
-        saveCache(CacheType.rarefaction.getCacheFileName(), cacheData);
+        RarefactionChart rarefactionChart = new RarefactionChart(frequencyTable.getCache(), line, areaLine);
+        saveCache(CacheType.rarefaction.getCacheFileName(), rarefactionChart);
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }

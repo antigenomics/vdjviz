@@ -8,6 +8,8 @@ import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import graph.RarefactionChart.RarefactionChart;
+import graph.RarefactionChart.RarefactionLine;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
@@ -372,6 +374,8 @@ public class AccountAPI extends Controller {
         public boolean area;
         public boolean hideTooltip;
         public String color;
+        public boolean dash;
+        public int x_start;
     }
 
     public static class RarefactionCache {
@@ -388,42 +392,31 @@ public class AccountAPI extends Controller {
         int count = 0;
         for (UserFile file : account.getUserfiles()) {
             if (file.isRendered() && !file.isRendering()) {
-                File rarefactionCache = new File(file.getDirectoryPath() + "/rarefaction.cache");
-                FileInputStream cacheFile = new FileInputStream(rarefactionCache);
+                FileInputStream cacheFile = new FileInputStream(new File(file.getDirectoryPath() + "/rarefaction.cache"));
                 ObjectMapper objectMapper = new ObjectMapper();
-                RarefactionCache rarefactionCache1 = objectMapper.readValue(cacheFile, RarefactionCache.class);
-
+                RarefactionCache rarefactionCache = objectMapper.readValue(cacheFile, RarefactionCache.class);
+                rarefactionCache.line.color = RarefactionColor.getColor(count++);
                 if (file.getSampleCount() < maxCount) {
-
-                    FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache1.freqTableCache);
+                    FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache.freqTableCache);
                     Rarefaction rarefaction = new Rarefaction(frequencyTable);
                     ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount);
-                    Data data = new Data(new String[]{"values", "key", "color", "dash", "hideTooltip", "x_start"});
-                    xyValues additionalLine = new xyValues();
+                    RarefactionLine additionalLine = new RarefactionLine(file.getFileName() + "_rarefaction_add_line", rarefactionCache.line.color, false, true, true, extrapolate.get(0).x);
                     for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
-                        additionalLine.addValue(rarefactionPoint.x, rarefactionPoint.mean);
+                        additionalLine.addPoint(rarefactionPoint.x, rarefactionPoint.mean);
                     }
-                    rarefactionCache1.line.color = RarefactionColor.getColor(count++);
-                    data.addData(new Object[]{additionalLine.getValues(), file.getFileName() + "_rarefaction_add_line", rarefactionCache1.line.color, true, true, extrapolate.get(0).x});
-
-                    Data areaData = new Data(new String[]{"values", "key", "color", "area", "dash", "hideTooltip"});
-                    xyValues areaXYValues = new xyValues();
+                    RarefactionLine additionalAreaLine = new RarefactionLine(file.getFileName() + "rarefaction_add_area", "#dcdcdc", true, true, true, extrapolate.get(0).x);
 
                     for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
-                        areaXYValues.addValue(rarefactionPoint.x, rarefactionPoint.ciL);
+                        additionalAreaLine.addPoint(rarefactionPoint.x, rarefactionPoint.ciL);
                     }
-
                     for (int i = extrapolate.size() - 1; i >= 0; --i) {
-                        areaXYValues.addValue(extrapolate.get(i).x, extrapolate.get(i).ciU);
+                        additionalAreaLine.addPoint(extrapolate.get(i).x, extrapolate.get(i).ciU);
                     }
-
-                    areaData.addData(new Object[]{areaXYValues.getValues(), file.getFileName() + "_rarefaction_add_area", "#dcdcdc", true, true, true});
-
-                    rarefactionData.add(Json.toJson(areaData.getData()));
-                    rarefactionData.add(Json.toJson(data.getData()));
+                    rarefactionData.add(Json.toJson(additionalLine));
+                    rarefactionData.add(Json.toJson(additionalAreaLine));
                 }
-                rarefactionData.add(Json.toJson(rarefactionCache1.areaLine));
-                rarefactionData.add(Json.toJson(rarefactionCache1.line));
+                rarefactionData.add(Json.toJson(rarefactionCache.areaLine));
+                rarefactionData.add(Json.toJson(rarefactionCache.line));
             }
         }
         serverResponse.addData(new Object[]{"success", rarefactionData});

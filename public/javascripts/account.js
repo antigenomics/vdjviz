@@ -1023,7 +1023,7 @@ function quantileSunbirstChart(data, param) {
                 return color;
             })
             .style("cursor", function(d) {
-                if (d.children) {
+                if (d.children != null) {
                     return "pointer"
                 }
                 return null;
@@ -1053,7 +1053,7 @@ function quantileSunbirstChart(data, param) {
             .text(function(d) {
                 if (d.name == "data") return null;
                 var label = d.name;
-                if (!d.children) {
+                if (d.children == null) {
                     label += "  " + (d.size.toFixed(2) * 100).toFixed(0) + "%";
                 }
                 return label;
@@ -1091,7 +1091,7 @@ function quantileSunbirstChart(data, param) {
 
         function isParentOf(p, c) {
             if (p === c) return true;
-            if (p.children) {
+            if (p.children != null) {
                 return p.children.some(function(d) {
                     return isParentOf(d, c);
                 });
