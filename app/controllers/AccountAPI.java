@@ -1,14 +1,10 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.diversity.FrequencyTable;
 import com.antigenomics.vdjtools.diversity.Rarefaction;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import graph.RarefactionChart.RarefactionChart;
 import graph.RarefactionChart.RarefactionLine;
 import models.Account;
 import models.LocalUser;
@@ -23,12 +19,11 @@ import scala.concurrent.duration.Duration;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import utils.ArrayUtils.Data;
-import utils.ArrayUtils.xyValues;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
-import utils.RarefactionColor.RarefactionColor;
+import graph.RarefactionChart.RarefactionColor;
 
 import java.io.File;
 import java.io.FileInputStream;

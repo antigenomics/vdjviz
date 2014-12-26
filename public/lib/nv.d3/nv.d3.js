@@ -5853,11 +5853,12 @@ nv.models.lineChart = function() {
 
             function findInDataByKey(key) {
                 var element;
-                data.forEach(function(series) {
-                    if (series.key == key) {
-                        element = series;
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].key == key) {
+                        element = data[i];
+                        break;
                     }
-                });
+                }
                 return element;
             }
 
@@ -5870,26 +5871,31 @@ nv.models.lineChart = function() {
                         return !series.disabled;
                     })
                     .forEach(function(series,i) {
-                        pointIndex = nv.interactiveBisect(series.values, e.pointXValue, chart.x());
-                        lines.highlightPoint(i, pointIndex, true);
-                        var point = series.values[pointIndex];
-                        if (typeof point === 'undefined') return;
-                        if (typeof singlePoint === 'undefined') singlePoint = point;
-                        if (typeof pointXLocation === 'undefined') pointXLocation = chart.xScale()(chart.x()(point,pointIndex));
+                        if (!series.hideTooltip) {
+                            pointIndex = nv.interactiveBisect(series.values, e.pointXValue, chart.x());
+                            lines.highlightPoint(i, pointIndex, true);
+                            var point = series.values[pointIndex];
+                            if (typeof point === 'undefined') return;
+                            if (typeof singlePoint === 'undefined') singlePoint = point;
+                            if (typeof pointXLocation === 'undefined') pointXLocation = chart.xScale()(chart.x()(point, pointIndex));
 
-                        var rarefactionAddLine = findInDataByKey(series.key + '_rarefaction_add_line');
-                        var value = chart.y()(point, pointIndex);
-                        if (rarefactionAddLine && chart.x()(point,pointIndex) >= rarefactionAddLine.x_start) {
-                            var addPointIndex = nv.interactiveBisect(rarefactionAddLine.values, e.pointXValue, chart.x());
-                            var addPoint = rarefactionAddLine.values[addPointIndex];
-                            value = chart.y()(addPoint, addPointIndex);
+
+                            var value = chart.y()(point, pointIndex);
+
+                            var rarefactionAddLine = findInDataByKey(series.key + '_rarefaction_add_line');
+                            if (rarefactionAddLine && chart.x()(point, pointIndex) >= rarefactionAddLine.x_start) {
+                                var addPointIndex = nv.interactiveBisect(rarefactionAddLine.values, e.pointXValue, chart.x());
+                                var addPoint = rarefactionAddLine.values[addPointIndex];
+                                value = chart.y()(addPoint, addPointIndex);
+                            }
+
+                            allData.push({
+                                key: series.key,
+                                value: value,
+                                color: color(series, series.seriesIndex),
+                                hideTooltip: series.hideTooltip
+                            });
                         }
-                        allData.push({
-                            key: series.key,
-                            value: value,
-                            color: color(series,series.seriesIndex),
-                            hideTooltip: series.hideTooltip
-                        });
                     });
                 //Highlight the tooltip entry based on which point the mouse is closest to.
                 if (allData.length > 2) {
@@ -5927,28 +5933,21 @@ nv.models.lineChart = function() {
                     series.seriesIndex = i;
                     return !series.disabled;
                 }).forEach(function(series) {
-                    var pointIndex = nv.interactiveBisect(series.values, e.pointXValue, chart.x());
-                    var point = series.values[pointIndex];
-                    if (typeof point === 'undefined') return;
-                    if (typeof pointXLocation === 'undefined') pointXLocation = chart.xScale()(chart.x()(point,pointIndex));
-                    var yPos = chart.yScale()(chart.y()(point,pointIndex));
+                    if (!series.hideTooltip) {
+                        var pointIndex = nv.interactiveBisect(series.values, e.pointXValue, chart.x());
+                        var point = series.values[pointIndex];
+                        if (typeof point === 'undefined') return;
+                        if (typeof pointXLocation === 'undefined') pointXLocation = chart.xScale()(chart.x()(point, pointIndex));
+                        var yPos = chart.yScale()(chart.y()(point, pointIndex));
 
-                    var rarefactionAddLine = findInDataByKey(series.key + '_rarefaction_add_line');
-                    var value = chart.y()(point, pointIndex);
-                    if (rarefactionAddLine && chart.x()(point,pointIndex) >= rarefactionAddLine.x_start) {
-                        var addPointIndex = nv.interactiveBisect(rarefactionAddLine.values, e.pointXValue, chart.x());
-                        var addPoint = rarefactionAddLine.values[addPointIndex];
-                        value = chart.y()(addPoint, addPointIndex);
+                        allData.push({
+                            point: point,
+                            pointIndex: pointIndex,
+                            pos: [pointXLocation, yPos],
+                            seriesIndex: series.seriesIndex,
+                            series: series
+                        });
                     }
-
-                    allData.push({
-                        point: point,
-                        pointIndex: pointIndex,
-                        pos: [pointXLocation, yPos],
-                        seriesIndex: series.seriesIndex,
-                        series: series,
-                        hideTooltip: series.hideTooltip
-                    });
                 });
 
                 lines.dispatch.elementClick(allData);

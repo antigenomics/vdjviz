@@ -18,4 +18,5 @@ public class RarefactionChart {
         this.line = line;
         this.areaLine = areaLine;
     }
+
 }

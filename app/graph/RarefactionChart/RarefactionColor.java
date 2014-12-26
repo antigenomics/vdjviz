@@ -1,4 +1,4 @@
-package utils.RarefactionColor;
+package graph.RarefactionChart;
 
 
 public class RarefactionColor {

@@ -1,7 +1,6 @@
 package utils;
 
 import com.antigenomics.vdjdb.core.db.CdrDatabase;
-import com.antigenomics.vdjtools.Clonotype;
 import com.antigenomics.vdjtools.db.CdrMatch;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.BasicStats;
@@ -16,16 +15,15 @@ import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.milaboratory.core.tree.TreeSearchParameters;
-import graph.QuantileStatsChart.Quantile;
-import graph.QuantileStatsChart.QuantileStatsChart;
 import graph.QuantileStatsChart.QuantileStatsChartCreator;
+import graph.RarefactionChart.RarefactionChartCreator;
 import graph.RarefactionChart.RarefactionLine;
 import graph.RarefactionChart.RarefactionChart;
-import graph.SpectratypeChart.SpectratypeBar;
-import graph.SpectratypeChart.SpectratypeChart;
 import graph.SpectratypeChart.SpectratypeChartCreator;
 import graph.SpectratypeVChart.SpectratypeVBar;
 import graph.SpectratypeVChart.SpectratypeVChart;
+import graph.SpectratypeVChart.SpectratypeVChartCreator;
+import graph.VJUsageChart.VJUsageChartCreator;
 import models.Account;
 import play.Logger;
 import play.mvc.WebSocket;
@@ -33,7 +31,7 @@ import models.UserFile;
 import play.libs.Json;
 import utils.ArrayUtils.Data;
 import utils.CacheType.CacheType;
-import utils.RarefactionColor.RarefactionColor;
+import graph.RarefactionChart.RarefactionColor;
 import graph.SpectratypeVChart.VColor;
 
 import java.io.File;
@@ -85,33 +83,8 @@ public class ComputationUtil {
     }
 
     private void vjUsageData() throws Exception {
-
-        SegmentUsage segmentUsage = new SegmentUsage(sampleCollection, false);
-        segmentUsage.vUsageHeader();
-        segmentUsage.jUsageHeader();
-        String sampleId = sample.getSampleMetadata().getSampleId();
-        double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
-        List<String> labels = new ArrayList<>();
-        String[] vVector = segmentUsage.vUsageHeader();
-        String[] jVector = segmentUsage.jUsageHeader();
-
-        double[][] matrix = new double[vVector.length + jVector.length][];
-        for (int i = 0; i < vVector.length + jVector.length; i++) {
-            matrix[i] = new double[vVector.length + jVector.length];
-        }
-        for (int i = 0; i < jVector.length; i++) {
-            for (int j = 0; j < vVector.length; j++) {
-                matrix[i][j + jVector.length] = vjMatrix[i][j];
-                matrix[j + jVector.length][i] = vjMatrix[i][j];
-            }
-        }
-
-        Collections.addAll(labels, jVector);
-        Collections.addAll(labels, vVector);
-        HashMap<String, Object> data = new HashMap<>();
-        data.put("matrix", matrix);
-        data.put("labels", labels);
-        saveCache("vjUsage", data);
+        VJUsageChartCreator vjUsageChartCreator = new VJUsageChartCreator(file, account, sampleCollection);
+        vjUsageChartCreator.create().saveCache();
         serverResponse.changeValue("progress", 20);
         out.write(Json.toJson(serverResponse.getData()));
 
@@ -125,28 +98,12 @@ public class ComputationUtil {
     }
 
     private void spectratypeV() throws Exception {
-        SpectratypeV spectratypeV = new SpectratypeV(false, false);
-        spectratypeV.addAll(sample);
-        int default_top = 12;
-        Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(default_top);
-        SpectratypeVChart spectratypeVChart = new SpectratypeVChart();
-        for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
-            Spectratype spectratype = collapsedSpectratypes.get(key);
-            SpectratypeVBar spectratypeVBar = new SpectratypeVBar(key, new VColor(key).getHexVColor());
-            int x_coordinates[] = spectratype.getLengths();
-            double y_coordinates[] = spectratype.getHistogram();
-            for (int i = 0; i < x_coordinates.length; i++) {
-                spectratypeVBar.addPoint((double) x_coordinates[i], y_coordinates[i]);
-            }
-            spectratypeVChart.addBar(spectratypeVBar);
-        }
-        saveCache(CacheType.spectratypeV.getCacheFileName(), spectratypeVChart.getChart());
+        SpectratypeVChartCreator spectratypeVChartCreator = new SpectratypeVChartCreator(file, account, sample);
+        spectratypeVChartCreator.create().saveCache();
         serverResponse.changeValue("progress", 40);
         out.write(Json.toJson(serverResponse.getData()));
     }
 
-
-    //TODO
     private void quantileStats() throws Exception {
         QuantileStatsChartCreator quantileStatsChartCreator = new QuantileStatsChartCreator(file, account, sample);
         quantileStatsChartCreator.create().saveCache();
@@ -204,22 +161,8 @@ public class ComputationUtil {
 
 
     private void rarefaction() throws Exception {
-        FrequencyTable frequencyTable = new FrequencyTable(sample, IntersectionType.Strict);
-        Rarefaction rarefaction = new Rarefaction(frequencyTable);
-        ArrayList<Rarefaction.RarefactionPoint> rarefactionPoints = rarefaction.build(sample.getCount());
-        RarefactionLine line = new RarefactionLine(file.getFileName(), RarefactionColor.getColor(rarefaction.hashCode()), false,  false);
-        RarefactionLine areaLine = new RarefactionLine(file.getFileName() + "_area", "#dcdcdc", true, true);
-        for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {
-            line.addPoint(rarefactionPoint.x, rarefactionPoint.mean);
-        }
-        for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {
-            areaLine.addPoint(rarefactionPoint.x, rarefactionPoint.ciL);
-        }
-        for (int i = rarefactionPoints.size() - 1; i >=0; --i) {
-            areaLine.addPoint(rarefactionPoints.get(i).x, rarefactionPoints.get(i).ciU);
-        }
-        RarefactionChart rarefactionChart = new RarefactionChart(frequencyTable.getCache(), line, areaLine);
-        saveCache(CacheType.rarefaction.getCacheFileName(), rarefactionChart);
+        RarefactionChartCreator rarefactionChartCreator = new RarefactionChartCreator(file, account, sample);
+        rarefactionChartCreator.create().saveCache();
         serverResponse.changeValue("progress", 90);
         out.write(Json.toJson(serverResponse.getData()));
     }
