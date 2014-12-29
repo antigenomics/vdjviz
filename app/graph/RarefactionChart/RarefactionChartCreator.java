@@ -37,7 +37,7 @@ public class RarefactionChartCreator {
 
     public RarefactionChartCreator create() {
 
-        ArrayList<Rarefaction.RarefactionPoint> rarefactionPoints = rarefaction.build(sample.getCount());
+        ArrayList<Rarefaction.RarefactionPoint> rarefactionPoints = rarefaction.build(0, sample.getCount(), 20);
         RarefactionLine line = new RarefactionLine(file.getFileName(), RarefactionColor.getColor(rarefaction.hashCode()), false,  false);
         RarefactionLine areaLine = new RarefactionLine(file.getFileName() + "_area", "#dcdcdc", true, true);
         for (Rarefaction.RarefactionPoint rarefactionPoint : rarefactionPoints) {

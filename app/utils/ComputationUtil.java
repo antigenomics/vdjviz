@@ -147,7 +147,7 @@ public class ComputationUtil {
 
     private void basicStats() throws Exception {
         BasicStats basicStats = new BasicStats(sample);
-        String[] header = BasicStats.getHEADER().split("\t");
+        String[] header = BasicStats.HEADER.split("\t");
         HashMap<String, String> basicStatsCache = new HashMap<>();
         String[] basicStatsValues = basicStats.toString().split("\t");
         basicStatsCache.put("Name", file.getFileName());

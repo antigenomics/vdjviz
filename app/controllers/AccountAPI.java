@@ -394,7 +394,7 @@ public class AccountAPI extends Controller {
                 if (file.getSampleCount() < maxCount) {
                     FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache.freqTableCache);
                     Rarefaction rarefaction = new Rarefaction(frequencyTable);
-                    ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount);
+                    ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount, 5);
                     RarefactionLine additionalLine = new RarefactionLine(file.getFileName() + "_rarefaction_add_line", rarefactionCache.line.color, false, true, true, extrapolate.get(0).x);
                     for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
                         additionalLine.addPoint(rarefactionPoint.x, rarefactionPoint.mean);

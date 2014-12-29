@@ -4,23 +4,26 @@ package graph.RarefactionChart;
 public class RarefactionColor {
 
     private static final String[] colors = new String[]{
-            "#313695",
-            "#fdae61",
-            "#66bd63",
-            "#f4a582",
-            "#5aae61",
-            "#8073ac",
-            "#abdda4",
-            "#35978f",
-            "#ff7f00",
-            "#33a02c",
-            "#fb9a99",
-            "#e31a1c",
-            "#ffff99",
-            "#a6cee3",
-            "#1f78b4",
-            "#b15928",
-            "#ff7f00"
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22",
+            "#17becf",
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c",
+            "#d62728",
+            "#9467bd",
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f",
+            "#bcbd22",
+            "#17becf",
     };
 
     public static String getColor(int i) {

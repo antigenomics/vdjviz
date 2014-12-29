@@ -315,7 +315,7 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
-                $scope.rarefactionExportTypes = ['PNG', 'JPEG'];
+                $scope.rarefactionExportTypes = ['JPEG'];
 
                 $scope.showRarefaction = function () {
                     return $rootScope.state === 'rarefaction';
@@ -1360,7 +1360,7 @@ function rarefactionPlot(data, param) {
             .style("height", "900px")
             .style("width", width);
 
-        var chart = nv.models.lineChart()
+        var chart = nv.models.lineRarefactionChart()
             .useInteractiveGuideline(true)
             .duration(500)
             .showLegend(false)
@@ -1380,9 +1380,6 @@ function rarefactionPlot(data, param) {
         svg.datum(data)
             .call(chart);
 
-        nv.utils.windowResize(function () {
-            chart.update()
-        });
         return chart;
     });
 }
