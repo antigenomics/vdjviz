@@ -48,6 +48,33 @@ public class ComputationUtil {
     private UserFile file;
     private WebSocket.Out<JsonNode> out;
     private Data serverResponse;
+    private ProgressResponse progressResponse;
+
+    private class ProgressResponse {
+        public String result;
+        public String action;
+        public String progress;
+        public String fileName;
+        private WebSocket.Out<JsonNode> out;
+
+        public ProgressResponse(String fileName, WebSocket.Out<JsonNode> out) {
+            this.fileName = fileName;
+            this.out = out;
+            this.result = "ok";
+            this.action = "render";
+            this.progress = "start";
+        }
+
+        public void sendMessage(String progress) {
+            this.progress = progress;
+            sendMessage();
+        }
+
+        public void sendMessage() {
+            out.write(Json.toJson(this));
+        }
+
+    }
 
     public ComputationUtil(UserFile file, WebSocket.Out<JsonNode> out) {
         Software software = file.getSoftwareType();
@@ -56,10 +83,12 @@ public class ComputationUtil {
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         this.sample = sampleCollection.getAt(0);
         this.sampleCollection = sampleCollection;
+        file.setSampleCount(sample.getCount());
         this.file = file;
         this.account = file.getAccount();
         this.out = out;
         this.serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
+        this.progressResponse = new ProgressResponse(file.getFileName(), out);
     }
 
     public Sample getSample() {
@@ -85,30 +114,26 @@ public class ComputationUtil {
     private void vjUsageData() throws Exception {
         VJUsageChartCreator vjUsageChartCreator = new VJUsageChartCreator(file, account, sampleCollection);
         vjUsageChartCreator.create().saveCache();
-        serverResponse.changeValue("progress", 20);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("20");
 
     }
 
     private void spectratype() throws Exception {
         SpectratypeChartCreator spectratypeChartCreator = new SpectratypeChartCreator(file, account, sample);
         spectratypeChartCreator.create().saveCache();
-        serverResponse.changeValue("progress", 30);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("30");
     }
 
     private void spectratypeV() throws Exception {
         SpectratypeVChartCreator spectratypeVChartCreator = new SpectratypeVChartCreator(file, account, sample);
         spectratypeVChartCreator.create().saveCache();
-        serverResponse.changeValue("progress", 40);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("40");
     }
 
     private void quantileStats() throws Exception {
         QuantileStatsChartCreator quantileStatsChartCreator = new QuantileStatsChartCreator(file, account, sample);
         quantileStatsChartCreator.create().saveCache();
-        serverResponse.changeValue("progress", 100);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("100");
     }
 
     private void annotation() throws Exception {
@@ -141,8 +166,7 @@ public class ComputationUtil {
         }
         data.addData(new Object[]{annotationData, header});
         saveCache(CacheType.annotation.getCacheFileName(), data.getData());
-        serverResponse.changeValue("progress", 60);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("60");
     }
 
     private void basicStats() throws Exception {
@@ -155,16 +179,14 @@ public class ComputationUtil {
             basicStatsCache.put(header[i], basicStatsValues[i]);
         }
         saveCache(CacheType.summary.getCacheFileName(), basicStatsCache);
-        serverResponse.changeValue("progress", 60);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("80");
     }
 
 
     private void rarefaction() throws Exception {
         RarefactionChartCreator rarefactionChartCreator = new RarefactionChartCreator(file, account, sample);
         rarefactionChartCreator.create().saveCache();
-        serverResponse.changeValue("progress", 90);
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("90");
     }
 
 
@@ -185,8 +207,7 @@ public class ComputationUtil {
     public void createSampleCache() throws Exception {
         file.changeRenderingState(true);
         Ebean.update(file);
-        serverResponse.addData(new Object[]{"ok", "render", "start", file.getFileName()});
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("start");
         vjUsageData();
         spectratype();
         spectratypeV();
@@ -196,8 +217,7 @@ public class ComputationUtil {
         quantileStats();
         file.changeRenderingState(false);
         file.changeRenderedState(true);
-        serverResponse.changeValue("progress", "end");
-        out.write(Json.toJson(serverResponse.getData()));
+        progressResponse.sendMessage("end");
         Ebean.update(file);
     }
 }

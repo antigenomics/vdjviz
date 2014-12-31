@@ -18,7 +18,6 @@ import play.mvc.*;
 import scala.concurrent.duration.Duration;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
-import utils.ArrayUtils.Data;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -169,7 +168,6 @@ public class AccountAPI extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        Data serverResponse = new Data(new String[]{"result", "message"});
         JsonNode request = request().body().asJson();
 
         File fileDir;
@@ -182,24 +180,20 @@ public class AccountAPI extends Controller {
                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
                 if (file == null) {
                     Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +" have no file named " + fileName);
-                    serverResponse.addData(new Object[]{"error", "You have no file named " + fileName});
-                    return forbidden(Json.toJson(serverResponse.getData()));
+                    return forbidden(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
                 }
                 fileDir = new File(file.getDirectoryPath());
                 files = fileDir.listFiles();
                 if (files == null) {
-                    serverResponse.addData(new Object[]{"error", "File does not exist"});
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("error", "File does not exist")));
                 }
                 try {
                     UserFile.deleteFile(file);
-                    serverResponse.addData(new Object[]{"ok", "Successfully deleted"});
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
                 } catch (Exception e) {
                     Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + "Error while deleting file " + fileName);
                     e.printStackTrace();
-                    serverResponse.addData(new Object[]{"error", "Error while deleting file " + fileName});
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("error", "Error while deleteing file " + fileName)));
                 }
             //Delete all files
             case "deleteAll":
@@ -207,17 +201,14 @@ public class AccountAPI extends Controller {
                     for (UserFile f : account.getUserfiles()) {
                         UserFile.deleteFile(f);
                     }
-                    serverResponse.addData(new Object[]{"ok", ""});
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
                 } catch (Exception e) {
                     Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while deleting files for  " + account.getUserName());
                     e.printStackTrace();
-                    serverResponse.addData(new Object[]{"error", "Error while deleting files"});
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("error", "Error while deleting files")));
                 }
             default:
-                serverResponse.addData(new Object[]{"error", "Invalid action"});
-                return badRequest(Json.toJson(serverResponse.getData()));
+                return badRequest(Json.toJson(new ServerResponse("error", "Invalid action")));
         }
     }
 

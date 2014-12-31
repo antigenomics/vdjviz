@@ -48,11 +48,6 @@ public class UserFile extends Model {
         this.rendering = false;
         this.fileExtension = fileExtension;
 
-
-        List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(filePath);
-        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, softwareType, false);
-        this.sampleCount = sampleCollection.getAt(0).getCount();
     }
 
     public static class FileInformation {
@@ -65,6 +60,10 @@ public class UserFile extends Model {
             this.softwareTypeName = softwareTypeName;
             this.state = state;
         }
+    }
+
+    public void setSampleCount(Long count) {
+        this.sampleCount = count;
     }
 
     public Account getAccount() {
