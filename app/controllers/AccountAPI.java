@@ -305,6 +305,11 @@ public class AccountAPI extends Controller {
 
     private static Result basicStats(Account account) throws FileNotFoundException {
         //Return basicStats cache for all files in json format
+
+        if (account.getFilesCount() == 0) {
+            return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
+        }
+
         List<JsonNode> basicStatsData = new ArrayList<>();
         for (UserFile file : account.getUserfiles()) {
             if (file.isRendered() && !file.isRendering()) {
@@ -343,6 +348,11 @@ public class AccountAPI extends Controller {
         List<JsonNode> rarefactionData = new ArrayList<>();
         Long maxCount = UserFile.getMaxSampleCount();
         int count = 0;
+
+        if (account.getFilesCount() == 0) {
+            return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
+        }
+
         for (UserFile file : account.getUserfiles()) {
             if (file.isRendered() && !file.isRendering()) {
                 FileInputStream cacheFile = new FileInputStream(new File(file.getDirectoryPath() + "/rarefaction.cache"));
@@ -352,7 +362,7 @@ public class AccountAPI extends Controller {
                 if (file.getSampleCount() < maxCount) {
                     FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache.freqTableCache);
                     Rarefaction rarefaction = new Rarefaction(frequencyTable);
-                    ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount, 5);
+                    ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount, 20);
                     RarefactionLine additionalLine = new RarefactionLine(file.getFileName() + "_rarefaction_add_line", rarefactionCache.line.color, false, true, true, extrapolate.get(0).x);
                     for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
                         additionalLine.addPoint(rarefactionPoint.x, rarefactionPoint.mean);

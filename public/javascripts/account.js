@@ -786,7 +786,8 @@ function getData(handleData, param, file) {
                         break;
                 }
             },
-            error: function () {
+            error: function (data) {
+                console.log(data.responseJSON.message);
                 noDataAvailable(param, file);
             }
         });
