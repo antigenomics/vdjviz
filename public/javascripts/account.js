@@ -1398,10 +1398,10 @@ function summaryStats(data, param) {
     thead.append("th").html("Sample");
     thead.append("th").html("Reads");
     thead.append("th").html("Diversity");
-    thead.append("th").html("Mean clone fraction");
-    thead.append("th").html("Median clone fraction");
-    thead.append("th").html("Out of frame count");
-    thead.append("th").html("Out of frame fraction");
+    thead.append("th").html("Mean clonotype frequency");
+    thead.append("th").html("Median clonotype frequency");
+    thead.append("th").html("Non-coding clonotypes");
+    thead.append("th").html("NC clonotypes frequency");
     thead.append("th").html("Mean insert size");
     thead.append("th").html("Mean N(D)N size");
     thead.append("th").html("Mean CDR3 length");
@@ -1412,10 +1412,10 @@ function summaryStats(data, param) {
         {"data": "Name"},                  //Sample
         {"data": "count"},                 //Reads
         {"data": "diversity"},             //Rarefaction
-        {"data": "mean_clone_fraction"},    //Mean clone fraction
-        {"data": "median_clone_fraction"}, //Median clone fraction
-        {"data": "oof_count"},             //Out of frame count
-        {"data": "oof_fraction"},          //Out of frame fraction
+        {"data": "mean_frequency"},        //Mean clonotype frequency
+        {"data": "median_frequency"},      //Median clonotype frequency
+        {"data": "nc_diversity"},          //Non-coding clonotypes
+        {"data": "nc_frequency"},          //NC clonotypes frequency
         {"data": "mean_insert_size"},      //Mean insert size
         {"data": "mean_ndn_size"},         //Mean N(d)N size
         {"data": "mean_cdr3nt_length"},    //Mean CDR3 length

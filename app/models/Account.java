@@ -1,10 +1,13 @@
 package models;
 
 import java.util.*;
+
+import play.Play;
 import play.mvc.PathBindable;
 import static play.data.validation.Constraints.*;
 import javax.persistence.*;
 import play.db.ebean.Model;
+import models.UserFile.FileInformation;
 
 
 @Entity
@@ -25,6 +28,58 @@ public class Account extends Model {
         this.userName = userName;
         this.userDirPath = userDirPath;
         this.userfiles = new ArrayList<>();
+    }
+
+    public class AccountInformation {
+        //Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
+        public String email;
+        public String firstName;
+        public String lastName;
+        public String userName;
+        public Integer filesCount;
+
+        public AccountInformation(String email, String firstName, String lastName, String userName, Integer filesCount) {
+            this.email = email;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.userName = userName;
+            this.filesCount = filesCount;
+        }
+    }
+
+    public class FilesInformation {
+        public List<UserFile.FileInformation> files;
+        public Integer maxFileSize;
+        public Integer maxFilesCount;
+
+        public FilesInformation(List<UserFile.FileInformation> files, Integer maxFileSize, Integer maxFilesCount) {
+            this.files = files;
+            this.maxFileSize = maxFileSize;
+            this.maxFilesCount = maxFilesCount;
+        }
+    }
+
+    public FilesInformation getFilesInformation() {
+        List<UserFile.FileInformation> files = new ArrayList<>();
+        for (UserFile userFile : getUserfiles()) {
+            String state;
+            if (userFile.isRendered()) {
+                state = "rendered";
+            } else if (userFile.isRendering()) {
+                state = "rendering";
+            } else {
+                state = "wait";
+            }
+            files.add(new UserFile.FileInformation(userFile.getFileName(), userFile.getSoftwareTypeName(), state));
+        }
+        Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
+        Integer maxFileSize = Play.application().configuration().getInt("maxFileSize");
+        return new FilesInformation(files, maxFileSize, maxFilesCount);
+    }
+
+
+    public AccountInformation getAccountInformation() {
+        return new AccountInformation(this.user.email, this.user.firstName, this.user.lastName, this.userName, this.getFilesCount());
     }
 
     public List<UserFile> getUserfiles() {

@@ -24,6 +24,9 @@ import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
 import graph.RarefactionChart.RarefactionColor;
+import utils.server.CacheServerResponse;
+import utils.server.ServerResponse;
+import utils.server.WSResponse;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,20 +52,17 @@ public class AccountAPI extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        Data serverResponse = new Data(new String[]{"result", "message"});
 
         if (account == null) {
-            serverResponse.addData(new Object[]{"error", "Unknown error"});
-            return ok(Json.toJson(serverResponse.getData()));
+            return ok(Json.toJson(new ServerResponse("error", "Unknown error")));
         }
 
         //Checking files count
         Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
         if (maxFilesCount > 0) {
             if (account.getFilesCount() >= maxFilesCount) {
-                serverResponse.addData(new Object[]{"error", "You have exceeded the limit of the number of files"});
                 Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
-                return ok(Json.toJson(serverResponse.getData()));
+                return ok(Json.toJson(new ServerResponse("error", "You have exceeded the limit of the number of files")));
             }
         }
 
@@ -71,15 +71,13 @@ public class AccountAPI extends Controller {
         Http.MultipartFormData.FilePart file = body.getFile("files[]");
 
         if (file == null) {
-            serverResponse.addData(new Object[]{"error", "You should upload file"});
-            return ok(Json.toJson(serverResponse.getData()));
+            return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
         }
         Long maxFileSize = Play.application().configuration().getLong("maxFileSize");
         if (maxFileSize > 0) {
             Long sizeMB = file.getFile().length() / 1024;
             if (sizeMB > maxFileSize) {
-                serverResponse.addData(new Object[]{"error", "File is too large"});
-                return ok(Json.toJson(serverResponse.getData()));
+                return ok(Json.toJson(new ServerResponse("error", "File is too large")));
             }
         }
 
@@ -96,16 +94,14 @@ public class AccountAPI extends Controller {
 
         String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
         if (fileName == null || !fileName.matches(pattern)) {
-            serverResponse.addData(new Object[]{"error", "Invalid name"});
-            return ok(Json.toJson(serverResponse.getData()));
+            return ok(Json.toJson(new ServerResponse("error", "Invalid name")));
         }
 
 
         List<UserFile> allFiles = UserFile.findByAccount(account);
         for (UserFile userFile: allFiles) {
             if (userFile.getFileName().equals(fileName)) {
-                serverResponse.addData(new Object[]{"error", "You should use unique names for your files"});
-                return ok(Json.toJson(serverResponse.getData()));
+                return ok(Json.toJson(new ServerResponse("error", "You should use unique names for your files")));
             }
         }
 
@@ -115,9 +111,8 @@ public class AccountAPI extends Controller {
             if (!accountDir.exists()) {
                 Boolean accountDirCreated = accountDir.mkdir();
                 if (!accountDirCreated) {
-                    serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                     Logger.of("user." + account.getUserName()).error("Error creating main directory for user " + account.getUserName());
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
                 }
             }
 
@@ -129,18 +124,16 @@ public class AccountAPI extends Controller {
             if (!fileDir.exists()) {
                 Boolean created = fileDir.mkdir();
                 if (!created) {
-                    serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                     Logger.of("user." + account.getUserName()).error("Error creating file directory for user " + account.getUserName());
-                    return ok(Json.toJson(serverResponse.getData()));
+                    return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
                 }
             }
 
             String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
             Boolean uploaded = uploadedFile.renameTo(new File(account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension));
             if (!uploaded) {
-                serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
                 Logger.of("user." + account.getUserName()).error("Error upload file for user " + account.getUserName());
-                return ok(Json.toJson(serverResponse.getData()));
+                return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
             }
 
             final UserFile newFile = new UserFile(account, fileName,
@@ -150,7 +143,6 @@ public class AccountAPI extends Controller {
 
             //Updating database UserFile <-> Account
             Ebean.save(newFile);
-            serverResponse.addData(new Object[]{"success", ""});
             Integer deleteAfter = Play.application().configuration().getInt("deleteAfter");
             if (deleteAfter > 0) {
                 Akka.system().scheduler().scheduleOnce(
@@ -163,12 +155,11 @@ public class AccountAPI extends Controller {
                         Akka.system().dispatcher()
                 );
             }
-            return ok(Json.toJson(serverResponse.getData()));
+            return ok(Json.toJson(new ServerResponse("success", "Successfully uploaded")));
         } catch (Exception e) {
-            serverResponse.addData(new Object[]{"error", "Server currently unavailable"});
             e.printStackTrace();
             Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
-            return ok(Json.toJson(serverResponse.getData()));
+            return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
         }
     }
 
@@ -236,25 +227,7 @@ public class AccountAPI extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-        List<HashMap<String, Object>> files = new ArrayList<>();
-        for (UserFile file: account.getUserfiles()) {
-            HashMap<String, Object> fileInformation = new HashMap<>();
-            fileInformation.put("fileName", file.getFileName());
-            fileInformation.put("softwareTypeName", file.getSoftwareTypeName());
-            if (file.isRendered()) {
-                fileInformation.put("state", "rendered");
-            } else if (file.isRendering()) {
-                fileInformation.put("state", "rendering");
-            } else {
-                fileInformation.put("state", "wait");
-            }
-            files.add(fileInformation);
-        }
-        Data serverResponse = new Data(new String[]{"files", "maxFileSize", "maxFilesCount"});
-        Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
-        Integer maxFileSize = Play.application().configuration().getInt("maxFileSize");
-        serverResponse.addData(new Object[]{files, maxFileSize, maxFilesCount});
-        return ok(Json.toJson(serverResponse.getData()));
+        return ok(Json.toJson(account.getFilesInformation()));
     }
 
     public static Result accountInformation() {
@@ -263,11 +236,7 @@ public class AccountAPI extends Controller {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
-        Data serverResponse = new Data(new String[]{"result", "data"});
-        Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
-        accountInformation.addData(new Object[]{localUser.email, localUser.firstName, localUser.lastName, account.getUserName(), account.getFilesCount()});
-        serverResponse.addData(new Object[]{"ok", accountInformation.getData()});
-        return ok(Json.toJson(serverResponse.getData()));
+        return ok(Json.toJson(new CacheServerResponse("ok", account.getAccountInformation())));
     }
 
     public static Result data() throws IOException {
@@ -277,13 +246,11 @@ public class AccountAPI extends Controller {
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         Account account = localUser.account;
 
-        Data serverResponse = new Data(new String[]{"result", "message"});
         JsonNode request = request().body().asJson();
         if (!request.findValue("action").asText().equals("data")
                 || request.findValue("fileName") == null
                 || request.findValue("type") == null) {
-            serverResponse.addData(new Object[]{"error", "Invalid action"});
-            return badRequest(Json.toJson(serverResponse.getData()));
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
         }
 
         String fileName = request.findValue("fileName").asText();
@@ -307,45 +274,38 @@ public class AccountAPI extends Controller {
             e.printStackTrace();
             Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                     ": error while requesting " + type + " data");
-            serverResponse.addData(new Object[]{"error", "Unknown type " + type});
-            return badRequest(Json.toJson(serverResponse.getData()));
+            return badRequest(Json.toJson(new ServerResponse("error", "Unknown type " + type)));
         }
     }
 
     private static Result cache(UserFile file, String cacheName, Account account) {
         //Return cache file transformed into json format
-        Data serverResponse = new Data(new String[]{"result", "message", "data"});
         if (file == null) {
             Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                     " have no requested file");
-            serverResponse.addData(new Object[]{"error", "You have no this file", null});
-            return forbidden(Json.toJson(serverResponse.getData()));
+            return badRequest(Json.toJson(new CacheServerResponse("error", "You have no requested file", null)));
         }
         if (file.isRendered()) {
             try {
                 File jsonFile = new File(file.getDirectoryPath() + "/" + cacheName + ".cache");
                 FileInputStream fis = new FileInputStream(jsonFile);
                 JsonNode jsonData = Json.parse(fis);
-                serverResponse.addData(new Object[]{"success", "", jsonData});
-                return ok(Json.toJson(serverResponse.getData()));
+                return ok(Json.toJson(new CacheServerResponse("success", jsonData)));
             } catch (Exception e) {
                 Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                         ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
-                serverResponse.addData(new Object[]{"error", "Cache file does not exist", null});
-                return forbidden(Json.toJson(serverResponse.getData()));
+                return badRequest(Json.toJson(new CacheServerResponse("error", "Cache file does not exist", null)));
             }
         } else {
             Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " File: "
                     + file.getFileName() + " did not rendered");
-            serverResponse.addData(new Object[]{"error", "File did not rendered", null});
-            return forbidden(Json.toJson(serverResponse.getData()));
+            return badRequest(Json.toJson(new CacheServerResponse("error", "File did not rendered yet")));
         }
     }
 
     private static Result basicStats(Account account) throws FileNotFoundException {
         //Return basicStats cache for all files in json format
         List<JsonNode> basicStatsData = new ArrayList<>();
-        Data serverResponse = new Data(new String[]{"result", "data"});
         for (UserFile file : account.getUserfiles()) {
             if (file.isRendered() && !file.isRendering()) {
                 File basicStatsCache = new File(file.getDirectoryPath() + "/basicStats.cache");
@@ -354,17 +314,16 @@ public class AccountAPI extends Controller {
                 basicStatsData.add(basicStatsNode);
             }
         }
-        serverResponse.addData(new Object[]{"success", basicStatsData});
-        return ok(Json.toJson(serverResponse.getData()));
+        return ok(Json.toJson(new CacheServerResponse("success", basicStatsData)));
     }
 
-    public static class Points {
+    public static class Point {
         public double x;
         public double y;
     }
 
     public static class RarefactionLineCache {
-        public List<Points> values;
+        public List<Point> values;
         public String key;
         public boolean area;
         public boolean hideTooltip;
@@ -382,7 +341,6 @@ public class AccountAPI extends Controller {
     private static Result rarefaction(Account account) throws IOException {
         //Return rarefaction cache for all files in json format
         List<JsonNode> rarefactionData = new ArrayList<>();
-        Data serverResponse = new Data(new String[]{"result", "data"});
         Long maxCount = UserFile.getMaxSampleCount();
         int count = 0;
         for (UserFile file : account.getUserfiles()) {
@@ -414,8 +372,7 @@ public class AccountAPI extends Controller {
                 rarefactionData.add(Json.toJson(rarefactionCache.line));
             }
         }
-        serverResponse.addData(new Object[]{"success", rarefactionData});
-        return ok(Json.toJson(serverResponse.getData()));
+        return ok(Json.toJson(new CacheServerResponse("success", rarefactionData)));
     }
 
     public static WebSocket<JsonNode> ws() {
@@ -428,20 +385,17 @@ public class AccountAPI extends Controller {
             public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
                 in.onMessage(new F.Callback<JsonNode>() {
                     public void invoke(JsonNode event) {
-                        Data serverResponse = new Data(new String[]{"result", "action", "fileName", "message"});
                         switch (event.findValue("action").asText()) {
                             case "render" :
                                 String fileName = event.findValue("data").findValue("fileName").asText();
                                 if (fileName == null) {
-                                    serverResponse.addData(new Object[]{"error", "render", "", "Missing file name"});
-                                    out.write(Json.toJson(serverResponse.getData()));
+                                    out.write(Json.toJson(new WSResponse("error", "render", "Unknown", "Missing file name")));
                                     return;
                                 }
 
                                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
                                 if (file == null) {
-                                    serverResponse.addData(new Object[]{"error", "render", fileName, "You have no file named " + fileName});
-                                    out.write(Json.toJson(serverResponse.getData()));
+                                    out.write(Json.toJson(new WSResponse("error", "render", fileName, "You have no file named " + fileName)));
                                     return;
                                 }
                                 file.changeRenderingState(true);
@@ -454,16 +408,14 @@ public class AccountAPI extends Controller {
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail
                                     Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while rendering file " + file.getFileName());
-                                    serverResponse.addData(new Object[]{"error", "render", fileName, "Error while rendering"});
-                                    out.write(Json.toJson(serverResponse.getData()));
+                                    out.write(Json.toJson(new WSResponse("error", "render", fileName, "Error while rendering")));
                                     UserFile.deleteFile(file);
                                     e.printStackTrace();
                                     return;
                                 }
                             default:
                                 Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Render: unknown type");
-                                serverResponse.addData(new Object[]{"error", "render", "", "Unknown Action"});
-                                out.write(Json.toJson(serverResponse.getData()));
+                                out.write(Json.toJson(new WSResponse("error", "render", "", "Unknown action")));
                                 out.close();
                         }
                     }

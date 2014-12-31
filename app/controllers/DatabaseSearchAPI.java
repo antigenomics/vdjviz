@@ -28,18 +28,35 @@ public class DatabaseSearchAPI extends Controller {
         return ok(views.html.databaseSearch.databaseSearchMainPage.render(null));
     }
 
+    public static class DatabaseHit {
+        public String input;
+        public String alignment;
+        public Float score;
+        public Integer uid;
+        public List<List<String>> annotations;
+        public String[] annotationsHeader;
+
+        public DatabaseHit(String input, String alignment, Float score, Integer uid, List<List<String>> annotations, String[] annotationsHeader) {
+            this.input = input;
+            this.alignment = alignment;
+            this.score = score;
+            this.uid = uid;
+            this.annotations = annotations;
+            this.annotationsHeader = annotationsHeader;
+        }
+    }
+
     public static Result searchInput() {
         JsonNode request = request().body().asJson();
         String input = request.findValue("input").asText();
         if (input.equals("")) {
             return badRequest("Empty input field");
         }
-        int uid = 1;
-        List<Object> data = new ArrayList<>();
+        Integer uid = 1;
+        List<DatabaseHit> data = new ArrayList<>();
         CdrDatabase cdrDatabase = new CdrDatabase();
         CdrDatabaseSearcher cdrDatabaseSearcher = new CdrDatabaseSearcher(cdrDatabase);
         for (CdrSearchResult cdrSearchResult : cdrDatabaseSearcher.search(input)) {
-            Data dataNode = new Data(new String[]{"input", "alignment", "score", "uid", "annotations", "annotationsHeader"});
             List<List<String>> annotations = new ArrayList<>();
             for (CdrEntry cdrEntry : cdrSearchResult.getCdrEntrySet()) {
                 List<String> anNode = cdrEntry.getAnnotation();
@@ -47,15 +64,14 @@ public class DatabaseSearchAPI extends Controller {
                 anNode.add(0, cdrEntry.v);
                 annotations.add(anNode);
             }
-            dataNode.addData(new Object[]{
+            data.add(new DatabaseHit(
                     input,                                                          //input
                     cdrSearchResult.getAlignment().getAlignmentHelper().toString(), //alignment
                     cdrSearchResult.getAlignment().getScore(),                      //score
                     uid++,                                                          //uid
                     annotations,                                                    //annotations
                     cdrDatabase.annotationHeader                                    //header
-            });
-            data.add(dataNode.getData());
+                    ));
         }
         return ok(Json.toJson(data));
     }

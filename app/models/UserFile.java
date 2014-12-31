@@ -53,7 +53,18 @@ public class UserFile extends Model {
         sampleFileNames.add(filePath);
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, softwareType, false);
         this.sampleCount = sampleCollection.getAt(0).getCount();
+    }
 
+    public static class FileInformation {
+        public String fileName;
+        public String softwareTypeName;
+        public String state;
+
+        public FileInformation(String fileName, String softwareTypeName, String state) {
+            this.fileName = fileName;
+            this.softwareTypeName = softwareTypeName;
+            this.state = state;
+        }
     }
 
     public Account getAccount() {
