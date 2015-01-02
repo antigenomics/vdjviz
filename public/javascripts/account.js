@@ -438,6 +438,14 @@
                     return added + waiting;
                 }
 
+                function isRenderingFilesExist() {
+                    var exist = false;
+                    angular.forEach($scope.newFiles, function(file) {
+                        if (file.state === 'rendering') exist = true;
+                    })
+                    return exist;
+                }
+
                 function addNew(uid, fileName, fileExtension, data)  {
                     $scope.$apply(function () {
                         $scope.newFiles[uid] = {
@@ -471,6 +479,7 @@
                 function updateResult(file, result) {
                     $scope.$apply(function () {
                         file.result = result;
+                        file.state = 'rendered';
                     })
                 }
 
@@ -571,12 +580,14 @@
                                                     break;
                                                 case "end" :
                                                     $rootScope.changeFileState(file, 'rendered');
-                                                    if (!$rootScope.isRenderingFilesExists()) {
-                                                        $rootScope.updateVisualisationTab();
-                                                    }
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
                                                     socket.close();
+                                                    console.log(isRenderingFilesExist());
+                                                    if (!isRenderingFilesExist()) {
+                                                        $rootScope.updateVisualisationTab();
+                                                    }
+
                                                     break;
                                                 default:
                                                     updateProgress(file, 50 + (event.progress / 2));
@@ -770,7 +781,6 @@ function getData(handleData, param, file) {
                 "type": param.type
             }),
             success: function (data) {
-                loaded(param.place);
                 if (!data) {
                     location.reload();
                 }
@@ -787,8 +797,13 @@ function getData(handleData, param, file) {
                 }
             },
             error: function (data) {
-                console.log(data.responseJSON.message);
                 noDataAvailable(param, file);
+            },
+            complete: function(data) {
+                //For automatic reload on logout
+                if (typeof data.responseJSON === 'undefined') location.reload();
+                if (data.responseJSON.message != null) console.log(data.responseJSON.message);
+                loaded(param.place);
             }
         });
     }

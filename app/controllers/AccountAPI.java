@@ -285,12 +285,12 @@ public class AccountAPI extends Controller {
             } catch (Exception e) {
                 Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                         ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
-                return badRequest(Json.toJson(new CacheServerResponse("error", "Cache file does not exist", null)));
+                return ok(Json.toJson(new CacheServerResponse("error", "Cache file does not exist", null)));
             }
         } else {
             Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " File: "
                     + file.getFileName() + " did not rendered");
-            return badRequest(Json.toJson(new CacheServerResponse("error", "File did not rendered yet")));
+            return ok(Json.toJson(new CacheServerResponse("error", "File did not rendered yet")));
         }
     }
 

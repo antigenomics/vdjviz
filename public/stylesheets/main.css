@@ -71,6 +71,10 @@ html, body {
     border-color: red;
 }
 
+.main-content {
+    min-height: 1000px;
+}
+
 .main-tbody-files .name-td {
     width: 15%;
 }
