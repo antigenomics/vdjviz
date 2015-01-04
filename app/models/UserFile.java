@@ -47,6 +47,7 @@ public class UserFile extends Model {
         this.rendered = false;
         this.rendering = false;
         this.fileExtension = fileExtension;
+        this.sampleCount = 0L;
 
     }
 
@@ -187,7 +188,6 @@ public class UserFile extends Model {
 
     public static void asyncDeleteFile(UserFile file) {
         UserFile f = UserFile.findById(file.id);
-        System.out.println(file.id + " | " + f);
         deleteFile(f);
     }
 }

@@ -6,6 +6,7 @@ import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.RarefactionChart.RarefactionLine;
+import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
@@ -139,7 +140,12 @@ public class AccountAPI extends Controller {
                     unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
                     account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension,
                     fileDir.getAbsolutePath(), fileExtension);
-            newFile.setSampleCount();
+
+            try {
+                newFile.setSampleCount();
+            } catch (Exception e) {
+                return ok(Json.toJson(new ServerResponse("error", "Error while computation")));
+            }
 
             //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");
             Integer maxClonotypesCount = Play.application().configuration().getInt("maxClonotypesCount");
@@ -241,7 +247,7 @@ public class AccountAPI extends Controller {
         return ok(Json.toJson(new CacheServerResponse("ok", account.getAccountInformation())));
     }
 
-    public static Result data() throws IOException {
+    public static Result data() throws Exception {
         //Identifying user using the Secure Social API
         //Return data for chart
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -267,7 +273,8 @@ public class AccountAPI extends Controller {
                     case "summary":
                         return basicStats(account);
                     case "rarefaction":
-                        return rarefaction(account);
+                        Boolean needToCreateNew = request.findValue("new").asBoolean();
+                        return rarefaction(account, needToCreateNew);
                     default:
                         throw new IllegalArgumentException("Unknown type " + type);
                 }
@@ -345,46 +352,14 @@ public class AccountAPI extends Controller {
         public RarefactionLineCache areaLine;
     }
 
-    private static Result rarefaction(Account account) throws IOException {
-        //Return rarefaction cache for all files in json format
-        List<JsonNode> rarefactionData = new ArrayList<>();
-        Long maxCount = UserFile.getMaxSampleCount();
-        int count = 0;
+    private static Result rarefaction(Account account, Boolean needToCreateNew) throws Exception {
 
         if (account.getFilesCount() == 0) {
             return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
         }
 
-        for (UserFile file : account.getUserfiles()) {
-            if (file.isRendered() && !file.isRendering()) {
-                FileInputStream cacheFile = new FileInputStream(new File(file.getDirectoryPath() + "/rarefaction.cache"));
-                ObjectMapper objectMapper = new ObjectMapper();
-                RarefactionCache rarefactionCache = objectMapper.readValue(cacheFile, RarefactionCache.class);
-                rarefactionCache.line.color = RarefactionColor.getColor(count++);
-                if (file.getSampleCount() < maxCount) {
-                    FrequencyTable frequencyTable = new FrequencyTable(rarefactionCache.freqTableCache);
-                    Rarefaction rarefaction = new Rarefaction(frequencyTable);
-                    ArrayList<Rarefaction.RarefactionPoint> extrapolate = rarefaction.extrapolate(maxCount, 20);
-                    RarefactionLine additionalLine = new RarefactionLine(file.getFileName() + "_rarefaction_add_line", rarefactionCache.line.color, false, true, true, extrapolate.get(0).x);
-                    for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
-                        additionalLine.addPoint(rarefactionPoint.x, rarefactionPoint.mean);
-                    }
-                    RarefactionLine additionalAreaLine = new RarefactionLine(file.getFileName() + "rarefaction_add_area", "#dcdcdc", true, true, true, extrapolate.get(0).x);
-
-                    for (Rarefaction.RarefactionPoint rarefactionPoint : extrapolate) {
-                        additionalAreaLine.addPoint(rarefactionPoint.x, rarefactionPoint.ciL);
-                    }
-                    for (int i = extrapolate.size() - 1; i >= 0; --i) {
-                        additionalAreaLine.addPoint(extrapolate.get(i).x, extrapolate.get(i).ciU);
-                    }
-                    rarefactionData.add(Json.toJson(additionalLine));
-                    rarefactionData.add(Json.toJson(additionalAreaLine));
-                }
-                rarefactionData.add(Json.toJson(rarefactionCache.areaLine));
-                rarefactionData.add(Json.toJson(rarefactionCache.line));
-            }
-        }
-        return ok(Json.toJson(new CacheServerResponse("success", rarefactionData)));
+        RarefactionChart rarefactionChart = new RarefactionChart(account);
+        return ok(Json.toJson(new CacheServerResponse("success", rarefactionChart.create(needToCreateNew))));
     }
 
     public static WebSocket<JsonNode> ws() {

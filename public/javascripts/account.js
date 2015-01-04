@@ -12,6 +12,7 @@
             controller: ['$scope', '$http', function ($scope, $http) {
                 //private parameters
                 var uid = 0;
+                var needToCreateNew = true;
 
                 var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
                     return {
@@ -73,6 +74,7 @@
                 };
 
                 $scope.addFileToList = function (file) {
+                    needToCreateNew = true;
                     $scope.files[file.fileName] = {
                         uid: uid++,
                         fileName: file.fileName,
@@ -119,6 +121,10 @@
                     return !!(fileName in $scope.files);
                 };
 
+                $scope.isNeedToCreateNew = function() {
+                    return needToCreateNew;
+                };
+
                 $scope.updateVisualisationTab = function () {
                     var param = {};
                     switch ($scope.state) {
@@ -141,6 +147,8 @@
                             param.place = '.rarefaction-visualisation-tab';
                             param.fileName = 'all';
                             param.type = 'rarefaction';
+                            param.needToCreateNew = needToCreateNew;
+                            needToCreateNew = false;
                             getData(rarefactionPlot, param);
                             break;
                         case 'summary':
@@ -778,7 +786,8 @@ function getData(handleData, param, file) {
             data: JSON.stringify({
                 "action": "data",
                 "fileName": param.fileName,
-                "type": param.type
+                "type": param.type,
+                "new": param.needToCreateNew
             }),
             success: function (data) {
                 if (!data) {
