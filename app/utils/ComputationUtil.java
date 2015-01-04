@@ -83,7 +83,6 @@ public class ComputationUtil {
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
         this.sample = sampleCollection.getAt(0);
         this.sampleCollection = sampleCollection;
-        file.setSampleCount(sample.getCount());
         this.file = file;
         this.account = file.getAccount();
         this.out = out;

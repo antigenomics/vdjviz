@@ -62,8 +62,12 @@ public class UserFile extends Model {
         }
     }
 
-    public void setSampleCount(Long count) {
-        this.sampleCount = count;
+    public void setSampleCount() {
+        Software software = getSoftwareType();
+        List<String> sampleFileNames = new ArrayList<>();
+        sampleFileNames.add(getPath());
+        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
+        this.sampleCount = sampleCollection.getAt(0).getCount();
     }
 
     public Account getAccount() {
@@ -163,8 +167,27 @@ public class UserFile extends Model {
         Ebean.delete(file);
     }
 
+    public static void cleanTemporaryFiles(UserFile file) {
+        File fileDir = new File(file.fileDirPath);
+        File[] files = fileDir.listFiles();
+        if (files == null) {
+            fileDir.delete();
+            Ebean.delete(file);
+            return;
+        }
+        for (File cache : files) {
+            try {
+                Files.deleteIfExists(cache.toPath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        fileDir.delete();
+    }
+
     public static void asyncDeleteFile(UserFile file) {
         UserFile f = UserFile.findById(file.id);
+        System.out.println(file.id + " | " + f);
         deleteFile(f);
     }
 }

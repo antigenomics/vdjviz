@@ -139,6 +139,17 @@ public class AccountAPI extends Controller {
                     unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
                     account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension,
                     fileDir.getAbsolutePath(), fileExtension);
+            newFile.setSampleCount();
+
+            //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");
+            Integer maxClonotypesCount = Play.application().configuration().getInt("maxClonotypesCount");
+
+            if (maxClonotypesCount > 0) {
+                if (newFile.getSampleCount() > maxClonotypesCount) {
+                    UserFile.cleanTemporaryFiles(newFile);
+                    return ok(Json.toJson(new ServerResponse("error", "Number of clonotypes should be less than " + maxClonotypesCount)));
+                }
+            }
 
             //Updating database UserFile <-> Account
             Ebean.save(newFile);
