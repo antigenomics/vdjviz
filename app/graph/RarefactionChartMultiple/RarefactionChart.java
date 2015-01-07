@@ -49,7 +49,7 @@ public class RarefactionChart {
         if (needToCreateNew) {
             Long maxCount = UserFile.getMaxSampleCount();
             Integer count = 0;
-            for (UserFile userFile : account.getUserfiles()) {
+            for (UserFile userFile : account.getRenderedUserFiles()) {
                 Software software = userFile.getSoftwareType();
                 List<String> sampleFileNames = new ArrayList<>();
                 sampleFileNames.add(userFile.getPath());
@@ -83,9 +83,9 @@ public class RarefactionChart {
                 for (int i = values.size() - 1; i >= 0; --i) {
                     areaLine.addPoint(values.get(i).x, values.get(i).ciU);
                 }
+                addLine(areaLine);
                 addLine(line);
                 addLine(additionalLine);
-                addLine(areaLine);
             }
             created = true;
             saveCache();

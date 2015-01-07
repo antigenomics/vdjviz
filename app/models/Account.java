@@ -95,6 +95,14 @@ public class Account extends Model {
         return userfiles;
     }
 
+    public List<UserFile> getRenderedUserFiles() {
+        List<UserFile> renderedUserFiles = new ArrayList<>();
+        for (UserFile userfile : userfiles) {
+            if (userfile.isRendered()) renderedUserFiles.add(userfile);
+        }
+        return renderedUserFiles;
+    }
+
     public String getUserName() {
         return userName;
     }
