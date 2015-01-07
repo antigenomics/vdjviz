@@ -17,6 +17,12 @@ import java.util.*;
 @Entity
 public class UserFile extends Model {
 
+    enum RenderState {
+        RENDERED,
+        RENDERING,
+        WAIT
+    }
+
     @Id
     private Long id;
     @ManyToOne
@@ -30,8 +36,7 @@ public class UserFile extends Model {
     private String filePath;
     private String fileDirPath;
     private String fileExtension;
-    private Boolean rendered;
-    private Boolean rendering;
+    private RenderState renderState;
 
     public UserFile(Account account, String fileName,
                     String uniqueName, String softwareTypeName,
@@ -44,23 +49,26 @@ public class UserFile extends Model {
         this.softwareTypeName = softwareTypeName;
         this.filePath = filePath;
         this.fileDirPath = fileDirPath;
-        this.rendered = false;
-        this.rendering = false;
         this.fileExtension = fileExtension;
         this.sampleCount = 0L;
+        this.renderState = RenderState.WAIT;
 
     }
 
     public static class FileInformation {
         public String fileName;
         public String softwareTypeName;
-        public String state;
+        public Integer state;
 
-        public FileInformation(String fileName, String softwareTypeName, String state) {
+        public FileInformation(String fileName, String softwareTypeName, Integer state) {
             this.fileName = fileName;
             this.softwareTypeName = softwareTypeName;
             this.state = state;
         }
+    }
+
+    public RenderState getRenderState() {
+        return renderState;
     }
 
     public void setSampleCount() {
@@ -101,12 +109,14 @@ public class UserFile extends Model {
     }
 
     public Boolean isRendered() {
-        return rendered;
+        return renderState.equals(RenderState.RENDERED);
     }
 
     public Boolean isRendering() {
-        return rendering;
+        return renderState.equals(RenderState.RENDERING);
     }
+
+    public Boolean isWait() { return renderState.equals(RenderState.WAIT); }
 
     public String getFileExtension() {
         return fileExtension;
@@ -124,12 +134,16 @@ public class UserFile extends Model {
         return id;
     }
 
-    public void changeRenderedState(Boolean state) {
-        rendered = state;
+    public void rendered() {
+        renderState = RenderState.RENDERED;
     }
 
-    public void changeRenderingState(Boolean state) {
-        rendering = state;
+    public void rendering() {
+        renderState = RenderState.RENDERING;
+    }
+
+    public void waitRender() {
+        renderState = RenderState.WAIT;
     }
 
     public static UserFile findById(Long id) {

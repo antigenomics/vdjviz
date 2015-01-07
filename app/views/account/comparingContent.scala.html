@@ -42,8 +42,8 @@
                         <tr ng-repeat="file in files">
                             <td>{{ file.fileName }}</td>
                             <td>
-                                <div ng-show="file.state == 'rendering'">File is rendering</div>
-                                <ul class="nav nav-pills nav-comparing" ng-hide="file.state == 'rendering'">
+                                <div ng-show="isRendering(file)">File is rendering</div>
+                                <ul class="nav nav-pills nav-comparing" ng-show="isRendered(file)">
                                     <li ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showItem(file, tab)" ng-class="{'active':file.meta[tab.type].comparing}">
                                         <a>{{tab.tabName}}</a>
                                     </li>

@@ -62,15 +62,7 @@ public class Account extends Model {
     public FilesInformation getFilesInformation() {
         List<UserFile.FileInformation> files = new ArrayList<>();
         for (UserFile userFile : getUserfiles()) {
-            String state;
-            if (userFile.isRendered()) {
-                state = "rendered";
-            } else if (userFile.isRendering()) {
-                state = "rendering";
-            } else {
-                state = "wait";
-            }
-            files.add(new UserFile.FileInformation(userFile.getFileName(), userFile.getSoftwareTypeName(), state));
+            files.add(new UserFile.FileInformation(userFile.getFileName(), userFile.getSoftwareTypeName(), userFile.getRenderState().ordinal()));
         }
         Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
         Integer maxFileSize = Play.application().configuration().getInt("maxFileSize");

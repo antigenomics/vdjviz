@@ -204,8 +204,6 @@ public class ComputationUtil {
     }
 
     public void createSampleCache() throws Exception {
-        file.changeRenderingState(true);
-        Ebean.update(file);
         progressResponse.sendMessage("start");
         vjUsageData();
         spectratype();
@@ -214,9 +212,8 @@ public class ComputationUtil {
         basicStats();
         rarefaction();
         quantileStats();
-        file.changeRenderingState(false);
-        file.changeRenderedState(true);
-        progressResponse.sendMessage("end");
+        file.rendered();
         Ebean.update(file);
+        progressResponse.sendMessage("end");
     }
 }

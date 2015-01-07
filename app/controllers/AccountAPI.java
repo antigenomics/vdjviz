@@ -1,11 +1,7 @@
 package controllers;
 
-import com.antigenomics.vdjtools.diversity.FrequencyTable;
-import com.antigenomics.vdjtools.diversity.Rarefaction;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import graph.RarefactionChart.RarefactionLine;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
 import models.LocalUser;
@@ -23,7 +19,6 @@ import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
-import graph.RarefactionChart.RarefactionColor;
 import utils.server.CacheServerResponse;
 import utils.server.ServerResponse;
 import utils.server.WSResponse;
@@ -31,7 +26,6 @@ import utils.server.WSResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -385,12 +379,13 @@ public class AccountAPI extends Controller {
                                     out.write(Json.toJson(new WSResponse("error", "render", fileName, "You have no file named " + fileName)));
                                     return;
                                 }
-                                file.changeRenderingState(true);
+                                file.rendering();
                                 Ebean.update(file);
                                 try {
                                     //Trying to render cache files for sample
                                     ComputationUtil computationUtil = new ComputationUtil(file, out);
                                     computationUtil.createSampleCache();
+                                    out.close();
                                     return;
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail

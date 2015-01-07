@@ -2,7 +2,16 @@
  * Created by bvdmitri on 13.11.14.
  */
 
+
+
 (function () {
+
+    var RenderState = {
+        RENDERED: 0,
+        RENDERING: 1,
+        WAIT: 2
+    };
+
     var app = angular.module('accountPage', []);
 
     //Main Directive
@@ -48,6 +57,7 @@
                 $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/account/api/files'})
                         .success(function (data) {
+                            console.log(data);
                             $scope.initialized = true;
                             $scope.maxFilesCount = data["maxFilesCount"];
                             $scope.maxFileSize = data["maxFileSize"];
@@ -163,18 +173,18 @@
                 };
 
                 $scope.deleteFileFromList = function (fileName) {
-                    newFlag = true;
+                    needToCreateNew = true;
                     delete $scope.files[fileName];
                 };
 
                 $scope.changeFileState = function (file, state) {
                     $scope.files[file.fileName].state = state;
-                }
+                };
 
                 $scope.isRenderingFilesExists = function() {
                     var exist = false;
                     angular.forEach($scope.files, function(file) {
-                        if (file.state === 'rendering') exist = true;
+                        if (file.state === RenderState.RENDERING) exist = true;
                     });
                     return exist;
                 }
@@ -220,7 +230,7 @@
                 }
 
                 function isRendering(file){
-                    return file.state === 'rendering';
+                    return file.state === RenderState.RENDERING;
                 }
 
                 function isActiveState(state) {
@@ -449,7 +459,7 @@
                 function isRenderingFilesExist() {
                     var exist = false;
                     angular.forEach($scope.newFiles, function(file) {
-                        if (file.state === 'rendering') exist = true;
+                        if (file.state === RenderState.RENDERING) exist = true;
                     })
                     return exist;
                 }
@@ -461,7 +471,7 @@
                             fileName: fileName,
                             softwareTypeName: 'mitcr',
                             fileExtension: fileExtension,
-                            state: 'rendering',
+                            state: RenderState.RENDERING,
                             wait: true,
                             tooltip: '',
                             progress: 0,
@@ -487,7 +497,7 @@
                 function updateResult(file, result) {
                     $scope.$apply(function () {
                         file.result = result;
-                        file.state = 'rendered';
+                        file.state = RenderState.RENDERED;
                     })
                 }
 
@@ -587,7 +597,7 @@
                                                     $rootScope.addFileToList(file);
                                                     break;
                                                 case "end" :
-                                                    $rootScope.changeFileState(file, 'rendered');
+                                                    $rootScope.changeFileState(file, RenderState.RENDERED);
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
                                                     socket.close();
@@ -678,8 +688,16 @@
                     return $rootScope.state === 'comparing';
                 };
 
+                $scope.isRendered = function(file) {
+                    return file.state === RenderState.RENDERED;
+                };
+
+                $scope.isRendering = function(file) {
+                    return file.state === RenderState.RENDERING;
+                };
+
                 $scope.showItem = function (file, tab) {
-                    if (file.state != 'rendering') {
+                    if (file.state != RenderState.RENDERING) {
                         if (!$rootScope.files[file.fileName].meta[tab.type].comparingCache) {
                             var param = {
                                 fileName: file.fileName,
