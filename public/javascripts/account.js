@@ -435,7 +435,8 @@
 
                 function changeCommonSoftwareType() {
                     angular.forEach($scope.newFiles, function (file) {
-                        file.softwareTypeName = $scope.commonSoftwareType;
+                        if (file.wait)
+                            file.softwareTypeName = $scope.commonSoftwareType;
                     });
                 }
 
@@ -501,7 +502,7 @@
                             fileName: fileName,
                             softwareTypeName: 'mitcr',
                             fileExtension: fileExtension,
-                            state: RenderState.RENDERING,
+                            state: RenderState.WAIT,
                             wait: true,
                             tooltip: '',
                             progress: 0,
