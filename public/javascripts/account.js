@@ -340,8 +340,32 @@
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
                 $scope.rarefactionExportTypes = ['JPEG'];
+                $scope.area = 'Hide';
+
+                $scope.changeArea = function() {
+                    d3.select('.rarefaction-visualisation-tab')
+                        .selectAll('.nv-area')
+                        .style('visibility', function() {
+                            switch ($scope.area) {
+                                case 'Hide':
+                                    return 'hidden';
+                                case 'Show':
+                                    return 'visible';
+                                default:
+                                    return 'visible';
+                            }
+                        });
+
+                    if ($scope.area === 'Show') {
+                        $scope.area = 'Hide'
+                    } else {
+                        $scope.area = 'Show'
+                    }
+
+                };
 
                 $scope.showRarefaction = function () {
+                    if ($rootScope.state !== htmlState.RAREFACTION) $scope.area = 'Hide';
                     return $rootScope.state === htmlState.RAREFACTION;
                 };
 
@@ -1516,7 +1540,9 @@ function summaryStats(data, param) {
 
 function loading(place) {
     var d3Place = d3.select(place);
-    d3Place.style("display", "block");
+        d3Place.html("");
+        d3Place.style("display", "block");
+
     var loading = d3Place.append("div").attr("class", "loading");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
     loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");

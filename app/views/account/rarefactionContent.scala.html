@@ -1,6 +1,7 @@
 <div class="rarefaction-tab" ng-show="showRarefaction()">
     <h3>Rarefaction
-    <button ng-repeat="type in rarefactionExportTypes" class="btn btn-default pull-right" ng-click="exportRarefaction(type)">Export to {{ type }}</button>
+        <button ng-repeat="type in rarefactionExportTypes" class="btn btn-default pull-right" ng-click="exportRarefaction(type)">Export to {{ type }}</button>
+        <button class="btn btn-default pull-right" ng-click="changeArea()">{{ area }} area</button>
     </h3>
     <hr>
     <div class="rarefaction-visualisation-tab"></div>
