@@ -1,5 +1,8 @@
 package models;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 
 import play.Play;
@@ -8,6 +11,8 @@ import static play.data.validation.Constraints.*;
 import javax.persistence.*;
 import play.db.ebean.Model;
 import models.UserFile.FileInformation;
+import utils.CacheType.CacheType;
+import utils.server.Configuration;
 
 
 @Entity
@@ -51,11 +56,13 @@ public class Account extends Model {
         public List<UserFile.FileInformation> files;
         public Integer maxFileSize;
         public Integer maxFilesCount;
+        public Boolean rarefactionCache;
 
-        public FilesInformation(List<UserFile.FileInformation> files, Integer maxFileSize, Integer maxFilesCount) {
+        public FilesInformation(List<FileInformation> files, Integer maxFileSize, Integer maxFilesCount, Boolean rarefactionCache) {
             this.files = files;
             this.maxFileSize = maxFileSize;
             this.maxFilesCount = maxFilesCount;
+            this.rarefactionCache = rarefactionCache;
         }
     }
 
@@ -64,9 +71,19 @@ public class Account extends Model {
         for (UserFile userFile : getUserfiles()) {
             files.add(new UserFile.FileInformation(userFile.getFileName(), userFile.getSoftwareTypeName(), userFile.getRenderState().ordinal()));
         }
-        Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
-        Integer maxFileSize = Play.application().configuration().getInt("maxFileSize");
-        return new FilesInformation(files, maxFileSize, maxFilesCount);
+
+        File jsonFile = new File(getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
+        Boolean rarefactionCache = !jsonFile.exists();
+
+        return new FilesInformation(files, Configuration.getMaxFileSize(), Configuration.getMaxFilesCount(), rarefactionCache);
+    }
+
+    public void cleanAllFiles() throws IOException {
+        for (UserFile f : getUserfiles()) {
+            UserFile.deleteFile(f);
+        }
+        File rarefactionCache = new File(getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
+        Files.deleteIfExists(rarefactionCache.toPath());
     }
 
 

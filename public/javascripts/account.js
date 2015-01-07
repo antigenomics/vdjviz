@@ -12,6 +12,14 @@
         WAIT: 2
     };
 
+    var htmlState = {
+        ACCOUNT_INFORMATION: 0,
+        FILE: 1,
+        RAREFACTION: 2,
+        SUMMARY: 3,
+        COMPARING: 4
+    };
+
     var app = angular.module('accountPage', []);
 
     //Main Directive
@@ -41,7 +49,7 @@
                 $scope.maxFilesCount = 0;
                 $scope.maxFileSize = 0;
                 $scope.files = {};
-                $scope.state = 'accountInformation';
+                $scope.state = htmlState.ACCOUNT_INFORMATION;
                 $scope.activeFileName = '';
                 $scope.visualisationTabs = {
                     vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
@@ -57,13 +65,13 @@
                 $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/account/api/files'})
                         .success(function (data) {
-                            console.log(data);
                             $scope.initialized = true;
                             $scope.maxFilesCount = data["maxFilesCount"];
                             $scope.maxFileSize = data["maxFileSize"];
                             angular.forEach(data["files"], function (file) {
                             $scope.addFileToList(file);
-                        })
+                        });
+                            needToCreateNew = data["rarefactionCache"];
                         })
                         .error(function() {
                             $scope.errorInit = true;
@@ -138,7 +146,7 @@
                 $scope.updateVisualisationTab = function () {
                     var param = {};
                     switch ($scope.state) {
-                        case 'file':
+                        case htmlState.FILE:
                             var file = $scope.files[$scope.activeFileName];
                             param = {
                                 fileName: file.fileName,
@@ -153,7 +161,7 @@
                                 file.meta[$scope.activeTab.type].cached = true;
                             }
                             break;
-                        case 'rarefaction':
+                        case htmlState.RAREFACTION:
                             param.place = '.rarefaction-visualisation-tab';
                             param.fileName = 'all';
                             param.type = 'rarefaction';
@@ -161,7 +169,7 @@
                             needToCreateNew = false;
                             getData(rarefactionPlot, param);
                             break;
-                        case 'summary':
+                        case htmlState.SUMMARY:
                             param.place = '.summary-visualisation-tab';
                             param.fileName = 'all';
                             param.type = 'summary';
@@ -212,6 +220,7 @@
                 $scope.isActiveFile = isActiveFile;
                 $scope.isActiveState = isActiveState;
                 $scope.isRendering = isRendering;
+                $scope.htmlState = htmlState;
 
                 function showNewFilesTable() {
                     $("#add-new-file").click();
@@ -225,7 +234,7 @@
                 function setActiveFile(file) {
                     if (!isRendering(file)) {
                         $rootScope.activeFileName = file.fileName;
-                        setActiveState('file');
+                        setActiveState(htmlState.FILE);
                     }
                 }
 
@@ -238,7 +247,7 @@
                 }
 
                 function isActiveFile(file) {
-                    return file.fileName === $rootScope.activeFileName && isActiveState('file');
+                    return file.fileName === $rootScope.activeFileName && isActiveState(htmlState.FILE);
                 }
 
                 function isFilesEmpty() {
@@ -249,19 +258,16 @@
                     $http.post('/account/api/delete', {
                         action: 'delete',
                         fileName: file.fileName
-                    }).success(function () {
-                        if (($rootScope.state === 'file' && file.fileName === $rootScope.activeFileName) || Object.keys($rootScope.files).length == 1) {
-                            $rootScope.state = 'accountInformation'
-                        } else if (!isActiveState('file')) {
+                    }).success(function (data) {
+                        console.log(data.message);
+                        $rootScope.deleteFileFromList(file.fileName);
+                        if ((isActiveFile(file.fileName)) || Object.keys($rootScope.files).length == 1) {
+                            $rootScope.state = htmlState.ACCOUNT_INFORMATION;
+                        } else if (!isActiveState(htmlState.FILE)) {
                             $rootScope.updateVisualisationTab();
                         }
-                        $("#sidebar_file_" + file.uid).animate({
-                            right: "1000px"
-                        }, 500, function() {
-                            $scope.$apply(function () {
-                                $rootScope.deleteFileFromList(file.fileName);
-                            })
-                        });
+                    }).error(function(data) {
+                        console.log(data.message);
                     });
                 }
 
@@ -269,7 +275,7 @@
                     $http.post('/account/api/delete', {action: 'deleteAll'})
                         .success(function () {
                             $rootScope.files = {};
-                            $rootScope.state = 'accountInformation';
+                            $rootScope.state = htmlState.ACCOUNT_INFORMATION;
                         });
                 }
             }]
@@ -299,7 +305,7 @@
                 };
 
                 $scope.showTab = function () {
-                    return $rootScope.state === 'file';
+                    return $rootScope.state === htmlState.FILE;
                 };
 
                 $scope.showFile = function (file) {
@@ -318,7 +324,7 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
                 $scope.showAccountInformation = function () {
-                    return $rootScope.state === 'accountInformation';
+                    return $rootScope.state === htmlState.ACCOUNT_INFORMATION;
                 }
             }]
         }
@@ -336,7 +342,7 @@
                 $scope.rarefactionExportTypes = ['JPEG'];
 
                 $scope.showRarefaction = function () {
-                    return $rootScope.state === 'rarefaction';
+                    return $rootScope.state === htmlState.RAREFACTION;
                 };
 
                 $scope.exportRarefaction = function (type) {
@@ -355,7 +361,7 @@
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
                 $scope.showSummary = function () {
-                    return $rootScope.state === 'summary';
+                    return $rootScope.state === htmlState.SUMMARY;
                 }
             }]
         }
@@ -685,7 +691,11 @@
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
 
                 $scope.showComparing = function () {
-                    return $rootScope.state === 'comparing';
+                    return $rootScope.state === htmlState.COMPARING;
+                };
+
+                $scope.isComparing = function(file, tab) {
+                    return file.meta[tab.type].comparing;
                 };
 
                 $scope.isRendered = function(file) {

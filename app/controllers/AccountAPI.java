@@ -20,6 +20,7 @@ import utils.CommonUtil;
 import utils.ComputationUtil;
 import org.apache.commons.io.FilenameUtils;
 import utils.server.CacheServerResponse;
+import utils.server.Configuration;
 import utils.server.ServerResponse;
 import utils.server.WSResponse;
 
@@ -51,10 +52,9 @@ public class AccountAPI extends Controller {
             return ok(Json.toJson(new ServerResponse("error", "Unknown error")));
         }
 
-        //Checking files count
-        Integer maxFilesCount = Play.application().configuration().getInt("maxFilesCount");
-        if (maxFilesCount > 0) {
-            if (account.getFilesCount() >= maxFilesCount) {
+        //Checking files count;
+        if (Configuration.getMaxFilesCount() > 0) {
+            if (account.getFilesCount() >= Configuration.getMaxFilesCount()) {
                 Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
                 return ok(Json.toJson(new ServerResponse("error", "You have exceeded the limit of the number of files")));
             }
@@ -66,11 +66,11 @@ public class AccountAPI extends Controller {
 
         if (file == null) {
             return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
-        }
-        Long maxFileSize = Play.application().configuration().getLong("maxFileSize");
-        if (maxFileSize > 0) {
+        };
+
+        if (Configuration.getMaxFileSize() > 0) {
             Long sizeMB = file.getFile().length() / 1024;
-            if (sizeMB > maxFileSize) {
+            if (sizeMB > Configuration.getMaxFileSize()) {
                 return ok(Json.toJson(new ServerResponse("error", "File is too large")));
             }
         }
@@ -141,13 +141,12 @@ public class AccountAPI extends Controller {
                 return ok(Json.toJson(new ServerResponse("error", "Error while computation")));
             }
 
-            //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");
-            Integer maxClonotypesCount = Play.application().configuration().getInt("maxClonotypesCount");
+            //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");;
 
-            if (maxClonotypesCount > 0) {
-                if (newFile.getSampleCount() > maxClonotypesCount) {
+            if (Configuration.getMaxClonotypesCount() > 0) {
+                if (newFile.getSampleCount() > Configuration.getMaxClonotypesCount()) {
                     UserFile.cleanTemporaryFiles(newFile);
-                    return ok(Json.toJson(new ServerResponse("error", "Number of clonotypes should be less than " + maxClonotypesCount)));
+                    return ok(Json.toJson(new ServerResponse("error", "Number of clonotypes should be less than " + Configuration.getMaxClonotypesCount())));
                 }
             }
 
@@ -209,9 +208,7 @@ public class AccountAPI extends Controller {
             //Delete all files
             case "deleteAll":
                 try {
-                    for (UserFile f : account.getUserfiles()) {
-                        UserFile.deleteFile(f);
-                    }
+                    account.cleanAllFiles();
                     return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
                 } catch (Exception e) {
                     Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while deleting files for  " + account.getUserName());
@@ -323,27 +320,6 @@ public class AccountAPI extends Controller {
             }
         }
         return ok(Json.toJson(new CacheServerResponse("success", basicStatsData)));
-    }
-
-    public static class Point {
-        public double x;
-        public double y;
-    }
-
-    public static class RarefactionLineCache {
-        public List<Point> values;
-        public String key;
-        public boolean area;
-        public boolean hideTooltip;
-        public String color;
-        public boolean dash;
-        public int x_start;
-    }
-
-    public static class RarefactionCache {
-        public Map<Long, Long> freqTableCache;
-        public RarefactionLineCache line;
-        public RarefactionLineCache areaLine;
     }
 
     private static Result rarefaction(Account account, Boolean needToCreateNew) throws Exception {

@@ -2,19 +2,16 @@ package graph.RarefactionChartMultiple;
 
 
 import com.antigenomics.vdjtools.Software;
-import com.antigenomics.vdjtools.diversity.DiversityType;
 import com.antigenomics.vdjtools.diversity.FrequencyTable;
 import com.antigenomics.vdjtools.diversity.Rarefaction;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.fasterxml.jackson.databind.JsonNode;
-import graph.RarefactionChart.*;
 import models.Account;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;
 import utils.CacheType.CacheType;
-import utils.server.CacheServerResponse;
 
 import java.io.File;
 import java.io.FileInputStream;

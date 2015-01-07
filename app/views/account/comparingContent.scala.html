@@ -22,12 +22,6 @@
             </div>
             <div class="modal-body comparing-table-body">
                 <table class="table modal-file-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                    </thead>
                     <tbody class="main-tbody-comparing-files">
                         <tr>
                             <td>Show all</td>
@@ -44,7 +38,7 @@
                             <td>
                                 <div ng-show="isRendering(file)">File is rendering</div>
                                 <ul class="nav nav-pills nav-comparing" ng-show="isRendered(file)">
-                                    <li ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showItem(file, tab)" ng-class="{'active':file.meta[tab.type].comparing}">
+                                    <li ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showItem(file, tab)" ng-class="{'active':isComparing(file, tab)}">
                                         <a>{{tab.tabName}}</a>
                                     </li>
                                 </ul>
