@@ -138,7 +138,7 @@ public class AccountAPI extends Controller {
             try {
                 newFile.setSampleCount();
             } catch (Exception e) {
-                return ok(Json.toJson(new ServerResponse("error", "Error while computation")));
+                return ok(Json.toJson(new ServerResponse("error", "Error while rendering")));
             }
 
             //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");;

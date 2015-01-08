@@ -13,6 +13,7 @@ public class VColor {
 
     private String findColor(String vGene) {
         String fPart = vGene.contains("-") ? vGene.substring(0, vGene.indexOf("-")) : vGene;
+        String sPart = vGene.contains("-") ? vGene.substring(vGene.indexOf("-") + 1, vGene.length()) : null;
         String hexColor;
         switch (fPart) {
             case "TRBV1":
@@ -105,11 +106,26 @@ public class VColor {
             case "TRBV30":
                 hexColor = "80cdc1";
                 break;
+            case "IGHV1":
+                hexColor = "dddddd";
+                break;
+            case "IGHV2":
+                hexColor = "cbcbcb";
+                break;
+            case "IGHV3":
+                hexColor = "bbbbbb";
+                break;
+            case "IGHV4":
+                hexColor = "cccccc";
+                break;
+            case "IGHV5":
+                hexColor = "dcdcdc";
+                break;
             default:
-                hexColor = "DCDCDC";
+                hexColor = "dcdcdc";
         }
-        if (vGene.contains("-")) {
-            Integer scale = Integer.parseInt(vGene.substring(vGene.indexOf("-") + 1));
+        if (sPart != null) {
+            Integer scale = sPart.contains("-") ? Integer.parseInt(sPart.substring(0, sPart.indexOf("-"))) : Integer.parseInt(sPart);
             hexColor = vColorDarker(hexColor, scale);
         }
         return hexColor;
