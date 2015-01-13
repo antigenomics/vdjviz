@@ -5,6 +5,12 @@ import java.awt.*;
 
 public class RarefactionColor {
 
+    private int count;
+
+    public RarefactionColor() {
+        this.count = -1;
+    }
+
     private static final String[] colors = new String[]{
             "1f77b4",
             "ff7f0e",
@@ -28,11 +34,12 @@ public class RarefactionColor {
             "17becf",
     };
 
-    public static String getColor(int i) {
-        return "#" + darker(colors[i % colors.length], i / colors.length);
+    public String getNext() {
+        count++;
+        return "#" + darker(colors[count % colors.length], count / colors.length);
     }
 
-    private static String darker(String hex, int scale) {
+    private String darker(String hex, int scale) {
         Integer intVal = Integer.parseInt(hex, 16);
         Integer R = intVal & 0xff0000;
         Integer G = intVal & 0x00ff00;

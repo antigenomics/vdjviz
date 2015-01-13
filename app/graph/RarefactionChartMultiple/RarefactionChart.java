@@ -48,7 +48,7 @@ public class RarefactionChart {
 
         if (needToCreateNew) {
             Long maxCount = UserFile.getMaxSampleCount();
-            Integer count = 0;
+            RarefactionColor rarefactionColor = new RarefactionColor();
             for (UserFile userFile : account.getRenderedUserFiles()) {
                 Software software = userFile.getSoftwareType();
                 List<String> sampleFileNames = new ArrayList<>();
@@ -59,7 +59,7 @@ public class RarefactionChart {
                 Rarefaction rarefaction = new Rarefaction(frequencyTable);
                 ArrayList<Rarefaction.RarefactionPoint> values = rarefaction.build(0, maxCount, 40);
 
-                String color = RarefactionColor.getColor(count++);
+                String color = rarefactionColor.getNext();
                 RarefactionLine line = new RarefactionLine(userFile.getFileName(), color, false, false);
                 RarefactionLine additionalLine = new RarefactionLine(userFile.getFileName() + "_rarefaction_add_line", color, false, true, true, userFile.getSampleCount());
                 RarefactionLine areaLine = new RarefactionLine(userFile.getFileName() + "_area", "#dcdcdc", true, true);

@@ -41,7 +41,7 @@ public class SpectratypeVChartCreator {
         Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(defaultTop);
         for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
-            SpectratypeVBar spectratypeVBar = new SpectratypeVBar(key, new VColor(key).getHexVColor());
+            SpectratypeVBar spectratypeVBar = new SpectratypeVBar(key, VColor.getColor(key));
             int x_coordinates[] = spectratype.getLengths();
             double y_coordinates[] = spectratype.getHistogram();
             for (int i = 0; i < x_coordinates.length; i++) {

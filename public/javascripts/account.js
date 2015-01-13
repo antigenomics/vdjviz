@@ -183,6 +183,9 @@
                 $scope.deleteFileFromList = function (fileName) {
                     needToCreateNew = true;
                     delete $scope.files[fileName];
+                    if ($scope.files.length == 0) {
+                        $scope.state = htmlState.ACCOUNT_INFORMATION;
+                    }
                 };
 
                 $scope.changeFileState = function (file, state) {
@@ -632,7 +635,6 @@
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
                                                     socket.close();
-                                                    console.log(isRenderingFilesExist());
                                                     if (!isRenderingFilesExist()) {
                                                         $rootScope.updateVisualisationTab();
                                                     }
