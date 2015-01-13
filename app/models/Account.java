@@ -103,6 +103,14 @@ public class Account extends Model {
         return renderedUserFiles;
     }
 
+    public long getMaxSampleCount() {
+        long max = 0l;
+        for (UserFile userFile : getRenderedUserFiles()) {
+            max = userFile.getSampleCount() > max ? userFile.getSampleCount() : max;
+        }
+        return max;
+    }
+
     public String getUserName() {
         return userName;
     }

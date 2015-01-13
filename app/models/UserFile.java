@@ -91,15 +91,6 @@ public class UserFile extends Model {
         return sampleCount;
     }
 
-    public static Long getMaxSampleCount() {
-        Long max = 0L;
-        for (UserFile userFile : UserFile.find().all()) {
-            if (userFile.getSampleCount() > max) max = userFile.getSampleCount();
-        }
-        return max;
-    }
-
-
     public String getPath() {
         return filePath;
     }

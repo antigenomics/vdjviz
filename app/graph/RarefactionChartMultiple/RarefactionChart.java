@@ -47,7 +47,7 @@ public class RarefactionChart {
     public JsonNode create(Boolean needToCreateNew) throws Exception {
 
         if (needToCreateNew) {
-            Long maxCount = UserFile.getMaxSampleCount();
+            Long maxCount = account.getMaxSampleCount();
             RarefactionColor rarefactionColor = new RarefactionColor();
             for (UserFile userFile : account.getRenderedUserFiles()) {
                 Software software = userFile.getSoftwareType();
