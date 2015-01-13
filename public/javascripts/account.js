@@ -210,7 +210,7 @@
             templateUrl: '/account/filesSidebar',
             tranclude: true,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', '$http', function ($scope, $rootScope, $http) {
+            controller: ['$scope', '$rootScope', '$http', '$log', function ($scope, $rootScope, $http, $log) {
 
 
                 //Public functions
@@ -262,15 +262,15 @@
                         action: 'delete',
                         fileName: file.fileName
                     }).success(function (data) {
-                        console.log(data.message);
-                        $rootScope.deleteFileFromList(file.fileName);
-                        if ((isActiveFile(file.fileName)) || Object.keys($rootScope.files).length == 1) {
+                        $log.info(data.message);
+                        if (isActiveFile(file) || Object.keys($rootScope.files).length == 1) {
                             $rootScope.state = htmlState.ACCOUNT_INFORMATION;
                         } else if (!isActiveState(htmlState.FILE)) {
                             $rootScope.updateVisualisationTab();
                         }
+                        $rootScope.deleteFileFromList(file.fileName);
                     }).error(function(data) {
-                        console.log(data.message);
+                        $log.error(data.message);
                     });
                 }
 
@@ -292,7 +292,7 @@
             templateUrl: '/account/mainVisualisationContent',
             tranclude: true,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+            controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
 
                 $scope.exportChartPng = function (file, tab, exportType) {
                     saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type, 3, exportType);
@@ -845,7 +845,6 @@ function getData(handleData, param, file) {
                 "new": param.needToCreateNew
             }),
             success: function (data) {
-                console.log(data);
                 if (!data) {
                     location.reload();
                 }
@@ -866,7 +865,8 @@ function getData(handleData, param, file) {
             },
             complete: function(data) {
                 //For automatic reload on logout
-                if (data.responseJSON.message != null) console.log(data.message);
+                if (data == null) location.reload();
+                if (data.responseJSON.message != null) console.log(data.responseJSON.message);
                 loaded(param.place);
             }
         });
