@@ -187,7 +187,7 @@ public class ComputationUtil {
         vjUsageData();
         spectratype();
         spectratypeV();
-        annotation();
+        //annotation();
         basicStats();
         quantileStats();
         file.rendered();

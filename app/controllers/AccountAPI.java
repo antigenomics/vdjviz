@@ -1,7 +1,9 @@
 package controllers;
 
 import com.avaje.ebean.Ebean;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
 import models.LocalUser;
@@ -15,6 +17,7 @@ import play.mvc.*;
 import scala.concurrent.duration.Duration;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
+import sun.org.mozilla.javascript.json.JsonParser;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -292,6 +295,7 @@ public class AccountAPI extends Controller {
                 JsonNode jsonData = Json.parse(fis);
                 return ok(Json.toJson(new CacheServerResponse("success", jsonData)));
             } catch (Exception e) {
+                e.printStackTrace();
                 Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                         ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
                 return ok(Json.toJson(new CacheServerResponse("error", "Cache file does not exist", null)));

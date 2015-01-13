@@ -845,6 +845,7 @@ function getData(handleData, param, file) {
                 "new": param.needToCreateNew
             }),
             success: function (data) {
+                console.log(data);
                 if (!data) {
                     location.reload();
                 }
@@ -865,8 +866,7 @@ function getData(handleData, param, file) {
             },
             complete: function(data) {
                 //For automatic reload on logout
-                if (typeof data.responseJSON === 'undefined') location.reload();
-                if (data.responseJSON.message != null) console.log(data.responseJSON.message);
+                if (data.responseJSON.message != null) console.log(data.message);
                 loaded(param.place);
             }
         });
