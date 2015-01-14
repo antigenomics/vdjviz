@@ -57,7 +57,7 @@ public class RarefactionChart {
                 Sample sample = sampleCollection.getAt(0);
                 FrequencyTable frequencyTable = new FrequencyTable(sample);
                 Rarefaction rarefaction = new Rarefaction(frequencyTable);
-                ArrayList<Rarefaction.RarefactionPoint> values = rarefaction.build(0, maxCount, 40);
+                ArrayList<Rarefaction.RarefactionPoint> values = rarefaction.build(0, maxCount, 80);
 
                 String color = rarefactionColor.getNext();
                 RarefactionLine line = new RarefactionLine(userFile.getFileName(), color, false, false);

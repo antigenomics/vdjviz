@@ -17,9 +17,9 @@
             </a>
         </li>
         <hr>
-        <li ng-class="{active:isActiveState(htmlState.RAREFACTION)}" ng-click="setActiveState(htmlState.RAREFACTION)"><a>Rarefaction<i class="fa fa-area-chart pull-right"></i></a></li>
-        <li ng-class="{active:isActiveState(htmlState.SUMMARY)}" ng-click="setActiveState(htmlState.SUMMARY)"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
-        <li ng-class="{active:isActiveState(htmlState.COMPARING)}" ng-click="setActiveState(htmlState.COMPARING)"><a>Compare</a></li>
+        <li ng-class="{active:isRarefactionState()}" ng-click="setRarefactionState()"><a>Rarefaction<i class="fa fa-area-chart pull-right"></i></a></li>
+        <li ng-class="{active:isSummaryState()}" ng-click="setSummaryState()"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
+        <li ng-class="{active:isCompareState()}" ng-click="setCompareState()"><a>Compare</a></li>
         <hr>
         <li ng-click="deleteAll()"><a>Delete All</a></li>
     </ul>

@@ -183,8 +183,8 @@
                 $scope.deleteFileFromList = function (fileName) {
                     needToCreateNew = true;
                     delete $scope.files[fileName];
-                    if ($scope.files.length == 0) {
-                        $scope.state = htmlState.ACCOUNT_INFORMATION;
+                    if ($scope.state === htmlState.RAREFACTION || $scope.state === htmlState.SUMMARY) {
+                        $scope.updateVisualisationTab();
                     }
                 };
 
@@ -223,7 +223,37 @@
                 $scope.isActiveFile = isActiveFile;
                 $scope.isActiveState = isActiveState;
                 $scope.isRendering = isRendering;
-                $scope.htmlState = htmlState;
+                $scope.setRarefactionState = setRarefactionState;
+                $scope.setSummaryState = setSummaryState;
+                $scope.setCompareState = setCompareState;
+                $scope.isRarefactionState = isRarefactionState;
+                $scope.isSummaryState = isSummaryState;
+                $scope.isCompareState = isCompareState;
+
+
+                function setRarefactionState() {
+                    setActiveState(htmlState.RAREFACTION);
+                }
+
+                function setSummaryState() {
+                    setActiveState(htmlState.SUMMARY);
+                }
+
+                function setCompareState() {
+                    setActiveState(htmlState.COMPARING);
+                }
+
+                function isRarefactionState() {
+                    isActiveState(htmlState.RAREFACTION);
+                }
+
+                function isSummaryState() {
+                    isActiveState(htmlState.SUMMARY);
+                }
+
+                function isCompareState() {
+                    isActiveState(htmlState.COMPARING);
+                }
 
                 function showNewFilesTable() {
                     $("#add-new-file").click();
@@ -494,7 +524,7 @@
                     var exist = false;
                     angular.forEach($scope.newFiles, function(file) {
                         if (file.state === RenderState.RENDERING) exist = true;
-                    })
+                    });
                     return exist;
                 }
 
