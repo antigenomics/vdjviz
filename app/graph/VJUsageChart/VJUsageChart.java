@@ -1,5 +1,6 @@
 package graph.VJUsageChart;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class VJUsageChart {

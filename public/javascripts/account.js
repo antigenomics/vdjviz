@@ -1411,8 +1411,8 @@ function vjUsage(data, param) {
     // Visualize
     var chord = d3.layout.chord()
         .padding(.03)
-        .sortGroups(d3.descending)
-        .matrix(data.matrix);
+        .matrix(data.matrix)
+        .sortSubgroups(d3.ascending);
 
     var width = param.width,
         height = param.height,
@@ -1438,7 +1438,7 @@ function vjUsage(data, param) {
         .enter().append("path")
         .attr("class", "arc")
         .style("fill", function (d) {
-            return d.index < 4 ? '#444444' : fill(d.index);
+            return fill(d.index);
         })
         .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
         .on("mouseover", fade(.1))

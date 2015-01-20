@@ -3,6 +3,7 @@ package graph.VJUsageChart;
 import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
+import graph.SpectratypeVChart.VColor;
 import models.Account;
 import models.UserFile;
 import play.Logger;
@@ -37,13 +38,17 @@ public class VJUsageChartCreator {
 
     public VJUsageChartCreator create() {
         SegmentUsage segmentUsage = new SegmentUsage(sampleCollection, false);
-        segmentUsage.vUsageHeader();
-        segmentUsage.jUsageHeader();
-        String sampleId = sample.getSampleMetadata().getSampleId();
-        double[][] vjMatrix = segmentUsage.vjUsageMatrix(sampleId);
         List<String> labels = new ArrayList<>();
-        String[] vVector = segmentUsage.vUsageHeader();
-        String[] jVector = segmentUsage.jUsageHeader();
+        String sampleId = sample.getSampleMetadata().getSampleId();
+        MatrixMath matrixMath = new MatrixMath(segmentUsage.vjUsageMatrix(sampleId),
+                                                segmentUsage.jUsageHeader(),
+                                                segmentUsage.vUsageHeader(),
+                                                segmentUsage.jUsageVector(sampleId),
+                                                segmentUsage.vUsageVector(sampleId));
+        matrixMath.sort().transpose();
+        double[][] vjMatrix = matrixMath.getMatrix();
+        String[] jVector = matrixMath.getRowsNames();
+        String[] vVector = matrixMath.getColumnsNames();
 
         double[][] matrix = new double[vVector.length + jVector.length][];
         for (int i = 0; i < vVector.length + jVector.length; i++) {
