@@ -101,32 +101,22 @@
                         meta: {
                             vjusage: {
                                 cached: false,
-                                comparingCache: false,
-                                data: [],
                                 comparing: false
                             },
                             spectratype: {
                                 cached: false,
-                                comparingCache: false,
-                                data: [],
                                 comparing: false
                             },
                             spectratypeV: {
                                 cached: false,
-                                comparingCache: false,
-                                data: [],
                                 comparing: false
                             },
                             quantileStats: {
                                 cached: false,
-                                comparingCache: false,
-                                data: [],
                                 comparing: false
                             },
                             annotation: {
                                 cached: false,
-                                comparingCache: false,
-                                data: [],
                                 comparing: false
                             }
                         }
@@ -745,54 +735,98 @@
             templateUrl: '/account/comparingContent',
             tranclude: false,
             require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+            controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
 
                 $scope.showComparing = function () {
                     return $rootScope.state === htmlState.COMPARING;
                 };
+                $scope.comparingItems = [];
+                $scope.isComparing = isComparing;
+                $scope.isRendered = isRendered;
+                $scope.isRendering = isRendering;
+                $scope.showAllItems = showAllItems;
+                $scope.switchItem = switchItem;
+                $scope.isItems = isItems;
 
-                $scope.isComparing = function(file, tab) {
+                function isItems() {
+                    return $scope.comparingItems.length > 0;
+                }
+
+                function isComparing(file, tab) {
                     return file.meta[tab.type].comparing;
-                };
+                }
 
-                $scope.isRendered = function(file) {
+                function isRendered(file) {
                     return file.state === RenderState.RENDERED;
-                };
+                }
 
-                $scope.isRendering = function(file) {
+                function isRendering(file) {
                     return file.state === RenderState.RENDERING;
-                };
+                }
 
-                $scope.showItem = function (file, tab) {
-                    if (file.state != RenderState.RENDERING) {
-                        if (!$rootScope.files[file.fileName].meta[tab.type].comparingCache) {
-                            var param = {
-                                fileName: file.fileName,
-                                id: file.uid + '_comparing',
-                                height: (tab.type === 'vjusage') ? 320 : 520,
-                                width: 300,
-                                type: tab.type,
-                                place: '#id' + file.uid + ' .' + tab.comparingPlace
-                            };
-                            getData(tab.dataHandler, param, file);
-                        }
-                        $rootScope.files[file.fileName].meta[tab.type].comparing = !$rootScope.files[file.fileName].meta[tab.type].comparing;
-                        $rootScope.files[file.fileName].meta[tab.type].comparingCache = true;
+                function switchItem(file, tab) {
+                    if (isComparing(file, tab)) {
+                        deleteItem(file, tab)
+                    } else {
+                        showItem(file, tab);
                     }
-                };
+                }
 
-                $scope.showAllItems = function (tab) {
+                function deleteItem(file, tab) {
+                    var i = 0;
+                    for (; i < $scope.comparingItems.length; ++i) {
+                         if ($scope.comparingItems[i].fileName === file.fileName && $scope.comparingItems[i].tabName === tab.tabName) {
+                             $scope.comparingItems.splice(i, 1);
+                             $rootScope.files[file.fileName].meta[tab.type].comparing = false;
+                             break;
+                         }
+                    }
+                }
+
+                function deleteAllItems(tab) {
+                    var cleanedArray = [];
+                    for (var i = 0; i < $scope.comparingItems.length; i++) {
+                        if ($scope.comparingItems[i].tabName != tab.tabName) {
+                            cleanedArray.push($scope.comparingItems[i]);
+                        } else {
+                            $rootScope.files[$scope.comparingItems[i].fileName].meta[tab.type].comparing = false;
+                        }
+                    }
+                    $scope.comparingItems.splice(0, $scope.comparingItems.length);
+                    $scope.comparingItems = cleanedArray;
+                }
+
+                function showItem(file, tab) {
+                    if (file.state != RenderState.RENDERING) {
+                        $scope.comparingItems.push({
+                            fileName: file.fileName,
+                            tabName: tab.tabName,
+                            place: tab.comparingPlace,
+                            uid: file.uid
+                        });
+                        $rootScope.files[file.fileName].meta[tab.type].comparing = true;
+                        var param = {
+                            fileName: file.fileName,
+                            id: file.uid + '_comparing',
+                            height: (tab.type === 'vjusage') ? 320 : 520,
+                            width: 300,
+                            type: tab.type,
+                            place: '#id' + file.uid + ' .' + tab.comparingPlace
+                        };
+                        getData(tab.dataHandler, param, file);
+                    }
+                }
+
+                function showAllItems(tab) {
                     var shown = 0;
                     angular.forEach($rootScope.files, function (file) {
                         if (!file.meta[tab.type].comparing) {
-                            $scope.showItem(file, tab);
+                            showItem(file, tab);
                             shown++;
                         }
                     });
                     if (shown == 0) {
-                        angular.forEach($rootScope.files, function (file) {
-                            $scope.showItem(file, tab);
-                        })
+                        deleteAllItems(tab);
                     }
                 }
             }]
@@ -860,9 +894,6 @@
 
 //Request data from server
 function getData(handleData, param, file) {
-    if (file && file.meta[param.type].data.length != 0) {
-        handleData(file.meta[param.type].data, param);
-    } else {
         loading(param.place);
         $.ajax({
             url: "/account/api/data",
@@ -881,9 +912,6 @@ function getData(handleData, param, file) {
                 switch (data["result"]) {
                     case "success" :
                         handleData(data.data, param);
-                        if (typeof file != 'undefined') {
-                            file.meta[param.type].data = data.data;
-                        }
                         break;
                     default :
                         noDataAvailable(param, file);
@@ -900,7 +928,6 @@ function getData(handleData, param, file) {
                 loaded(param.place);
             }
         });
-    }
 }
 
 function spectratype(data, param) {
@@ -1602,8 +1629,6 @@ function noDataAvailable(param, file) {
             .html("No Data Available");
     if (file) {
         file.meta[param.type].cached = false;
-        file.meta[param.type].comparingCache = false;
-        file.meta[param.type].data = [];
     }
 }
 

@@ -100,9 +100,14 @@ html, body {
 }
 
 .comparing-tab-header {
-    position: fixed;
+    height: 60px;
     margin: 20px;
     z-index: 10;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .visualisation-results {
@@ -156,6 +161,11 @@ html, body {
     background-color: #fafafa;
     border: 1px solid #e8e8e8;
     border-right: 0;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .drag-and-drop-icon {

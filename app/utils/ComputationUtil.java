@@ -136,8 +136,8 @@ public class ComputationUtil {
             Data v = new Data(new String[]{"v", "match"});
             Data j = new Data(new String[]{"j", "match"});
             Data cdr3aa = new Data(new String[]{"cdr3aa", "pos", "vend", "jstart", "dstart", "dend"});
-            v.addData(new Object[]{cdrDatabaseMatch.getQuery().getV(), cdrDatabaseMatch.getvMatch()});
-            j.addData(new Object[]{cdrDatabaseMatch.getQuery().getJ(), cdrDatabaseMatch.getjMatch()});
+            v.addData(new Object[]{cdrDatabaseMatch.getQuery().getV(), cdrDatabaseMatch.isvMatch()});
+            j.addData(new Object[]{cdrDatabaseMatch.getQuery().getJ(), cdrDatabaseMatch.isjMatch()});
             cdr3aa.addData(new Object[]{cdrDatabaseMatch.getQuery().getCdr3aa(),
                     cdrDatabaseMatch.getAlignment().getAbsoluteMutations().firsMutationPosition(),
                     cdrDatabaseMatch.getQuery().getVEnd(),

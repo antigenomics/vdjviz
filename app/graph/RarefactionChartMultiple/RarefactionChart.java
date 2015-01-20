@@ -65,23 +65,23 @@ public class RarefactionChart {
                 RarefactionLine areaLine = new RarefactionLine(userFile.getFileName() + "_area", "#dcdcdc", true, true);
 
                 for (Rarefaction.RarefactionPoint value : values) {
-                    areaLine.addPoint(value.x, value.ciL);
-                    switch (value.diversityType) {
+                    areaLine.addPoint(value.getX(), value.getCiL());
+                    switch (value.getDiversityType()) {
                         case Interpolated:
-                            line.addPoint(value.x, value.mean);
+                            line.addPoint(value.getX(), value.getMean());
                             break;
                         case Extrapolated:
-                            additionalLine.addPoint(value.x, value.mean);
+                            additionalLine.addPoint(value.getX(), value.getMean());
                             break;
                         default:
-                            line.addPoint(value.x, value.mean);
-                            additionalLine.addPoint(value.x, value.mean);
+                            line.addPoint(value.getX(), value.getMean());
+                            additionalLine.addPoint(value.getX(), value.getMean());
                             break;
                     }
                 }
 
                 for (int i = values.size() - 1; i >= 0; --i) {
-                    areaLine.addPoint(values.get(i).x, values.get(i).ciU);
+                    areaLine.addPoint(values.get(i).getX(), values.get(i).getCiU());
                 }
                 addLine(areaLine);
                 addLine(line);
