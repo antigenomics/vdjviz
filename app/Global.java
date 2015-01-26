@@ -4,12 +4,18 @@ import models.UserFile;
 import play.Application;
 import play.GlobalSettings;
 import play.Play;
+import play.api.mvc.EssentialFilter;
+import play.filters.gzip.GzipFilter;
 
 import java.io.File;
 import play.Logger;
 
 
 public class Global extends GlobalSettings {
+
+    public <T extends EssentialFilter> Class<T>[] filters() {
+        return new Class[]{GzipFilter.class};
+    }
 
     public void onStart(Application app) {
 

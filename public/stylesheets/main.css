@@ -99,6 +99,14 @@ html, body {
     min-height: 500px;
 }
 
+.add-new-compare-button {
+    visibility: hidden;
+}
+
+.show-compare-button {
+    visibility: visible;
+}
+
 .comparing-tab-header {
     height: 60px;
     margin: 20px;

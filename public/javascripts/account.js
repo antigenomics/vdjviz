@@ -219,7 +219,11 @@
                 $scope.isRarefactionState = isRarefactionState;
                 $scope.isSummaryState = isSummaryState;
                 $scope.isCompareState = isCompareState;
+                $scope.showCompareModal = showCompareModal;
 
+                function showCompareModal() {
+                    $('#comparingAddButton').click();
+                }
 
                 function setRarefactionState() {
                     setActiveState(htmlState.RAREFACTION);
@@ -234,15 +238,15 @@
                 }
 
                 function isRarefactionState() {
-                    isActiveState(htmlState.RAREFACTION);
+                    return isActiveState(htmlState.RAREFACTION);
                 }
 
                 function isSummaryState() {
-                    isActiveState(htmlState.SUMMARY);
+                    return isActiveState(htmlState.SUMMARY);
                 }
 
                 function isCompareState() {
-                    isActiveState(htmlState.COMPARING);
+                    return isActiveState(htmlState.COMPARING);
                 }
 
                 function showNewFilesTable() {
@@ -250,6 +254,7 @@
                 }
 
                 function setActiveState(state){
+                    window.scrollTo(0, 0);
                     $rootScope.state = state;
                     $rootScope.updateVisualisationTab();
                 }
@@ -923,7 +928,7 @@ function getData(handleData, param, file) {
             },
             complete: function(data) {
                 //For automatic reload on logout
-                if (data == null) location.reload();
+                if (data == null || typeof data.responseJSON === 'undefined') location.reload();
                 if (data.responseJSON.message != null) console.log(data.responseJSON.message);
                 loaded(param.place);
             }
