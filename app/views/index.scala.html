@@ -1,6 +1,6 @@
 @(username: String)
 
-@main("Welcome to VDJvisualisation") {
+@main("VDJviz - home") {
     <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
     @navbar(username)
     <ul class="bxslider">
@@ -16,7 +16,7 @@
                 <div class="col-lg-12">
                     <div class="col-lg-6">
                         <h3>V-J Usage</h3>
-                        <text>A circos-styled plot visualizing frequencies of Variable-Joining segment combinations</text>
+                        <text>Chord digram of Variable-Joining segment junction frequencies</text>
                     </div>
                     <div class="col-lg-6">
                         <img src="@routes.Assets.at("images/features_1.jpeg")" class="feature-img">
@@ -29,14 +29,14 @@
                     </div>
                     <div class="col-lg-6">
                         <h3>Spectratype</h3>
-                        <text>Plots spectratype providing detalization for the most expanded clonotypes</text>
+                        <text>Distribution of reads by CDR3 length explicitly showing top clonotypes</text>
                     </div>
                 </div>
                 <div class="col-lg-12"><hr></div>
                 <div class="col-lg-12">
                     <div class="col-lg-6">
                         <h3>V Spectratype</h3>
-                        <text>Plots spectratype providing detalization for the most common Variable segment families</text>
+                        <text>A pectratype that explicitly shows the most common Variable segment families</text>
                     </div>
                     <div class="col-lg-6">
                         <img src="@routes.Assets.at("images/features_3.jpeg")" class="feature-img">
@@ -49,16 +49,16 @@
                     </div>
                     <div class="col-lg-6">
                         <h3>Quantile Stats</h3>
-                        <text>Displays the clonality of sample. The sample is divided into 5 quantiles based on clonotype rank.
-                            The relative size of each quantile is shown.</text>
+                        <text>A detailed sample clonality chart</text>
                     </div>
                 </div>
+                <div class="col-lg-12"><hr></div>
                 <div class="col-lg-12">
-                    <div><h3>And more...</h3></div>
+                    <div><h3>Sample comparison, annotation and more...</h3></div>
                 </div>
             </div>
             <footer>
-                <p>&copy; Company 2014</p>
+                <p>&copy; 2014 MiLaboratory.com</p>
             </footer>
         </div>
 }
