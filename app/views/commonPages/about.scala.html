@@ -1,16 +1,23 @@
 @(username: String)
 @main("About") {
     @navbar(username)
-    VDJviz is a lightweight immune repertoire browser.
-    After registering and signing in, users can upload clonotype tables that were produced using MiTCR, MiGEC and IgBlastWrapper Rep-Seq processing software.
-    VDJviz server will compute a set of key repertoire statistics and display them as interactive graphics.
-    VDJviz can also be run as a local server, please see the link to source code below.
-    
-    NOTE: Currently there is an upload limit of 25 files with at most 10,000 clonotypes
-    
-    Some useful links:
-    * https://github.com/mikessh/vdjviz - VDJviz source code
-    * https://github.com/mikessh/vdjtools/wiki/Input - detailed description of input formats
-    * https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples - sample datasets
-    * https://github.com/mikessh/vdjtools/wiki/Modules - detailed description of post-analysis
+    <div class="container">
+        <div class="row">
+            <h2>About</h2>
+            <hr>
+                <div class="about_description">
+                    <p>     VDJviz is a lightweight immune repertoire browser. After registering and signing in, users can upload clonotype tables that were produced using MiTCR, MiGEC and IgBlastWrapper Rep-Seq processing software. VDJviz server will compute a set of key repertoire statistics and display them as interactive graphics. VDJviz can also be run as a local server, please see the link to source code below.</p>
+                    <p class="about_note"><b>NOTE:</b> Currently there is an upload limit of 25 files with at most 10,000 clonotypes</p>
+                    <div class="about_links">
+                        <h3>Some useful links:</h3>
+                        <hr>
+                            <p><a href="https://github.com/mikessh/vdjviz">https://github.com/mikessh/vdjviz</a> - VDJviz source code</p>
+                            <p><a href="https://github.com/mikessh/vdjtools">https://github.com/mikessh/vdjtools</a> - VDJtools source code</p>
+                            <p><a href="https://github.com/mikessh/vdjtools/wiki/Input">https://github.com/mikessh/vdjtools/wiki/Input</a> - detailed description of input formats</p>
+                            <p><a href="https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples">https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples</a> sample datasets</p>
+                            <p><a href="https://github.com/mikessh/vdjtools/wiki/Modules">https://github.com/mikessh/vdjtools/wiki/Modules</a> - detailed description of post-analysis</p>
+                    </div>
+                </div>
+        </div>
+    </div>
 }
