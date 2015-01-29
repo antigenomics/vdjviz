@@ -1302,6 +1302,7 @@ function annotationTable(data, param) {
         ],
         "scrollY": "600px",
         dom: '<"pull-left"f>    l<"clear">Trtd<"pull-left"i>p',
+        iDisplayLength: 100,
         responsive: true,
         tableTools: {
             "sSwfPath": "../../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
@@ -1374,11 +1375,76 @@ function annotationTable(data, param) {
                         result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
                     }
                     return result;
-
-
                 },
                 "width": "20%",
                 "targets": 2
+            },
+            {
+                "render": function(data) {
+                    var cdr3aa = data["cdr3nt"];
+                    var vend = data["vend"];
+                    var dstart = data["dstart"];
+                    var dend = data["dend"];
+                    var jstart = data["jstart"];
+                    var pos = data["pos"];
+                    jstart = (jstart < 0) ? 10000 : jstart;
+                    dstart = (dstart < 0) ? vend + 1 : dstart;
+                    dend = (dend < 0) ? vend : dend;
+                    while (vend >= jstart) jstart++;
+                    while (dstart <= vend) dstart++;
+                    while (dend >= jstart) dend--;
+                    var createSubString = function (start, end, color) {
+                        return {
+                            start: start,
+                            end: end,
+                            color: color,
+                            substring: cdr3aa.substring(start, end + 1)
+                        }
+                    };
+
+                    var insert = function (index, str, insertString) {
+                        if (index > 0)
+                            return str.substring(0, index) + insertString + str.substring(index, str.length);
+                        else
+                            return insertString + str;
+                    };
+
+                    var arr = [];
+
+                    if (vend >= 0) {
+                        arr.push(createSubString(0, vend, "#4daf4a"));
+                    }
+
+                    if (dstart - vend > 1) {
+                        arr.push(createSubString(vend + 1, dstart - 1, "black"));
+                    }
+
+                    if (dstart > 0 && dend > 0 && dend >= dstart) {
+                        arr.push(createSubString(dstart, dend, "#ec7014"));
+                    }
+
+                    if (jstart - dend > 1) {
+                        arr.push(createSubString(dend + 1, jstart - 1, "black"));
+                    }
+
+                    if (jstart > 0) {
+                        arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
+                    }
+
+                    var result = "";
+                    for (var i = 0; i < arr.length; i++) {
+                        var element = arr[i];
+                        if (pos >= element.start && pos <= element.end) {
+                            var newPos = pos - element.start;
+                            element.substring = insert(newPos + 1, element.substring, '</u></b>');
+                            element.substring = insert(newPos, element.substring, '<b><u>');
+                        }
+                        result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+                    }
+                    return result;
+                },
+                "targets": 5
+
             }
         ]
     });

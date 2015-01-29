@@ -5,7 +5,7 @@ import com.antigenomics.vdjtools.Clonotype;
 public class AnnotationTableRow {
     public Double freq;
     public Integer count;
-    public String cdr3nt;
+    public AnnotationTableCdr3nt cdr3nt;
     public AnnotationTableCdr3aa cdr3aa;
     public String v;
     public String j;
@@ -16,6 +16,6 @@ public class AnnotationTableRow {
         this.count = clonotype.getCount();
         this.v = clonotype.getV();
         this.j = clonotype.getJ();
-        this.cdr3nt = clonotype.getCdr3nt();
+        this.cdr3nt = new AnnotationTableCdr3nt(clonotype.getCdr3nt(), -1, clonotype.getVEnd(), clonotype.getJStart(), clonotype.getDStart(), clonotype.getDEnd());
     }
 }

@@ -104,6 +104,26 @@ public class Account extends Model {
         return names;
     }
 
+    public List<Long> getRenderedFileSizes() {
+        List<Long> sizes = new ArrayList<>();
+        for (UserFile userFile : getRenderedUserFiles()) {
+            File file = new File(userFile.getPath());
+            sizes.add(file.length());
+        }
+        Collections.sort(sizes);
+        return sizes;
+    }
+
+    public List<Long> getFileSizes() {
+        List<Long> sizes = new ArrayList<>();
+        for (UserFile userFile : getUserfiles()) {
+            File file = new File(userFile.getPath());
+            sizes.add(file.length());
+        }
+        Collections.sort(sizes);
+        return sizes;
+    }
+
 
     public AccountInformation getAccountInformation() {
         return new AccountInformation(this.user.email, this.user.firstName, this.user.lastName, this.userName, this.getFilesCount());
