@@ -26,6 +26,17 @@
 	display: block;
 }
 
+/** SIGN IN BUTTON
+===================================*/
+
+.bx-wrapper .bx-sign-in-button {
+	position: absolute;
+	top: 47%;
+	left: 45%;
+	width: 10%;
+}
+
+
 /** THEME
 ===================================*/
 

@@ -267,6 +267,7 @@
                 }
 
                 function isRendering(file){
+                    console.log(file);
                     return file.state === RenderState.RENDERING;
                 }
 
@@ -470,7 +471,7 @@
 
                 function uploadAll() {
                     angular.forEach($scope.newFiles, function (file) {
-                        $scope.uploadFile(file);
+                        uploadFile(file);
                     })
                 }
 
@@ -542,9 +543,9 @@
                 }
 
                 function updateTooltip(file, tooltip) {
-                    $scope.$apply(function () {
+                    //$scope.$apply(function () {
                         file.tooltip = tooltip;
-                    })
+                    //})
                 }
 
                 function updateProgress(file, progress) {

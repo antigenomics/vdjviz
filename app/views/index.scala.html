@@ -3,8 +3,12 @@
 @main("VDJviz - home") {
     <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
     @navbar(username)
+
     <ul class="bxslider">
-        <li><img src="@routes.Assets.at("images/1920x500.gif")" /></li>
+        <li>
+            <img src="@routes.Assets.at("images/1920x500.gif")"/>
+            <button class="bx-sign-in-button btn btn-primary">Start analysis</button>
+        </li>
         <li><img src="@routes.Assets.at("images/1920x500.gif")" /></li>
         <li><img src="@routes.Assets.at("images/1920x500.gif")" /></li>
     </ul>

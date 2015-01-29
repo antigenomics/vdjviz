@@ -9,8 +9,12 @@
     top: 2%;
     height: 96%;
     width: 23%;
-    background-color: #DCDCDC;
     position: absolute;
+    overflow: hidden;
+}
+
+.person-place .person-img img {
+    width: 100%;
 }
 
 .person-place .person-name {
