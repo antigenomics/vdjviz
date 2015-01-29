@@ -7,7 +7,6 @@ GET         /                                        controllers.Application.ind
 GET         /contacts                                controllers.Application.contacts()
 GET         /about                                   controllers.Application.about()
 GET         /noscript                                controllers.Application.noScriptPage()
-GET         /test                                    controllers.Application.test()
 
 
 # Angular directives urls
@@ -31,10 +30,6 @@ POST        /account/api/upload                      controllers.AccountAPI.uplo
 POST        /account/api/delete                      controllers.AccountAPI.delete()
 POST        /account/api/data                        controllers.AccountAPI.data()
 GET         /account/api/files                       controllers.AccountAPI.files()
-
-# Database Search API
-GET         /database                                controllers.DatabaseSearchAPI.databaseSearchMainPage()
-POST        /database/api/search                     controllers.DatabaseSearchAPI.searchInput()
 
 # Robots.txt route
 
