@@ -17,25 +17,30 @@
     </div>
     <div class="col-lg-12">
         <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
-            A circos-styled plot visualizing frequencies of Variable-Joining segment combinations
+            This plot shows a chord diagram of Variable-Joining segment combination frequencies.
+            Each chord represent a set of clonotypes with a given V-J junction and is scaled according to the frequency of reads with such junction.
+            Each arc represents a V or J segment and is scaled to the relative number of reads that contain corresponding segment.
         </div>
         <div class="visualisation-description-spectratype" ng-show="isActiveTab(visualisationTabs.spectratype)">
-            Plots spectratype providing detalization for the most expanded clonotypes
+            This histogram shows the distribution of reads by CDR3 length.
+            Several top clonotypes are shown explicitly by colored bars.
         </div>
         <div class="visualisation-description-spectratypeV" ng-show="isActiveTab(visualisationTabs.spectratypev)">
-            Plots spectratype providing detalization for the most common Variable segment families
-        </div>
-        <div class="visualisation-description-sizeClassifying" ng-show="isActiveTab(visualisationTabs.sizeclassifying)">
-            Size classifying description placeholder
+            This plot shows the distribution of reads by CDR3 length.
+            Separate histograms are shown that correspond to top Variable segment families.
         </div>
         <div class="visualisation-description-quantileStats" ng-show="isActiveTab(visualisationTabs.quantilestats)">
-            Displays the clonality of sample. The sample is divided into 5 quantiles based on clonotype rank.
-            The relative size of each quantile is shown.
+            A sunburst plot showing the the clonality of sample.
+            Inner level shows the read frequency of singletons (clonotypes met once), doubletons (clonotypes met twice) and high-order clonotypes.
+            Singletons and doubletons are the basis for estimating the number of unseen species (clonotypes) for the sample.
+            The second level shows high order clonotypes are divided into 5 quantiles based on clonotype rank.
         </div>
         <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
-            Queries clonotypes against a pre-built databases, containing clonotype signatures of known specificity.
-            A fuzzy search is performed by CDR3 amino acid sequences.
-            Pre-built database contains clonotype specificity information obtained from literature mining and includes CMV-, EBV- and influenza-specific clonotypes.
+            This table shows the results of querying clonotypes against a pre-built database containing clonotypes of known specificity.
+            Amino acid sequences are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.
+            Amino acid substitutions are marked with bold and underscore. Non-matching Variable and Joining segment names are shown in red.
+            A fuzzy search is performed by CDR3 amino acid sequences. 
+            The pre-built database contains clonotype specificity information obtained from literature mining and includes CMV-, EBV- and influenza-specific clonotypes.
         </div>
     </div>
     <hr>
