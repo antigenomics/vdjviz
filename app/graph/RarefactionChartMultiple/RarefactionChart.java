@@ -17,11 +17,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RarefactionChart {
     private List<RarefactionLine> lines;
+    private String md5;
 
     private Account account;
     private boolean created;
@@ -42,6 +46,10 @@ public class RarefactionChart {
         if (created)
             return lines;
         throw new Exception("You should create graph");
+    }
+
+    public String getMd5() {
+        return md5;
     }
 
     public JsonNode create(Boolean needToCreateNew) throws Exception {
@@ -88,14 +96,47 @@ public class RarefactionChart {
                 addLine(additionalLine);
             }
             created = true;
+
+            saveMD5();
             saveCache();
             return Json.toJson(lines);
         } else {
             File jsonFile = new File(account.getDirectoryPath() + "/" + cacheName + ".cache");
+            if (!jsonFile.exists()) {
+                return create(true);
+            }
             FileInputStream fis = new FileInputStream(jsonFile);
             JsonNode jsonData = Json.parse(fis);
+            if (!jsonData.findValue("md5").asText().equals(getMD5()) || !jsonData.has("lines")) {
+                return create(true);
+            }
+            if (!jsonData.has("lines")) {
+                return create(true);
+            }
             return jsonData.findValue("lines");
         }
+    }
+
+    private String getMD5() throws Exception {
+        List<String> fileNames = account.getRenderedFileNames();
+        String namesString = "";
+        for (String fileName : fileNames) {
+            namesString += fileName;
+        }
+        MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+        messageDigest.update(namesString.getBytes(), 0, namesString.length());
+        return new BigInteger(1, messageDigest.digest()).toString(16);
+    }
+
+    private void saveMD5() throws Exception {
+        List<String> fileNames = account.getRenderedFileNames();
+        String namesString = "";
+        for (String fileName : fileNames) {
+            namesString += fileName;
+        }
+        MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+        messageDigest.update(namesString.getBytes(), 0, namesString.length());
+        md5 = new BigInteger(1, messageDigest.digest()).toString(16);
     }
 
     private void saveCache() {

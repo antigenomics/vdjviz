@@ -86,6 +86,24 @@ public class Account extends Model {
         Files.deleteIfExists(rarefactionCache.toPath());
     }
 
+    public List<String> getRenderedFileNames() {
+        List<String> names = new ArrayList<>();
+        for (UserFile userFile : getRenderedUserFiles()) {
+            names.add(userFile.getFileName());
+        }
+        Collections.sort(names);
+        return names;
+    }
+
+    public List<String> getFileNames() {
+        List<String> names = new ArrayList<>();
+        for (UserFile userFile : getUserfiles()) {
+            names.add(userFile.getFileName());
+        }
+        Collections.sort(names);
+        return names;
+    }
+
 
     public AccountInformation getAccountInformation() {
         return new AccountInformation(this.user.email, this.user.firstName, this.user.lastName, this.userName, this.getFilesCount());

@@ -267,7 +267,6 @@
                 }
 
                 function isRendering(file){
-                    console.log(file);
                     return file.state === RenderState.RENDERING;
                 }
 
