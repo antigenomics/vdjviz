@@ -41,8 +41,4 @@ public class Application extends Controller {
         return ok(views.html.commonPages.noScriptPage.render());
     }
 
-    public static Result test() {
-        return ok(views.html.test.render());
-    }
-
 }

@@ -10,6 +10,7 @@ import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.milaboratory.core.tree.TreeSearchParameters;
+import graph.AnnotationTable.AnnotationTable;
 import graph.QuantileStatsChart.QuantileStatsChartCreator;
 import graph.SpectratypeChart.SpectratypeChartCreator;
 import graph.SpectratypeVChart.SpectratypeVChartCreator;
@@ -124,7 +125,7 @@ public class ComputationUtil {
     }
 
     private void annotation() throws Exception {
-
+        /*
         CdrDatabase cdrDatabase = new CdrDatabase();
         DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, new TreeSearchParameters(1, 0, 0, 1));
         BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
@@ -153,6 +154,9 @@ public class ComputationUtil {
         }
         data.addData(new Object[]{annotationData, header});
         saveCache(CacheType.annotation.getCacheFileName(), data.getData());
+        */
+        AnnotationTable annotationTable = new AnnotationTable(account, file, sample);
+        annotationTable.create().saveCache();
         progressResponse.sendMessage("60");
     }
 

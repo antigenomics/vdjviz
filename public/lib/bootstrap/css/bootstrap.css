@@ -4402,6 +4402,7 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
 .pagination > li {
   display: inline;
 }
+
 .pagination > li > a,
 .pagination > li > span {
   position: relative;
@@ -4409,7 +4410,7 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   padding: 8px 12px;
   line-height: 1.4;
   text-decoration: none;
-  color: #008cba;
+  color: #ffffff;
   background-color: transparent;
   border: 1px solid transparent;
   margin-left: -1px;
@@ -4425,6 +4426,7 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
 }
+
 .pagination > li > a:hover,
 .pagination > li > span:hover,
 .pagination > li > a:focus,
@@ -4451,7 +4453,7 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
 .pagination > .disabled > a,
 .pagination > .disabled > a:hover,
 .pagination > .disabled > a:focus {
-  color: #999999;
+  color: #000000;
   background-color: #ffffff;
   border-color: transparent;
   cursor: not-allowed;
@@ -4520,7 +4522,7 @@ fieldset[disabled] .navbar-inverse .btn-link:focus {
 .pager .disabled > a:hover,
 .pager .disabled > a:focus,
 .pager .disabled > span {
-  color: #999999;
+  color: #000000;
   background-color: transparent;
   cursor: not-allowed;
 }
@@ -6520,12 +6522,12 @@ input[type="checkbox"] {
 .pagination {
   font-size: 12px;
   font-weight: 300;
-  color: #999999;
+  color: #000000;
 }
 .pagination > li > a,
 .pagination > li > span {
   margin-left: 4px;
-  color: #999999;
+  color: #000000;
 }
 .pagination > .active > a,
 .pagination > .active > span {

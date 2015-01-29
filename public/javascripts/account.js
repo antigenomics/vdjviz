@@ -1280,31 +1280,28 @@ function annotationTable(data, param) {
     thead.append("th").html("Frequency");
     thead.append("th").html("Count");
     thead.append("th").html("CDR3AA");
-    thead.append("th").html("J");
     thead.append("th").html("V");
+    thead.append("th").html("J");
+    thead.append("th").html("CDR3NT");
 
     var column = [
         {"data": "freq"},
         {"data": "count"},
-        {"data": "query_cdr3aa"},
-        {"data": "query_J"},
-        {"data": "query_V"}
+        {"data": "cdr3aa"},
+        {"data": "v"},
+        {"data": "j"},
+        {"data": "cdr3nt"}
     ];
-
-    for (var i = 0; i < data["header"].length; i++) {
-        thead.append("th").html(data["header"][i]);
-        column.push({"data": data["header"][i]});
-    }
 
     var dataTable = $('#annotation_table_' + param.id).dataTable({
         "data": data["data"],
         "columns": column,
-        'iDisplayLength': 10000,
+        //'iDisplayLength': 50,
         'order': [
-            [0, "decs"]
+            [1, "decs"]
         ],
         "scrollY": "600px",
-        dom: '<"pull-left"f><"clear">TrtS',
+        dom: '<"pull-left"f>    l<"clear">Trtd<"pull-left"i>p',
         responsive: true,
         tableTools: {
             "sSwfPath": "../../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
@@ -1382,28 +1379,6 @@ function annotationTable(data, param) {
                 },
                 "width": "20%",
                 "targets": 2
-            },
-            {
-                "render": function (data) {
-                    if (!data["match"]) {
-                        return "<div style='color: red;'>" + data["j"] + "</div>";
-                    } else {
-                        return data["j"];
-                    }
-                },
-                "width": "10%",
-                "targets": 3
-            },
-            {
-                "render": function (data) {
-                    if (!data["match"]) {
-                        return "<div style='color: red;'>" + data["v"] + "</div>";
-                    } else {
-                        return data["v"];
-                    }
-                },
-                "width": "10%",
-                "targets": 4
             }
         ]
     });
