@@ -1,6 +1,6 @@
 <div class="visualisation-tab" ng-show="showTab()">
     <ul class="nav nav-pills nav-visualisation">
-        <li ng-repeat="tab in visualisationTabs" ng-click="setActiveTab(tab)" ng-class="{active:isActiveTab(tab)}">
+        <li ng-repeat="tab in visualisationTabs" ng-click="setActiveTab(tab)" ng-class="{'active':isActiveTab(tab)}">
             <a>{{ tab.tabName }}</a>
         </li>
     </ul>
@@ -36,11 +36,8 @@
             The second level shows high order clonotypes are divided into 5 quantiles based on clonotype rank.
         </div>
         <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
-            This table shows the results of querying clonotypes against a pre-built database containing clonotypes of known specificity.
-            Amino acid sequences are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.
-            Amino acid substitutions are marked with bold and underscore. Non-matching Variable and Joining segment names are shown in red.
-            A fuzzy search is performed by CDR3 amino acid sequences. 
-            The pre-built database contains clonotype specificity information obtained from literature mining and includes CMV-, EBV- and influenza-specific clonotypes.
+            This table displays top 1000 most abundant clonotypes in the selected sample.
+            Nucleotide and amino acid sequences of CDR3 region are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.
         </div>
     </div>
     <hr>
