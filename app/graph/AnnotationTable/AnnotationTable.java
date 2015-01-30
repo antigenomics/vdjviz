@@ -40,7 +40,7 @@ public class AnnotationTable {
     public AnnotationTable create() {
         int count = 0;
         for (Clonotype clonotype : sample) {
-            data.add(new AnnotationTableRow(clonotype));
+            data.add(new AnnotationTableRow(clonotype, count + 1));
             count++;
             if (count >= 1000) break;
         }

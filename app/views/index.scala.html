@@ -7,21 +7,26 @@
     <ul class="bxslider">
         <li>
             <img src="@routes.Assets.at("images/slider1.png")"/>
-            <button class="bx-sign-in-button btn btn-primary">Start analysis</button>
         </li>
         <li>
             <img src="@routes.Assets.at("images/slider2.png")" />
-            <button class="bx-sign-in-button btn btn-primary">Start analysis</button>
         </li>
         <li>
             <img src="@routes.Assets.at("images/slider3.png")" />
-            <button class="bx-sign-in-button btn btn-primary">Start analysis</button>
         </li>
     </ul>
 
         <div class="container container-width-fixed">
             <div class="row">
-                <h1>Features</h1>
+
+                <div class="round-button center-block">
+                    <div class="round-button-circle">
+                        <a href="@routes.AccountAPI.account()" class="round-button">BROWSE</a>
+                    </div>
+                </div>
+                <br>
+                <br>
+                <h1 class="center-block text-center">Features</h1>
                 <div class="col-lg-12"><hr></div>
                 <div class="col-lg-12">
                     <div class="col-lg-6">
@@ -67,6 +72,7 @@
                     <div><h3>Sample comparison, annotation and more...</h3></div>
                 </div>
             </div>
+            <hr>
             <footer>
                 <p>&copy; 2014 MiLaboratory.com</p>
             </footer>

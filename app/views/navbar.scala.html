@@ -13,14 +13,14 @@
         <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
             @if(username != null) {
-                <li><a href="/account">Account</a></li>
+                <li><a href="/account">Browser</a></li>
             }
             <li><a href="/contacts">Contacts</a></li>
             <li><a href="/about">About</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
             @if(username != null) {
-                <li><a href="/account">Logged as @username</a></li>
+                <li><a>Logged as @username</a></li>
                 <li><a href="/logout">Logout</a></li>
             }
             @if(username == null) {

@@ -62,6 +62,10 @@
                 $scope.initialized = false;
                 $scope.errorInit = false;
 
+                $scope.showStartPage = function() {
+                    $scope.state = htmlState.ACCOUNT_INFORMATION;
+                }
+
                 $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/account/api/files'})
                         .success(function (data) {
@@ -1277,6 +1281,7 @@ function annotationTable(data, param) {
             .attr("class", "table table-striped table-hover"),
         thead = table.append("thead").append("tr");
 
+    thead.append("th").html("Index");
     thead.append("th").html("Frequency");
     thead.append("th").html("Count");
     thead.append("th").html("CDR3AA");
@@ -1285,6 +1290,7 @@ function annotationTable(data, param) {
     thead.append("th").html("CDR3NT");
 
     var column = [
+        {"data": "index"},
         {"data": "freq"},
         {"data": "count"},
         {"data": "cdr3aa"},
@@ -1298,7 +1304,7 @@ function annotationTable(data, param) {
         "columns": column,
         //'iDisplayLength': 50,
         'order': [
-            [1, "decs"]
+            [2, "decs"]
         ],
         "scrollY": "600px",
         dom: '<"pull-left"f>    l<"clear">Trtd<"pull-left"i>p',
@@ -1310,7 +1316,7 @@ function annotationTable(data, param) {
         "columnDefs": [
             {
                 "width": "6%",
-                "targets": [0, 1]
+                "targets": [1, 2]
             },
             {
                 "render": function (data) {
@@ -1377,7 +1383,7 @@ function annotationTable(data, param) {
                     return result;
                 },
                 "width": "20%",
-                "targets": 2
+                "targets": 3
             },
             {
                 "render": function(data) {
@@ -1443,7 +1449,7 @@ function annotationTable(data, param) {
                     }
                     return result;
                 },
-                "targets": 5
+                "targets": 6
 
             }
         ]
@@ -1552,12 +1558,12 @@ function rarefactionPlot(data, param) {
             .height(800);
 
         chart.xAxis
-            .axisLabel('Sample size, TCM')
+            .axisLabel('Sample size')
             .tickFormat(d3.format(',r'));
 
         chart.yAxis
             .axisLabel('Diversity, clonotypes')
-            .tickFormat(d3.format('.02f'));
+            .tickFormat(d3.format('d'));
 
 
         svg.datum(data)
@@ -1582,7 +1588,7 @@ function summaryStats(data, param) {
     thead.append("th").html("Reads");
     thead.append("th").html("Diversity");
     thead.append("th").html("Mean clonotype frequency");
-    thead.append("th").html("Median clonotype frequency");
+    thead.append("th").html("Geo. mean clonotype frequency");
     thead.append("th").html("Non-coding clonotypes");
     thead.append("th").html("NC clonotypes frequency");
     thead.append("th").html("Mean insert size");
@@ -1596,7 +1602,7 @@ function summaryStats(data, param) {
         {"data": "count"},                 //Reads
         {"data": "diversity"},             //Rarefaction
         {"data": "mean_frequency"},        //Mean clonotype frequency
-        {"data": "median_frequency"},      //Median clonotype frequency
+        {"data": "geomean_frequency"},     //Median clonotype frequency
         {"data": "nc_diversity"},          //Non-coding clonotypes
         {"data": "nc_frequency"},          //NC clonotypes frequency
         {"data": "mean_insert_size"},      //Mean insert size

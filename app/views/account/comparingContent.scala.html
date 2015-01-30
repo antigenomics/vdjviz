@@ -1,6 +1,8 @@
 <div class="comparing-tab" ng-show="showComparing()">
     <div class="comparing-tab-header">
-        <button href="#comparing-files-table" role="button" data-toggle="modal" id="comparingAddButton" class="btn btn-default">Add</button>
+        <button href="#comparing-files-table" role="button" data-toggle="modal" id="comparingAddButton" class="btn btn-default">Manage comparing graphs</button>
+        <br>
+        <p>You can also manage graphs by clicking plus button in comparing line on sidebar</p>
     </div>
     <div class="comparing-tab-body col-lg-12">
         <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}">
@@ -22,7 +24,7 @@
                 <table class="table modal-file-table">
                     <tbody class="main-tbody-comparing-files">
                         <tr>
-                            <td>Show all</td>
+                            <td><b>Show all</b></td>
                             <td>
                                 <ul class="nav nav-pills nav-comparing">
                                     <li ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showAllItems(tab)">

@@ -4,6 +4,45 @@ html, body {
     padding-top: 0;
 }
 
+.round-button {
+    width: 200px;
+    height: 200px;
+}
+.round-button-circle {
+    width: 200px;
+    height: 200px;
+    padding-bottom: 100%;
+    border-radius: 50%;
+    border:10px solid #cfdcec;
+    overflow:hidden;
+
+    background: #4679BD;
+    box-shadow: 0 0 3px gray;
+}
+.round-button-circle:hover {
+    background:#30588e;
+}
+.round-button a {
+    display:block;
+    float:left;
+    width:100%;
+    padding-top:55%;
+    padding-bottom:50%;
+    line-height:1em;
+    margin-top:-0.5em;
+
+    text-align:center;
+    color:#e2eaf3;
+    font-size:1.0em;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+.round-button a:hover {
+    color:#e2eaf3;
+    text-decoration: none;
+}
+
 .about_description > p {
     white-space: pre-wrap;
 }

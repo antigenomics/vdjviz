@@ -3,6 +3,7 @@ package graph.AnnotationTable;
 import com.antigenomics.vdjtools.Clonotype;
 
 public class AnnotationTableRow {
+    public Integer index;
     public Double freq;
     public Integer count;
     public AnnotationTableCdr3nt cdr3nt;
@@ -10,7 +11,8 @@ public class AnnotationTableRow {
     public String v;
     public String j;
 
-    public AnnotationTableRow(Clonotype clonotype) {
+    public AnnotationTableRow(Clonotype clonotype, Integer index) {
+        this.index = index;
         this.cdr3aa = new AnnotationTableCdr3aa(clonotype.getCdr3aa(), -1, clonotype.getVEnd(), clonotype.getJStart(), clonotype.getDStart(), clonotype.getDEnd());
         this.freq = clonotype.getFreq();
         this.count = clonotype.getCount();

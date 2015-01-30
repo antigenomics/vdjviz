@@ -1,10 +1,10 @@
 @(localUser: LocalUser)
 <div class="account-information-tab" ng-show="showAccountInformation()">
-    Account Information
+    <br>
+    <p><b>VDJviz</b> is a lightweight immune repertoire browser.</p>
     <hr>
-    Email: @localUser.email
-    <br>
-    First Name: @localUser.firstName
-    <br>
-    Last Name: @localUser.lastName
+    <p>You can upload clonotype tables that were produced using MiTCR, MiGEC and IgBlastWrapper Rep-Seq processing software. VDJviz server will compute a set of key repertoire statistics and display them as interactive graphics.</p>
+    <p><b>NOTE:</b> Currently there is an upload limit of 25 files with at most 10,000 clonotypes</p>
+    <p>Click <b>Your Files</b> button to upload and manage uploading files, uploaded files will be shown at the sidebar</p>
+
 </div>

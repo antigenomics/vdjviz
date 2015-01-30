@@ -479,7 +479,7 @@ nv.nearestValueIndex = function (values, searchVal, threshold) {
                 .attr("colspan",3)
                 .append("strong")
                 .classed("x-value",true)
-                .html(headerFormatter(d.value));
+                .html('Sample size: ' + headerFormatter(d.value));
 
             var tbodyEnter = table.selectAll("tbody")
                 .data([d])
