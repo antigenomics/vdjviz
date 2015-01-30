@@ -3,13 +3,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="choose-files-button btn btn-primary" ng-click="addNewButton()">Add</div>
-                <div class="upload-all-button btn btn-primary" ng-click="uploadAll()" ng-show="isNewFilesEmpty()">Upload All</div>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
                                 Close</span></button>
             </div>
             <div class="modal-body fade well" id="new-files-dropzone">
                 <div ng-hide="isNewFilesEmpty()">
-                    <text>You can drag and drop your files here</text>
+                    <p>You can drag and drop your files here</p>
+                    <p>Supported extensions: txt, gz</p>
                     <br>
                     <i class="fa fa-4x fa-file-text-o drag-and-drop-icon"></i>
                 </div>
@@ -34,7 +34,9 @@
                                 </select>
                             </td>
                             <td></td>
-                            <td></td>
+                            <td>
+                                <div class="upload-all-button btn btn-default" ng-click="uploadAll()" ng-show="isNewFilesEmpty()">Upload All</div>
+                            </td>
                         </tr>
                         <tr ng-repeat="file in newFiles" ng-class="{'success':isSuccess(file), 'danger':isError(file)}">
                             <td class="name-td">

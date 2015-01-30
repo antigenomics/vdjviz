@@ -17,27 +17,58 @@
     </div>
     <div class="col-lg-12">
         <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
-            This plot shows a chord diagram of Variable-Joining segment combination frequencies.
-            Each chord represent a set of clonotypes with a given V-J junction and is scaled according to the frequency of reads with such junction.
-            Each arc represents a V or J segment and is scaled to the relative number of reads that contain corresponding segment.
+            <h2>Description</h2>
+            <hr>
+            <p>This plot shows a chord diagram of Variable-Joining segment combination frequencies.</p>
+            <p>Each chord represent a set of clonotypes with a given V-J junction and is scaled according to the frequency of reads with such junction.</p>
+            <p>Each arc represents a V or J segment and is scaled to the relative number of reads that contain corresponding segment.</p>
+            <h2>Interactivity</h2>
+            <hr>
+            <p>Hover any sector for detailed intersect information</p>
         </div>
         <div class="visualisation-description-spectratype" ng-show="isActiveTab(visualisationTabs.spectratype)">
-            This histogram shows the distribution of reads by CDR3 length.
-            Several top clonotypes are shown explicitly by colored bars.
+            <h2>Description</h2>
+            <hr>
+            <p>This histogram shows the distribution of reads by CDR3 length.</p>
+            <p>Several top clonotypes are shown explicitly by colored bars.</p>
+            <h2>Interactivity</h2>
+            <hr>
+            <p><b>Click</b> on the clonotype name to show/hide it on histogram</p>
+            <p><b>Double click</b> on the clonotype name to hide other clonotypes</p>
+
         </div>
         <div class="visualisation-description-spectratypeV" ng-show="isActiveTab(visualisationTabs.spectratypev)">
-            This plot shows the distribution of reads by CDR3 length.
-            Separate histograms are shown that correspond to top Variable segment families.
+            <h2>Description</h2>
+            <hr>
+            <p>This plot shows the distribution of reads by CDR3 length.</p>
+            <p>Separate histograms are shown that correspond to top Variable segment families.</p>
+            <h2>Interactivity</h2>
+            <hr>
+            <p><b>Click</b> on the V-Gene to show/hide it on histogram</p>
+            <p><b>Double click</b> on the V-Gene name to hide other V-Genes</p>
+            <p>Equal V-Genes have one color on the all histograms</p>
         </div>
         <div class="visualisation-description-quantileStats" ng-show="isActiveTab(visualisationTabs.quantilestats)">
-            A sunburst plot showing the the clonality of sample.
-            Inner level shows the read frequency of singletons (clonotypes met once), doubletons (clonotypes met twice) and high-order clonotypes.
-            Singletons and doubletons are the basis for estimating the number of unseen species (clonotypes) for the sample.
-            The second level shows high order clonotypes are divided into 5 quantiles based on clonotype rank.
+            <h2>Description</h2>
+            <hr>
+            <p>A sunburst plot showing the the clonality of sample.</p>
+            <p>Inner level shows the read frequency of <b>singletons</b> (clonotypes met once), <b>doubletons</b> (clonotypes met twice) and <b>high-order</b> clonotypes.</p>
+            <p><b>Singletons</b> and <b>doubletons</b> are the basis for estimating the number of unseen species (clonotypes) for the sample.</p>
+            <p>The second level shows <b>high order</b> clonotypes are divided into 5 quantiles based on clonotype rank.</p>
+            <h2>Interactivity</h2>
+            <hr>
+            <p><b>Click</b> on the <b>high-order</b> sector for detailed information</p>
+            <p><b>Click</b> on the center of graph will hide detailed information</p>
         </div>
         <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
-            This table displays top 1000 most abundant clonotypes in the selected sample.
-            Nucleotide and amino acid sequences of CDR3 region are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.
+            <h2>Description</h2>
+            <hr>
+            <p>This table displays top 1000 most abundant clonotypes in the selected sample.</p>
+            <p>Nucleotide and amino acid sequences of CDR3 region are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.</p>
+            <h2>Interactivity</h2>
+            <hr>
+            <p>Export your data to all common document formats</p>
+            <p><b>Click</b> on the header of column for sorting data by this column</p>
         </div>
     </div>
     <hr>
