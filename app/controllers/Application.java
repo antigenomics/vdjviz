@@ -37,8 +37,8 @@ public class Application extends Controller {
         return ok(views.html.commonPages.about.render(null));
     }
 
-    public static Result noScriptPage() {
-        return ok(views.html.commonPages.noScriptPage.render());
+    public static Result badBrowser() {
+        return ok(views.html.commonPages.badBrowserPage.render());
     }
 
 }

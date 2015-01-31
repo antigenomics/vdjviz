@@ -1,13 +1,30 @@
 @(title: String)(content: Html)
 
 <!DOCTYPE html>
-
 <html>
     <head>
         <title>@title</title>
         <noscript>
-            <meta http-equiv="refresh" content="0;url=/noscript">
+            <meta http-equiv="refresh" content="0;url=/badbrowser">
         </noscript>
+        <script>
+            function getBrowser(){
+                var ua = navigator.userAgent;
+                if (ua.search(/Chrome/) > 0) return 'Google Chrome';
+                if (ua.search(/Firefox/) > 0) return 'Firefox';
+                if (ua.search(/Opera/) > 0) return 'Opera';
+                if (ua.search(/Safari/) > 0) return 'Safari';
+                if (ua.search(/MSIE/) > 0) return 'Internet Explorer';
+                return 'Undefined';
+            }
+
+            var browser = getBrowser();
+
+            if (browser === 'Internet Explorer' || browser === 'Undefined') {
+                location.href = "/badbrowser";
+            }
+
+        </script>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
         <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">

@@ -6,7 +6,7 @@
 GET         /                                        controllers.Application.index()
 GET         /contacts                                controllers.Application.contacts()
 GET         /about                                   controllers.Application.about()
-GET         /noscript                                controllers.Application.noScriptPage()
+GET         /badbrowser                              controllers.Application.badBrowser()
 
 
 # Angular directives urls
