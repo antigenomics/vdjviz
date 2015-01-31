@@ -6,7 +6,22 @@
         <title>Error</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.css")">
-        <script>window.location.replace("/")</script>
+        <script>
+        function getBrowser(){
+            var ua = navigator.userAgent;
+            if (ua.search(/MSIE/) > 0) return 'badbrowser';
+            if (ua.search(/iPhone/) > 0) return 'badbrowser';
+            if (ua.search(/iPad/) > 0) return 'badbrowser';
+            if (ua.search(/Android/) > 0) return 'badbrowser';
+            return 'ok';
+        }
+
+        var browser = getBrowser();
+
+        if (browser == 'ok') {
+            window.location.replace("/");
+        }
+        </script>
         <style>
             .logo_img {
                 width: 100%;
