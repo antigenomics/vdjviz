@@ -20,7 +20,7 @@
         </ul>
         <ul class="nav navbar-nav navbar-right">
             @if(username != null) {
-                <li><a>Logged as @username</a></li>
+                <li><a href="/account">Logged as @username</a></li>
                 <li><a href="/logout">Logout</a></li>
             }
             @if(username == null) {
