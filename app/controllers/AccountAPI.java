@@ -89,7 +89,7 @@ public class AccountAPI extends Controller {
             fileName = body.asFormUrlEncoded().get("fileName")[0];
         }
 
-        String pattern = "^[a-zA-Z0-9_.-]{1,20}$";
+        String pattern = "^[a-zA-Z0-9_.-]{1,40}$";
         if (fileName == null || !fileName.matches(pattern)) {
             return ok(Json.toJson(new ServerResponse("error", "Invalid name")));
         }

@@ -1,2 +1,6 @@
 User-agent: *
+<<<<<<< 29dca4340afabb048a343a9255ce18c1337a101a
 Disallow: /account
+=======
+Disallow: /account
+>>>>>>> e02512288e07a1df7224fef1ee858b93fe4fe4f8
