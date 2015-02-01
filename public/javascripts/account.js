@@ -452,9 +452,10 @@
                 $scope.deleteFromQuery = deleteFromQuery;
 
 
-                function isNameValid(fileName){
-                    var regexp = /^[a-zA-Z0-9_.-]{1,20}$/;
-                    return regexp.test(fileName)
+                function isNameValid(file){
+                    var regexp = /^[a-zA-Z0-9_.-]{1,40}$/;
+                    var valid = regexp.test(file.fileName);
+                    return valid;
                 }
 
                 function isNewFilesEmpty() {
@@ -479,7 +480,7 @@
                 }
 
                 function uploadFile(file) {
-                    if (isWait(file) && isNameValid(file.fileName)) {
+                    if (isWait(file) && isNameValid(file)) {
                         updateTooltip(file, "Uploading");
                         file.data.formData = {
                             softwareTypeName: file.softwareTypeName,
@@ -542,7 +543,10 @@
                             resultTooltip: '',
                             data: data
                         };
-                    })
+                    });
+                    $('#invalid-name-popover-' + uid).popover({
+                        trigger: 'focus'
+                    });
                 }
 
                 function updateTooltip(file, tooltip) {
@@ -731,6 +735,7 @@
                         }
                     })
                 });
+
 
             }]
 

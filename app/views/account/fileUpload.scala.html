@@ -40,7 +40,17 @@
                         </tr>
                         <tr ng-repeat="file in newFiles" ng-class="{'success':isSuccess(file), 'danger':isError(file)}">
                             <td class="name-td">
-                                <input ng-model="file.fileName" type="text" value="file.fileName" ng-show="file.wait" ng-class="{'invalid-name-input':!isNameValid(file.fileName)}"/>
+                                <input id="invalid-name-popover-{{ file.uid }}"
+                                    ng-model="file.fileName"
+                                    type="text"
+                                    value="file.fileName"
+                                    ng-show="file.wait"
+                                    ng-class="{'invalid-name-input':!isNameValid(file)}"
+                                    data-toggle="popover"
+                                    data-html="true"
+                                    data-placement="left"
+                                    data-container="body"
+                                    data-content="File name can contain 'a-z' letters, numbers, and   .  (dot),  -  (dash),  _  (underline) symbols. <br> Maximum name length: 40  "/>
                                 <text ng-hide="file.wait">{{ file.fileName }}</text>
                             </td>
                             <td class="select-td">
@@ -63,7 +73,7 @@
                                 </div>
                             </td>
                             <td class="button-td">
-                                <button ng-show="file.wait && isNameValid(file.fileName)" class="btn btn-default" ng-click="uploadFile(file)">
+                                <button ng-show="file.wait && isNameValid(file)" class="btn btn-default" ng-click="uploadFile(file)">
                                                 Upload
                                 </button>
                                 <button ng-show="file.wait" class="btn btn-default" ng-click="deleteFromQuery(file)">&times;</button>
