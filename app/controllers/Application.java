@@ -1,6 +1,7 @@
 package controllers;
 
 import models.LocalUser;
+import play.Logger;
 import play.mvc.*;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
@@ -11,6 +12,7 @@ public class Application extends Controller {
 
     @SecureSocial.UserAwareAction
     public static Result index() {
+        Logger.of("stat").info(request().remoteAddress());
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         if (user != null) {
             return ok(index.render(LocalUser.find.byId(user.identityId().userId()).getAccountUserName()));

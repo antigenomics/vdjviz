@@ -6,7 +6,7 @@ public class VColor {
 
     public static String getColor(String seed) {
         if (seed.equals("other")) return "#dcdcdc";
-        float goldenRationConjugate = 0.618033988749895f;
+        float goldenRationConjugate = 0.818033988749895f;
         int hash = hash(seed.getBytes());
         float h = (nextFloat(hash(seed.getBytes())) + goldenRationConjugate) % 1;
         Color color = hsb(hash % 6, h);
@@ -21,19 +21,18 @@ public class VColor {
         k = Math.abs(k);
         switch (k) {
             case 0:
-                return Color.getHSBColor(h, 1f, 0.8f);
+                return Color.getHSBColor(h, 0.85f, 0.65f);
             case 1:
-                return Color.getHSBColor(h, 0.8f, 0.8f);
+                return Color.getHSBColor(h, 0.65f, 0.65f);
             case 2:
-                return Color.getHSBColor(h, 0.6f, 1f);
+                return Color.getHSBColor(h, 0.45f, 0.85f);
             case 3:
-                return Color.getHSBColor(h, 0.6f, 0.85f);
+                return Color.getHSBColor(h, 0.45f, 0.7f);
             case 4:
-                return Color.getHSBColor(h, 0.7f, 0.95f);
+                return Color.getHSBColor(h, 0.55f, 0.8f);
             case 5:
-                return Color.getHSBColor(h, 1f, 1f);
+                return Color.getHSBColor(h, 0.85f, 0.85f);
             default:
-                System.out.println(k);
                 return null;
         }
     }

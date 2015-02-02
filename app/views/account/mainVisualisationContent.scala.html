@@ -1,9 +1,10 @@
 <div class="visualisation-tab" ng-show="showTab()">
     <ul class="nav nav-pills nav-visualisation">
         <li ng-repeat="tab in visualisationTabs" ng-click="setActiveTab(tab)" ng-class="{'active':isActiveTab(tab)}">
-            <a>{{ tab.tabName }}</a>
+            <a style="font-size: 20px">{{ tab.tabName }}</a>
         </li>
     </ul>
+    <hr>
     <div class="col-lg-12">
         <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
             <p>This plot shows a chord diagram of Variable-Joining (V-J) segment combination frequencies.</p>

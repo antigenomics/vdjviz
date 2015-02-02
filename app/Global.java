@@ -6,9 +6,14 @@ import play.GlobalSettings;
 import play.Play;
 import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
+import static play.mvc.Results.notFound;
 
 import java.io.File;
 import play.Logger;
+import play.libs.F;
+import play.mvc.Http;
+import play.mvc.Results;
+import play.mvc.SimpleResult;
 
 
 public class Global extends GlobalSettings {
@@ -41,6 +46,12 @@ public class Global extends GlobalSettings {
                 }
             }
         }
+    }
+
+    @Override
+    public F.Promise<SimpleResult> onHandlerNotFound(Http.RequestHeader requestHeader) {
+        return F.Promise.<SimpleResult>pure(Results.notFound(
+                views.html.commonPages.notFound.render(requestHeader.path())));
     }
 
     public void onStop(Application app) {

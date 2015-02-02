@@ -6,7 +6,7 @@
         <hr>
     </div>
     <div class="comparing-tab-body col-lg-12">
-        <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}">
+        <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}" style="font-size: 15px">
             <h2>{{ item.fileName }} {{ item.tabName }}</h2>
             <hr>
             <div class="{{ item.place }}"></div>
@@ -19,10 +19,10 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
                                 Close</span></button>
-                <div>Comparing</div>
+                <div style="font-size: 15px">Comparing</div>
             </div>
             <div class="modal-body comparing-table-body">
-                <table class="table modal-file-table">
+                <table class="table modal-file-table" style="font-size: 15px">
                     <tbody class="main-tbody-comparing-files">
                         <tr>
                             <td><b>Show all</b></td>

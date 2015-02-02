@@ -1,0 +1,21 @@
+@(path: String)
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Bad browser</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.css")">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <h2>Ooops :(</h2>
+                <hr>
+                <h1>Sorry, but there is no page named <b>"@path"</b></h1>
+                <a href="/">Back</a>
+            </div>
+        </div>
+
+    </body>
+</html>

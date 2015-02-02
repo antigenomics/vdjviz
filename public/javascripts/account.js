@@ -1291,8 +1291,14 @@ function annotationTable(data, param) {
     thead.append("th").html("Count");
     thead.append("th").html("CDR3AA");
     thead.append("th").html("V");
+    thead.append("th").html("D");
     thead.append("th").html("J");
     thead.append("th").html("CDR3NT");
+
+    var freq = 0.0;
+    for (var i = 0; i < data.data.length; i++) {
+        freq += data.data[i].freq;
+    }
 
     var column = [
         {"data": "index"},
@@ -1300,6 +1306,7 @@ function annotationTable(data, param) {
         {"data": "count"},
         {"data": "cdr3aa"},
         {"data": "v"},
+        {"data": "d"},
         {"data": "j"},
         {"data": "cdr3nt"}
     ];
@@ -1321,7 +1328,14 @@ function annotationTable(data, param) {
         "columnDefs": [
             {
                 "width": "6%",
-                "targets": [1, 2]
+                "render": function(data) {
+                    return (data / freq * 100).toPrecision(2) + '%';
+                },
+                "targets": 1
+            },
+            {
+                "width": "6%",
+                "targets": 2
             },
             {
                 "render": function (data) {
@@ -1454,7 +1468,7 @@ function annotationTable(data, param) {
                     }
                     return result;
                 },
-                "targets": 6
+                "targets": 7
 
             }
         ]
@@ -1463,7 +1477,10 @@ function annotationTable(data, param) {
 
 function vjUsage(data, param) {
 
-    var fill = d3.scale.category20c();
+    //var fill = d3.scale.category20c();
+    var fill = function(i) {
+        return data.colors[i % data.colors.length];
+    };
 
     // Visualize
     var chord = d3.layout.chord()
