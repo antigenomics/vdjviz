@@ -1324,7 +1324,7 @@ function annotationTable(data, param) {
             {
                 "width": "6%",
                 "render": function(data) {
-                    return data.toPrecision(2) + '%';
+                    return (data * 100).toPrecision(2) + '%';
                 },
                 "targets": 1
             },
