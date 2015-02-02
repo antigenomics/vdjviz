@@ -1,11 +1,9 @@
 <div class="comparing-tab" ng-show="showComparing()">
     <div class="comparing-tab-header">
-        <h2>Comparing</h2>
-        <hr>
-        <p>This tab provides you to compare data for your samples, just click on the <b>"Manage comparing graphs"</b> button to start</p>
-        <p>You can also manage comparing samples by clicking <i class="fa fa-plus"></i> button in comparing tab on the sidebar</p>
+        <p>You can plot multiple graphs for different samples side-by-side using this tab.</p>
         <br>
-        <button href="#comparing-files-table" role="button" data-toggle="modal" id="comparingAddButton" class="btn btn-default">Manage comparing graphs</button>
+        <button href="#comparing-files-table" role="button" data-toggle="modal" id="comparingAddButton" class="btn btn-default">Add or remove graphs</button>
+        <hr>
     </div>
     <div class="comparing-tab-body col-lg-12">
         <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}">
