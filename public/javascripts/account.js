@@ -1295,11 +1295,6 @@ function annotationTable(data, param) {
     thead.append("th").html("J");
     thead.append("th").html("CDR3NT");
 
-    var freq = 0.0;
-    for (var i = 0; i < data.data.length; i++) {
-        freq += data.data[i].freq;
-    }
-
     var column = [
         {"data": "index"},
         {"data": "freq"},
@@ -1329,7 +1324,7 @@ function annotationTable(data, param) {
             {
                 "width": "6%",
                 "render": function(data) {
-                    return (data / freq * 100).toPrecision(2) + '%';
+                    return data.toPrecision(2) + '%';
                 },
                 "targets": 1
             },
