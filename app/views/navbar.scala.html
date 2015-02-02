@@ -16,7 +16,7 @@
                 data-container="body"
                 data-toggle="popover"
                 data-placement="bottom"
-                data-content='Just click "Browser" to start! '>Browser</a></li>
+                data-content="Click me to start!">Browser</a></li>
             <li><a href="/contacts">Contacts</a></li>
             <li><a href="/about">About</a></li>
         </ul>
@@ -46,7 +46,12 @@
             trigger: "manual"
         });
         @if(username == null) {
-            $('#browser-link' ).popover('show');
+            if (window.location.pathname === '/') {
+                $ ( '#browser-link' ).popover ( 'show' ) ;
+                setTimeout(function() {
+                    $ ( '#browser-link' ).popover ( 'hide' ) ;
+                }, 15000);
+            }
         }
     })
 
