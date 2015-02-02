@@ -12,9 +12,11 @@
     <div id="navbar" class="collapse navbar-collapse" style="font-size: 15px">
         <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
-            @if(username != null) {
-                <li><a href="/account">Browser</a></li>
-            }
+            <li><a href="/account" id="browser-link"
+                data-container="body"
+                data-toggle="popover"
+                data-placement="bottom"
+                data-content='Just click "Browser" to start! '>Browser</a></li>
             <li><a href="/contacts">Contacts</a></li>
             <li><a href="/about">About</a></li>
         </ul>
@@ -30,3 +32,22 @@
     </div>
     </div>
 </nav>
+<style>
+    .popover {
+        position: fixed;
+    }
+    .popover-content {
+        font-size: 17px;
+    }
+</style>
+<script>
+    $(document).ready(function() {
+        $('#browser-link' ).popover({
+            trigger: "manual"
+        });
+        @if(username == null) {
+            $('#browser-link' ).popover('show');
+        }
+    })
+
+</script>
