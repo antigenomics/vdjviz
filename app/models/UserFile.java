@@ -4,6 +4,7 @@ package models;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
+import org.joda.time.DateTime;
 import play.data.validation.Constraints;
 import play.mvc.PathBindable;
 import play.db.ebean.Model;
@@ -37,6 +38,7 @@ public class UserFile extends Model {
     private String fileDirPath;
     private String fileExtension;
     private RenderState renderState;
+    private DateTime createdAt;
 
     public UserFile(Account account, String fileName,
                     String uniqueName, String softwareTypeName,
@@ -52,6 +54,7 @@ public class UserFile extends Model {
         this.fileExtension = fileExtension;
         this.sampleCount = 0L;
         this.renderState = RenderState.WAIT;
+        this.createdAt = new DateTime();
 
     }
 
@@ -76,7 +79,11 @@ public class UserFile extends Model {
         List<String> sampleFileNames = new ArrayList<>();
         sampleFileNames.add(getPath());
         SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-        this.sampleCount = sampleCollection.getAt(0).getCount();
+        this.sampleCount = (long) sampleCollection.getAt(0).getDiversity();
+    }
+
+    public Long getCreatedAtTimeInMillis() {
+        return createdAt.getMillis();
     }
 
     public Account getAccount() {

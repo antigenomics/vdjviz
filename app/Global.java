@@ -1,19 +1,21 @@
 
 import models.Account;
 import models.UserFile;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
 import play.Application;
 import play.GlobalSettings;
 import play.Play;
 import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
-import static play.mvc.Results.notFound;
 
 import java.io.File;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 import play.Logger;
-import play.libs.F;
-import play.mvc.Http;
-import play.mvc.Results;
-import play.mvc.SimpleResult;
+import play.libs.Akka;
+import scala.concurrent.duration.Duration;
 
 
 public class Global extends GlobalSettings {
@@ -46,12 +48,49 @@ public class Global extends GlobalSettings {
                 }
             }
         }
+        final Integer deleteAfter = Play.application().configuration().getInt("deleteAfter");
+        if (deleteAfter > 0) {
+            Akka.system().scheduler().schedule(
+                    Duration.create(nextExecutionInSeconds(1, 0), TimeUnit.SECONDS),
+                    Duration.create(24, TimeUnit.SECONDS),
+                    new Runnable() {
+                        public void run() {
+                            Long currentTime = new DateTime().getMillis();
+                            for (Account account : Account.findAll()) {
+                                for (UserFile userFile : account.getUserfiles()) {
+                                    Long hours = (currentTime - userFile.getCreatedAtTimeInMillis()) / (60 * 60 * 1000);
+                                    System.out.println(hours);
+                                    if (hours > deleteAfter) {
+                                        UserFile.asyncDeleteFile(userFile);
+                                        Logger.of("user." + account.getUserName()).info("File " + userFile.getFileName() + " was deleted");
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    Akka.system().dispatcher()
+            );
+        }
+
     }
 
-    @Override
-    public F.Promise<SimpleResult> onHandlerNotFound(Http.RequestHeader requestHeader) {
-        return F.Promise.<SimpleResult>pure(Results.notFound(
-                views.html.commonPages.notFound.render(requestHeader.path())));
+    public static int nextExecutionInSeconds(int hour, int minute){
+        return Seconds.secondsBetween(
+                new DateTime(),
+                nextExecution(hour, minute)
+        ).getSeconds();
+    }
+
+    public static DateTime nextExecution(int hour, int minute){
+        DateTime next = new DateTime()
+                .withHourOfDay(hour)
+                .withMinuteOfHour(minute)
+                .withSecondOfMinute(0)
+                .withMillisOfSecond(0);
+
+        return (next.isBeforeNow())
+                ? next.plusHours(24)
+                : next;
     }
 
     public void onStop(Application app) {
