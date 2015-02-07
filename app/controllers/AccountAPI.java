@@ -155,18 +155,6 @@ public class AccountAPI extends Controller {
 
             //Updating database UserFile <-> Account
             Ebean.save(newFile);
-            Integer deleteAfter = Play.application().configuration().getInt("deleteAfter");
-            if (deleteAfter > 0) {
-                Akka.system().scheduler().scheduleOnce(
-                        Duration.create(deleteAfter, TimeUnit.HOURS),
-                        new Runnable() {
-                            public void run() {
-                                UserFile.asyncDeleteFile(newFile);
-                            }
-                        },
-                        Akka.system().dispatcher()
-                );
-            }
             return ok(Json.toJson(new ServerResponse("success", "Successfully uploaded")));
         } catch (Exception e) {
             e.printStackTrace();
