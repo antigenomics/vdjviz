@@ -52,14 +52,13 @@ public class Global extends GlobalSettings {
         if (deleteAfter > 0) {
             Akka.system().scheduler().schedule(
                     Duration.create(nextExecutionInSeconds(1, 0), TimeUnit.SECONDS),
-                    Duration.create(24, TimeUnit.SECONDS),
+                    Duration.create(24, TimeUnit.HOURS),
                     new Runnable() {
                         public void run() {
                             Long currentTime = new DateTime().getMillis();
                             for (Account account : Account.findAll()) {
                                 for (UserFile userFile : account.getUserfiles()) {
                                     Long hours = (currentTime - userFile.getCreatedAtTimeInMillis()) / (60 * 60 * 1000);
-                                    System.out.println(hours);
                                     if (hours > deleteAfter) {
                                         UserFile.asyncDeleteFile(userFile);
                                         Logger.of("user." + account.getUserName()).info("File " + userFile.getFileName() + " was deleted");
