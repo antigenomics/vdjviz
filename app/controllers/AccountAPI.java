@@ -147,7 +147,7 @@ public class AccountAPI extends Controller {
             //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");;
 
             if (Configuration.getMaxClonotypesCount() > 0) {
-                if (newFile.getSampleCount() > Configuration.getMaxClonotypesCount()) {
+                if (newFile.getClonotypesCount() > Configuration.getMaxClonotypesCount()) {
                     UserFile.cleanTemporaryFiles(newFile);
                     return ok(Json.toJson(new ServerResponse("error", "Number of clonotypes should be less than " + Configuration.getMaxClonotypesCount())));
                 }

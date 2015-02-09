@@ -30,6 +30,7 @@ public class UserFile extends Model {
     private Account account;
     private String fileName;
     private String uniqueName;
+    private Integer clonotypesCount;
     private Long sampleCount;
     private Software softwareType;
     @Constraints.Required
@@ -52,7 +53,7 @@ public class UserFile extends Model {
         this.filePath = filePath;
         this.fileDirPath = fileDirPath;
         this.fileExtension = fileExtension;
-        this.sampleCount = 0L;
+        this.clonotypesCount = 0;
         this.renderState = RenderState.WAIT;
         this.createdAt = new DateTime();
 
@@ -75,11 +76,15 @@ public class UserFile extends Model {
     }
 
     public void setSampleCount() {
-        Software software = getSoftwareType();
         List<String> sampleFileNames = new ArrayList<>();
         sampleFileNames.add(getPath());
-        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-        this.sampleCount = (long) sampleCollection.getAt(0).getDiversity();
+        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, softwareType, false);
+        this.clonotypesCount = sampleCollection.getAt(0).getDiversity();
+        this.sampleCount = sampleCollection.getAt(0).getCount();
+    }
+
+    public Integer getClonotypesCount() {
+        return clonotypesCount;
     }
 
     public Long getCreatedAtTimeInMillis() {

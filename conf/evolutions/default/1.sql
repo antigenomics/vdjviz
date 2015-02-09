@@ -36,6 +36,7 @@ create table user_file (
   account_id                bigint,
   file_name                 varchar(255),
   unique_name               varchar(255),
+  clonotypes_count          integer,
   sample_count              bigint,
   software_type             integer,
   software_type_name        varchar(255),
