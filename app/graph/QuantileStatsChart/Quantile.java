@@ -17,4 +17,12 @@ public class Quantile {
         this.name = name;
         this.children = children;
     }
+
+    public void addChildren(String name, double size) {
+        if (children == null) {
+            this.children = new ArrayList<>();
+        }
+        children.add(new Quantile(name, size));
+
+    }
 }

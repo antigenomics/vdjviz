@@ -1122,6 +1122,7 @@ function quantileSunbirstChart(data, param) {
             .margin({top: 0, left: 0, right: 0, bottom: 0});
 
         var keys = [
+            {key: "data", "color": "#ffffff", label: ""},
             {key: "Singleton", color: "#9e9ac8", label: "Singleton"},
             {key: "Doubleton", color: "#bcbddc", label: "Doubleton"},
             {key: "HighOrder", color: "#9ebcda", label: "High Order"},
@@ -1160,6 +1161,9 @@ function quantileSunbirstChart(data, param) {
 
         var nodes = partition.nodes(data);
 
+        var colors = ["#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf", "#74add1", "#abd9e9", "#e0f3f8", "#bababa", "#DCDCDC"];
+        var topCount = 0;
+
         var path = svg.selectAll("path")
             .data(nodes)
             .enter().append("path")
@@ -1167,11 +1171,13 @@ function quantileSunbirstChart(data, param) {
             .attr("d", arc)
             .style("fill", function(d) {
                 var name = d.name;
+                var found = false;
                 var color = "#ffffff";
                 keys.forEach(function(d) {
-                    if (d.key === name) color = d.color;
+                    if (d.key === name) { color = d.color; found = true; };
                 });
-                return color;
+                if (found) return color;
+                return colors[topCount++ % colors.length];
             })
             .style("cursor", function(d) {
                 if (d.children != null) {
@@ -1204,8 +1210,8 @@ function quantileSunbirstChart(data, param) {
             .text(function(d) {
                 if (d.name == "data") return null;
                 var label = d.name;
-                if (d.children == null) {
-                    label += "  " + (d.size.toFixed(2) * 100).toFixed(0) + "%";
+                if (d.size != 0) {
+                    label += "  " + (d.size.toPrecision(2) * 100).toPrecision(2) + "%";
                 }
                 return label;
             });
@@ -1643,7 +1649,7 @@ function summaryStats(data, param) {
                 "render": function (data) {
                     return parseFloat(data).toExponential(2);
                 },
-                "targets": [3, 4, 10]
+                "targets": [3, 4]
             },
             {
                 "render": function (data) {
@@ -1656,6 +1662,12 @@ function summaryStats(data, param) {
                     return parseFloat(data).toFixed(2)
                 },
                 "targets": [7, 8, 9]
+            },
+            {
+                "render": function(data) {
+                    return data.substring(0, 6);
+                },
+                "targets": 10
             }
         ],
         "columns": column,

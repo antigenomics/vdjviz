@@ -125,36 +125,6 @@ public class ComputationUtil {
     }
 
     private void annotation() throws Exception {
-        /*
-        CdrDatabase cdrDatabase = new CdrDatabase();
-        DatabaseBrowser databaseBrowser = new DatabaseBrowser(false, false, new TreeSearchParameters(1, 0, 0, 1));
-        BrowserResult browserResult = databaseBrowser.query(sample, cdrDatabase);
-        Data data = new Data(new String[]{"data", "header"});
-        List<HashMap<String, Object>> annotationData = new ArrayList<>();
-        String[] header = cdrDatabase.annotationHeader;
-        for (CdrMatch cdrDatabaseMatch : browserResult) {
-            Data annotationDataNode = new Data(new String[]{"query_cdr3aa", "query_V", "query_J", "freq", "count"});
-            Data v = new Data(new String[]{"v", "match"});
-            Data j = new Data(new String[]{"j", "match"});
-            Data cdr3aa = new Data(new String[]{"cdr3aa", "pos", "vend", "jstart", "dstart", "dend"});
-            v.addData(new Object[]{cdrDatabaseMatch.getQuery().getV(), cdrDatabaseMatch.isvMatch()});
-            j.addData(new Object[]{cdrDatabaseMatch.getQuery().getJ(), cdrDatabaseMatch.isjMatch()});
-            cdr3aa.addData(new Object[]{cdrDatabaseMatch.getQuery().getCdr3aa(),
-                    cdrDatabaseMatch.getAlignment().getAbsoluteMutations().firsMutationPosition(),
-                    cdrDatabaseMatch.getQuery().getVEnd(),
-                    cdrDatabaseMatch.getQuery().getJStart(),
-                    cdrDatabaseMatch.getQuery().getDStart(),
-                    cdrDatabaseMatch.getQuery().getDEnd()});
-            annotationDataNode.addData(new Object[]{cdr3aa.getData(), v.getData(), j.getData(), cdrDatabaseMatch.getQuery().getFreq(), cdrDatabaseMatch.getQuery().getCount()});
-            List<String> annotations = cdrDatabaseMatch.getSubject().getAnnotation();
-            for (int i = 0; i < header.length; i++) {
-                annotationDataNode.changeValue(header[i], annotations.get(i));
-            }
-            annotationData.add(annotationDataNode.getData());
-        }
-        data.addData(new Object[]{annotationData, header});
-        saveCache(CacheType.annotation.getCacheFileName(), data.getData());
-        */
         AnnotationTable annotationTable = new AnnotationTable(account, file, sample);
         annotationTable.create().saveCache();
         progressResponse.sendMessage("60");
