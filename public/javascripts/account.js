@@ -453,7 +453,7 @@
 
 
                 function isNameValid(file){
-                    var regexp = /^[a-zA-Z0-9_.-]{1,40}$/;
+                    var regexp = /^[a-zA-Z0-9_.+-]{1,40}$/;
                     var valid = regexp.test(file.fileName);
                     return valid;
                 }
