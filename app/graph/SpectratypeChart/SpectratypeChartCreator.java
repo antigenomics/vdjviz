@@ -36,7 +36,7 @@ public class SpectratypeChartCreator {
 
     public SpectratypeChartCreator create() {
         int[] x_coordinates = sp.getLengths();
-        double[] y_coordinates = sp.getHistogram();
+        double[] y_coordinates = sp.getHistogram(false);
         int x_min = x_coordinates[0];
         int x_max = x_coordinates[x_coordinates.length - 1];
 

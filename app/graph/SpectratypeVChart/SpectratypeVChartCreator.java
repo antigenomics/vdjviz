@@ -37,13 +37,17 @@ public class SpectratypeVChartCreator {
         this.created = false;
     }
 
+    public SpectratypeVChart getSpectratypeVChart() {
+        return spectratypeVChart;
+    }
+
     public SpectratypeVChartCreator create() {
         Map<String, Spectratype> collapsedSpectratypes = spectratypeV.collapse(defaultTop);
         for (String key : new HashSet<>(collapsedSpectratypes.keySet())) {
             Spectratype spectratype = collapsedSpectratypes.get(key);
             SpectratypeVBar spectratypeVBar = new SpectratypeVBar(key, VColor.getColor(key));
             int x_coordinates[] = spectratype.getLengths();
-            double y_coordinates[] = spectratype.getHistogram();
+            double y_coordinates[] = spectratype.getHistogram(false);
             for (int i = 0; i < x_coordinates.length; i++) {
                 spectratypeVBar.addPoint((double) x_coordinates[i], y_coordinates[i]);
             }
