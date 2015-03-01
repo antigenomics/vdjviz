@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
+import models.IPAddress;
 import models.LocalUser;
 import models.UserFile;
 import play.Logger;
@@ -37,13 +38,37 @@ import java.util.concurrent.TimeUnit;
 @SecureSocial.SecuredAction
 public class AccountAPI extends Controller {
 
+    public static Boolean checkIP() {
+        String ip = request().remoteAddress();
+        IPAddress ipAddress = IPAddress.findByIp(ip);
+        if (ipAddress == null) {
+            ipAddress = new IPAddress(ip, 1L, false);
+            ipAddress.save();
+            return true;
+        } else {
+            if (ipAddress.isBanned()) {
+                return false;
+            } else {
+                ipAddress.count();
+                return true;
+            }
+        }
+    }
+
     public static Result account() {
+        if (!checkIP()) {
+            return badRequest();
+        }
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         return ok(views.html.account.accountMainPage.render(localUser.getAccountUserName()));
     }
 
     public static Result upload() {
+
+        if (!checkIP()) {
+            return badRequest();
+        }
 
         //Identifying user using the SecureSocial API
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -56,11 +81,10 @@ public class AccountAPI extends Controller {
         }
 
         //Checking files count;
-        if (Configuration.getMaxFilesCount() > 0) {
-            if (account.getFilesCount() >= Configuration.getMaxFilesCount()) {
-                Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
-                return ok(Json.toJson(new ServerResponse("error", "You have exceeded the limit of the number of files")));
-            }
+        if (account.isMaxFilesCountExceeded()) {
+            Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
+            return ok(Json.toJson(new ServerResponse("error", "You have exceeded the limit of the number of files")));
+
         }
 
         //Getting the file from request body
@@ -71,9 +95,9 @@ public class AccountAPI extends Controller {
             return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
         };
 
-        if (Configuration.getMaxFileSize() > 0) {
+        if (account.getMaxFilesSize() > 0) {
             Long sizeMB = file.getFile().length() / 1024;
-            if (sizeMB > Configuration.getMaxFileSize()) {
+            if (sizeMB > account.getMaxFilesSize()) {
                 return ok(Json.toJson(new ServerResponse("error", "File is too large")));
             }
         }
@@ -146,8 +170,8 @@ public class AccountAPI extends Controller {
 
             //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");;
 
-            if (Configuration.getMaxClonotypesCount() > 0) {
-                if (newFile.getClonotypesCount() > Configuration.getMaxClonotypesCount()) {
+            if (account.getMaxClonotypesCount() > 0) {
+                if (newFile.getClonotypesCount() > account.getMaxClonotypesCount()) {
                     UserFile.cleanTemporaryFiles(newFile);
                     return ok(Json.toJson(new ServerResponse("error", "Number of clonotypes should be less than " + Configuration.getMaxClonotypesCount())));
                 }
@@ -164,6 +188,9 @@ public class AccountAPI extends Controller {
     }
 
     public static Result delete() {
+        if (!checkIP()) {
+            return badRequest();
+        }
         //Identifying user using the Secure Social API
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -212,6 +239,9 @@ public class AccountAPI extends Controller {
     }
 
     public static Result files() {
+        if (!checkIP()) {
+            return badRequest();
+        }
         //Identifying user using the Secure Social API
         //Return meta information about all files
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -221,6 +251,9 @@ public class AccountAPI extends Controller {
     }
 
     public static Result accountInformation() {
+        if (!checkIP()) {
+            return badRequest();
+        }
         //Identifying user using the Secure Social API
         //Return account information
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -230,6 +263,9 @@ public class AccountAPI extends Controller {
     }
 
     public static Result data() throws Exception {
+        if (!checkIP()) {
+            return badRequest();
+        }
         //Identifying user using the Secure Social API
         //Return data for chart
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -270,6 +306,9 @@ public class AccountAPI extends Controller {
     }
 
     private static Result cache(UserFile file, String cacheName, Account account) {
+        if (!checkIP()) {
+            return badRequest();
+        }
         //Return cache file transformed into json format
         if (file == null) {
             Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
@@ -296,6 +335,9 @@ public class AccountAPI extends Controller {
     }
 
     private static Result basicStats(Account account) throws FileNotFoundException {
+        if (!checkIP()) {
+            return badRequest();
+        }
         //Return basicStats cache for all files in json format
 
         if (account.getFilesCount() == 0) {
@@ -315,6 +357,9 @@ public class AccountAPI extends Controller {
     }
 
     private static Result rarefaction(Account account, Boolean needToCreateNew) throws Exception {
+        if (!checkIP()) {
+            return badRequest();
+        }
 
         if (account.getFilesCount() == 0) {
             return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
@@ -325,6 +370,9 @@ public class AccountAPI extends Controller {
     }
 
     public static WebSocket<JsonNode> ws() {
+        if (!checkIP()) {
+            return null;
+        }
         //Socket for updating information about computation progress
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
         final Account account = localUser.account;

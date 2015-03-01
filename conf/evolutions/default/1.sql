@@ -8,7 +8,18 @@ create table account (
   user_name                 varchar(255),
   user_id                   varchar(255),
   user_dir_path             varchar(255),
+  max_files_size            integer,
+  max_files_count           integer,
+  max_clonotypes_count      integer,
+  privelegies               tinyint(1) default 0,
   constraint pk_account primary key (id))
+;
+
+create table ipaddress (
+  ip                        varchar(255) not null,
+  count                     bigint,
+  banned                    tinyint(1) default 0,
+  constraint pk_ipaddress primary key (ip))
 ;
 
 create table local_token (
@@ -64,6 +75,8 @@ create index ix_user_file_account_3 on user_file (account_id);
 SET FOREIGN_KEY_CHECKS=0;
 
 drop table account;
+
+drop table ipaddress;
 
 drop table local_token;
 

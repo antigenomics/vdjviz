@@ -1,5 +1,6 @@
 
 import models.Account;
+import models.IPAddress;
 import models.UserFile;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
@@ -57,13 +58,18 @@ public class Global extends GlobalSettings {
                         public void run() {
                             Long currentTime = new DateTime().getMillis();
                             for (Account account : Account.findAll()) {
-                                for (UserFile userFile : account.getUserfiles()) {
-                                    Long hours = (currentTime - userFile.getCreatedAtTimeInMillis()) / (60 * 60 * 1000);
-                                    if (hours > deleteAfter) {
-                                        UserFile.asyncDeleteFile(userFile);
-                                        Logger.of("user." + account.getUserName()).info("File " + userFile.getFileName() + " was deleted");
+                                if (!account.isPrivilege()) {
+                                    for (UserFile userFile : account.getUserfiles()) {
+                                        Long hours = (currentTime - userFile.getCreatedAtTimeInMillis()) / (60 * 60 * 1000);
+                                        if (hours > deleteAfter) {
+                                            UserFile.asyncDeleteFile(userFile);
+                                            Logger.of("user." + account.getUserName()).info("File " + userFile.getFileName() + " was deleted");
+                                        }
                                     }
                                 }
+                            }
+                            for (IPAddress ipAddress : IPAddress.find().all()) {
+                                ipAddress.flushCount();
                             }
                         }
                     },

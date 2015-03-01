@@ -27,12 +27,20 @@ public class Account extends Model {
     private String userDirPath;
     @OneToMany(mappedBy="account")
     private List<UserFile> userfiles;
+    private Integer maxFilesSize;
+    private Integer maxFilesCount;
+    private Integer maxClonotypesCount;
+    private Boolean privelegies;
 
     public Account(LocalUser user, String userName, String userDirPath) {
         this.user = user;
         this.userName = userName;
         this.userDirPath = userDirPath;
         this.userfiles = new ArrayList<>();
+        this.maxClonotypesCount = Configuration.getMaxClonotypesCount();
+        this.maxFilesSize = Configuration.getMaxFileSize();
+        this.maxFilesCount = Configuration.getMaxFilesCount();
+        this.privelegies = false;
     }
 
     public class AccountInformation {
@@ -60,8 +68,8 @@ public class Account extends Model {
 
         public FilesInformation(List<FileInformation> files, Integer maxFileSize, Integer maxFilesCount, Boolean rarefactionCache) {
             this.files = files;
-            this.maxFileSize = maxFileSize;
-            this.maxFilesCount = maxFilesCount;
+            this.maxFileSize = getMaxFilesSize();
+            this.maxFilesCount = getMaxFilesCount();
             this.rarefactionCache = rarefactionCache;
         }
     }
@@ -75,7 +83,32 @@ public class Account extends Model {
         File jsonFile = new File(getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
         Boolean rarefactionCache = !jsonFile.exists();
 
-        return new FilesInformation(files, Configuration.getMaxFileSize(), Configuration.getMaxFilesCount(), rarefactionCache);
+        return new FilesInformation(files, maxFilesSize, maxFilesCount, rarefactionCache);
+    }
+
+    public Boolean isPrivilege() {
+        return privelegies;
+    }
+
+    public Integer getMaxFilesSize() {
+        return privelegies ? 0 : maxFilesSize;
+    }
+
+    public Integer getMaxFilesCount() {
+        return privelegies ? 0: maxFilesCount;
+    }
+
+    public Integer getMaxClonotypesCount() {
+        return privelegies ? 0: maxClonotypesCount;
+    }
+
+    public Boolean isMaxFilesCountExceeded() {
+        if (getMaxFilesCount() > 0) {
+            if (getFilesCount() > getMaxFilesCount()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void cleanAllFiles() throws IOException {

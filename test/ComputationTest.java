@@ -2,7 +2,12 @@ import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.diversity.QuantileStats;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
+import graph.SpectratypeVChart.SpectratypeVBar;
+import graph.SpectratypeVChart.SpectratypeVChart;
+import graph.SpectratypeVChart.SpectratypeVChartCreator;
+import models.UserFile;
 import org.junit.Test;
+import play.libs.Json;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -42,5 +47,4 @@ public class ComputationTest {
             );
         }
     }
-
 }
