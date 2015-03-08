@@ -11,11 +11,18 @@ import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import play.Logger;
 import play.libs.Akka;
+import play.libs.F;
+import play.mvc.Action;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.SimpleResult;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 
@@ -23,6 +30,26 @@ public class Global extends GlobalSettings {
 
     public <T extends EssentialFilter> Class<T>[] filters() {
         return new Class[]{GzipFilter.class};
+    }
+
+    @Override
+    public Action onRequest(Http.Request request, Method method) {
+        String ip = request.remoteAddress();
+        IPAddress ipAddress = IPAddress.findByIp(ip);
+        if (ipAddress == null) {
+            ipAddress = new IPAddress(ip, 1L, false);
+            ipAddress.save();
+        } else {
+            if (ipAddress.isBanned()) {
+                return new Action.Simple() {
+                    @Override
+                    public F.Promise<SimpleResult> call(Http.Context ctx) throws Throwable {
+                        return F.Promise.pure((SimpleResult) status(0));
+                    }
+                };
+            }
+        }
+        return super.onRequest(request, method);
     }
 
     public void onStart(Application app) {
