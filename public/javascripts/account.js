@@ -1352,6 +1352,7 @@ function annotationTable(data, param) {
                     while (vend >= jstart) jstart++;
                     while (dstart <= vend) dstart++;
                     while (dend >= jstart) dend--;
+
                     var createSubString = function (start, end, color) {
                         return {
                             start: start,

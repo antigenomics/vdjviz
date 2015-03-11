@@ -20,7 +20,6 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class RarefactionChart {
@@ -74,7 +73,7 @@ public class RarefactionChart {
 
                 for (Rarefaction.RarefactionPoint value : values) {
                     areaLine.addPoint(value.getX(), value.getCiL());
-                    switch (value.getDiversityType()) {
+                    switch (value.getRichnessType()) {
                         case Interpolated:
                             line.addPoint(value.getX(), value.getMean());
                             break;

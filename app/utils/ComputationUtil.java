@@ -100,32 +100,32 @@ public class ComputationUtil {
     }
 
     private void vjUsageData() throws Exception {
-        VJUsageChartCreator vjUsageChartCreator = new VJUsageChartCreator(file, account, sampleCollection);
+        VJUsageChartCreator vjUsageChartCreator = new VJUsageChartCreator(file, sampleCollection);
         vjUsageChartCreator.create().saveCache();
         progressResponse.sendMessage("20");
 
     }
 
     private void spectratype() throws Exception {
-        SpectratypeChartCreator spectratypeChartCreator = new SpectratypeChartCreator(file, account, sample);
+        SpectratypeChartCreator spectratypeChartCreator = new SpectratypeChartCreator(file, sample);
         spectratypeChartCreator.create().saveCache();
         progressResponse.sendMessage("30");
     }
 
     private void spectratypeV() throws Exception {
-        SpectratypeVChartCreator spectratypeVChartCreator = new SpectratypeVChartCreator(file, account, sample);
+        SpectratypeVChartCreator spectratypeVChartCreator = new SpectratypeVChartCreator(file, sample);
         spectratypeVChartCreator.create().saveCache();
         progressResponse.sendMessage("40");
     }
 
     private void quantileStats() throws Exception {
-        QuantileStatsChartCreator quantileStatsChartCreator = new QuantileStatsChartCreator(file, account, sample);
+        QuantileStatsChartCreator quantileStatsChartCreator = new QuantileStatsChartCreator(file, sample);
         quantileStatsChartCreator.create().saveCache();
         progressResponse.sendMessage("100");
     }
 
     private void annotation() throws Exception {
-        AnnotationTable annotationTable = new AnnotationTable(account, file, sample);
+        AnnotationTable annotationTable = new AnnotationTable(file, sample);
         annotationTable.create().saveCache();
         progressResponse.sendMessage("60");
     }

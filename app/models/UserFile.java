@@ -6,7 +6,6 @@ import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import org.joda.time.DateTime;
 import play.data.validation.Constraints;
-import play.mvc.PathBindable;
 import play.db.ebean.Model;
 import javax.persistence.Entity;
 import javax.persistence.Id;

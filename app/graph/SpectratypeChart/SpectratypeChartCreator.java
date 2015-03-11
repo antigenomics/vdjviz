@@ -1,6 +1,6 @@
 package graph.SpectratypeChart;
 
-import com.antigenomics.vdjtools.Clonotype;
+import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.sample.Sample;
 import models.Account;
@@ -16,7 +16,6 @@ import java.util.List;
 
 public class SpectratypeChartCreator {
     private UserFile file;
-    private Account account;
     private Spectratype sp;
     private List<Clonotype> topclones;
     private boolean created;
@@ -24,9 +23,8 @@ public class SpectratypeChartCreator {
     private SpectratypeChart spectratypeChart;
 
 
-    public SpectratypeChartCreator(UserFile file, Account account, Sample sample) {
+    public SpectratypeChartCreator(UserFile file, Sample sample) {
         this.file = file;
-        this.account = account;
         this.sp = new Spectratype(false, false);
         this.topclones = sp.addAllFancy(sample, 10);
         this.created = false;
@@ -69,7 +67,7 @@ public class SpectratypeChartCreator {
                 fileWriter.write(Json.stringify(Json.toJson(spectratypeChart.getChart())));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
                         ": save cache error [" + file.getFileName() + "," + cacheName + "]");
                 fnfe.printStackTrace();
             }

@@ -17,7 +17,6 @@ import java.util.Map;
 
 public class SpectratypeVChartCreator {
     private UserFile file;
-    private Account account;
     private Sample sample;
     private SpectratypeVChart spectratypeVChart;
     private Integer defaultTop;
@@ -25,9 +24,8 @@ public class SpectratypeVChartCreator {
     private SpectratypeV spectratypeV;
     private boolean created;
 
-    public SpectratypeVChartCreator(UserFile file, Account account, Sample sample) {
+    public SpectratypeVChartCreator(UserFile file, Sample sample) {
         this.file = file;
-        this.account = account;
         this.sample = sample;
         this.spectratypeVChart = new SpectratypeVChart();
         this.spectratypeV = new SpectratypeV(false, false);
@@ -65,7 +63,7 @@ public class SpectratypeVChartCreator {
                 fileWriter.write(Json.stringify(Json.toJson(spectratypeVChart.getChart())));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
                         ": save cache error [" + file.getFileName() + "," + cacheName + "]");
                 fnfe.printStackTrace();
             }

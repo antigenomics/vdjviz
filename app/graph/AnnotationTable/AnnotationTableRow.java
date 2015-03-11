@@ -1,6 +1,6 @@
 package graph.AnnotationTable;
 
-import com.antigenomics.vdjtools.Clonotype;
+import com.antigenomics.vdjtools.sample.Clonotype;
 
 public class AnnotationTableRow {
     public Integer index;

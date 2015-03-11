@@ -1,7 +1,7 @@
 package graph.AnnotationTable;
 
 
-import com.antigenomics.vdjtools.Clonotype;
+import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.Sample;
 import models.Account;
 import models.UserFile;
@@ -22,12 +22,10 @@ public class AnnotationTable {
     private Boolean created;
     private String cacheName;
     private UserFile file;
-    private Account account;
 
-    public AnnotationTable(Account account, UserFile file,Sample sample) {
+    public AnnotationTable(UserFile file, Sample sample) {
         this.created = false;
         this.sample = sample;
-        this.account = account;
         this.file = file;
         this.cacheName = CacheType.annotation.getCacheFileName();
         this.data = new ArrayList<>();
@@ -56,7 +54,7 @@ public class AnnotationTable {
                 fileWriter.write(Json.stringify(Json.toJson(this)));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
                         ": save cache error [" + file.getFileName() + "," + cacheName + "]");
                 fnfe.printStackTrace();
             }

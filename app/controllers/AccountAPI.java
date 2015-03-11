@@ -1,24 +1,17 @@
 package controllers;
 
 import com.avaje.ebean.Ebean;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
-import models.IPAddress;
 import models.LocalUser;
 import models.UserFile;
 import play.Logger;
-import play.Play;
-import play.libs.Akka;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.*;
-import scala.concurrent.duration.Duration;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
-import sun.org.mozilla.javascript.json.JsonParser;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -32,43 +25,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 
 @SecureSocial.SecuredAction
 public class AccountAPI extends Controller {
 
-    public static Boolean checkIP() {
-        String ip = request().remoteAddress();
-        IPAddress ipAddress = IPAddress.findByIp(ip);
-        if (ipAddress == null) {
-            ipAddress = new IPAddress(ip, 1L, false);
-            ipAddress.save();
-            return true;
-        } else {
-            if (ipAddress.isBanned()) {
-                return false;
-            } else {
-                ipAddress.count();
-                return true;
-            }
-        }
-    }
-
     public static Result account() {
-        if (!checkIP()) {
-            return badRequest();
-        }
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
         return ok(views.html.account.accountMainPage.render(localUser.getAccountUserName()));
     }
 
     public static Result upload() {
-
-        if (!checkIP()) {
-            return badRequest();
-        }
 
         //Identifying user using the SecureSocial API
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -188,9 +156,6 @@ public class AccountAPI extends Controller {
     }
 
     public static Result delete() {
-        if (!checkIP()) {
-            return badRequest();
-        }
         //Identifying user using the Secure Social API
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
         LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
@@ -239,9 +204,6 @@ public class AccountAPI extends Controller {
     }
 
     public static Result files() {
-        if (!checkIP()) {
-            return badRequest();
-        }
         //Identifying user using the Secure Social API
         //Return meta information about all files
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -251,9 +213,6 @@ public class AccountAPI extends Controller {
     }
 
     public static Result accountInformation() {
-        if (!checkIP()) {
-            return badRequest();
-        }
         //Identifying user using the Secure Social API
         //Return account information
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -263,9 +222,6 @@ public class AccountAPI extends Controller {
     }
 
     public static Result data() throws Exception {
-        if (!checkIP()) {
-            return badRequest();
-        }
         //Identifying user using the Secure Social API
         //Return data for chart
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -306,9 +262,6 @@ public class AccountAPI extends Controller {
     }
 
     private static Result cache(UserFile file, String cacheName, Account account) {
-        if (!checkIP()) {
-            return badRequest();
-        }
         //Return cache file transformed into json format
         if (file == null) {
             Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
@@ -335,9 +288,6 @@ public class AccountAPI extends Controller {
     }
 
     private static Result basicStats(Account account) throws FileNotFoundException {
-        if (!checkIP()) {
-            return badRequest();
-        }
         //Return basicStats cache for all files in json format
 
         if (account.getFilesCount() == 0) {
@@ -357,9 +307,6 @@ public class AccountAPI extends Controller {
     }
 
     private static Result rarefaction(Account account, Boolean needToCreateNew) throws Exception {
-        if (!checkIP()) {
-            return badRequest();
-        }
 
         if (account.getFilesCount() == 0) {
             return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
@@ -370,9 +317,6 @@ public class AccountAPI extends Controller {
     }
 
     public static WebSocket<JsonNode> ws() {
-        if (!checkIP()) {
-            return null;
-        }
         //Socket for updating information about computation progress
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
         final Account account = localUser.account;

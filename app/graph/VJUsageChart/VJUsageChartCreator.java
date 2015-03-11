@@ -20,7 +20,6 @@ import java.util.List;
 
 public class VJUsageChartCreator {
     private UserFile file;
-    private Account account;
     private SampleCollection sampleCollection;
     private Sample sample;
     private VJUsageChart vjUsageChart;
@@ -28,9 +27,8 @@ public class VJUsageChartCreator {
     private boolean created;
 
 
-    public VJUsageChartCreator(UserFile file, Account account, SampleCollection sampleCollection) {
+    public VJUsageChartCreator(UserFile file, SampleCollection sampleCollection) {
         this.file = file;
-        this.account = account;
         this.sampleCollection = sampleCollection;
         this.sample = sampleCollection.getAt(0);
         this.created = false;
@@ -76,7 +74,7 @@ public class VJUsageChartCreator {
                 fileWriter.write(Json.stringify(Json.toJson(vjUsageChart)));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
                         ": save cache error [" + file.getFileName() + "," + cacheName + "]");
                 fnfe.printStackTrace();
             }

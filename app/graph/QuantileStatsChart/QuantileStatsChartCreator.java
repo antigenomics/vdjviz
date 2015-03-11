@@ -1,6 +1,6 @@
 package graph.QuantileStatsChart;
 
-import com.antigenomics.vdjtools.Clonotype;
+import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.diversity.QuantileStats;
 import com.antigenomics.vdjtools.sample.Sample;
 import models.Account;
@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 public class QuantileStatsChartCreator {
@@ -21,13 +20,12 @@ public class QuantileStatsChartCreator {
     private QuantileStatsChart quantileStatsChart;
     private Sample sample;
     private UserFile file;
-    private Account account;
     private String cacheName;
     private QuantileStats quantileStats;
     //TODO
     private HashMap<String, Object> data;
 
-    public QuantileStatsChartCreator(UserFile file, Account account, Sample sample) {
+    public QuantileStatsChartCreator(UserFile file, Sample sample) {
         this.quantileStats = new QuantileStats(sample, 5);
         this.quantileStatsChart = new QuantileStatsChart();
         this.data = new HashMap<>();
@@ -86,7 +84,7 @@ public class QuantileStatsChartCreator {
                 fileWriter.write(Json.stringify(Json.toJson(data)));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
                         ": save cache error [" + file.getFileName() + "," + cacheName + "]");
                 fnfe.printStackTrace();
             }
