@@ -1323,13 +1323,13 @@ function annotationTable(data, param) {
 
     var dataTable = $('#annotation_table_' + param.id).dataTable({
         dom: '<"pull-left"f><"clear">TrtS',
+        scrollY: '600px',
         "data": data["data"],
         "columns": column,
-        //'iDisplayLength': 50,
         'order': [
             [2, "decs"]
         ],
-        iDisplayLength: 100,
+        iDisplayLength: 1000,
         responsive: true,
         tableTools: {
             "sSwfPath": "../../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"

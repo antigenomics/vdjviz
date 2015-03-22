@@ -744,3 +744,7 @@ img.blur {
     }
 
 }
+
+.dataTables_scrollBody thead {
+    visibility: hidden;
+}
