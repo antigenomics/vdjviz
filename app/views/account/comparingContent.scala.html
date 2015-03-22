@@ -1,56 +1,55 @@
-<div class="comparing-tab" ng-show="showComparing()">
-    <div class="comparing-tab-header">
-        <p>You can plot multiple graphs for different samples side-by-side using this tab.</p>
-        <br>
-        <button href="#comparing-files-table" role="button" data-toggle="modal" id="comparingAddButton" class="btn btn-default">Add or remove graphs</button>
-        <hr>
-    </div>
-    <div class="comparing-tab-body col-lg-12">
-        <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}" style="font-size: 15px">
-            <h2>{{ item.fileName }} {{ item.tabName }}</h2>
-            <hr>
-            <div class="{{ item.place }}"></div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
-                                Close</span></button>
-                <div style="font-size: 15px">Comparing</div>
-            </div>
-            <div class="modal-body comparing-table-body">
-                <table class="table modal-file-table" style="font-size: 15px">
-                    <tbody class="main-tbody-comparing-files">
-                        <tr>
-                            <td><b>Show all</b></td>
-                            <td>
-                                <ul class="nav nav-pills nav-comparing">
-                                    <li ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showAllItems(tab)">
-                                        <a>{{ tab.tabName }}</a>
-                                    </li>
-                                </ul>
-                            </td>
-                        </tr>
-                        <tr ng-repeat="file in files">
-                            <td>{{ file.fileName }}</td>
-                            <td>
-                                <div ng-show="isRendering(file)">File is rendering</div>
-                                <ul class="nav nav-pills nav-comparing" ng-show="isRendered(file)">
-                                    <li ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="switchItem(file, tab)" ng-class="{'active':isComparing(file, tab)}">
-                                        <a>{{tab.tabName}}</a>
-                                    </li>
-                                </ul>
-                            </td>
+<div class="row comparing-tab" ng-show="showComparing()">
+    <div class="col-lg-12">
+        <div class="panel panel-info separated">
+            <div class="panel-body">
+                <div class="comparing-tab" ng-show="showComparing()">
+                    <div class="comparing-tab-header">
+                        <p>You can plot multiple graphs for different samples side-by-side using this tab.</p>
+                        <br>
+                        <button href="#comparing-files-table" role="button" data-toggle="modal" id="comparingAddButton" class="btn btn-info sharp">Add or remove graphs</button>
+                        <hr>
+                    </div>
+                    <div class="comparing-tab-body col-lg-12">
+                        <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}" style="font-size: 15px">
+                            <h2>{{ item.fileName }} {{ item.tabName }}</h2>
+                            <hr>
+                            <div class="{{ item.place }}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="comparing-files-table" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                                <div style="font-size: 15px">Comparing</div>
+                            </div>
+                            <div class="modal-body comparing-table-body">
+                                <table class="table modal-file-table" style="font-size: 15px">
+                                    <tbody>
+                                        <tr>
+                                            <td><b>Show all</b></td>
+                                            <td ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showAllItems(tab)">
+                                                {{ tab.tabName }}
+                                            </td>
+                                        </tr>
+                                        <tr ng-repeat="file in files">
+                                            <td>{{ file.fileName }}</td>
+                                            <td ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="switchItem(file, tab)" ng-class="{'info':isComparing(file, tab)}">
+                                                <div ng-show="isRendering(file)">File is rendering</div>
+                                                <div ng-show="isRendered(file)">{{tab.tabName}}</div>
+                                            </td>
 
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="comparing-table-footer">
-                <button type="button" class="btn btn-default footer-close-button" data-dismiss="modal">Close</button>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="comparing-table-footer">
+                                <button type="button" class="btn btn-default footer-close-button" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

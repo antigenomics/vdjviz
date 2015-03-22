@@ -2,53 +2,64 @@
 @main("Contacts") {
     <link href="@routes.Assets.at("stylesheets/contacts.css")" rel="stylesheet">
     @navbar(username)
-    <div class="container">
+    <div id="common_page_wrapper">
         <div class="row">
-            <h2>Contacts</h2>
-            <hr>
-            <div class="person-place">
-                <div class="person-img"><img src="@routes.Assets.at("images/DmitryChudakov.jpg")" /></div>
-                <div class="person-name">Dmitry Chudakov, PhD</div>
-                <hr class="delimiter">
-                <div class="person-description">
-                <p>Head of Genomics of Adaptive Immunity laboratory, IBCh RAS.</p>
-                <p>Please contact for collaboration proposals and commercial projects on TCR/antibody profiling.</p>
-                <p><i class="fa fa-envelope-o"></i> Email: <a href="mailto:chudakovdm@@gmаil.com">chudakovdm@@gmail.com</a></p>
-                </div>
-            </div>
-            <hr>
-            <div class="person-place">
-                <div class="person-img"><img src="@routes.Assets.at("images/MikhailShugay.png")" /></div>
-                <div class="person-name">Mikhail Shugay, PhD</div>
-                <hr class="delimiter">
-                <div class="person-description">
-                <p>Postdoc at Genomics of Adaptive Immunity laboratory, IBCh RAS.</p>
-                <p>Please contact regarding any issues with post-analysis of RepSeq data using VDJtools/VDJviz.</p>
-                <p><i class="fa fa-envelope-o"></i> Email: <a href="mailto:mikhail.shugay@@gmаil.сом">mikhail.shugay@@gmаil.соm</a></p>
-                <p><i class="fa fa-github"></i>   GitHub: <a href="https://github.com/mikessh">mikessh</a></p>
-                </div>
-            </div>
-            <hr>
-            <div class="person-place">
-                <div class="person-img"><img src="@routes.Assets.at("images/DmitryBagaev.jpg")" /></div>
-                <div class="person-name">Bagaev Dmitry</div>
-                <hr class="delimiter">
-                <div class="person-description">
-                    <p>VDJviz web design and implementation.</p>
-                    <p><i class="fa fa-envelope-o"></i> Email: <a href="mailto:bvdmitri@@gmail.com">bvdmitri@@gmail.com</a></p>
-                    <p><i class="fa fa-github"></i>   GitHub: <a href="https://github.com/bvdmitri">bvdmitri</a></p>
-                </div>
-            </div>
-            <hr>
-            <div class="person-place">
-                <div class="person-img"><img src="@routes.Assets.at("images/MiLibLogo.png")" /></div>
-                <div class="person-name">MiLaboratory team</div>
-                <hr class="delimiter">
-                <div class="person-description">
-                    <p>Developing state-of-art solutions for immune repertoire sequencing and analysis.</p>
-                    <p><i class="fa fa-link"></i>  URL: <a href="http://www.milaboratory.com"> milaboratory.com</a></p>
+            <div class="col-lg-8 col-lg-offset-2">
+                <div class="panel panel-info separated">
+                    <div class="panel-body">
+                        <h1>Contacts</h1>
+                        <hr class="wide">
+                        <div class="person-place">
+                            <div class="person-img"><img src="@routes.Assets.at("images/DmitryChudakov.jpg")" /></div>
+                            <div class="person-name">Dmitry Chudakov, PhD</div>
+                            <hr class="delimiter">
+                            <div class="person-description">
+                                <p>Head of Genomics of Adaptive Immunity laboratory, IBCh RAS.</p>
+                                <p>Please contact for collaboration proposals and commercial projects on TCR/antibody profiling.</p>
+                                <p><i class="fa fa-envelope-o"></i> Email: <a href="mailto:chudakovdm@@gmаil.com">chudakovdm@@gmail.com</a></p>
+                            </div>
+                        </div>
+                        <hr class="wide">
+                        <div class="person-place">
+                            <div class="person-img"><img src="@routes.Assets.at("images/MikhailShugay.png")" /></div>
+                            <div class="person-name">Mikhail Shugay, PhD</div>
+                            <hr class="delimiter">
+                            <div class="person-description">
+                                <p>Postdoc at Genomics of Adaptive Immunity laboratory, IBCh RAS.</p>
+                                <p>Please contact regarding any issues with post-analysis of RepSeq data using VDJtools/VDJviz.</p>
+                                <p><i class="fa fa-envelope-o"></i> Email: <a href="mailto:mikhail.shugay@@gmаil.сом">mikhail.shugay@@gmаil.соm</a></p>
+                                <p><i class="fa fa-github"></i>   GitHub: <a href="https://github.com/mikessh">mikessh</a></p>
+                            </div>
+                        </div>
+                        <hr class="wide">
+                        <div class="person-place">
+                            <div class="person-img"><img src="@routes.Assets.at("images/DmitryBagaev.jpg")" /></div>
+                            <div class="person-name">Bagaev Dmitry</div>
+                            <hr class="delimiter">
+                            <div class="person-description">
+                                <p>VDJviz web design and implementation.</p>
+                                <p><i class="fa fa-envelope-o"></i> Email: <a href="mailto:bvdmitri@@gmail.com">bvdmitri@@gmail.com</a></p>
+                                <p><i class="fa fa-github"></i>   GitHub: <a href="https://github.com/bvdmitri">bvdmitri</a></p>
+                            </div>
+                        </div>
+                        <hr class="wide">
+                        <div class="person-place">
+                            <div class="person-img"><img src="@routes.Assets.at("images/MiLibLogo.png")" /></div>
+                            <div class="person-name">MiLaboratory team</div>
+                            <hr class="delimiter">
+                            <div class="person-description">
+                                <p>Developing state-of-art solutions for immune repertoire sequencing and analysis.</p>
+                                <p><i class="fa fa-link"></i>  URL: <a href="http://www.milaboratory.com"> milaboratory.com</a></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+    <div id="footer_page_wrapper">
+        <footer>
+            <p>&copy; 2014-2015 MiLaboratory.com</p>
+        </footer>
     </div>
 }

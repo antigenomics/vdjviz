@@ -2,57 +2,67 @@
 
 @main("VDJviz - home") {
     <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
-    @navbar(username)
-
-    <ul class="bxslider">
-        <li>
-            <img src="@routes.Assets.at("images/slider1.png")"/>
-        </li>
-        <li>
-            <img src="@routes.Assets.at("images/slider2.png")" />
-        </li>
-        <li>
-            <img src="@routes.Assets.at("images/slider3.png")" />
-        </li>
-    </ul>
-
-        <div class="container container-width-fixed">
-            <div class="row">
-                <div class="text-center"><h2>Features</h2></div>
-                <div class="col-lg-12"><hr></div>
-                <div class="col-lg-12">
-                    <div class="col-lg-6">
-                        <h3>Browse the clonotype composition of sample</h3>
-                        <text>Table of annotated immune receptor sequences</text>
-                    </div>
-                    <div class="col-lg-6">
-                        <img src="@routes.Assets.at("images/features_1.png")" class="feature-img">
+    @views.html.navbar(username)
+    <div id="slider_page_wrapper">
+        <ul class="bxslider">
+            <li>
+                <img src="@routes.Assets.at("images/slider1.png")"/>
+            </li>
+            <li>
+                <img src="@routes.Assets.at("images/slider2.png")" />
+            </li>
+            <li>
+                <img src="@routes.Assets.at("images/slider3.png")" />
+            </li>
+        </ul>
+    </div>
+    <div id="index_page_wrapper">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel panel-info separated">
+                    <div class="panel-body">
+                        <div class="col-lg-8 col-lg-offset-2">
+                            <h2>Features</h2>
+                            <div class="col-lg-12"><hr></div>
+                            <div class="col-lg-12">
+                                <div class="col-lg-6">
+                                    <h3>Browse the clonotype composition of sample</h3>
+                                    <text>Table of annotated immune receptor sequences</text>
+                                </div>
+                                <div class="col-lg-6">
+                                    <img src="@routes.Assets.at("images/features_1.png")" class="feature-img">
+                                </div>
+                            </div>
+                            <div class="col-lg-12"><hr></div>
+                            <div class="col-lg-12">
+                                <div class="col-lg-6">
+                                    <img src="@routes.Assets.at("images/features_3.png")" class="feature-img">
+                                </div>
+                                <div class="col-lg-6">
+                                    <h3>View interactive graphs of key repertoire characteristics</h3>
+                                    <text>Repertoire clonality, spectratype and Variable-Joining segment usage</text>
+                                </div>
+                            </div>
+                            <div class="col-lg-12"><hr></div>
+                            <div class="col-lg-12">
+                                <div class="col-lg-6">
+                                    <h3>Explore and compare sample diversity</h3>
+                                    <text>Rarefaction analysis and summary statistics</text>
+                                </div>
+                                <div class="col-lg-6">
+                                    <img src="@routes.Assets.at("images/features_2.png")" class="feature-img">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-lg-12"><hr></div>
-                <div class="col-lg-12">
-                    <div class="col-lg-6">
-                        <img src="@routes.Assets.at("images/features_3.png")" class="feature-img">
-                    </div>
-                    <div class="col-lg-6">
-                        <h3>View interactive graphs of key repertoire characteristics</h3>
-                        <text>Repertoire clonality, spectratype and Variable-Joining segment usage</text>
-                    </div>
-                </div>
-                <div class="col-lg-12"><hr></div>
-                <div class="col-lg-12">
-                    <div class="col-lg-6">
-                        <h3>Explore and compare sample diversity</h3>
-                        <text>Rarefaction analysis and summary statistics</text>
-                    </div>
-                    <div class="col-lg-6">
-                        <img src="@routes.Assets.at("images/features_2.png")" class="feature-img">
-                    </div>
-                </div>                
             </div>
-            <hr>
-            <footer>
-                <p>&copy; 2014-2015 MiLaboratory.com</p>
-            </footer>
         </div>
+    </div>
+
+    <div id="footer_page_wrapper">
+        <footer>
+            <p>&copy; 2014-2015 MiLaboratory.com</p>
+        </footer>
+    </div>
 }

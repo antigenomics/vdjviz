@@ -50,3 +50,6 @@ GET         /reset                                   securesocial.controllers.Re
 POST        /reset                                   securesocial.controllers.Registration.handleStartResetPassword
 GET         /reset/:token                            securesocial.controllers.Registration.resetPassword(token)
 POST        /reset/:token                            securesocial.controllers.Registration.handleResetPassword(token)
+
+
+GET         /*path                                   controllers.Application.notFound404(path: String)

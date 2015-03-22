@@ -1,38 +1,39 @@
-@(startForm:play.api.data.Form[String])(implicit request: play.api.mvc.RequestHeader)
+@(startForm: play.api.data.Form[String])(implicit request: play.api.mvc.RequestHeader)
 @import helper._
 @import securesocial.core.IdentityProvider
-    @implicitFieldConstructor = @{ FieldConstructor(securesocial.views.html.inputFieldConstructor.f) }
+@implicitFieldConstructor = @{
+    FieldConstructor(securesocial.views.html.inputFieldConstructor.f)
+}
 
-@Secure.main( Messages("securesocial.signup.title") ) {
+@Secure.main(Messages("securesocial.signup.title")) {
 
     <div class="container">
-        <div class="col-lg-6 col-lg-offset-3">
-
-    @request.flash.get("error").map { msg =>
-        <div class="alert alert-error">
-            @Messages(msg)
-        </div>
-    }
-
-    <form action="@securesocial.core.providers.utils.RoutesHelper.handleStartSignUp().absoluteURL(IdentityProvider.sslEnabled)(request)"
-    class="form-horizontal"
-    autocomplete="off" method="post"
-    >
-        <fieldset>
-            <legend><h1>@Messages("securesocial.signup.title")</h1></legend>
-            @helper.inputText(
-                startForm("email"),
-                '_label -> Messages("securesocial.signup.email1"),
-                'class -> "input-xlarge"
-            )
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">@Messages("securesocial.signup.createAccount")</button>
-                <a class="btn" href="@securesocial.core.providers.utils.RoutesHelper.login()">@Messages("securesocial.signup.cancel")</a>
+        <div class="row">
+            <div class="col-lg-4 col-lg-offset-4">
+                <div class="single-window panel panel-default">
+                    <div class="panel-heading">Sign up</div>
+                    @request.flash.get("error").map { msg =>
+                        <div class="alert alert-danger alert-xs sharp">
+                            @Messages(msg)
+                        </div>
+                    }
+                    <div class="panel-body">
+                        <form action="@securesocial.core.providers.utils.RoutesHelper.handleStartSignUp().absoluteURL(IdentityProvider.sslEnabled)(request)"
+                        method="post" role="form"
+                        >
+                            <fieldset>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="E-mail" name="email" type="email" autofocus>
+                                </div>
+                                <button type="submit" class="btn btn-info btn-lg btn-block">
+                                    Sign up<i class="fa fa-fw fa-arrow-right"></i></button>
+                            </fieldset>
+                        </form>
+                        <hr class="wide">
+                        <p><a href="@securesocial.core.providers.utils.RoutesHelper.login()">Cancel</a></p>
+                    </div>
+                </div>
             </div>
-
-        </fieldset>
-    </form>
-    </div>
+        </div>
     </div>
 }

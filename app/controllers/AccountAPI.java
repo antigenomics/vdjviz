@@ -353,6 +353,7 @@ public class AccountAPI extends Controller {
                                     out.write(Json.toJson(new WSResponse("error", "render", fileName, "Error while rendering")));
                                     UserFile.deleteFile(file);
                                     e.printStackTrace();
+                                    out.close();
                                     return;
                                 }
                             default:

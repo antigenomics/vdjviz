@@ -12,10 +12,6 @@ $(document).ready(function () {
         captions: true
     });
 
-    $('.bx-sign-in-button').click(function() {
-        window.location.replace("/signin");
-    })
-
 });
 
 

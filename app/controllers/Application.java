@@ -1,8 +1,6 @@
 package controllers;
 
-import models.IPAddress;
 import models.LocalUser;
-import play.Logger;
 import play.mvc.*;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
@@ -43,4 +41,7 @@ public class Application extends Controller {
         return ok(views.html.commonPages.badBrowserPage.render());
     }
 
+    public static Result notFound404(String path) {
+        return ok(views.html.commonPages.notFound.render(path));
+    }
 }

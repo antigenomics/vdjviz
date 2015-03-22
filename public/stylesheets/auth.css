@@ -1,0 +1,17 @@
+img.blur {
+    -webkit-filter: url(#blur);
+    filter: url(#blur);
+    -webkit-filter: blur(10px);
+    filter: blur(10px);
+    filter:progid:DXImageTransform.Microsoft.Blur(PixelRadius='10');
+    -webkit-transition: 1s -webkit-filter linear;
+}
+
+.auth_background {
+    width: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
+    height: 100%;
+}
+

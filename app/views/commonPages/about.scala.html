@@ -1,23 +1,34 @@
 @(username: String)
 @main("About") {
     @navbar(username)
-    <div class="container">
+    <div id="common_page_wrapper">
         <div class="row">
-            <h2>About</h2>
-            <hr>
-                <div class="about_description">
-                    <p>VDJviz is a lightweight immune repertoire browser. After registering and signing in, users can upload clonotype tables that were produced using <a href="http://mitcr.milaboratory.com/">MiTCR</a>, <a href="https://github.com/mikessh/migec">MiGEC</a> and <a href="https://github.com/mikessh/igblastwrp">IgBlastWrapper</a> Rep-Seq processing software. VDJviz server will compute a set of key repertoire statistics and display them as interactive graphics.</p>
-                    <p>This application was built using Play Framework and VDJtools API. VDJviz can also be run as a local server, check out the link to source code below.</p>
-                    <div class="about_links">
-                        <h3>Some useful links:</h3>
-                        <hr>
-                            <p><a href="https://github.com/mikessh/vdjviz">https://github.com/mikessh/vdjviz</a> - VDJviz source code</p>
-                            <p><a href="https://github.com/mikessh/vdjtools">https://github.com/mikessh/vdjtools</a> - VDJtools source code</p>
-                            <p><a href="https://github.com/mikessh/vdjtools/wiki/Input">https://github.com/mikessh/vdjtools/wiki/Input</a> - detailed description of input formats</p>
-                            <p><a href="https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples">https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples</a> sample datasets</p>
-                            <p><a href="https://github.com/mikessh/vdjtools/wiki/Modules">https://github.com/mikessh/vdjtools/wiki/Modules</a> - detailed description of post-analysis</p>
+            <div class="col-lg-8 col-lg-offset-2">
+                <div class="panel panel-info separated">
+                    <div class="panel-body">
+                        <h1>About</h1>
+                        <hr class="wide">
+                        <div class="about_description">
+                            <p>VDJviz is a lightweight immune repertoire browser. After registering and signing in, users can upload clonotype tables that were produced using <a href="http://mitcr.milaboratory.com/">MiTCR</a>, <a href="https://github.com/mikessh/migec">MiGEC</a> and <a href="https://github.com/mikessh/igblastwrp">IgBlastWrapper</a> Rep-Seq processing software. VDJviz server will compute a set of key repertoire statistics and display them as interactive graphics.</p>
+                            <p>This application was built using Play Framework and VDJtools API. VDJviz can also be run as a local server, check out the link to source code below.</p>
+                            <div class="about_links">
+                                <h3>Some useful links:</h3>
+                                <hr class="wide">
+                                <p><a href="https://github.com/mikessh/vdjviz">https://github.com/mikessh/vdjviz</a> - VDJviz source code</p>
+                                <p><a href="https://github.com/mikessh/vdjtools">https://github.com/mikessh/vdjtools</a> - VDJtools source code</p>
+                                <p><a href="https://github.com/mikessh/vdjtools/wiki/Input">https://github.com/mikessh/vdjtools/wiki/Input</a> - detailed description of input formats</p>
+                                <p><a href="https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples">https://github.com/mikessh/vdjtools/tree/master/examples/aging_lite/samples</a> sample datasets</p>
+                                <p><a href="https://github.com/mikessh/vdjtools/wiki/Modules">https://github.com/mikessh/vdjtools/wiki/Modules</a> - detailed description of post-analysis</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
         </div>
+    </div>
+    <div id="footer_page_wrapper">
+        <footer>
+            <p>&copy; 2014-2015 MiLaboratory.com</p>
+        </footer>
     </div>
 }

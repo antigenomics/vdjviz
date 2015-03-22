@@ -22,6 +22,14 @@
 
     var app = angular.module('accountPage', []);
 
+    app.directive('onLastRepeat', function() {
+        return function(scope, element, attrs) {
+            if (scope.$last) setTimeout(function(){
+                scope.$emit('onRepeatLast', element, attrs);
+            }, 1);
+        };
+    });
+
     //Main Directive
     app.directive('accountPage', function () {
         return {
@@ -201,11 +209,9 @@
     app.directive('filesSidebar', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/filesSidebar',
             tranclude: true,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', '$http', '$log', function ($scope, $rootScope, $http, $log) {
-
 
                 //Public functions
                 $scope.showNewFilesTable = showNewFilesTable;
@@ -283,7 +289,7 @@
                 }
 
                 function isFilesEmpty() {
-                    return Object.keys($rootScope.files).length;
+                    return Object.keys($rootScope.files).length === 0;
                 }
 
                 function deleteFile(file) {
@@ -310,6 +316,17 @@
                             $rootScope.state = htmlState.ACCOUNT_INFORMATION;
                         });
                 }
+
+                $scope.$on('onRepeatLast', function () {
+                    $('#side-menu').slimScroll({
+                        height: '100%',
+                        color: '#1abc9c',
+                        railColor: '#1abc9c',
+                        railOpacity: 0.8,
+                        disableFadeOut: true,
+                        wheelStep: 20
+                    });
+                });
             }]
         }
     });
@@ -318,7 +335,6 @@
     app.directive('mainVisualisationContent', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/mainVisualisationContent',
             tranclude: true,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
@@ -366,7 +382,6 @@
     app.directive('rarefactionContent', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/rarefactionContent',
             transclude: false,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
@@ -412,7 +427,6 @@
     app.directive('summaryContent', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/summaryContent',
             tranclude: false,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
@@ -427,7 +441,6 @@
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/fileUpload',
             tranclude: true,
             require: '^accountPage',
             controller: ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
@@ -746,7 +759,6 @@
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/comparingContent',
             tranclude: false,
             require: '^accountPage',
             controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
@@ -1282,11 +1294,8 @@ function quantileSunbirstChart(data, param) {
 function annotationTable(data, param) {
     var place = d3.select(param.place);
         place.html("");
-    var svg = place
-        .append("div")
-        .attr("class", "svg");
 
-    var table = svg
+    var table = place
             .append("table")
             .attr("id", "annotation_table_" + param.id)
             .attr("class", "table table-striped table-hover"),
@@ -1313,14 +1322,13 @@ function annotationTable(data, param) {
     ];
 
     var dataTable = $('#annotation_table_' + param.id).dataTable({
+        dom: '<"pull-left"f><"clear">TrtS',
         "data": data["data"],
         "columns": column,
         //'iDisplayLength': 50,
         'order': [
             [2, "decs"]
         ],
-        "scrollY": "600px",
-        dom: '<"pull-left"f>    l<"clear">Trtd<"pull-left"i>p',
         iDisplayLength: 100,
         responsive: true,
         tableTools: {
@@ -1604,9 +1612,8 @@ function summaryStats(data, param) {
 
     var table = place.append("table")
         .attr("id", "basicStatsTable")
-        .attr("class", "table table-striped table-hover");
-
-    var thead = table.append("thead").append("tr");
+        .attr("class", "table table-striped table-hover"),
+        thead = table.append("thead").append("tr");
 
     thead.append("th").html("Sample");
     thead.append("th").html("Reads");

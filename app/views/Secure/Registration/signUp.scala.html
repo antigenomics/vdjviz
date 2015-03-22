@@ -1,63 +1,63 @@
-@(signUpForm:play.api.data.Form[securesocial.controllers.Registration.RegistrationInfo], token: String)(implicit request: play.api.mvc.RequestHeader)
+@(signUpForm: play.api.data.Form[securesocial.controllers.Registration.RegistrationInfo], token: String)(implicit request: play.api.mvc.RequestHeader)
 @import securesocial.core.providers.UsernamePasswordProvider
 @import securesocial.core.IdentityProvider
 @import helper._
-    @implicitFieldConstructor = @{ FieldConstructor(securesocial.views.html.inputFieldConstructor.f) }
+@implicitFieldConstructor = @{
+    FieldConstructor(securesocial.views.html.inputFieldConstructor.f)
+}
 
-@Secure.main( Messages("securesocial.signup.title") ) {
-        <div class="container">
+@Secure.main(Messages("securesocial.signup.title")) {
+    <div class="container">
+        <div class="row">
             <div class="col-lg-6 col-lg-offset-3">
-    @request.flash.get("error").map { msg =>
-        <div class="alert alert-error">
-            @msg
-        </div>
-    }
-    <form action="@securesocial.core.providers.utils.RoutesHelper.handleSignUp(token).absoluteURL(IdentityProvider.sslEnabled)(request)"
-    class="form-horizontal"
-    autocomplete= "off"
-    method="POST"
-    >
-        <fieldset>
-            <legend><h1>@Messages("securesocial.signup.title")</h1></legend>
-            @if( UsernamePasswordProvider.withUserNameSupport ) {
-                @helper.inputText(
-                    signUpForm("userName"),
-                    '_label -> Messages("securesocial.signup.username"),
-                    'class -> "input-xlarge"
-                )
-            }
-
-            @helper.inputText(
-                signUpForm("firstName"),
-                '_label -> Messages("securesocial.signup.firstName"),
-                'class -> "input-xlarge"
-            )
-
-            @helper.inputText(
-                signUpForm("lastName"),
-                '_label -> Messages("securesocial.signup.lastName"),
-                'class -> "input-xlarge"
-            )
-
-            @helper.inputPassword(
-                signUpForm("password.password1"),
-                '_label -> Messages("securesocial.signup.password1"),
-                'class -> "input-xlarge"
-            )
-
-            @helper.inputPassword(
-                signUpForm("password.password2"),
-                '_label -> Messages("securesocial.signup.password2"),
-                '_error -> signUpForm.error("password"),
-                'class -> "input-xlarge"
-            )
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">@Messages("securesocial.signup.createAccount")</button>
-                <a class="btn" href="@securesocial.core.providers.utils.RoutesHelper.login()">@Messages("securesocial.signup.cancel")</a>
+                <div class="single-window panel panel-default">
+                    <div class="panel-heading">
+                        Sign up
+                    </div>
+                    @request.flash.get("error").map { msg =>
+                        <div class="alert alert-danger alert-xs sharp">
+                            @msg
+                        </div>
+                    }
+                    <div class="panel-body">
+                        <form action="@securesocial.core.providers.utils.RoutesHelper.handleSignUp(token).absoluteURL(IdentityProvider.sslEnabled)(request)"
+                        method="POST"
+                        role="form"
+                        >
+                            <fieldset>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="First name" name="firstName" type="text" autofocus=""
+                                    value="@signUpForm("firstName").value"
+                                    >
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Last name" name="lastName" type="text"
+                                    value="@signUpForm("lastName").value"
+                                    >
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Password" name="password.password1" type="text">
+                                </div>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Repeat your password" name="password.password2" type="text">
+                                </div>
+                                @if(signUpForm("password.password1").hasErrors || signUpForm("password.password2").hasErrors) {
+                                    <div class="alert alert-danger alert-xs sharp">
+                                        <strong>Password error</strong>
+                                        <ol>
+                                            <li>The password field is required</li>
+                                            <li>Password sholud contain at least 8 characters</li>
+                                        </ol>
+                                    </div>
+                                }
+                                <button type="submit" class="btn btn-info btn-lg btn-block">Done!</button>
+                            </fieldset>
+                        </form>
+                        <hr class="wide">
+                        <a href="@routes.Application.index()">Cancel</a>
+                    </div>
+                </div>
             </div>
-        </fieldset>
-    </form>
-    </div>
+        </div>
     </div>
 }
