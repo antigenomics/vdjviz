@@ -3,7 +3,6 @@ package graph.QuantileStatsChart;
 import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.diversity.QuantileStats;
 import com.antigenomics.vdjtools.sample.Sample;
-import models.Account;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;

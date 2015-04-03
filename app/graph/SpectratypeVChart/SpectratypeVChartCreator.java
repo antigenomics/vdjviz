@@ -3,7 +3,6 @@ package graph.SpectratypeVChart;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.basic.SpectratypeV;
 import com.antigenomics.vdjtools.sample.Sample;
-import models.Account;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;

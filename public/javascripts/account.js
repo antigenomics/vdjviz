@@ -1,24 +1,20 @@
-/**
- * Created by bvdmitri on 13.11.14.
- */
-
-
+var CONSOLE_INFO = true;
 
 (function () {
 
-    var RenderState = {
+    var RenderState = Object.freeze({
         RENDERED: 0,
         RENDERING: 1,
         WAIT: 2
-    };
+    });
 
-    var htmlState = {
+    var htmlState = Object.freeze({
         ACCOUNT_INFORMATION: 0,
         FILE: 1,
         RAREFACTION: 2,
         SUMMARY: 3,
         COMPARING: 4
-    };
+    });
 
     var app = angular.module('accountPage', []);
 
@@ -30,11 +26,116 @@
         };
     });
 
+    app.factory('accountInfo', ['$log', '$http', function($log, $http) {
+        "use strict";
+        var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
+        var email = "", firstName = "", lastName = "", userName = "";
+        var rarefactionCache = false;
+        var initialized = false;
+        var initializeError = false;
+        var files = {};
+        var uid = 0;
+
+        initialize();
+
+        function initialize() {
+            if (CONSOLE_INFO) {
+                $log.info('Initializing account information');
+            }
+            $http.get('/account/api/info')
+                .success(function(response) {
+                    initialized = true;
+                    var info = response.data;
+                    email = info.email;
+                    firstName = info.firstName;
+                    lastName = info.lastName;
+                    userName = info.userName;
+                    filesCount = info.filesCount;
+                    maxFilesCount = info.filesInformation.maxFilesCount;
+                    maxFileSize = info.filesInformation.maxFileSize;
+                    angular.forEach(info.filesInformation.files, function(file) {
+                        files[file.fileName] = {
+                            uid: uid++,
+                            fileName: file.fileName,
+                            state: file.state,
+                            softwareTypeName: file.softwareTypeName,
+                            meta: {
+                                vjusage: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                spectratype: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                spectratypeV: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                quantileStats: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                annotation: {
+                                    cached: false,
+                                    comparing: false
+                                }
+                            }
+                        }
+                    });
+                    if (CONSOLE_INFO) {
+                        $log.info('Account initialized');
+                        $log.info('User: ' + userName);
+                        $log.info('Files count: ' + filesCount);
+                        $log.info('Max files count: ' + maxFilesCount);
+                        $log.info('Max file size: ' + maxFileSize);
+                    }
+                })
+                .error(function() {
+                    initializeError = true;
+                })
+        }
+
+        function getFiles() {
+            return files;
+        }
+
+        return {
+            getFiles: getFiles
+        }
+    }]);
+
+    app.factory('stateInfo', ['$log', function($log) {
+        "use strict";
+
+        var state = htmlState.ACCOUNT_INFORMATION;
+        var activeFileName = '';
+
+        function setActiveFileName(fileName) {
+            state = htmlState.FILE;
+            activeFileName = fileName;
+        }
+
+        function getActiveFileName() {
+            return activeFileName;
+        }
+
+        function isActiveFileName(fileName) {
+            return activeFileName === fileName;
+        }
+
+        return {
+            setActiveFileName: setActiveFileName,
+            getActiveFileName: getActiveFileName,
+            isActiveFileName: isActiveFileName
+        }
+    }]);
+
     //Main Directive
     app.directive('accountPage', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', function ($scope, $http) {
+            controller: ['$scope', '$http', 'accountInfo', function ($scope, $http, accountInfo) {
                 //private parameters
                 var uid = 0;
                 var needToCreateNew = true;
@@ -72,7 +173,7 @@
 
                 $scope.showStartPage = function() {
                     $scope.state = htmlState.ACCOUNT_INFORMATION;
-                }
+                };
 
                 $scope.updateFilesList = function () {
                     $http({method: 'GET', url: '/account/api/files'})
@@ -200,7 +301,7 @@
                         if (file.state === RenderState.RENDERING) exist = true;
                     });
                     return exist;
-                }
+                };
             }]
         }
     });
@@ -1295,6 +1396,8 @@ function annotationTable(data, param) {
     var place = d3.select(param.place);
         place.html("");
 
+    var displayLength = 1000;
+
     var table = place
             .append("table")
             .attr("id", "annotation_table_" + param.id)
@@ -1483,6 +1586,35 @@ function annotationTable(data, param) {
             }
         ]
     });
+
+    var $scrollViewer = $('#annotation_table_' + param.id + '_wrapper .dataTables_scrollBody');
+
+    $scrollViewer.scroll(function() {
+
+        if ($scrollViewer.scrollTop() - displayLength * 30 > 0) {
+            $.ajax({
+                url: "/account/api/annotation",
+                type: "post",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    "action": "data",
+                    "fileName": param.fileName,
+                    "index": 1
+                }),
+                success: function (data) {
+                    console.log(data);
+                },
+                complete: function(data) {
+                    //For automatic reload on logout
+                    if (data == null || typeof data.responseJSON === 'undefined') location.reload();
+                    if (data.responseJSON.message != null) console.log(data.responseJSON.message);
+                }
+            });
+            $scrollViewer.unbind('scroll');
+        }
+
+    })
+
 }
 
 function vjUsage(data, param) {

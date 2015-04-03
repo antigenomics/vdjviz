@@ -30,6 +30,8 @@ POST        /account/api/upload                      controllers.AccountAPI.uplo
 POST        /account/api/delete                      controllers.AccountAPI.delete()
 POST        /account/api/data                        controllers.AccountAPI.data()
 GET         /account/api/files                       controllers.AccountAPI.files()
+GET         /account/api/info                        controllers.AccountAPI.accountInformation()
+POST        /account/api/annotation                  controllers.AccountAPI.annotationData()
 
 # Robots.txt route
 

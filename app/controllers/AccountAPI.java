@@ -1,7 +1,10 @@
 package controllers;
 
+import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import graph.AnnotationTable.AnnotationTable;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
 import models.LocalUser;
@@ -29,6 +32,12 @@ import java.util.*;
 
 @SecureSocial.SecuredAction
 public class AccountAPI extends Controller {
+
+    public static Account getCurrentAccount() {
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        return localUser.account;
+    }
 
     public static Result account() {
         Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
@@ -213,12 +222,7 @@ public class AccountAPI extends Controller {
     }
 
     public static Result accountInformation() {
-        //Identifying user using the Secure Social API
-        //Return account information
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
-        return ok(Json.toJson(new CacheServerResponse("ok", account.getAccountInformation())));
+        return ok(Json.toJson(new CacheServerResponse("ok", getCurrentAccount().getAccountInformation())));
     }
 
     public static Result data() throws Exception {
@@ -258,6 +262,36 @@ public class AccountAPI extends Controller {
             Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
                     ": error while requesting " + type + " data");
             return badRequest(Json.toJson(new ServerResponse("error", "Unknown type " + type)));
+        }
+    }
+
+    public static Result annotationData() {
+        //Identifying user using the Secure Social API
+        //Return data for chart
+        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
+        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
+        Account account = localUser.account;
+
+        JsonNode request = request().body().asJson();
+        if (!request.findValue("action").asText().equals("data")
+                || request.findValue("fileName") == null
+                || request.findValue("index") == null) {
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
+        }
+
+        String fileName = request.findValue("fileName").asText();
+        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+
+        if (file != null) {
+            Software software = file.getSoftwareType();
+            List<String> sampleFileNames = new ArrayList<>();
+            sampleFileNames.add(file.getPath());
+            SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
+            AnnotationTable annotationTable = new AnnotationTable(file, sampleCollection.getAt(0), request.findValue("index").asInt());
+            annotationTable.create();
+            return ok(Json.toJson(annotationTable.getData()));
+        } else {
+            return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
         }
     }
 
