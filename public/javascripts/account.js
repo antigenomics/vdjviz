@@ -105,7 +105,7 @@ var CONSOLE_INFO = true;
             return files;
         }
 
-        //Delete file
+        //Delete file from server and client-side application
         function deleteFile(file) {
             if (CONSOLE_INFO) {
                 $log.info('Trying to delete file ' + file.fileName);
@@ -113,7 +113,7 @@ var CONSOLE_INFO = true;
             $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
                 .success(function () {
                     if (stateInfo.isActiveFile(file) || Object.keys(files).length == 1) {
-                        stateInfo.setState(htmlState.ACCOUNT_INFORMATION);
+                        stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     } else if (!stateInfo.isActiveState(htmlState.FILE)) {
                         //TODO update visualisation tab
                     }
@@ -131,6 +131,11 @@ var CONSOLE_INFO = true;
                 });
         }
 
+        //Delete file only from client-side application
+        function deleteFile_client(file) {
+            delete files[file.fileName];
+        }
+
         //Delete all files
         function deleteAll() {
             if (CONSOLE_INFO) {
@@ -138,8 +143,9 @@ var CONSOLE_INFO = true;
             }
             $http.post('/account/api/delete', {action: 'deleteAll'})
                 .success(function () {
-                    files = {};
-                    stateInfo.setState(htmlState.ACCOUNT_INFORMATION);
+                    var file;
+                    for (file in files) { if (files.hasOwnProperty(file)) { delete files[file]; } }
+                    stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     if (CONSOLE_INFO) {
                         $log.info('All files successfully deleted');
                     }
@@ -160,17 +166,74 @@ var CONSOLE_INFO = true;
         function isInitializeError() {
             return initializeError === true;
         }
+
+        //Checking on unique name of file
+        function isFileAlreadyExist(fileName) {
+            return fileName in files;
+        }
+
+        //Getter for max files count
+        function getMaxFilesCount() {
+            return maxFilesCount;
+        }
+
+        //Getter for max file size
+        function getMaxFileSize() {
+            return maxFileSize;
+        }
+
+        //Adding new file
+        function addNewFile(file) {
+            files[file.fileName] = {
+                uid: uid++,
+                fileName: file.fileName,
+                state: RenderState.RENDERING,
+                softwareTypeName: file.softwareTypeName,
+                meta: {
+                    vjusage: {
+                        cached: false,
+                        comparing: false
+                    },
+                    spectratype: {
+                        cached: false,
+                        comparing: false
+                    },
+                    spectratypeV: {
+                        cached: false,
+                        comparing: false
+                    },
+                    quantileStats: {
+                        cached: false,
+                        comparing: false
+                    },
+                    annotation: {
+                        cached: false,
+                        comparing: false
+                    }
+                }
+            }
+        }
+
+        function changeFileState(file, state) {
+            files[file.fileName].state = state;
+        }
         //------------------------------//
 
         return {
             getFiles: getFiles,
             deleteFile: deleteFile,
+            deleteFile_client: deleteFile_client,
             deleteAll: deleteAll,
             isInitialized: isInitialized,
-            isInitializeError: isInitializeError
+            isInitializeError: isInitializeError,
+            isFileAlreadyExist: isFileAlreadyExist,
+            getMaxFilesCount: getMaxFilesCount,
+            getMaxFileSize: getMaxFileSize,
+            addNewFile: addNewFile,
+            changeFileState: changeFileState
+
         }
     }]);
-
 
     //This factory handles global state of application
     app.factory('stateInfo', function() {
@@ -342,6 +405,7 @@ var CONSOLE_INFO = true;
                 //Public functions
                 $scope.showNewFilesTable = showNewFilesTable;
                 $scope.isFilesEmpty = isFilesEmpty;
+                $scope.isFileRendering = isFileRendering;
                 $scope.setRarefactionState = setRarefactionState;
                 $scope.setSummaryState = setSummaryState;
                 $scope.setCompareState = setCompareState;
@@ -380,6 +444,10 @@ var CONSOLE_INFO = true;
 
                 function showNewFilesTable() {
                     $("#add-new-file").click();
+                }
+
+                function isFileRendering(file) {
+                    return file.state === RenderState.RENDERING;
                 }
 
                 function isFilesEmpty() {
@@ -451,10 +519,7 @@ var CONSOLE_INFO = true;
     app.directive('accountInformation', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/accountInformation',
-            controller: ['$scope', function ($scope) {
-
-            }]
+            templateUrl: '/account/accountInformation'
         }
     });
 
@@ -496,25 +561,18 @@ var CONSOLE_INFO = true;
         }
     });
 
-    //Summary tab Directive
-    app.directive('summaryContent', function () {
-        return {
-            restrict: 'E',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
-
-            }]
-        }
-    });
-
     //Upload support Directive
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
-            tranclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
+            controller: ['$scope', '$http', 'accountInfo', function ($scope, $http, accountInfo) {
                 //Private var
                 var uid = 0;
+                var errors = Object.freeze({
+                    FILES_COUNT_EXCEEDED_ERROR: 0,
+                    UNIQUE_NAME_CONFLICT_ERROR: 1,
+                    FILE_IS_TOO_LARGE_ERROR: 2
+                });
 
                 //Public var
                 $scope.newFiles = {};
@@ -594,7 +652,7 @@ var CONSOLE_INFO = true;
 
                 //Private Functions
                 function filesCount() {
-                    var added = Object.keys($rootScope.files).length;
+                    var added = Object.keys(accountInfo.getFiles()).length;
                     var waiting = 0;
                     angular.forEach($scope.newFiles, function (file) {
                         if (file.wait) waiting++;
@@ -632,9 +690,7 @@ var CONSOLE_INFO = true;
                 }
 
                 function updateTooltip(file, tooltip) {
-                    //$scope.$apply(function () {
-                        file.tooltip = tooltip;
-                    //})
+                    file.tooltip = tooltip;
                 }
 
                 function updateProgress(file, progress) {
@@ -659,13 +715,13 @@ var CONSOLE_INFO = true;
                 function addNewError(uid, fileName, error) {
                     var resultTooltip;
                     switch (error) {
-                        case 0:
+                        case errors.FILES_COUNT_EXCEEDED_ERROR:
                             resultTooltip = 'You have exceeded limit of files';
                             break;
-                        case 1:
+                        case errors.UNIQUE_NAME_CONFLICT_ERROR:
                             resultTooltip = 'You should use unique names for your files';
                             break;
-                        case 2:
+                        case errors.FILE_IS_TOO_LARGE_ERROR:
                             resultTooltip = 'File is too large';
                             break;
                         default:
@@ -688,15 +744,15 @@ var CONSOLE_INFO = true;
                     angular.forEach($scope.newFiles, function (file) {
                         if (file.fileName == fileName && file.wait) contain = true;
                     });
-                    return $rootScope.isContain(fileName)|| contain;
+                    return accountInfo.isFileAlreadyExist(fileName)|| contain;
                 }
 
                 function isCountExceeded() {
-                    return $rootScope.maxFilesCount > 0 && filesCount() >= $rootScope.maxFilesCount;
+                    return accountInfo.getMaxFilesCount() > 0 && filesCount() >= accountInfo.getMaxFilesCount();
                 }
 
                 function isSizeExceeded(file) {
-                    return $rootScope.maxFileSize > 0 && (file.size  / 1024 ) > $rootScope.maxFileSize;
+                    return accountInfo.getMaxFileSize() > 0 && (file.size  / 1024 ) > accountInfo.getMaxFileSize();
                 }
 
                 function isWait(file) {
@@ -718,11 +774,11 @@ var CONSOLE_INFO = true;
                             fileExtension = 'txt';
                         }
                         if (isCountExceeded()) {
-                            addNewError(uid++, fileName, 0);
+                            addNewError(uid++, fileName, errors.FILES_COUNT_EXCEEDED_ERROR);
                         } else if (isContain(fileName)) {
-                            addNewError(uid++, fileName, 1);
+                            addNewError(uid++, fileName, errors.UNIQUE_NAME_CONFLICT_ERROR);
                         } else if (isSizeExceeded(file)) {
-                            addNewError(uid++, fileName, 2);
+                            addNewError(uid++, fileName, errors.FILE_IS_TOO_LARGE_ERROR);
                         } else {
                             addNew(uid++, fileName, fileExtension, data);
                         }
@@ -743,17 +799,16 @@ var CONSOLE_INFO = true;
                                             switch (event["progress"]) {
                                                 case "start" :
                                                     updateTooltip(file, "Computation");
-                                                    $rootScope.addFileToList(file);
+                                                    accountInfo.addNewFile(file);
                                                     break;
                                                 case "end" :
-                                                    $rootScope.changeFileState(file, RenderState.RENDERED);
+                                                    accountInfo.changeFileState(file, RenderState.RENDERED);
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
                                                     socket.close();
                                                     if (!isRenderingFilesExist()) {
-                                                        $rootScope.updateVisualisationTab();
+                                                        //TODO update visualisation
                                                     }
-
                                                     break;
                                                 default:
                                                     updateProgress(file, 50 + (event.progress / 2));
@@ -761,12 +816,12 @@ var CONSOLE_INFO = true;
                                             break;
                                         case "error" :
                                             socket.close();
-                                            $rootScope.deleteFileFromList(file.fileName);
+                                            accountInfo.deleteFile_client(file);
                                             updateResult(file, 'error');
                                             updateResultTooltip(file, event["message"]);
                                             break;
                                         default:
-                                            $rootScope.deleteFileFromList(file.fileName);
+                                            accountInfo.deleteFile_client(file);
                                             updateTooltip(file, "Server unavailable");
                                             break;
                                     }
@@ -828,9 +883,10 @@ var CONSOLE_INFO = true;
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
+            controller: ['$scope', 'accountInfo', function ($scope, accountInfo) {
 
                 $scope.comparingItems = [];
+                $scope.files = accountInfo.getFiles();
                 $scope.isComparing = isComparing;
                 $scope.isRendered = isRendered;
                 $scope.isRendering = isRendering;
@@ -863,11 +919,10 @@ var CONSOLE_INFO = true;
                 }
 
                 function deleteItem(file, tab) {
-                    var i = 0;
-                    for (; i < $scope.comparingItems.length; ++i) {
+                    for (var i = 0; i < $scope.comparingItems.length; ++i) {
                          if ($scope.comparingItems[i].fileName === file.fileName && $scope.comparingItems[i].tabName === tab.tabName) {
                              $scope.comparingItems.splice(i, 1);
-                             $rootScope.files[file.fileName].meta[tab.type].comparing = false;
+                             $scope.files[file.fileName].meta[tab.type].comparing = false;
                              break;
                          }
                     }
@@ -894,7 +949,7 @@ var CONSOLE_INFO = true;
                             place: tab.comparingPlace,
                             uid: file.uid
                         });
-                        $rootScope.files[file.fileName].meta[tab.type].comparing = true;
+                        $scope.files[file.fileName].meta[tab.type].comparing = true;
                         var param = {
                             fileName: file.fileName,
                             id: file.uid + '_comparing',
@@ -909,7 +964,7 @@ var CONSOLE_INFO = true;
 
                 function showAllItems(tab) {
                     var shown = 0;
-                    angular.forEach($rootScope.files, function (file) {
+                    angular.forEach($scope.files, function (file) {
                         if (!file.meta[tab.type].comparing) {
                             showItem(file, tab);
                             shown++;
