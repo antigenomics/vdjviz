@@ -26,8 +26,12 @@ var CONSOLE_INFO = true;
         };
     });
 
-    app.factory('accountInfo', ['$log', '$http', function($log, $http) {
+
+    //This factory handle account information
+    //and user's files
+    app.factory('accountInfo', ['$log', '$http', 'stateInfo', function($log, $http, stateInfo) {
         "use strict";
+        //Private variables
         var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
         var email = "", firstName = "", lastName = "", userName = "";
         var rarefactionCache = false;
@@ -36,177 +40,24 @@ var CONSOLE_INFO = true;
         var files = {};
         var uid = 0;
 
-        initialize();
-
-        function initialize() {
-            if (CONSOLE_INFO) {
-                $log.info('Initializing account information');
-            }
-            $http.get('/account/api/info')
-                .success(function(response) {
-                    initialized = true;
-                    var info = response.data;
-                    email = info.email;
-                    firstName = info.firstName;
-                    lastName = info.lastName;
-                    userName = info.userName;
-                    filesCount = info.filesCount;
-                    maxFilesCount = info.filesInformation.maxFilesCount;
-                    maxFileSize = info.filesInformation.maxFileSize;
-                    angular.forEach(info.filesInformation.files, function(file) {
-                        files[file.fileName] = {
-                            uid: uid++,
-                            fileName: file.fileName,
-                            state: file.state,
-                            softwareTypeName: file.softwareTypeName,
-                            meta: {
-                                vjusage: {
-                                    cached: false,
-                                    comparing: false
-                                },
-                                spectratype: {
-                                    cached: false,
-                                    comparing: false
-                                },
-                                spectratypeV: {
-                                    cached: false,
-                                    comparing: false
-                                },
-                                quantileStats: {
-                                    cached: false,
-                                    comparing: false
-                                },
-                                annotation: {
-                                    cached: false,
-                                    comparing: false
-                                }
-                            }
-                        }
-                    });
-                    if (CONSOLE_INFO) {
-                        $log.info('Account initialized');
-                        $log.info('User: ' + userName);
-                        $log.info('Files count: ' + filesCount);
-                        $log.info('Max files count: ' + maxFilesCount);
-                        $log.info('Max file size: ' + maxFileSize);
-                    }
-                })
-                .error(function() {
-                    initializeError = true;
-                })
+        //Initializing account information
+        if (CONSOLE_INFO) {
+            $log.info('Initializing account information');
         }
-
-        function getFiles() {
-            return files;
-        }
-
-        return {
-            getFiles: getFiles
-        }
-    }]);
-
-    app.factory('stateInfo', ['$log', function($log) {
-        "use strict";
-
-        var state = htmlState.ACCOUNT_INFORMATION;
-        var activeFileName = '';
-
-        function setActiveFileName(fileName) {
-            state = htmlState.FILE;
-            activeFileName = fileName;
-        }
-
-        function getActiveFileName() {
-            return activeFileName;
-        }
-
-        function isActiveFileName(fileName) {
-            return activeFileName === fileName;
-        }
-
-        return {
-            setActiveFileName: setActiveFileName,
-            getActiveFileName: getActiveFileName,
-            isActiveFileName: isActiveFileName
-        }
-    }]);
-
-    //Main Directive
-    app.directive('accountPage', function () {
-        return {
-            restrict: 'E',
-            controller: ['$scope', '$http', 'accountInfo', function ($scope, $http, accountInfo) {
-                //private parameters
-                var uid = 0;
-                var needToCreateNew = true;
-
-                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
-                    return {
-                        tabName: tabName,
-                        type: type,
-                        dataHandler: dataHandler,
-                        mainPlace: mainPlace,
-                        comparing: comparing,
-                        exportPng: exportPng,
-                        exportType: exportType,
-                        comparingPlace: comparingPlace
-                    }
-                };
-
-
-                //public parameters
-                $scope.maxFilesCount = 0;
-                $scope.maxFileSize = 0;
-                $scope.files = {};
-                $scope.state = htmlState.ACCOUNT_INFORMATION;
-                $scope.activeFileName = '';
-                $scope.visualisationTabs = {
-                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
-                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
-                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
-                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
-                    annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
-                };
-                $scope.activeTab = $scope.visualisationTabs.vjusage;
-                $scope.initialized = false;
-                $scope.errorInit = false;
-
-                $scope.showStartPage = function() {
-                    $scope.state = htmlState.ACCOUNT_INFORMATION;
-                };
-
-                $scope.updateFilesList = function () {
-                    $http({method: 'GET', url: '/account/api/files'})
-                        .success(function (data) {
-                            $scope.initialized = true;
-                            $scope.maxFilesCount = data["maxFilesCount"];
-                            $scope.maxFileSize = data["maxFileSize"];
-                            angular.forEach(data["files"], function (file) {
-                            $scope.addFileToList(file);
-                        });
-                            needToCreateNew = data["rarefactionCache"];
-                        })
-                        .error(function() {
-                            $scope.errorInit = true;
-                        })
-                };
-
-                $scope.getActiveFile = function () {
-                    return $scope.files[$scope.activeFileName];
-                };
-
-                $scope.isContain = function (file) {
-                    angular.forEach($scope.files, function (f) {
-                        if (file.fileName === f.fileName) {
-                            return true;
-                        }
-                    });
-                    return false;
-                };
-
-                $scope.addFileToList = function (file) {
-                    needToCreateNew = true;
-                    $scope.files[file.fileName] = {
+        $http.get('/account/api/info')
+            .success(function(response) {
+                initialized = true;
+                var info = response.data;
+                email = info.email;
+                firstName = info.firstName;
+                lastName = info.lastName;
+                userName = info.userName;
+                filesCount = info.filesCount;
+                maxFilesCount = info.filesInformation.maxFilesCount;
+                maxFileSize = info.filesInformation.maxFileSize;
+                //TODO rarefaction cache
+                angular.forEach(info.filesInformation.files, function(file) {
+                    files[file.fileName] = {
                         uid: uid++,
                         fileName: file.fileName,
                         state: file.state,
@@ -234,16 +85,187 @@ var CONSOLE_INFO = true;
                             }
                         }
                     }
+                });
+                if (CONSOLE_INFO) {
+                    $log.info('Account initialized');
+                    $log.info('User: ' + userName);
+                    $log.info('Files count: ' + filesCount);
+                    $log.info('Max files count: ' + maxFilesCount);
+                    $log.info('Max file size: ' + maxFileSize);
+                }
+            })
+            .error(function() {
+                initializeError = true;
+            });
+
+        //Public api
+        //-----------------------------//
+        //Getter for user's files
+        function getFiles() {
+            return files;
+        }
+
+        //Delete file
+        function deleteFile(file) {
+            if (CONSOLE_INFO) {
+                $log.info('Trying to delete file ' + file.fileName);
+            }
+            $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
+                .success(function () {
+                    if (stateInfo.isActiveFile(file) || Object.keys(files).length == 1) {
+                        stateInfo.setState(htmlState.ACCOUNT_INFORMATION);
+                    } else if (!stateInfo.isActiveState(htmlState.FILE)) {
+                        //TODO update visualisation tab
+                    }
+                    rarefactionCache = false;
+                    delete files[file.fileName];
+
+                    if (CONSOLE_INFO) {
+                        $log.info('File ' + file.fileName + ' successfully deleted');
+                    }
+                }).error(function(response) {
+                    if (CONSOLE_INFO) {
+                        $log.error('Error while deleting file ' + file.fileName);
+                        $log.error(response.message);
+                    }
+                });
+        }
+
+        //Delete all files
+        function deleteAll() {
+            if (CONSOLE_INFO) {
+                $log.info('Trying to delete all files')
+            }
+            $http.post('/account/api/delete', {action: 'deleteAll'})
+                .success(function () {
+                    files = {};
+                    stateInfo.setState(htmlState.ACCOUNT_INFORMATION);
+                    if (CONSOLE_INFO) {
+                        $log.info('All files successfully deleted');
+                    }
+                })
+                .error(function() {
+                    if (CONSOLE_INFO) {
+                        $log.error('Error while deleting files');
+                    }
+                });
+        }
+
+        //Checking initializing
+        function isInitialized() {
+            return initialized === true;
+        }
+
+        //Checking initializing error
+        function isInitializeError() {
+            return initializeError === true;
+        }
+        //------------------------------//
+
+        return {
+            getFiles: getFiles,
+            deleteFile: deleteFile,
+            deleteAll: deleteAll,
+            isInitialized: isInitialized,
+            isInitializeError: isInitializeError
+        }
+    }]);
+
+
+    //This factory handles global state of application
+    app.factory('stateInfo', function() {
+        "use strict";
+        //Private variables
+        var state = htmlState.ACCOUNT_INFORMATION;
+        var activeFile = {};
+
+
+        //Public api
+        //------------------------------//
+        //Setter for active file
+        function setActiveFile(file) {
+            state = htmlState.FILE;
+            activeFile = file;
+        }
+
+        //Getter for active file
+        function getActiveFile() {
+            return activeFile;
+        }
+
+        //Checking active file
+        function isActiveFile(file) {
+            return activeFile === file && state === htmlState.FILE;
+        }
+
+        //Setter for global state
+        function setActiveState(st) {
+            state = st;
+        }
+
+        //Checking global state
+        function isActiveState(st) {
+            return state === st;
+        }
+
+        //Getter for global state
+        function getActiveState() {
+            return state;
+        }
+        //-------------------------------//
+
+
+        return {
+            setActiveFile: setActiveFile,
+            getActiveFile: getActiveFile,
+            isActiveFile: isActiveFile,
+            setActiveState: setActiveState,
+            getActiveState: getActiveState,
+            isActiveState: isActiveState
+        }
+    });
+
+    //Main Directive
+    app.directive('accountPage', function () {
+        return {
+            restrict: 'E',
+            controller: ['$scope', 'accountInfo', 'stateInfo', function ($scope, accountInfo, stateInfo) {
+                //State info api
+                $scope.isActiveState = stateInfo.isActiveState;
+                $scope.getActiveFile = stateInfo.getActiveFile;
+
+
+                $scope.isAccountInformation = function() {
+                    return stateInfo.isActiveState(htmlState.ACCOUNT_INFORMATION);
                 };
 
-                $scope.updateFilesList();
-
-                $scope.isContain = function (fileName) {
-                    return !!(fileName in $scope.files);
+                $scope.isFileInformation = function() {
+                    return stateInfo.isActiveState(htmlState.FILE);
                 };
 
-                $scope.isNeedToCreateNew = function() {
-                    return needToCreateNew;
+                $scope.isComparingInformation = function() {
+                    return stateInfo.isActiveState(htmlState.COMPARING);
+                };
+
+                $scope.isSummaryInformation = function() {
+                    return stateInfo.isActiveState(htmlState.SUMMARY);
+                };
+
+                $scope.isRarefactionInformation = function() {
+                    return stateInfo.isActiveState(htmlState.RAREFACTION);
+                };
+
+                $scope.showStartPage = function() {
+                    $scope.state = htmlState.ACCOUNT_INFORMATION;
+                };
+
+                $scope.isContain = function (file) {
+                    angular.forEach($scope.files, function (f) {
+                        if (file.fileName === f.fileName) {
+                            return true;
+                        }
+                    });
+                    return false;
                 };
 
                 $scope.updateVisualisationTab = function () {
@@ -283,14 +305,6 @@ var CONSOLE_INFO = true;
                     }
                 };
 
-                $scope.deleteFileFromList = function (fileName) {
-                    needToCreateNew = true;
-                    delete $scope.files[fileName];
-                    if ($scope.state === htmlState.RAREFACTION || $scope.state === htmlState.SUMMARY) {
-                        $scope.updateVisualisationTab();
-                    }
-                };
-
                 $scope.changeFileState = function (file, state) {
                     $scope.files[file.fileName].state = state;
                 };
@@ -310,20 +324,24 @@ var CONSOLE_INFO = true;
     app.directive('filesSidebar', function () {
         return {
             restrict: 'E',
-            tranclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', '$http', '$log', function ($scope, $rootScope, $http, $log) {
+            controller: ['$scope', 'accountInfo', 'stateInfo', function ($scope, accountInfo, stateInfo) {
+                //Variables
+                $scope.files = accountInfo.getFiles();
+
+
+                //Account Info api
+                $scope.deleteFile = accountInfo.deleteFile;
+                $scope.deleteAll = accountInfo.deleteAll;
+
+                //State info api
+                $scope.setActiveFile = stateInfo.setActiveFile;
+                $scope.isActiveFile = stateInfo.isActiveFile;
+                $scope.isActiveState = stateInfo.isActiveState;
+                $scope.setActiveState = stateInfo.setActiveState;
 
                 //Public functions
                 $scope.showNewFilesTable = showNewFilesTable;
-                $scope.deleteFile = deleteFile;
-                $scope.deleteAll = deleteAll;
-                $scope.setActiveFile = setActiveFile;
-                $scope.setActiveState = setActiveState;
                 $scope.isFilesEmpty = isFilesEmpty;
-                $scope.isActiveFile = isActiveFile;
-                $scope.isActiveState = isActiveState;
-                $scope.isRendering = isRendering;
                 $scope.setRarefactionState = setRarefactionState;
                 $scope.setSummaryState = setSummaryState;
                 $scope.setCompareState = setCompareState;
@@ -337,85 +355,35 @@ var CONSOLE_INFO = true;
                 }
 
                 function setRarefactionState() {
-                    setActiveState(htmlState.RAREFACTION);
+                    stateInfo.setActiveState(htmlState.RAREFACTION);
                 }
 
                 function setSummaryState() {
-                    setActiveState(htmlState.SUMMARY);
+                    stateInfo.setActiveState(htmlState.SUMMARY);
                 }
 
                 function setCompareState() {
-                    setActiveState(htmlState.COMPARING);
+                    stateInfo.setActiveState(htmlState.COMPARING);
                 }
 
                 function isRarefactionState() {
-                    return isActiveState(htmlState.RAREFACTION);
+                    return stateInfo.isActiveState(htmlState.RAREFACTION);
                 }
 
                 function isSummaryState() {
-                    return isActiveState(htmlState.SUMMARY);
+                    return stateInfo.isActiveState(htmlState.SUMMARY);
                 }
 
                 function isCompareState() {
-                    return isActiveState(htmlState.COMPARING);
+                    return stateInfo.isActiveState(htmlState.COMPARING);
                 }
 
                 function showNewFilesTable() {
                     $("#add-new-file").click();
                 }
 
-                function setActiveState(state){
-                    window.scrollTo(0, 0);
-                    $rootScope.state = state;
-                    $rootScope.updateVisualisationTab();
-                }
-
-                function setActiveFile(file) {
-                    if (!isRendering(file)) {
-                        $rootScope.activeFileName = file.fileName;
-                        setActiveState(htmlState.FILE);
-                    }
-                }
-
-                function isRendering(file){
-                    return file.state === RenderState.RENDERING;
-                }
-
-                function isActiveState(state) {
-                    return $rootScope.state === state;
-                }
-
-                function isActiveFile(file) {
-                    return file.fileName === $rootScope.activeFileName && isActiveState(htmlState.FILE);
-                }
-
                 function isFilesEmpty() {
-                    return Object.keys($rootScope.files).length === 0;
-                }
-
-                function deleteFile(file) {
-                    $http.post('/account/api/delete', {
-                        action: 'delete',
-                        fileName: file.fileName
-                    }).success(function (data) {
-                        $log.info(data.message);
-                        if (isActiveFile(file) || Object.keys($rootScope.files).length == 1) {
-                            $rootScope.state = htmlState.ACCOUNT_INFORMATION;
-                        } else if (!isActiveState(htmlState.FILE)) {
-                            $rootScope.updateVisualisationTab();
-                        }
-                        $rootScope.deleteFileFromList(file.fileName);
-                    }).error(function(data) {
-                        $log.error(data.message);
-                    });
-                }
-
-                function deleteAll() {
-                    $http.post('/account/api/delete', {action: 'deleteAll'})
-                        .success(function () {
-                            $rootScope.files = {};
-                            $rootScope.state = htmlState.ACCOUNT_INFORMATION;
-                        });
+                    return Object.keys($scope.files).length === 0;
                 }
 
                 $scope.$on('onRepeatLast', function () {
@@ -436,29 +404,44 @@ var CONSOLE_INFO = true;
     app.directive('mainVisualisationContent', function () {
         return {
             restrict: 'E',
-            tranclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
+            controller: ['$scope', 'stateInfo', function ($scope, stateInfo) {
+                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
+                    return {
+                        tabName: tabName,
+                        type: type,
+                        dataHandler: dataHandler,
+                        mainPlace: mainPlace,
+                        comparing: comparing,
+                        exportPng: exportPng,
+                        exportType: exportType,
+                        comparingPlace: comparingPlace
+                    }
+                };
+                $scope.visualisationTabs = {
+                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
+                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
+                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
+                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
+                    annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
+                };
+                $scope.activeTab = $scope.visualisationTabs.vjusage;
+
 
                 $scope.exportChartPng = function (file, tab, exportType) {
                     saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type, 3, exportType);
                 };
 
                 $scope.setActiveTab = function (tab) {
-                    $rootScope.activeTab = tab;
-                    $rootScope.updateVisualisationTab();
+                    $scope.activeTab = tab;
+                    //TODO update visuzlisation
                 };
 
                 $scope.isActiveTab = function (tab) {
-                    return $rootScope.activeTab === tab;
-                };
-
-                $scope.showTab = function () {
-                    return $rootScope.state === htmlState.FILE;
+                    return $scope.activeTab === tab;
                 };
 
                 $scope.showFile = function (file) {
-                    return file.fileName === $rootScope.activeFileName;
+                    return stateInfo.isActiveFile(file);
                 }
             }]
         }
@@ -469,12 +452,8 @@ var CONSOLE_INFO = true;
         return {
             restrict: 'E',
             templateUrl: '/account/accountInformation',
-            transclude: false,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
-                $scope.showAccountInformation = function () {
-                    return $rootScope.state === htmlState.ACCOUNT_INFORMATION;
-                }
+            controller: ['$scope', function ($scope) {
+
             }]
         }
     });
@@ -483,9 +462,7 @@ var CONSOLE_INFO = true;
     app.directive('rarefactionContent', function () {
         return {
             restrict: 'E',
-            transclude: false,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+            controller: ['$scope', function ($scope) {
 
                 $scope.rarefactionExportTypes = ['JPEG'];
                 $scope.area = 'Hide';
@@ -512,11 +489,6 @@ var CONSOLE_INFO = true;
 
                 };
 
-                $scope.showRarefaction = function () {
-                    if ($rootScope.state !== htmlState.RAREFACTION) $scope.area = 'Hide';
-                    return $rootScope.state === htmlState.RAREFACTION;
-                };
-
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
                 }
@@ -528,12 +500,8 @@ var CONSOLE_INFO = true;
     app.directive('summaryContent', function () {
         return {
             restrict: 'E',
-            tranclude: false,
-            require: '^accountPage',
             controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
-                $scope.showSummary = function () {
-                    return $rootScope.state === htmlState.SUMMARY;
-                }
+
             }]
         }
     });
@@ -860,13 +828,8 @@ var CONSOLE_INFO = true;
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
-            tranclude: false,
-            require: '^accountPage',
             controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
 
-                $scope.showComparing = function () {
-                    return $rootScope.state === htmlState.COMPARING;
-                };
                 $scope.comparingItems = [];
                 $scope.isComparing = isComparing;
                 $scope.isRendered = isRendered;
@@ -990,15 +953,13 @@ var CONSOLE_INFO = true;
                                 '</div>' +
                             '</div>' +
                         '</div>',
-            transclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+            controller: ['$scope', 'accountInfo', function($scope, accountInfo) {
                 $scope.blockPage = function() {
-                    return !$rootScope.initialized;
+                    return !accountInfo.isInitialized();
                 };
 
                 $scope.error = function() {
-                    return $rootScope.errorInit;
+                    return accountInfo.isInitializeError();
                 }
 
             }]
