@@ -48,7 +48,6 @@ var CONSOLE_INFO = true;
                 body: body
             };
             notifications.push(newNotification);
-            /*
             $timeout(function() {
                 deleteNotification(newNotification);
             }, (function() {
@@ -59,7 +58,6 @@ var CONSOLE_INFO = true;
                         return 3000;
                 }
             }()));
-            */
         }
 
         function addErrorNotification(header, body) {
