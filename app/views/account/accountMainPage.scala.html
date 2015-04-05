@@ -1,8 +1,21 @@
 @(userName: String)
 @main("Account") {
-    <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
     <account-page ng-app="accountPage">
+        <notifications>
+            <div id="notifications_wrapper">
+                <div class="notification" ng-repeat="notification in notifications" ng-class="{'error':isNotificationError(notification), 'info':isNotificationInfo(notification), 'success':isNotificationSuccess(notification)}">
+                    <div class="close_notification" ng-click="deleteNotification(notification)">
+                        <i class="fa fa-times"></i>
+                    </div>
+                    <div class="notification_header">
+                        <p>{{ notification.header }}</p>
+                    </div>
+                    <div class="notification_body">
+                        <p>{{ notification.body }}</p>
+                    </div>
+                </div>
+            </div>
+        </notifications>
         <block-page></block-page>
         <files-sidebar>
             @views.html.account.filesSidebar()

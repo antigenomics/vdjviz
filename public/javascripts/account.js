@@ -18,7 +18,7 @@ var CONSOLE_INFO = true;
         COMPARING: 4
     });
 
-    var app = angular.module('accountPage', []);
+    var app = angular.module('accountPage', ['ngAnimate']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -28,9 +28,90 @@ var CONSOLE_INFO = true;
         };
     });
 
+    app.factory('notifications', ['$log', '$timeout', function($log, $timeout) {
+        var notifications = [];
+
+
+        function getNotifications() {
+            return notifications;
+        }
+
+        function deleteNotification(notification) {
+            var id = notifications.indexOf(notification);
+            if (id >= 0) notifications.splice(id, 1);
+        }
+
+        function addNotification(type, header, body) {
+            var newNotification = {
+                type: type,
+                header: header,
+                body: body
+            };
+            notifications.push(newNotification);
+            /*
+            $timeout(function() {
+                deleteNotification(newNotification);
+            }, (function() {
+                switch (type) {
+                    case 'error':
+                        return 5000;
+                    default:
+                        return 3000;
+                }
+            }()));
+            */
+        }
+
+        function addErrorNotification(header, body) {
+            addNotification('error', header, body);
+        }
+
+        function addInfoNotification(header, body) {
+            addNotification('info', header, body);
+        }
+
+        function addSuccessNotification(header, body) {
+            addNotification('success', header, body);
+        }
+
+        return {
+            getNotifications: getNotifications,
+            deleteNotification: deleteNotification,
+            addNotification: addNotification,
+            addErrorNotification: addErrorNotification,
+            addInfoNotification: addInfoNotification,
+            addSuccessNotification: addSuccessNotification
+        };
+    }]);
+
+    app.directive('notifications', function() {
+        return {
+            restrict: 'E',
+            controller: ['$scope', 'notifications', function($scope, notifications) {
+                $scope.notifications = notifications.getNotifications();
+                $scope.deleteNotification = notifications.deleteNotification;
+
+                $scope.isNotificationError = function(notification) {
+                    return notification.type === 'error';
+                };
+
+                $scope.isNotificationInfo = function(notification) {
+                    return notification.type === 'info';
+                };
+
+                $scope.isNotificationSuccess = function(notification) {
+                    return notification.type === 'success';
+                };
+
+
+
+            }]
+        };
+    });
+
 
     //This factory handle account information and user's files
-    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', function($log, $http, stateInfo, chartInfo) {
+    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', 'notifications', function($log, $http, stateInfo, chartInfo, notifications) {
         //Private variables
         var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
         var email = "", firstName = "", lastName = "", userName = "";
@@ -56,8 +137,6 @@ var CONSOLE_INFO = true;
                 maxFilesCount = info.filesInformation.maxFilesCount;
                 maxFileSize = info.filesInformation.maxFileSize;
                 rarefactionCache = info.filesInformation.rarefactionCache;
-                chartInfo.update_rarefaction(!rarefactionCache);
-                chartInfo.update_summary();
                 angular.forEach(info.filesInformation.files, function(file) {
                     files[file.fileName] = {
                         uid: uid++,
@@ -88,6 +167,10 @@ var CONSOLE_INFO = true;
                         }
                     };
                 });
+                if (Object.keys(files).length > 0) {
+                    chartInfo.update_rarefaction(!rarefactionCache);
+                    chartInfo.update_summary();
+                }
                 if (CONSOLE_INFO) {
                     $log.info('Account initialized');
                     $log.info('User: ' + userName);
@@ -121,11 +204,12 @@ var CONSOLE_INFO = true;
                         chartInfo.update_summary();
                     }
                     delete files[file.fileName];
-
+                    notifications.addSuccessNotification('Deleting', file.fileName + ' have been successfully deleted');
                     if (CONSOLE_INFO) {
                         $log.info('File ' + file.fileName + ' successfully deleted');
                     }
                 }).error(function(response) {
+                    notifications.addErrorNotification('Deleting', 'Error while deleting file ' + file.fileName);
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting file ' + file.fileName);
                         $log.error(response.message);
@@ -148,11 +232,13 @@ var CONSOLE_INFO = true;
                     var file;
                     for (file in files) { if (files.hasOwnProperty(file)) { delete files[file]; } }
                     stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
+                    notifications.addSuccessNotification('Deleting', 'All files have been successfully deleted');
                     if (CONSOLE_INFO) {
                         $log.info('All files successfully deleted');
                     }
                 })
                 .error(function() {
+                    notifications.addErrorNotification('Deleting', 'Error while deleting all files');
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting files');
                     }
@@ -299,7 +385,7 @@ var CONSOLE_INFO = true;
     }]);
 
     //This factory requests data from server
-    app.factory('chartInfo', ['$log', '$http',function($log, $http) {
+    app.factory('chartInfo', ['$log', '$http', 'notifications',function($log, $http, notifications) {
 
         var oldFile = null;
 
@@ -343,6 +429,7 @@ var CONSOLE_INFO = true;
                         if (CONSOLE_INFO) {
                             $log.error('Error while requesting data for file ' + parameters.file.fileName);
                         }
+                        notifications.addErrorNotification(type, 'Error while requesting data for file ' + parameters.file.fileName);
                         noDataAvailable(parameters, parameters.file);
                         loaded(parameters.place);
                     });
@@ -374,7 +461,7 @@ var CONSOLE_INFO = true;
                     loaded(parameters.place);
                 })
                 .error(function() {
-                    //TODO notifications
+                    notifications.addErrorNotification('Rarefaction', 'Error while requesting rarefaction data');
                     loaded(parameters.place);
                 });
 
@@ -398,7 +485,7 @@ var CONSOLE_INFO = true;
                     loaded('.summary-visualisation-tab');
                 })
                 .error(function() {
-                    //TODO notifications
+                    notifications.addErrorNotification('Summary', 'Error while requesting summary data');
                     loaded('.summary-visualisation-tab');
                 });
         }
@@ -679,7 +766,7 @@ var CONSOLE_INFO = true;
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', 'accountInfo', 'chartInfo', function ($scope, $http, accountInfo, chartInfo) {
+            controller: ['$scope', '$http', 'accountInfo', 'chartInfo', 'notifications', function ($scope, $http, accountInfo, chartInfo, notifications) {
                 //Private var
                 var uid = 0;
                 var errors = Object.freeze({
@@ -691,7 +778,7 @@ var CONSOLE_INFO = true;
                 //Public var
                 $scope.newFiles = {};
                 $scope.uploadedFiles = [];
-                $scope.commonSoftwareType = 'mitcr';
+                $scope.commonSoftwareType = 'vdjtools';
 
                 //Public Functions
                 $scope.isNameValid = isNameValid;
@@ -776,7 +863,15 @@ var CONSOLE_INFO = true;
                 function isRenderingFilesExist() {
                     var exist = false;
                     angular.forEach($scope.newFiles, function(file) {
-                        if (file.state === RenderState.RENDERING || file.state === RenderState.WAIT) exist = true;
+                        if (file.state === RenderState.RENDERING) exist = true;
+                    });
+                    return exist;
+                }
+
+                function isWaitingFilesExist() {
+                    var exist = false;
+                    angular.forEach($scope.newFiles, function(file) {
+                        if (file.state === RenderState.WAIT) exist = true;
                     });
                     return exist;
                 }
@@ -786,7 +881,7 @@ var CONSOLE_INFO = true;
                         $scope.newFiles[uid] = {
                             uid: uid,
                             fileName: fileName,
-                            softwareTypeName: 'mitcr',
+                            softwareTypeName: $scope.commonSoftwareType,
                             fileExtension: fileExtension,
                             state: RenderState.WAIT,
                             wait: true,
@@ -879,7 +974,6 @@ var CONSOLE_INFO = true;
                 $('#fileupload').fileupload({
                     url: '/account/api/upload',
                     dataType: 'json',
-                    sequentialUploads: true,
                     dropZone: $('#new-files-dropzone'),
                     add: function (e, data) {
                         var file = data.files[0];
@@ -925,6 +1019,9 @@ var CONSOLE_INFO = true;
                                                     updateResult(file, 'success');
                                                     socket.close();
                                                     if (!isRenderingFilesExist()) {
+                                                        if (!isWaitingFilesExist()) {
+                                                            notifications.addSuccessNotification('Uploading', 'All files have been uploaded and rendered');
+                                                        }
                                                         chartInfo.update_rarefaction(true);
                                                         chartInfo.update_summary();
                                                     }
@@ -938,10 +1035,12 @@ var CONSOLE_INFO = true;
                                             accountInfo.deleteFile_client(file);
                                             updateResult(file, 'error');
                                             updateResultTooltip(file, event.message);
+                                            notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
                                             break;
                                         default:
                                             accountInfo.deleteFile_client(file);
-                                            updateTooltip(file, "Server unavailable");
+                                            notifications.addErrorNotification('Rendering', 'Server is unavailable');
+                                            updateTooltip(file, "Server is unavailable");
                                             break;
                                     }
 
@@ -960,10 +1059,12 @@ var CONSOLE_INFO = true;
                             case "error" :
                                 updateResult(file, 'error');
                                 updateResultTooltip(file, data.result.message);
+                                notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
                                 break;
                             default:
                                 updateResult(file, 'error');
-                                updateResultTooltip(file, "Server unavailable");
+                                updateResultTooltip(file, "Server is unavailable");
+                                notifications.addErrorNotification('Rendering', 'Server is unavailable');
                         }
 
                     }
@@ -1341,7 +1442,6 @@ function spectratypeV(data, param) {
 }
 
 function quantileSunbirstChart(data, param) {
-    "use strict";
     nv.addGraph(function () {
 
         var width = param.width,
@@ -1497,8 +1597,8 @@ function quantileSunbirstChart(data, param) {
         }
 
         function isParentOf(p, c) {
-            if (p === c) return true;
-            if (p.children !== null) {
+            if (p == c) return true;
+            if (p.children != null) {
                 return p.children.some(function(d) {
                     return isParentOf(d, c);
                 });
@@ -1514,7 +1614,7 @@ function quantileSunbirstChart(data, param) {
                 yd = d3.interpolate(y.domain(), [d.y, 1]),
                 yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
             return function (d, i) {
-                return i ? function () {
+                return i ? function (t) {
                     return arc(d);
                 }
                     : function (t) {
