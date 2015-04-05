@@ -1,7 +1,9 @@
+
+
 var CONSOLE_INFO = true;
 
 (function () {
-
+    "use strict";
     var RenderState = Object.freeze({
         RENDERED: 0,
         RENDERING: 1,
@@ -27,10 +29,8 @@ var CONSOLE_INFO = true;
     });
 
 
-    //This factory handle account information
-    //and user's files
-    app.factory('accountInfo', ['$log', '$http', 'stateInfo', function($log, $http, stateInfo) {
-        "use strict";
+    //This factory handle account information and user's files
+    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', function($log, $http, stateInfo, chartInfo) {
         //Private variables
         var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
         var email = "", firstName = "", lastName = "", userName = "";
@@ -55,7 +55,9 @@ var CONSOLE_INFO = true;
                 filesCount = info.filesCount;
                 maxFilesCount = info.filesInformation.maxFilesCount;
                 maxFileSize = info.filesInformation.maxFileSize;
-                //TODO rarefaction cache
+                rarefactionCache = info.filesInformation.rarefactionCache;
+                chartInfo.update_rarefaction(!rarefactionCache);
+                chartInfo.update_summary();
                 angular.forEach(info.filesInformation.files, function(file) {
                     files[file.fileName] = {
                         uid: uid++,
@@ -84,7 +86,7 @@ var CONSOLE_INFO = true;
                                 comparing: false
                             }
                         }
-                    }
+                    };
                 });
                 if (CONSOLE_INFO) {
                     $log.info('Account initialized');
@@ -112,12 +114,12 @@ var CONSOLE_INFO = true;
             }
             $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
                 .success(function () {
-                    if (stateInfo.isActiveFile(file) || Object.keys(files).length == 1) {
+                    if (stateInfo.isActiveFile(file) || Object.keys(files).length === 1) {
                         stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
-                    } else if (!stateInfo.isActiveState(htmlState.FILE)) {
-                        //TODO update visualisation tab
+                    } else if (Object.keys(files).length > 0) {
+                        chartInfo.update_rarefaction(true);
+                        chartInfo.update_summary();
                     }
-                    rarefactionCache = false;
                     delete files[file.fileName];
 
                     if (CONSOLE_INFO) {
@@ -139,7 +141,7 @@ var CONSOLE_INFO = true;
         //Delete all files
         function deleteAll() {
             if (CONSOLE_INFO) {
-                $log.info('Trying to delete all files')
+                $log.info('Trying to delete all files');
             }
             $http.post('/account/api/delete', {action: 'deleteAll'})
                 .success(function () {
@@ -211,11 +213,15 @@ var CONSOLE_INFO = true;
                         comparing: false
                     }
                 }
-            }
+            };
         }
 
         function changeFileState(file, state) {
             files[file.fileName].state = state;
+        }
+
+        function isRarefactionCached() {
+            return rarefactionCache;
         }
         //------------------------------//
 
@@ -230,14 +236,14 @@ var CONSOLE_INFO = true;
             getMaxFilesCount: getMaxFilesCount,
             getMaxFileSize: getMaxFileSize,
             addNewFile: addNewFile,
-            changeFileState: changeFileState
+            changeFileState: changeFileState,
+            isRarefactionCached: isRarefactionCached
 
-        }
+        };
     }]);
 
     //This factory handles global state of application
-    app.factory('stateInfo', function() {
-        "use strict";
+    app.factory('stateInfo', ['chartInfo', 'mainVisualisationTabs', function(chartInfo, mainVisualisationTabs) {
         //Private variables
         var state = htmlState.ACCOUNT_INFORMATION;
         var activeFile = {};
@@ -247,8 +253,11 @@ var CONSOLE_INFO = true;
         //------------------------------//
         //Setter for active file
         function setActiveFile(file) {
-            state = htmlState.FILE;
-            activeFile = file;
+            if (activeFile !== file) {
+                state = htmlState.FILE;
+                activeFile = file;
+                chartInfo.update_file(mainVisualisationTabs.getActiveTab(), file);
+            }
         }
 
         //Getter for active file
@@ -263,6 +272,7 @@ var CONSOLE_INFO = true;
 
         //Setter for global state
         function setActiveState(st) {
+            if (st !== htmlState.FILE) activeFile = {};
             state = st;
         }
 
@@ -285,8 +295,120 @@ var CONSOLE_INFO = true;
             setActiveState: setActiveState,
             getActiveState: getActiveState,
             isActiveState: isActiveState
+        };
+    }]);
+
+    //This factory requests data from server
+    app.factory('chartInfo', ['$log', '$http',function($log, $http) {
+
+        var oldFile = null;
+
+        function update_file(tab, file) {
+
+            if (typeof file === 'undefined') {
+                file = oldFile;
+            } else {
+                oldFile = file;
+            }
+
+            var type = tab.type,
+                dataHandler = tab.dataHandler,
+                parameters = {
+                    place: '#id' + file.uid + ' .' + tab.mainPlace,
+                    fileName: file.fileName,
+                    type: type,
+                    id: file.uid,
+                    height: 500,
+                    width: 500
+                };
+
+            if (!file.meta[type].cached) {
+                $http.post('/account/api/data', {
+                    action: 'data',
+                    fileName: file.fileName,
+                    type: type
+                })
+                    .success(function (data) {
+                        switch (data.result) {
+                            case 'success':
+                                file.meta[type].cached = true;
+                                dataHandler(data.data, parameters);
+                                break;
+                            default:
+                                noDataAvailable(parameters, file);
+                        }
+                        loaded(parameters.place);
+                    })
+                    .error(function () {
+                        if (CONSOLE_INFO) {
+                            $log.error('Error while requesting data for file ' + parameters.file.fileName);
+                        }
+                        noDataAvailable(parameters, parameters.file);
+                        loaded(parameters.place);
+                    });
+            }
+
         }
-    });
+
+        function update_rarefaction(newRarefaction) {
+            var parameters = {
+                place: '.rarefaction-visualisation-tab',
+                fileName: 'all',
+                type: 'rarefaction'
+            };
+            loading(parameters.place);
+            $http.post('/account/api/data', {
+                action: 'data',
+                type: 'rarefaction',
+                fileName: 'all',
+                'new': typeof newRarefaction === 'undefined' ? true : newRarefaction
+            })
+                .success(function (data) {
+                    switch (data.result) {
+                        case 'success':
+                            rarefactionPlot(data.data, parameters);
+                            break;
+                        default:
+                            noDataAvailable(parameters);
+                    }
+                    loaded(parameters.place);
+                })
+                .error(function() {
+                    //TODO notifications
+                    loaded(parameters.place);
+                });
+
+        }
+
+        function update_summary() {
+            loading('.summary-visualisation-tab');
+            $http.post('/account/api/data', {
+                action: 'data',
+                fileName: 'all',
+                type: 'summary'
+            })
+                .success(function(data) {
+                    switch (data.result) {
+                        case 'success':
+                            summaryStats(data.data);
+                            break;
+                        default:
+                            noDataAvailable('.summary-visualisation-tab');
+                    }
+                    loaded('.summary-visualisation-tab');
+                })
+                .error(function() {
+                    //TODO notifications
+                    loaded('.summary-visualisation-tab');
+                });
+        }
+
+        return {
+            update_file: update_file,
+            update_rarefaction: update_rarefaction,
+            update_summary: update_summary
+        };
+    }]);
 
     //Main Directive
     app.directive('accountPage', function () {
@@ -331,43 +453,6 @@ var CONSOLE_INFO = true;
                     return false;
                 };
 
-                $scope.updateVisualisationTab = function () {
-                    var param = {};
-                    switch ($scope.state) {
-                        case htmlState.FILE:
-                            var file = $scope.files[$scope.activeFileName];
-                            param = {
-                                fileName: file.fileName,
-                                type: $scope.activeTab.type,
-                                id: file.uid,
-                                height: 500,
-                                width: 500
-                            };
-                            if (!file.meta[$scope.activeTab.type].cached) {
-                                param.place = '#id' + file.uid + ' .' + $scope.activeTab.mainPlace;
-                                getData($scope.activeTab.dataHandler, param, file);
-                                file.meta[$scope.activeTab.type].cached = true;
-                            }
-                            break;
-                        case htmlState.RAREFACTION:
-                            param.place = '.rarefaction-visualisation-tab';
-                            param.fileName = 'all';
-                            param.type = 'rarefaction';
-                            param.needToCreateNew = needToCreateNew;
-                            needToCreateNew = false;
-                            getData(rarefactionPlot, param);
-                            break;
-                        case htmlState.SUMMARY:
-                            param.place = '.summary-visualisation-tab';
-                            param.fileName = 'all';
-                            param.type = 'summary';
-                            getData(summaryStats, param);
-                            break;
-                        default:
-                            break
-                    }
-                };
-
                 $scope.changeFileState = function (file, state) {
                     $scope.files[file.fileName].state = state;
                 };
@@ -380,7 +465,7 @@ var CONSOLE_INFO = true;
                     return exist;
                 };
             }]
-        }
+        };
     });
 
     //Sidebar Directive
@@ -465,54 +550,83 @@ var CONSOLE_INFO = true;
                     });
                 });
             }]
-        }
+        };
     });
 
-    //File visualisation Directive
+    //File visualisation directive and factory
+    app.factory('mainVisualisationTabs', ['chartInfo', function(chartInfo) {
+        var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
+            return {
+                tabName: tabName,
+                type: type,
+                dataHandler: dataHandler,
+                mainPlace: mainPlace,
+                comparing: comparing,
+                exportPng: exportPng,
+                exportType: exportType,
+                comparingPlace: comparingPlace
+            };
+        };
+        var visualisationTabs = {
+            vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
+            spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
+            spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
+            quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
+            annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
+        };
+        var activeTab = visualisationTabs.vjusage;
+
+        function setActiveTab(t) {
+            if (activeTab !== t) {
+                activeTab = t;
+                chartInfo.update_file(t);
+            }
+
+        }
+
+        function getActiveTab() {
+            return activeTab;
+        }
+
+        function isActiveTab(t) {
+            return activeTab === t;
+        }
+
+        function getTabs() {
+            return visualisationTabs;
+        }
+
+        return {
+            setActiveTab: setActiveTab,
+            getActiveTab: getActiveTab,
+            isActiveTab: isActiveTab,
+            getTabs: getTabs
+        };
+    }]);
+
+
     app.directive('mainVisualisationContent', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', 'stateInfo', function ($scope, stateInfo) {
-                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
-                    return {
-                        tabName: tabName,
-                        type: type,
-                        dataHandler: dataHandler,
-                        mainPlace: mainPlace,
-                        comparing: comparing,
-                        exportPng: exportPng,
-                        exportType: exportType,
-                        comparingPlace: comparingPlace
-                    }
-                };
-                $scope.visualisationTabs = {
-                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
-                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
-                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
-                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
-                    annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
-                };
-                $scope.activeTab = $scope.visualisationTabs.vjusage;
-
+            controller: ['$scope', 'stateInfo', 'mainVisualisationTabs', function ($scope, stateInfo, mainVisualisationTabs) {
+                $scope.visualisationTabs = mainVisualisationTabs.getTabs();
 
                 $scope.exportChartPng = function (file, tab, exportType) {
                     saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type, 3, exportType);
                 };
 
                 $scope.setActiveTab = function (tab) {
-                    $scope.activeTab = tab;
+                    mainVisualisationTabs.setActiveTab(tab);
                     //TODO update visuzlisation
                 };
 
-                $scope.isActiveTab = function (tab) {
-                    return $scope.activeTab === tab;
-                };
+                $scope.isActiveTab = mainVisualisationTabs.isActiveTab;
 
                 $scope.showFile = function (file) {
                     return stateInfo.isActiveFile(file);
-                }
+                };
             }]
-        }
+        };
     });
 
     //Account information Directive
@@ -520,7 +634,7 @@ var CONSOLE_INFO = true;
         return {
             restrict: 'E',
             templateUrl: '/account/accountInformation'
-        }
+        };
     });
 
     //Rarefaction tab Directive
@@ -547,25 +661,25 @@ var CONSOLE_INFO = true;
                         });
 
                     if ($scope.area === 'Show') {
-                        $scope.area = 'Hide'
+                        $scope.area = 'Hide';
                     } else {
-                        $scope.area = 'Show'
+                        $scope.area = 'Show';
                     }
 
                 };
 
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
-                }
+                };
             }]
-        }
+        };
     });
 
     //Upload support Directive
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', 'accountInfo', function ($scope, $http, accountInfo) {
+            controller: ['$scope', '$http', 'accountInfo', 'chartInfo', function ($scope, $http, accountInfo, chartInfo) {
                 //Private var
                 var uid = 0;
                 var errors = Object.freeze({
@@ -594,8 +708,7 @@ var CONSOLE_INFO = true;
 
                 function isNameValid(file){
                     var regexp = /^[a-zA-Z0-9_.+-]{1,40}$/;
-                    var valid = regexp.test(file.fileName);
-                    return valid;
+                    return regexp.test(file.fileName);
                 }
 
                 function isNewFilesEmpty() {
@@ -616,7 +729,7 @@ var CONSOLE_INFO = true;
                 function uploadAll() {
                     angular.forEach($scope.newFiles, function (file) {
                         uploadFile(file);
-                    })
+                    });
                 }
 
                 function uploadFile(file) {
@@ -663,7 +776,7 @@ var CONSOLE_INFO = true;
                 function isRenderingFilesExist() {
                     var exist = false;
                     angular.forEach($scope.newFiles, function(file) {
-                        if (file.state === RenderState.RENDERING) exist = true;
+                        if (file.state === RenderState.RENDERING || file.state === RenderState.WAIT) exist = true;
                     });
                     return exist;
                 }
@@ -696,20 +809,24 @@ var CONSOLE_INFO = true;
                 function updateProgress(file, progress) {
                     $scope.$apply(function () {
                         file.progress = progress;
-                    })
+                    });
                 }
 
                 function updateResult(file, result) {
                     $scope.$apply(function () {
                         file.result = result;
                         file.state = RenderState.RENDERED;
-                    })
+                    });
+                }
+
+                function updateState(file, state) {
+                    file.state = state;
                 }
 
                 function updateResultTooltip(file, resultTooltip) {
                     $scope.$apply(function () {
                         file.resultTooltip = resultTooltip;
-                    })
+                    });
                 }
 
                 function addNewError(uid, fileName, error) {
@@ -735,14 +852,14 @@ var CONSOLE_INFO = true;
                            wait: false,
                            result: 'error',
                            resultTooltip: resultTooltip
-                       }
+                       };
                     });
                 }
 
                 function isContain(fileName) {
                     var contain = false;
                     angular.forEach($scope.newFiles, function (file) {
-                        if (file.fileName == fileName && file.wait) contain = true;
+                        if (file.fileName === fileName && file.wait) contain = true;
                     });
                     return accountInfo.isFileAlreadyExist(fileName)|| contain;
                 }
@@ -769,7 +886,7 @@ var CONSOLE_INFO = true;
                         var originalFileName = file.name;
                         var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
                         var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
-                        if (fileExtension != 'txt' && fileExtension != 'gz') {
+                        if (fileExtension !== 'txt' && fileExtension !== 'gz') {
                             fileName += fileExtension;
                             fileExtension = 'txt';
                         }
@@ -789,15 +906,16 @@ var CONSOLE_INFO = true;
                     },
                     done: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
-                        switch (data.result["result"]) {
+                        switch (data.result.result) {
                             case "success" :
                                 var socket = new WebSocket("ws://" + location.host + "/account/api/ws");
                                 socket.onmessage = function (message) {
-                                    var event = JSON.parse(message["data"]);
-                                    switch (event["result"]) {
+                                    var event = JSON.parse(message.data);
+                                    switch (event.result) {
                                         case "ok" :
-                                            switch (event["progress"]) {
+                                            switch (event.progress) {
                                                 case "start" :
+                                                    updateState(file, RenderState.RENDERING);
                                                     updateTooltip(file, "Computation");
                                                     accountInfo.addNewFile(file);
                                                     break;
@@ -807,7 +925,8 @@ var CONSOLE_INFO = true;
                                                     updateResult(file, 'success');
                                                     socket.close();
                                                     if (!isRenderingFilesExist()) {
-                                                        //TODO update visualisation
+                                                        chartInfo.update_rarefaction(true);
+                                                        chartInfo.update_summary();
                                                     }
                                                     break;
                                                 default:
@@ -818,7 +937,7 @@ var CONSOLE_INFO = true;
                                             socket.close();
                                             accountInfo.deleteFile_client(file);
                                             updateResult(file, 'error');
-                                            updateResultTooltip(file, event["message"]);
+                                            updateResultTooltip(file, event.message);
                                             break;
                                         default:
                                             accountInfo.deleteFile_client(file);
@@ -870,13 +989,13 @@ var CONSOLE_INFO = true;
                             default :
                                 break;
                         }
-                    })
+                    });
                 });
 
 
             }]
 
-        }
+        };
     });
 
     //Comparing Directive
@@ -912,7 +1031,7 @@ var CONSOLE_INFO = true;
 
                 function switchItem(file, tab) {
                     if (isComparing(file, tab)) {
-                        deleteItem(file, tab)
+                        deleteItem(file, tab);
                     } else {
                         showItem(file, tab);
                     }
@@ -922,7 +1041,7 @@ var CONSOLE_INFO = true;
                     for (var i = 0; i < $scope.comparingItems.length; ++i) {
                          if ($scope.comparingItems[i].fileName === file.fileName && $scope.comparingItems[i].tabName === tab.tabName) {
                              $scope.comparingItems.splice(i, 1);
-                             $scope.files[file.fileName].meta[tab.type].comparing = false;
+                             file.meta[tab.type].comparing = false;
                              break;
                          }
                     }
@@ -931,10 +1050,10 @@ var CONSOLE_INFO = true;
                 function deleteAllItems(tab) {
                     var cleanedArray = [];
                     for (var i = 0; i < $scope.comparingItems.length; i++) {
-                        if ($scope.comparingItems[i].tabName != tab.tabName) {
+                        if ($scope.comparingItems[i].tabName !== tab.tabName) {
                             cleanedArray.push($scope.comparingItems[i]);
                         } else {
-                            $rootScope.files[$scope.comparingItems[i].fileName].meta[tab.type].comparing = false;
+                            $scope.files[$scope.comparingItems[i].fileName].meta[tab.type].comparing = false;
                         }
                     }
                     $scope.comparingItems.splice(0, $scope.comparingItems.length);
@@ -942,14 +1061,14 @@ var CONSOLE_INFO = true;
                 }
 
                 function showItem(file, tab) {
-                    if (file.state != RenderState.RENDERING) {
+                    if (file.state !== RenderState.RENDERING) {
                         $scope.comparingItems.push({
                             fileName: file.fileName,
                             tabName: tab.tabName,
                             place: tab.comparingPlace,
                             uid: file.uid
                         });
-                        $scope.files[file.fileName].meta[tab.type].comparing = true;
+                        file.meta[tab.type].comparing = true;
                         var param = {
                             fileName: file.fileName,
                             id: file.uid + '_comparing',
@@ -970,12 +1089,12 @@ var CONSOLE_INFO = true;
                             shown++;
                         }
                     });
-                    if (shown == 0) {
+                    if (shown === 0) {
                         deleteAllItems(tab);
                     }
                 }
             }]
-        }
+        };
     });
 
     //Block account page Directive
@@ -1015,10 +1134,10 @@ var CONSOLE_INFO = true;
 
                 $scope.error = function() {
                     return accountInfo.isInitializeError();
-                }
+                };
 
             }]
-        }
+        };
     });
 
     //Filter for comparing files
@@ -1037,6 +1156,7 @@ var CONSOLE_INFO = true;
 
 //Request data from server
 function getData(handleData, param, file) {
+        "use strict";
         loading(param.place);
         $.ajax({
             url: "/account/api/data",
@@ -1052,7 +1172,7 @@ function getData(handleData, param, file) {
                 if (!data) {
                     location.reload();
                 }
-                switch (data["result"]) {
+                switch (data.result) {
                     case "success" :
                         handleData(data.data, param);
                         break;
@@ -1061,19 +1181,20 @@ function getData(handleData, param, file) {
                         break;
                 }
             },
-            error: function (data) {
+            error: function () {
                 noDataAvailable(param, file);
             },
             complete: function(data) {
                 //For automatic reload on logout
-                if (data == null || typeof data.responseJSON === 'undefined') location.reload();
-                if (data.responseJSON.message != null) console.log(data.responseJSON.message);
+                if (data === null || typeof data.responseJSON === 'undefined') location.reload();
+                if (data.responseJSON.message !== null) console.log(data.responseJSON.message);
                 loaded(param.place);
             }
         });
 }
 
 function spectratype(data, param) {
+    "use strict";
     nv.addGraph(function () {
 
         var place = d3.select(param.place);
@@ -1092,9 +1213,7 @@ function spectratype(data, param) {
 
         var legend = nv.models.legend()
             .key(function(d) {
-                if (d['cdr3aa'])
-                    return d['cdr3aa'];
-                return 'Other'
+                return d['cdr3aa'] ? d['cdr3aa'] : 'Other';
             })
             .oneColumn(true)
             .margin({right: 100, top: 10})
@@ -1113,8 +1232,8 @@ function spectratype(data, param) {
                 .stacked(true)
                 .legendOnChart(true)
                 .tooltip(function (key, x, y, e) {
-                    if (key != "Other") {
-                        if (e.series.values[e.pointIndex].y != 0) {
+                    if (key !== "Other") {
+                        if (e.series.values[e.pointIndex].y !== 0) {
                             return '<h3>CDR3AA: ' + e.series.cdr3aa + '</h3>' +
                                 '<p>Top :' + e.series.key + '</p>' +
                                 '<p>Length : ' + x + '</p>' +
@@ -1137,7 +1256,7 @@ function spectratype(data, param) {
 
         var xValues = [];
         for (var i = 1; i < 100; i++) {
-            if (i % 3 == 0) {
+            if (i % 3 === 0) {
                 xValues.push(i);
             }
         }
@@ -1158,6 +1277,7 @@ function spectratype(data, param) {
 }
 
 function spectratypeV(data, param) {
+    "use strict";
     nv.addGraph(function () {
         var place = d3.select(param.place);
         place.html("");
@@ -1185,7 +1305,7 @@ function spectratypeV(data, param) {
                 .height(height)
                 .stacked(true)
                 .tooltip(function (key, x, y, e) {
-                    if (e.series.values[e.pointIndex].y != 0) {
+                    if (e.series.values[e.pointIndex].y !== 0) {
                         return '<h3>' + key + '</h3>' +
                             '<p>Length : ' + x + '</p>' +
                             '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
@@ -1197,7 +1317,7 @@ function spectratypeV(data, param) {
 
         var xValues = [];
         for (var i = 0; i < 100; i++) {
-            if (i % 3 == 0) {
+            if (i % 3 === 0) {
                 xValues.push(i);
             }
         }
@@ -1209,7 +1329,7 @@ function spectratypeV(data, param) {
 
         chart.yAxis
             .tickFormat(function (d) {
-                return Math.round(d * 10) + "%"
+                return Math.round(d * 10) + "%";
             });
 
         svg.datum(data)
@@ -1221,6 +1341,7 @@ function spectratypeV(data, param) {
 }
 
 function quantileSunbirstChart(data, param) {
+    "use strict";
     nv.addGraph(function () {
 
         var width = param.width,
@@ -1303,14 +1424,14 @@ function quantileSunbirstChart(data, param) {
                 var found = false;
                 var color = "#ffffff";
                 keys.forEach(function(d) {
-                    if (d.key === name) { color = d.color; found = true; };
+                    if (d.key === name) { color = d.color; found = true; }
                 });
                 if (found) return color;
                 return colors[topCount++ % colors.length];
             })
             .style("cursor", function(d) {
-                if (d.children != null) {
-                    return "pointer"
+                if (d.children !== null) {
+                    return "pointer";
                 }
                 return null;
             })
@@ -1337,9 +1458,9 @@ function quantileSunbirstChart(data, param) {
         textEnter.append("tspan")
             .attr("x", 0)
             .text(function(d) {
-                if (d.name == "data") return null;
+                if (d.name === "data") return null;
                 var label = d.name;
-                if (d.size != 0) {
+                if (d.size !== 0) {
                     label += "  " + (d.size.toPrecision(2) * 100).toPrecision(2) + "%";
                 }
                 return label;
@@ -1377,7 +1498,7 @@ function quantileSunbirstChart(data, param) {
 
         function isParentOf(p, c) {
             if (p === c) return true;
-            if (p.children != null) {
+            if (p.children !== null) {
                 return p.children.some(function(d) {
                     return isParentOf(d, c);
                 });
@@ -1393,8 +1514,7 @@ function quantileSunbirstChart(data, param) {
                 yd = d3.interpolate(y.domain(), [d.y, 1]),
                 yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
             return function (d, i) {
-                return i
-                    ? function (t) {
+                return i ? function () {
                     return arc(d);
                 }
                     : function (t) {
@@ -1409,10 +1529,9 @@ function quantileSunbirstChart(data, param) {
 }
 
 function annotationTable(data, param) {
+    "use strict";
     var place = d3.select(param.place);
         place.html("");
-
-    var displayLength = 1000;
 
     var table = place
             .append("table")
@@ -1443,7 +1562,7 @@ function annotationTable(data, param) {
     var dataTable = $('#annotation_table_' + param.id).dataTable({
         dom: '<"pull-left"f><"clear">TrtS',
         scrollY: '600px',
-        "data": data["data"],
+        "data": data.data,
         "columns": column,
         'order': [
             [2, "decs"]
@@ -1486,7 +1605,7 @@ function annotationTable(data, param) {
                             end: end,
                             color: color,
                             substring: cdr3aa.substring(start, end + 1)
-                        }
+                        };
                     };
 
                     var insert = function (index, str, insertString) {
@@ -1553,7 +1672,7 @@ function annotationTable(data, param) {
                             end: end,
                             color: color,
                             substring: cdr3aa.substring(start, end + 1)
-                        }
+                        };
                     };
 
                     var insert = function (index, str, insertString) {
@@ -1603,6 +1722,7 @@ function annotationTable(data, param) {
         ]
     });
 
+    /*
     var $scrollViewer = $('#annotation_table_' + param.id + '_wrapper .dataTables_scrollBody');
 
     $scrollViewer.scroll(function() {
@@ -1622,20 +1742,20 @@ function annotationTable(data, param) {
                 },
                 complete: function(data) {
                     //For automatic reload on logout
-                    if (data == null || typeof data.responseJSON === 'undefined') location.reload();
-                    if (data.responseJSON.message != null) console.log(data.responseJSON.message);
+                    if (data === null || typeof data.responseJSON === 'undefined') location.reload();
+                    if (data.responseJSON.message !== null) console.log(data.responseJSON.message);
                 }
             });
             $scrollViewer.unbind('scroll');
         }
 
     })
+    */
 
 }
 
 function vjUsage(data, param) {
-
-    //var fill = d3.scale.category20c();
+    "use strict";
     var fill = function(i) {
         return data.colors[i % data.colors.length];
     };
@@ -1695,9 +1815,9 @@ function vjUsage(data, param) {
             return ((d.startAngle + d.endAngle) / 2) > Math.PI ? "end" : null;
         })
         .attr("transform", function (d) {
-            return "rotate(" + (((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90) + ")"
-                + "translate(" + (r1 - 15) + ")"
-                + (((d.startAngle + d.endAngle) / 2) > Math.PI ? "rotate(180)" : "");
+            return "rotate(" + (((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90) + ")" +
+                "translate(" + (r1 - 15) + ")" +
+                (((d.startAngle + d.endAngle) / 2) > Math.PI ? "rotate(180)" : "");
         })
         .text(function (d) {
             return data.labels[d.index];
@@ -1708,7 +1828,7 @@ function vjUsage(data, param) {
         return function (g, i) {
             svg.selectAll(".chord path")
                 .filter(function (d) {
-                    return d.source.index != i && d.target.index != i;
+                    return d.source.index !== i && d.target.index !== i;
                 })
                 .transition()
                 .style("opacity", opacity);
@@ -1717,11 +1837,12 @@ function vjUsage(data, param) {
 }
 
 function rarefactionPlot(data, param) {
+    "use strict";
     nv.addGraph(function () {
         var place = d3.select(param.place);
         place.html(""); //cleanup old chart
 
-        var width = place.style('width');
+        var width = $(document).width() - 350;
 
         var svg = d3.select(param.place)
             .append("svg")
@@ -1753,9 +1874,9 @@ function rarefactionPlot(data, param) {
     });
 }
 
-function summaryStats(data, param) {
-
-    var place = d3.select(param.place);
+function summaryStats(data) {
+    "use strict";
+    var place = d3.select('.summary-visualisation-tab');
     place.html("");
 
     var table = place.append("table")
@@ -1815,7 +1936,7 @@ function summaryStats(data, param) {
             },
             {
                 "render": function (data) {
-                    return parseFloat(data).toFixed(2)
+                    return parseFloat(data).toFixed(2);
                 },
                 "targets": [7, 8, 9]
             },
@@ -1836,26 +1957,30 @@ function summaryStats(data, param) {
 }
 
 function loading(place) {
+    "use strict";
     var d3Place = d3.select(place);
         d3Place.html("");
         d3Place.style("display", "block");
 
-    var loading = d3Place.append("div").attr("class", "loading");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_4").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_5").append("div").attr("class", "wInnerBall");
+    var loadingPlace = d3Place.append("div").attr("class", "loading");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_4").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_5").append("div").attr("class", "wInnerBall");
 }
 
 function loaded(place) {
+    "use strict";
     d3.select(place)
         .select(".loading")
         .remove();
 }
 
 function noDataAvailable(param, file) {
-    var place = d3.select(param.place);
+    "use strict";
+    var p = param.place ? param.place : param;
+    var place = d3.select(p);
         place.html("");
         place.append("div")
             .style("width", "100%")
@@ -1870,6 +1995,7 @@ function noDataAvailable(param, file) {
 }
 
 $(document).bind('dragover', function (e) {
+    "use strict";
     var dropZone = $('#new-files-dropzone'),
         timeout = window.dropZoneTimeout;
     if (!timeout) {
@@ -1885,7 +2011,7 @@ $(document).bind('dragover', function (e) {
             break;
         }
         node = node.parentNode;
-    } while (node != null);
+    } while (node !== null);
     if (found) {
         dropZone.addClass('hover');
     } else {

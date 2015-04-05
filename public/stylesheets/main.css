@@ -209,6 +209,7 @@ img.blur {
 .feature-img {
     max-height: 500px;
     max-width: 500px;
+    width: 100%;
 }
 
 .sunbirst path {
