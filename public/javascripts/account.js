@@ -210,7 +210,6 @@ var CONSOLE_INFO = true;
                     notifications.addErrorNotification('Deleting', 'Error while deleting file ' + file.fileName);
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting file ' + file.fileName);
-                        $log.error(response.message);
                     }
                 });
         }
