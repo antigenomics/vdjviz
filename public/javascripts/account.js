@@ -18,7 +18,7 @@ var CONSOLE_INFO = true;
         COMPARING: 4
     });
 
-    var app = angular.module('accountPage', ['ngAnimate']);
+    var app = angular.module('accountPage', ['ngAnimate', 'datatables']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -101,7 +101,9 @@ var CONSOLE_INFO = true;
                     return notification.type === 'success';
                 };
 
-
+                $scope.isNotificationsExist = function() {
+                    return $scope.notifications.length > 0;
+                };
 
             }]
         };
@@ -382,7 +384,7 @@ var CONSOLE_INFO = true;
     }]);
 
     //This factory requests data from server
-    app.factory('chartInfo', ['$log', '$http', 'notifications',function($log, $http, notifications) {
+    app.factory('chartInfo', ['$log', '$http', 'notifications', 'summaryStatsFactory',function($log, $http, notifications, summaryStatsFactory) {
 
         var oldFile = null;
 
@@ -474,7 +476,7 @@ var CONSOLE_INFO = true;
                 .success(function(data) {
                     switch (data.result) {
                         case 'success':
-                            summaryStats(data.data);
+                            summaryStatsFactory.addData(data.data);
                             break;
                         default:
                             noDataAvailable('.summary-visualisation-tab');
@@ -755,6 +757,66 @@ var CONSOLE_INFO = true;
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
                 };
+            }]
+        };
+    });
+
+
+    app.factory('summaryStatsFactory', function() {
+        var data = [];
+
+
+        function addData(d) {
+            angular.copy(d, data);
+        }
+
+        function getData() {
+            return data;
+        }
+
+        return {
+            addData: addData,
+            getData: getData
+        };
+
+    });
+
+    //Summary content directive
+    app.directive('summaryStats', function() {
+        return {
+            restrict: 'E',
+            controller: ['$scope', 'summaryStatsFactory', 'DTOptionsBuilder', 'DTColumnDefBuilder', function($scope, summaryStatsFactory, DTOptionsBuilder, DTColumnDefBuilder) {
+                $scope.data = summaryStatsFactory.getData();
+
+                $scope.dtOptions = DTOptionsBuilder.newOptions()
+                    .withDisplayLength(25);
+                $scope.dtColumnsDefs = [
+                    DTColumnDefBuilder.newColumnDef(0),
+                    DTColumnDefBuilder.newColumnDef(1),
+                    DTColumnDefBuilder.newColumnDef(2),
+                    DTColumnDefBuilder.newColumnDef(3).renderWith(function(data) {
+                        return parseFloat(data).toExponential(2);
+                    }),
+                    DTColumnDefBuilder.newColumnDef(4).renderWith(function(data) {
+                        return parseFloat(data).toExponential(2);
+                    }),
+                    DTColumnDefBuilder.newColumnDef(5),
+                    DTColumnDefBuilder.newColumnDef(6).renderWith(function (data) {
+                        return parseFloat(data).toFixed(2) * 100 + "%";
+                    }),
+                    DTColumnDefBuilder.newColumnDef(7).renderWith(function (data) {
+                        return parseFloat(data).toFixed(2);
+                    }),
+                    DTColumnDefBuilder.newColumnDef(8).renderWith(function (data) {
+                        return parseFloat(data).toFixed(2);
+                    }),
+                    DTColumnDefBuilder.newColumnDef(9).renderWith(function (data) {
+                        return parseFloat(data).toFixed(2);
+                    }),
+                    DTColumnDefBuilder.newColumnDef(10).renderWith(function(data) {
+                        return data.substring(0, 6);
+                    })
+                ];
             }]
         };
     });
@@ -1968,88 +2030,6 @@ function rarefactionPlot(data, param) {
             .call(chart);
 
         return chart;
-    });
-}
-
-function summaryStats(data) {
-    "use strict";
-    var place = d3.select('.summary-visualisation-tab');
-    place.html("");
-
-    var table = place.append("table")
-        .attr("id", "basicStatsTable")
-        .attr("class", "table table-striped table-hover"),
-        thead = table.append("thead").append("tr");
-
-    thead.append("th").html("Sample");
-    thead.append("th").html("Reads");
-    thead.append("th").html("Diversity");
-    thead.append("th").html("Mean clonotype frequency");
-    thead.append("th").html("Geo. mean clonotype frequency");
-    thead.append("th").html("Non-coding clonotypes");
-    thead.append("th").html("NC clonotypes frequency");
-    thead.append("th").html("Mean insert size");
-    thead.append("th").html("Mean N(D)N size");
-    thead.append("th").html("Mean CDR3 length");
-    thead.append("th").html("Convergence");
-
-
-    var column = [
-        {"data": "Name"},                  //Sample
-        {"data": "count"},                 //Reads
-        {"data": "diversity"},             //Rarefaction
-        {"data": "mean_frequency"},        //Mean clonotype frequency
-        {"data": "geomean_frequency"},     //Median clonotype frequency
-        {"data": "nc_diversity"},          //Non-coding clonotypes
-        {"data": "nc_frequency"},          //NC clonotypes frequency
-        {"data": "mean_insert_size"},      //Mean insert size
-        {"data": "mean_ndn_size"},         //Mean N(d)N size
-        {"data": "mean_cdr3nt_length"},    //Mean CDR3 length
-        {"data": "convergence"}            //Convergence
-    ];
-
-    $('#basicStatsTable').dataTable({
-        dom: '<"pull-left"f><"clear">TrtS',
-        tableTools: {
-            "sSwfPath": "../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
-        },
-        data: data,
-        "columnDefs": [
-            {
-                "width": "10%",
-                "targets": 0
-            },
-            {
-                "render": function (data) {
-                    return parseFloat(data).toExponential(2);
-                },
-                "targets": [3, 4]
-            },
-            {
-                "render": function (data) {
-                    return parseFloat(data).toFixed(2) * 100 + "%";
-                },
-                "targets": 6
-            },
-            {
-                "render": function (data) {
-                    return parseFloat(data).toFixed(2);
-                },
-                "targets": [7, 8, 9]
-            },
-            {
-                "render": function(data) {
-                    return data.substring(0, 6);
-                },
-                "targets": 10
-            }
-        ],
-        "columns": column,
-        'iDisplayLength': 100,
-        'order': [
-            [0, "asc"]
-        ],
-        responsive: true
     });
 }
 

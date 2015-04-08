@@ -22,7 +22,7 @@ public class LocalToken extends Model {
 
     public boolean isSignUp;
 
-    public static Finder<String, LocalToken> find = new Finder<String, LocalToken>(
+    public static final Finder<String, LocalToken> find = new Finder<String, LocalToken>(
             String.class, LocalToken.class
     );
 }

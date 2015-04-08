@@ -1,7 +1,7 @@
 @(userName: String)
 @main("Account") {
     <account-page ng-app="accountPage">
-        <notifications>
+        <notifications ng-show="isNotificationsExist()">
             <div id="notifications_wrapper">
                 <div class="notification" ng-repeat="notification in notifications" ng-class="{'error':isNotificationError(notification), 'info':isNotificationInfo(notification), 'success':isNotificationSuccess(notification)}">
                     <div class="close_notification" ng-click="deleteNotification(notification)">

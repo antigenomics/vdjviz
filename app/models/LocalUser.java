@@ -21,7 +21,7 @@ public class LocalUser extends Model  {
     @OneToOne
     public Account account;
 
-    public static Finder<String, LocalUser> find = new Finder<String, LocalUser>(
+    public static final Finder<String, LocalUser> find = new Finder<String, LocalUser>(
             String.class, LocalUser.class
     );
 

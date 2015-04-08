@@ -12,7 +12,40 @@
                     </ul>
                 </div>
                 <hr>
-                <div class="summary-visualisation-tab"></div>
+                <summary-stats>
+                    <table datatable="ng" dt-options="dtOptions" dt-column-defs="dtColumnsDefs" dt-disable-deep-watchers="true" class="row-border hover">
+                        <thead>
+                            <tr>
+                                <th>Sample</th>
+                                <th>Reads</th>
+                                <th>Diversity</th>
+                                <th>Mean clonotype frequency</th>
+                                <th>Geo.mean clonotype frequency</th>
+                                <th>Non-coding clonotypes</th>
+                                <th>NC clonotypes frequency</th>
+                                <th>Mean insert size</th>
+                                <th>Mean N(D)N size</th>
+                                <th>Mean CDR3 length</th>
+                                <th>Convergence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="row in data">
+                                <td>{{ row.Name }}</td>
+                                <td>{{ row.count }}</td>
+                                <td>{{ row.diversity }}</td>
+                                <td>{{ row.mean_frequency }}</td>
+                                <td>{{ row.geomean_frequency }}</td>
+                                <td>{{ row.nc_diversity }}</td>
+                                <td>{{ row.nc_frequency }}</td>
+                                <td>{{ row.mean_insert_size }}</td>
+                                <td>{{ row.mean_ndn_size }}</td>
+                                <td>{{ row.mean_cdr3nt_length }}</td>
+                                <td>{{ row.convergence }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </summary-stats>
             </div>
         </div>
     </div>
