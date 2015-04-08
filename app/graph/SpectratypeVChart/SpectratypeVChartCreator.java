@@ -3,7 +3,6 @@ package graph.SpectratypeVChart;
 import com.antigenomics.vdjtools.basic.Spectratype;
 import com.antigenomics.vdjtools.basic.SpectratypeV;
 import com.antigenomics.vdjtools.sample.Sample;
-import models.Account;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 public class SpectratypeVChartCreator {
     private UserFile file;
-    private Sample sample;
     private SpectratypeVChart spectratypeVChart;
     private Integer defaultTop;
     private String cacheName;
@@ -26,7 +24,6 @@ public class SpectratypeVChartCreator {
 
     public SpectratypeVChartCreator(UserFile file, Sample sample) {
         this.file = file;
-        this.sample = sample;
         this.spectratypeVChart = new SpectratypeVChart();
         this.spectratypeV = new SpectratypeV(false, false);
         spectratypeV.addAll(sample);

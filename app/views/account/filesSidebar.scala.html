@@ -18,8 +18,8 @@
         <li ng-hide="isFilesEmpty()" class="sidebar_block_blue">
             <a>Samples</a>
         </li>
-        <li class="li_pointer" id="sidebar_file_{{ file.uid }}" ng-repeat="file in files" ng-class="{'current':isActiveFile(file), 'disabled':isRendering(file)}" ng-click="setActiveFile(file)" ng-mouseenter="hover=true" ng-mouseleave="hover=false" on-last-repeat>
-            <a>{{ file.fileName }}<text ng-show="isRendering(file)">| Rendering</text> <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i></a>
+        <li class="li_pointer" id="sidebar_file_{{ file.uid }}" ng-repeat="file in files" ng-class="{'current':isActiveFile(file), 'disabled':isFileRendering(file)}" ng-click="setActiveFile(file)" ng-mouseenter="hover=true" ng-mouseleave="hover=false" on-last-repeat>
+            <a>{{ file.fileName }} <text ng-show="isRendering(file)"> | Rendering</text> <i class="fa fa-trash pull-right" ng-class="{'hidden':!hover}" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i></a>
         </li>
         <li ng-hide="isFilesEmpty()">
             <a></a>
@@ -30,7 +30,7 @@
         <li>
             <a></a>
         </li>
-        <li ng-click="deleteAll()" class="sidebar_block_red" ng-hide="isFilesEmpty()">
+        <li ng-click="deleteAll()" class="sidebar_block_red li_pointer" ng-hide="isFilesEmpty()">
             <a>Delete all</a>
         </li>
     </ul>

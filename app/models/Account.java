@@ -44,12 +44,12 @@ public class Account extends Model {
     }
 
     public class AccountInformation {
-        //Data accountInformation = new Data(new String[]{"email", "firstName", "lastName", "userName", "filesCount"});
         public String email;
         public String firstName;
         public String lastName;
         public String userName;
         public Integer filesCount;
+        public FilesInformation filesInformation;
 
         public AccountInformation(String email, String firstName, String lastName, String userName, Integer filesCount) {
             this.email = email;
@@ -57,6 +57,7 @@ public class Account extends Model {
             this.lastName = lastName;
             this.userName = userName;
             this.filesCount = filesCount;
+            this.filesInformation = getFilesInformation();
         }
     }
 

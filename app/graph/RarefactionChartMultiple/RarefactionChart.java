@@ -119,13 +119,14 @@ public class RarefactionChart {
     private String getMD5() throws Exception {
         List<String> fileNames = account.getRenderedFileNames();
         List<Long> fileSizes = account.getRenderedFileSizes();
-        String namesString = "";
+        StringBuilder stringBuilder = new StringBuilder();
         for (String fileName : fileNames) {
-            namesString += fileName;
+            stringBuilder.append(fileName);
         }
         for (Long fileSize : fileSizes) {
-            namesString += fileSize.toString();
+            stringBuilder.append(fileSize.toString());
         }
+        String namesString = stringBuilder.toString();
         MessageDigest messageDigest = MessageDigest.getInstance("MD5");
         messageDigest.update(namesString.getBytes(), 0, namesString.length());
         return new BigInteger(1, messageDigest.digest()).toString(16);
@@ -134,14 +135,14 @@ public class RarefactionChart {
     private void saveMD5() throws Exception {
         List<String> fileNames = account.getRenderedFileNames();
         List<Long> fileSizes = account.getRenderedFileSizes();
-        String namesString = "";
+        StringBuilder stringBuilder = new StringBuilder();
         for (String fileName : fileNames) {
-            namesString += fileName;
+            stringBuilder.append(fileName);
         }
         for (Long fileSize : fileSizes) {
-            namesString += fileSize.toString();
+            stringBuilder.append(fileSize.toString());
         }
-
+        String namesString = stringBuilder.toString();
         MessageDigest messageDigest = MessageDigest.getInstance("MD5");
         messageDigest.update(namesString.getBytes(), 0, namesString.length());
         md5 = new BigInteger(1, messageDigest.digest()).toString(16);

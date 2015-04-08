@@ -9,12 +9,9 @@
         </noscript>
         <script>
         function getBrowser(){
-        var ua = navigator.userAgent;
-        if (ua.search(/MSIE/) > 0) return 'badbrowser';
-        if (ua.search(/iPhone/) > 0) return 'badbrowser';
-        if (ua.search(/iPad/) > 0) return 'badbrowser';
-        if (ua.search(/Android/) > 0) return 'badbrowser';
-        return 'ok';
+            var ua = navigator.userAgent;
+            if (ua.search(/MSIE/) > 0) return 'badbrowser';
+            return 'ok';
         }
 
         var browser = getBrowser();
@@ -50,6 +47,9 @@
         <script src="@routes.Assets.at("lib/fileUpload/jquery.fileupload.js")"></script>
         <script src="@routes.Assets.at("lib/fileUpload/jquery.iframe-transport.js")"></script>
         <script src="@routes.Assets.at("lib/svgtopng/svgtopng.js")"></script>
+        <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("lib/angular/angular-animate.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/account.js")" type="text/javascript"></script>
     </head>
     <body>
     @content

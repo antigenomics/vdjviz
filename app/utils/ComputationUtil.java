@@ -1,15 +1,11 @@
 package utils;
 
-import com.antigenomics.vdjdb.core.db.CdrDatabase;
-import com.antigenomics.vdjtools.db.CdrMatch;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.BasicStats;
-import com.antigenomics.vdjtools.db.*;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.milaboratory.core.tree.TreeSearchParameters;
 import graph.AnnotationTable.AnnotationTable;
 import graph.QuantileStatsChart.QuantileStatsChartCreator;
 import graph.SpectratypeChart.SpectratypeChartCreator;

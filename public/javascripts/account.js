@@ -1,26 +1,24 @@
-/**
- * Created by bvdmitri on 13.11.14.
- */
 
 
+var CONSOLE_INFO = true;
 
 (function () {
-
-    var RenderState = {
+    "use strict";
+    var RenderState = Object.freeze({
         RENDERED: 0,
         RENDERING: 1,
         WAIT: 2
-    };
+    });
 
-    var htmlState = {
+    var htmlState = Object.freeze({
         ACCOUNT_INFORMATION: 0,
         FILE: 1,
         RAREFACTION: 2,
         SUMMARY: 3,
         COMPARING: 4
-    };
+    });
 
-    var app = angular.module('accountPage', []);
+    var app = angular.module('accountPage', ['ngAnimate']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -30,82 +28,115 @@
         };
     });
 
-    //Main Directive
-    app.directive('accountPage', function () {
+    app.factory('notifications', ['$log', '$timeout', function($log, $timeout) {
+        var notifications = [];
+
+
+        function getNotifications() {
+            return notifications;
+        }
+
+        function deleteNotification(notification) {
+            var id = notifications.indexOf(notification);
+            if (id >= 0) notifications.splice(id, 1);
+        }
+
+        function addNotification(type, header, body) {
+            var newNotification = {
+                type: type,
+                header: header,
+                body: body
+            };
+            notifications.push(newNotification);
+            $timeout(function() {
+                deleteNotification(newNotification);
+            }, (function() {
+                switch (type) {
+                    case 'error':
+                        return 5000;
+                    default:
+                        return 3000;
+                }
+            }()));
+        }
+
+        function addErrorNotification(header, body) {
+            addNotification('error', header, body);
+        }
+
+        function addInfoNotification(header, body) {
+            addNotification('info', header, body);
+        }
+
+        function addSuccessNotification(header, body) {
+            addNotification('success', header, body);
+        }
+
+        return {
+            getNotifications: getNotifications,
+            deleteNotification: deleteNotification,
+            addNotification: addNotification,
+            addErrorNotification: addErrorNotification,
+            addInfoNotification: addInfoNotification,
+            addSuccessNotification: addSuccessNotification
+        };
+    }]);
+
+    app.directive('notifications', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', function ($scope, $http) {
-                //private parameters
-                var uid = 0;
-                var needToCreateNew = true;
+            controller: ['$scope', 'notifications', function($scope, notifications) {
+                $scope.notifications = notifications.getNotifications();
+                $scope.deleteNotification = notifications.deleteNotification;
 
-                var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
-                    return {
-                        tabName: tabName,
-                        type: type,
-                        dataHandler: dataHandler,
-                        mainPlace: mainPlace,
-                        comparing: comparing,
-                        exportPng: exportPng,
-                        exportType: exportType,
-                        comparingPlace: comparingPlace
-                    }
+                $scope.isNotificationError = function(notification) {
+                    return notification.type === 'error';
+                };
+
+                $scope.isNotificationInfo = function(notification) {
+                    return notification.type === 'info';
+                };
+
+                $scope.isNotificationSuccess = function(notification) {
+                    return notification.type === 'success';
                 };
 
 
-                //public parameters
-                $scope.maxFilesCount = 0;
-                $scope.maxFileSize = 0;
-                $scope.files = {};
-                $scope.state = htmlState.ACCOUNT_INFORMATION;
-                $scope.activeFileName = '';
-                $scope.visualisationTabs = {
-                    vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
-                    spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
-                    spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
-                    quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
-                    annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
-                };
-                $scope.activeTab = $scope.visualisationTabs.vjusage;
-                $scope.initialized = false;
-                $scope.errorInit = false;
 
-                $scope.showStartPage = function() {
-                    $scope.state = htmlState.ACCOUNT_INFORMATION;
-                }
+            }]
+        };
+    });
 
-                $scope.updateFilesList = function () {
-                    $http({method: 'GET', url: '/account/api/files'})
-                        .success(function (data) {
-                            $scope.initialized = true;
-                            $scope.maxFilesCount = data["maxFilesCount"];
-                            $scope.maxFileSize = data["maxFileSize"];
-                            angular.forEach(data["files"], function (file) {
-                            $scope.addFileToList(file);
-                        });
-                            needToCreateNew = data["rarefactionCache"];
-                        })
-                        .error(function() {
-                            $scope.errorInit = true;
-                        })
-                };
 
-                $scope.getActiveFile = function () {
-                    return $scope.files[$scope.activeFileName];
-                };
+    //This factory handle account information and user's files
+    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', 'notifications', function($log, $http, stateInfo, chartInfo, notifications) {
+        //Private variables
+        var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
+        var email = "", firstName = "", lastName = "", userName = "";
+        var rarefactionCache = false;
+        var initialized = false;
+        var initializeError = false;
+        var files = {};
+        var uid = 0;
 
-                $scope.isContain = function (file) {
-                    angular.forEach($scope.files, function (f) {
-                        if (file.fileName === f.fileName) {
-                            return true;
-                        }
-                    });
-                    return false;
-                };
-
-                $scope.addFileToList = function (file) {
-                    needToCreateNew = true;
-                    $scope.files[file.fileName] = {
+        //Initializing account information
+        if (CONSOLE_INFO) {
+            $log.info('Initializing account information');
+        }
+        $http.get('/account/api/info')
+            .success(function(response) {
+                initialized = true;
+                var info = response.data;
+                email = info.email;
+                firstName = info.firstName;
+                lastName = info.lastName;
+                userName = info.userName;
+                filesCount = info.filesCount;
+                maxFilesCount = info.filesInformation.maxFilesCount;
+                maxFileSize = info.filesInformation.maxFileSize;
+                rarefactionCache = info.filesInformation.rarefactionCache;
+                angular.forEach(info.filesInformation.files, function(file) {
+                    files[file.fileName] = {
                         uid: uid++,
                         fileName: file.fileName,
                         state: file.state,
@@ -132,62 +163,378 @@
                                 comparing: false
                             }
                         }
+                    };
+                });
+                if (Object.keys(files).length > 0) {
+                    chartInfo.update_rarefaction(!rarefactionCache);
+                    chartInfo.update_summary();
+                }
+                if (CONSOLE_INFO) {
+                    $log.info('Account initialized');
+                    $log.info('User: ' + userName);
+                    $log.info('Files count: ' + filesCount);
+                    $log.info('Max files count: ' + maxFilesCount);
+                    $log.info('Max file size: ' + maxFileSize);
+                }
+            })
+            .error(function() {
+                initializeError = true;
+            });
+
+        //Public api
+        //-----------------------------//
+        //Getter for user's files
+        function getFiles() {
+            return files;
+        }
+
+        //Delete file from server and client-side application
+        function deleteFile(file) {
+            if (CONSOLE_INFO) {
+                $log.info('Trying to delete file ' + file.fileName);
+            }
+            $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
+                .success(function () {
+                    if (stateInfo.isActiveFile(file) || Object.keys(files).length === 1) {
+                        stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
+                    } else if (Object.keys(files).length > 0) {
+                        chartInfo.update_rarefaction(true);
+                        chartInfo.update_summary();
                     }
+                    delete files[file.fileName];
+                    notifications.addSuccessNotification('Deleting', file.fileName + ' have been successfully deleted');
+                    if (CONSOLE_INFO) {
+                        $log.info('File ' + file.fileName + ' successfully deleted');
+                    }
+                }).error(function(response) {
+                    notifications.addErrorNotification('Deleting', 'Error while deleting file ' + file.fileName);
+                    if (CONSOLE_INFO) {
+                        $log.error('Error while deleting file ' + file.fileName);
+                    }
+                });
+        }
+
+        //Delete file only from client-side application
+        function deleteFile_client(file) {
+            delete files[file.fileName];
+        }
+
+        //Delete all files
+        function deleteAll() {
+            if (CONSOLE_INFO) {
+                $log.info('Trying to delete all files');
+            }
+            $http.post('/account/api/delete', {action: 'deleteAll'})
+                .success(function () {
+                    var file;
+                    for (file in files) { if (files.hasOwnProperty(file)) { delete files[file]; } }
+                    stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
+                    notifications.addSuccessNotification('Deleting', 'All files have been successfully deleted');
+                    if (CONSOLE_INFO) {
+                        $log.info('All files successfully deleted');
+                    }
+                })
+                .error(function() {
+                    notifications.addErrorNotification('Deleting', 'Error while deleting all files');
+                    if (CONSOLE_INFO) {
+                        $log.error('Error while deleting files');
+                    }
+                });
+        }
+
+        //Checking initializing
+        function isInitialized() {
+            return initialized === true;
+        }
+
+        //Checking initializing error
+        function isInitializeError() {
+            return initializeError === true;
+        }
+
+        //Checking on unique name of file
+        function isFileAlreadyExist(fileName) {
+            return fileName in files;
+        }
+
+        //Getter for max files count
+        function getMaxFilesCount() {
+            return maxFilesCount;
+        }
+
+        //Getter for max file size
+        function getMaxFileSize() {
+            return maxFileSize;
+        }
+
+        //Adding new file
+        function addNewFile(file) {
+            files[file.fileName] = {
+                uid: uid++,
+                fileName: file.fileName,
+                state: RenderState.RENDERING,
+                softwareTypeName: file.softwareTypeName,
+                meta: {
+                    vjusage: {
+                        cached: false,
+                        comparing: false
+                    },
+                    spectratype: {
+                        cached: false,
+                        comparing: false
+                    },
+                    spectratypeV: {
+                        cached: false,
+                        comparing: false
+                    },
+                    quantileStats: {
+                        cached: false,
+                        comparing: false
+                    },
+                    annotation: {
+                        cached: false,
+                        comparing: false
+                    }
+                }
+            };
+        }
+
+        function changeFileState(file, state) {
+            files[file.fileName].state = state;
+        }
+
+        function isRarefactionCached() {
+            return rarefactionCache;
+        }
+        //------------------------------//
+
+        return {
+            getFiles: getFiles,
+            deleteFile: deleteFile,
+            deleteFile_client: deleteFile_client,
+            deleteAll: deleteAll,
+            isInitialized: isInitialized,
+            isInitializeError: isInitializeError,
+            isFileAlreadyExist: isFileAlreadyExist,
+            getMaxFilesCount: getMaxFilesCount,
+            getMaxFileSize: getMaxFileSize,
+            addNewFile: addNewFile,
+            changeFileState: changeFileState,
+            isRarefactionCached: isRarefactionCached
+
+        };
+    }]);
+
+    //This factory handles global state of application
+    app.factory('stateInfo', ['chartInfo', 'mainVisualisationTabs', function(chartInfo, mainVisualisationTabs) {
+        //Private variables
+        var state = htmlState.ACCOUNT_INFORMATION;
+        var activeFile = {};
+
+
+        //Public api
+        //------------------------------//
+        //Setter for active file
+        function setActiveFile(file) {
+            if (activeFile !== file) {
+                state = htmlState.FILE;
+                activeFile = file;
+                chartInfo.update_file(mainVisualisationTabs.getActiveTab(), file);
+            }
+        }
+
+        //Getter for active file
+        function getActiveFile() {
+            return activeFile;
+        }
+
+        //Checking active file
+        function isActiveFile(file) {
+            return activeFile === file && state === htmlState.FILE;
+        }
+
+        //Setter for global state
+        function setActiveState(st) {
+            if (st !== htmlState.FILE) activeFile = {};
+            state = st;
+        }
+
+        //Checking global state
+        function isActiveState(st) {
+            return state === st;
+        }
+
+        //Getter for global state
+        function getActiveState() {
+            return state;
+        }
+        //-------------------------------//
+
+
+        return {
+            setActiveFile: setActiveFile,
+            getActiveFile: getActiveFile,
+            isActiveFile: isActiveFile,
+            setActiveState: setActiveState,
+            getActiveState: getActiveState,
+            isActiveState: isActiveState
+        };
+    }]);
+
+    //This factory requests data from server
+    app.factory('chartInfo', ['$log', '$http', 'notifications',function($log, $http, notifications) {
+
+        var oldFile = null;
+
+        function update_file(tab, file) {
+
+            if (typeof file === 'undefined') {
+                file = oldFile;
+            } else {
+                oldFile = file;
+            }
+
+            var type = tab.type,
+                dataHandler = tab.dataHandler,
+                parameters = {
+                    place: '#id' + file.uid + ' .' + tab.mainPlace,
+                    fileName: file.fileName,
+                    type: type,
+                    id: file.uid,
+                    height: 500,
+                    width: 500
                 };
 
-                $scope.updateFilesList();
+            if (!file.meta[type].cached) {
+                $http.post('/account/api/data', {
+                    action: 'data',
+                    fileName: file.fileName,
+                    type: type
+                })
+                    .success(function (data) {
+                        switch (data.result) {
+                            case 'success':
+                                file.meta[type].cached = true;
+                                dataHandler(data.data, parameters);
+                                break;
+                            default:
+                                noDataAvailable(parameters, file);
+                        }
+                        loaded(parameters.place);
+                    })
+                    .error(function () {
+                        if (CONSOLE_INFO) {
+                            $log.error('Error while requesting data for file ' + parameters.file.fileName);
+                        }
+                        notifications.addErrorNotification(type, 'Error while requesting data for file ' + parameters.file.fileName);
+                        noDataAvailable(parameters, parameters.file);
+                        loaded(parameters.place);
+                    });
+            }
 
-                $scope.isContain = function (fileName) {
-                    return !!(fileName in $scope.files);
-                };
+        }
 
-                $scope.isNeedToCreateNew = function() {
-                    return needToCreateNew;
-                };
-
-                $scope.updateVisualisationTab = function () {
-                    var param = {};
-                    switch ($scope.state) {
-                        case htmlState.FILE:
-                            var file = $scope.files[$scope.activeFileName];
-                            param = {
-                                fileName: file.fileName,
-                                type: $scope.activeTab.type,
-                                id: file.uid,
-                                height: 500,
-                                width: 500
-                            };
-                            if (!file.meta[$scope.activeTab.type].cached) {
-                                param.place = '#id' + file.uid + ' .' + $scope.activeTab.mainPlace;
-                                getData($scope.activeTab.dataHandler, param, file);
-                                file.meta[$scope.activeTab.type].cached = true;
-                            }
-                            break;
-                        case htmlState.RAREFACTION:
-                            param.place = '.rarefaction-visualisation-tab';
-                            param.fileName = 'all';
-                            param.type = 'rarefaction';
-                            param.needToCreateNew = needToCreateNew;
-                            needToCreateNew = false;
-                            getData(rarefactionPlot, param);
-                            break;
-                        case htmlState.SUMMARY:
-                            param.place = '.summary-visualisation-tab';
-                            param.fileName = 'all';
-                            param.type = 'summary';
-                            getData(summaryStats, param);
+        function update_rarefaction(newRarefaction) {
+            var parameters = {
+                place: '.rarefaction-visualisation-tab',
+                fileName: 'all',
+                type: 'rarefaction'
+            };
+            loading(parameters.place);
+            $http.post('/account/api/data', {
+                action: 'data',
+                type: 'rarefaction',
+                fileName: 'all',
+                'new': typeof newRarefaction === 'undefined' ? true : newRarefaction
+            })
+                .success(function (data) {
+                    switch (data.result) {
+                        case 'success':
+                            rarefactionPlot(data.data, parameters);
                             break;
                         default:
-                            break
+                            noDataAvailable(parameters);
                     }
+                    loaded(parameters.place);
+                })
+                .error(function() {
+                    notifications.addErrorNotification('Rarefaction', 'Error while requesting rarefaction data');
+                    loaded(parameters.place);
+                });
+
+        }
+
+        function update_summary() {
+            loading('.summary-visualisation-tab');
+            $http.post('/account/api/data', {
+                action: 'data',
+                fileName: 'all',
+                type: 'summary'
+            })
+                .success(function(data) {
+                    switch (data.result) {
+                        case 'success':
+                            summaryStats(data.data);
+                            break;
+                        default:
+                            noDataAvailable('.summary-visualisation-tab');
+                    }
+                    loaded('.summary-visualisation-tab');
+                })
+                .error(function() {
+                    notifications.addErrorNotification('Summary', 'Error while requesting summary data');
+                    loaded('.summary-visualisation-tab');
+                });
+        }
+
+        return {
+            update_file: update_file,
+            update_rarefaction: update_rarefaction,
+            update_summary: update_summary
+        };
+    }]);
+
+    //Main Directive
+    app.directive('accountPage', function () {
+        return {
+            restrict: 'E',
+            controller: ['$scope', 'accountInfo', 'stateInfo', function ($scope, accountInfo, stateInfo) {
+                //State info api
+                $scope.isActiveState = stateInfo.isActiveState;
+                $scope.getActiveFile = stateInfo.getActiveFile;
+
+
+                $scope.isAccountInformation = function() {
+                    return stateInfo.isActiveState(htmlState.ACCOUNT_INFORMATION);
                 };
 
-                $scope.deleteFileFromList = function (fileName) {
-                    needToCreateNew = true;
-                    delete $scope.files[fileName];
-                    if ($scope.state === htmlState.RAREFACTION || $scope.state === htmlState.SUMMARY) {
-                        $scope.updateVisualisationTab();
-                    }
+                $scope.isFileInformation = function() {
+                    return stateInfo.isActiveState(htmlState.FILE);
+                };
+
+                $scope.isComparingInformation = function() {
+                    return stateInfo.isActiveState(htmlState.COMPARING);
+                };
+
+                $scope.isSummaryInformation = function() {
+                    return stateInfo.isActiveState(htmlState.SUMMARY);
+                };
+
+                $scope.isRarefactionInformation = function() {
+                    return stateInfo.isActiveState(htmlState.RAREFACTION);
+                };
+
+                $scope.showStartPage = function() {
+                    $scope.state = htmlState.ACCOUNT_INFORMATION;
+                };
+
+                $scope.isContain = function (file) {
+                    angular.forEach($scope.files, function (f) {
+                        if (file.fileName === f.fileName) {
+                            return true;
+                        }
+                    });
+                    return false;
                 };
 
                 $scope.changeFileState = function (file, state) {
@@ -200,29 +547,34 @@
                         if (file.state === RenderState.RENDERING) exist = true;
                     });
                     return exist;
-                }
+                };
             }]
-        }
+        };
     });
 
     //Sidebar Directive
     app.directive('filesSidebar', function () {
         return {
             restrict: 'E',
-            tranclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', '$http', '$log', function ($scope, $rootScope, $http, $log) {
+            controller: ['$scope', 'accountInfo', 'stateInfo', function ($scope, accountInfo, stateInfo) {
+                //Variables
+                $scope.files = accountInfo.getFiles();
+
+
+                //Account Info api
+                $scope.deleteFile = accountInfo.deleteFile;
+                $scope.deleteAll = accountInfo.deleteAll;
+
+                //State info api
+                $scope.setActiveFile = stateInfo.setActiveFile;
+                $scope.isActiveFile = stateInfo.isActiveFile;
+                $scope.isActiveState = stateInfo.isActiveState;
+                $scope.setActiveState = stateInfo.setActiveState;
 
                 //Public functions
                 $scope.showNewFilesTable = showNewFilesTable;
-                $scope.deleteFile = deleteFile;
-                $scope.deleteAll = deleteAll;
-                $scope.setActiveFile = setActiveFile;
-                $scope.setActiveState = setActiveState;
                 $scope.isFilesEmpty = isFilesEmpty;
-                $scope.isActiveFile = isActiveFile;
-                $scope.isActiveState = isActiveState;
-                $scope.isRendering = isRendering;
+                $scope.isFileRendering = isFileRendering;
                 $scope.setRarefactionState = setRarefactionState;
                 $scope.setSummaryState = setSummaryState;
                 $scope.setCompareState = setCompareState;
@@ -236,85 +588,39 @@
                 }
 
                 function setRarefactionState() {
-                    setActiveState(htmlState.RAREFACTION);
+                    stateInfo.setActiveState(htmlState.RAREFACTION);
                 }
 
                 function setSummaryState() {
-                    setActiveState(htmlState.SUMMARY);
+                    stateInfo.setActiveState(htmlState.SUMMARY);
                 }
 
                 function setCompareState() {
-                    setActiveState(htmlState.COMPARING);
+                    stateInfo.setActiveState(htmlState.COMPARING);
                 }
 
                 function isRarefactionState() {
-                    return isActiveState(htmlState.RAREFACTION);
+                    return stateInfo.isActiveState(htmlState.RAREFACTION);
                 }
 
                 function isSummaryState() {
-                    return isActiveState(htmlState.SUMMARY);
+                    return stateInfo.isActiveState(htmlState.SUMMARY);
                 }
 
                 function isCompareState() {
-                    return isActiveState(htmlState.COMPARING);
+                    return stateInfo.isActiveState(htmlState.COMPARING);
                 }
 
                 function showNewFilesTable() {
                     $("#add-new-file").click();
                 }
 
-                function setActiveState(state){
-                    window.scrollTo(0, 0);
-                    $rootScope.state = state;
-                    $rootScope.updateVisualisationTab();
-                }
-
-                function setActiveFile(file) {
-                    if (!isRendering(file)) {
-                        $rootScope.activeFileName = file.fileName;
-                        setActiveState(htmlState.FILE);
-                    }
-                }
-
-                function isRendering(file){
+                function isFileRendering(file) {
                     return file.state === RenderState.RENDERING;
                 }
 
-                function isActiveState(state) {
-                    return $rootScope.state === state;
-                }
-
-                function isActiveFile(file) {
-                    return file.fileName === $rootScope.activeFileName && isActiveState(htmlState.FILE);
-                }
-
                 function isFilesEmpty() {
-                    return Object.keys($rootScope.files).length === 0;
-                }
-
-                function deleteFile(file) {
-                    $http.post('/account/api/delete', {
-                        action: 'delete',
-                        fileName: file.fileName
-                    }).success(function (data) {
-                        $log.info(data.message);
-                        if (isActiveFile(file) || Object.keys($rootScope.files).length == 1) {
-                            $rootScope.state = htmlState.ACCOUNT_INFORMATION;
-                        } else if (!isActiveState(htmlState.FILE)) {
-                            $rootScope.updateVisualisationTab();
-                        }
-                        $rootScope.deleteFileFromList(file.fileName);
-                    }).error(function(data) {
-                        $log.error(data.message);
-                    });
-                }
-
-                function deleteAll() {
-                    $http.post('/account/api/delete', {action: 'deleteAll'})
-                        .success(function () {
-                            $rootScope.files = {};
-                            $rootScope.state = htmlState.ACCOUNT_INFORMATION;
-                        });
+                    return Object.keys($scope.files).length === 0;
                 }
 
                 $scope.$on('onRepeatLast', function () {
@@ -328,63 +634,98 @@
                     });
                 });
             }]
-        }
+        };
     });
 
-    //File visualisation Directive
+    //File visualisation directive and factory
+    app.factory('mainVisualisationTabs', ['chartInfo', function(chartInfo) {
+        var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
+            return {
+                tabName: tabName,
+                type: type,
+                dataHandler: dataHandler,
+                mainPlace: mainPlace,
+                comparing: comparing,
+                exportPng: exportPng,
+                exportType: exportType,
+                comparingPlace: comparingPlace
+            };
+        };
+        var visualisationTabs = {
+            vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
+            spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
+            spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
+            quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
+            annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
+        };
+        var activeTab = visualisationTabs.vjusage;
+
+        function setActiveTab(t) {
+            if (activeTab !== t) {
+                activeTab = t;
+                chartInfo.update_file(t);
+            }
+
+        }
+
+        function getActiveTab() {
+            return activeTab;
+        }
+
+        function isActiveTab(t) {
+            return activeTab === t;
+        }
+
+        function getTabs() {
+            return visualisationTabs;
+        }
+
+        return {
+            setActiveTab: setActiveTab,
+            getActiveTab: getActiveTab,
+            isActiveTab: isActiveTab,
+            getTabs: getTabs
+        };
+    }]);
+
+
     app.directive('mainVisualisationContent', function () {
         return {
             restrict: 'E',
-            tranclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
+            controller: ['$scope', 'stateInfo', 'mainVisualisationTabs', function ($scope, stateInfo, mainVisualisationTabs) {
+                $scope.visualisationTabs = mainVisualisationTabs.getTabs();
 
                 $scope.exportChartPng = function (file, tab, exportType) {
                     saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type, 3, exportType);
                 };
 
                 $scope.setActiveTab = function (tab) {
-                    $rootScope.activeTab = tab;
-                    $rootScope.updateVisualisationTab();
+                    mainVisualisationTabs.setActiveTab(tab);
+                    //TODO update visuzlisation
                 };
 
-                $scope.isActiveTab = function (tab) {
-                    return $rootScope.activeTab === tab;
-                };
-
-                $scope.showTab = function () {
-                    return $rootScope.state === htmlState.FILE;
-                };
+                $scope.isActiveTab = mainVisualisationTabs.isActiveTab;
 
                 $scope.showFile = function (file) {
-                    return file.fileName === $rootScope.activeFileName;
-                }
+                    return stateInfo.isActiveFile(file);
+                };
             }]
-        }
+        };
     });
 
     //Account information Directive
     app.directive('accountInformation', function () {
         return {
             restrict: 'E',
-            templateUrl: '/account/accountInformation',
-            transclude: false,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
-                $scope.showAccountInformation = function () {
-                    return $rootScope.state === htmlState.ACCOUNT_INFORMATION;
-                }
-            }]
-        }
+            templateUrl: '/account/accountInformation'
+        };
     });
 
     //Rarefaction tab Directive
     app.directive('rarefactionContent', function () {
         return {
             restrict: 'E',
-            transclude: false,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
+            controller: ['$scope', function ($scope) {
 
                 $scope.rarefactionExportTypes = ['JPEG'];
                 $scope.area = 'Hide';
@@ -404,53 +745,37 @@
                         });
 
                     if ($scope.area === 'Show') {
-                        $scope.area = 'Hide'
+                        $scope.area = 'Hide';
                     } else {
-                        $scope.area = 'Show'
+                        $scope.area = 'Show';
                     }
 
                 };
 
-                $scope.showRarefaction = function () {
-                    if ($rootScope.state !== htmlState.RAREFACTION) $scope.area = 'Hide';
-                    return $rootScope.state === htmlState.RAREFACTION;
-                };
-
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
-                }
+                };
             }]
-        }
-    });
-
-    //Summary tab Directive
-    app.directive('summaryContent', function () {
-        return {
-            restrict: 'E',
-            tranclude: false,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function ($scope, $rootScope) {
-                $scope.showSummary = function () {
-                    return $rootScope.state === htmlState.SUMMARY;
-                }
-            }]
-        }
+        };
     });
 
     //Upload support Directive
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
-            tranclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$http', '$rootScope', function ($scope, $http, $rootScope) {
+            controller: ['$scope', '$http', 'accountInfo', 'chartInfo', 'notifications', function ($scope, $http, accountInfo, chartInfo, notifications) {
                 //Private var
                 var uid = 0;
+                var errors = Object.freeze({
+                    FILES_COUNT_EXCEEDED_ERROR: 0,
+                    UNIQUE_NAME_CONFLICT_ERROR: 1,
+                    FILE_IS_TOO_LARGE_ERROR: 2
+                });
 
                 //Public var
                 $scope.newFiles = {};
                 $scope.uploadedFiles = [];
-                $scope.commonSoftwareType = 'mitcr';
+                $scope.commonSoftwareType = 'vdjtools';
 
                 //Public Functions
                 $scope.isNameValid = isNameValid;
@@ -467,8 +792,7 @@
 
                 function isNameValid(file){
                     var regexp = /^[a-zA-Z0-9_.+-]{1,40}$/;
-                    var valid = regexp.test(file.fileName);
-                    return valid;
+                    return regexp.test(file.fileName);
                 }
 
                 function isNewFilesEmpty() {
@@ -489,7 +813,7 @@
                 function uploadAll() {
                     angular.forEach($scope.newFiles, function (file) {
                         uploadFile(file);
-                    })
+                    });
                 }
 
                 function uploadFile(file) {
@@ -525,7 +849,7 @@
 
                 //Private Functions
                 function filesCount() {
-                    var added = Object.keys($rootScope.files).length;
+                    var added = Object.keys(accountInfo.getFiles()).length;
                     var waiting = 0;
                     angular.forEach($scope.newFiles, function (file) {
                         if (file.wait) waiting++;
@@ -541,12 +865,20 @@
                     return exist;
                 }
 
+                function isWaitingFilesExist() {
+                    var exist = false;
+                    angular.forEach($scope.newFiles, function(file) {
+                        if (file.state === RenderState.WAIT) exist = true;
+                    });
+                    return exist;
+                }
+
                 function addNew(uid, fileName, fileExtension, data)  {
                     $scope.$apply(function () {
                         $scope.newFiles[uid] = {
                             uid: uid,
                             fileName: fileName,
-                            softwareTypeName: 'mitcr',
+                            softwareTypeName: $scope.commonSoftwareType,
                             fileExtension: fileExtension,
                             state: RenderState.WAIT,
                             wait: true,
@@ -563,40 +895,42 @@
                 }
 
                 function updateTooltip(file, tooltip) {
-                    //$scope.$apply(function () {
-                        file.tooltip = tooltip;
-                    //})
+                    file.tooltip = tooltip;
                 }
 
                 function updateProgress(file, progress) {
                     $scope.$apply(function () {
                         file.progress = progress;
-                    })
+                    });
                 }
 
                 function updateResult(file, result) {
                     $scope.$apply(function () {
                         file.result = result;
                         file.state = RenderState.RENDERED;
-                    })
+                    });
+                }
+
+                function updateState(file, state) {
+                    file.state = state;
                 }
 
                 function updateResultTooltip(file, resultTooltip) {
                     $scope.$apply(function () {
                         file.resultTooltip = resultTooltip;
-                    })
+                    });
                 }
 
                 function addNewError(uid, fileName, error) {
                     var resultTooltip;
                     switch (error) {
-                        case 0:
+                        case errors.FILES_COUNT_EXCEEDED_ERROR:
                             resultTooltip = 'You have exceeded limit of files';
                             break;
-                        case 1:
+                        case errors.UNIQUE_NAME_CONFLICT_ERROR:
                             resultTooltip = 'You should use unique names for your files';
                             break;
-                        case 2:
+                        case errors.FILE_IS_TOO_LARGE_ERROR:
                             resultTooltip = 'File is too large';
                             break;
                         default:
@@ -610,24 +944,24 @@
                            wait: false,
                            result: 'error',
                            resultTooltip: resultTooltip
-                       }
+                       };
                     });
                 }
 
                 function isContain(fileName) {
                     var contain = false;
                     angular.forEach($scope.newFiles, function (file) {
-                        if (file.fileName == fileName && file.wait) contain = true;
+                        if (file.fileName === fileName && file.wait) contain = true;
                     });
-                    return $rootScope.isContain(fileName)|| contain;
+                    return accountInfo.isFileAlreadyExist(fileName)|| contain;
                 }
 
                 function isCountExceeded() {
-                    return $rootScope.maxFilesCount > 0 && filesCount() >= $rootScope.maxFilesCount;
+                    return accountInfo.getMaxFilesCount() > 0 && filesCount() >= accountInfo.getMaxFilesCount();
                 }
 
                 function isSizeExceeded(file) {
-                    return $rootScope.maxFileSize > 0 && (file.size  / 1024 ) > $rootScope.maxFileSize;
+                    return accountInfo.getMaxFileSize() > 0 && (file.size  / 1024 ) > accountInfo.getMaxFileSize();
                 }
 
                 function isWait(file) {
@@ -637,23 +971,22 @@
                 $('#fileupload').fileupload({
                     url: '/account/api/upload',
                     dataType: 'json',
-                    sequentialUploads: true,
                     dropZone: $('#new-files-dropzone'),
                     add: function (e, data) {
                         var file = data.files[0];
                         var originalFileName = file.name;
                         var fileName = originalFileName.substr(0, originalFileName.lastIndexOf('.')) || originalFileName;
                         var fileExtension = originalFileName.substr((~-originalFileName.lastIndexOf(".") >>> 0) + 2);
-                        if (fileExtension != 'txt' && fileExtension != 'gz') {
+                        if (fileExtension !== 'txt' && fileExtension !== 'gz') {
                             fileName += fileExtension;
                             fileExtension = 'txt';
                         }
                         if (isCountExceeded()) {
-                            addNewError(uid++, fileName, 0);
+                            addNewError(uid++, fileName, errors.FILES_COUNT_EXCEEDED_ERROR);
                         } else if (isContain(fileName)) {
-                            addNewError(uid++, fileName, 1);
+                            addNewError(uid++, fileName, errors.UNIQUE_NAME_CONFLICT_ERROR);
                         } else if (isSizeExceeded(file)) {
-                            addNewError(uid++, fileName, 2);
+                            addNewError(uid++, fileName, errors.FILE_IS_TOO_LARGE_ERROR);
                         } else {
                             addNew(uid++, fileName, fileExtension, data);
                         }
@@ -664,27 +997,31 @@
                     },
                     done: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
-                        switch (data.result["result"]) {
+                        switch (data.result.result) {
                             case "success" :
                                 var socket = new WebSocket("ws://" + location.host + "/account/api/ws");
                                 socket.onmessage = function (message) {
-                                    var event = JSON.parse(message["data"]);
-                                    switch (event["result"]) {
+                                    var event = JSON.parse(message.data);
+                                    switch (event.result) {
                                         case "ok" :
-                                            switch (event["progress"]) {
+                                            switch (event.progress) {
                                                 case "start" :
+                                                    updateState(file, RenderState.RENDERING);
                                                     updateTooltip(file, "Computation");
-                                                    $rootScope.addFileToList(file);
+                                                    accountInfo.addNewFile(file);
                                                     break;
                                                 case "end" :
-                                                    $rootScope.changeFileState(file, RenderState.RENDERED);
+                                                    accountInfo.changeFileState(file, RenderState.RENDERED);
                                                     updateTooltip(file, "Success");
                                                     updateResult(file, 'success');
                                                     socket.close();
                                                     if (!isRenderingFilesExist()) {
-                                                        $rootScope.updateVisualisationTab();
+                                                        if (!isWaitingFilesExist()) {
+                                                            notifications.addSuccessNotification('Uploading', 'All files have been uploaded and rendered');
+                                                        }
+                                                        chartInfo.update_rarefaction(true);
+                                                        chartInfo.update_summary();
                                                     }
-
                                                     break;
                                                 default:
                                                     updateProgress(file, 50 + (event.progress / 2));
@@ -692,13 +1029,15 @@
                                             break;
                                         case "error" :
                                             socket.close();
-                                            $rootScope.deleteFileFromList(file.fileName);
+                                            accountInfo.deleteFile_client(file);
                                             updateResult(file, 'error');
-                                            updateResultTooltip(file, event["message"]);
+                                            updateResultTooltip(file, event.message);
+                                            notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
                                             break;
                                         default:
-                                            $rootScope.deleteFileFromList(file.fileName);
-                                            updateTooltip(file, "Server unavailable");
+                                            accountInfo.deleteFile_client(file);
+                                            notifications.addErrorNotification('Rendering', 'Server is unavailable');
+                                            updateTooltip(file, "Server is unavailable");
                                             break;
                                     }
 
@@ -717,10 +1056,12 @@
                             case "error" :
                                 updateResult(file, 'error');
                                 updateResultTooltip(file, data.result.message);
+                                notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
                                 break;
                             default:
                                 updateResult(file, 'error');
-                                updateResultTooltip(file, "Server unavailable");
+                                updateResultTooltip(file, "Server is unavailable");
+                                notifications.addErrorNotification('Rendering', 'Server is unavailable');
                         }
 
                     }
@@ -746,27 +1087,23 @@
                             default :
                                 break;
                         }
-                    })
+                    });
                 });
 
 
             }]
 
-        }
+        };
     });
 
     //Comparing Directive
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
-            tranclude: false,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', '$log', function ($scope, $rootScope, $log) {
+            controller: ['$scope', 'accountInfo', function ($scope, accountInfo) {
 
-                $scope.showComparing = function () {
-                    return $rootScope.state === htmlState.COMPARING;
-                };
                 $scope.comparingItems = [];
+                $scope.files = accountInfo.getFiles();
                 $scope.isComparing = isComparing;
                 $scope.isRendered = isRendered;
                 $scope.isRendering = isRendering;
@@ -792,18 +1129,17 @@
 
                 function switchItem(file, tab) {
                     if (isComparing(file, tab)) {
-                        deleteItem(file, tab)
+                        deleteItem(file, tab);
                     } else {
                         showItem(file, tab);
                     }
                 }
 
                 function deleteItem(file, tab) {
-                    var i = 0;
-                    for (; i < $scope.comparingItems.length; ++i) {
+                    for (var i = 0; i < $scope.comparingItems.length; ++i) {
                          if ($scope.comparingItems[i].fileName === file.fileName && $scope.comparingItems[i].tabName === tab.tabName) {
                              $scope.comparingItems.splice(i, 1);
-                             $rootScope.files[file.fileName].meta[tab.type].comparing = false;
+                             file.meta[tab.type].comparing = false;
                              break;
                          }
                     }
@@ -812,10 +1148,10 @@
                 function deleteAllItems(tab) {
                     var cleanedArray = [];
                     for (var i = 0; i < $scope.comparingItems.length; i++) {
-                        if ($scope.comparingItems[i].tabName != tab.tabName) {
+                        if ($scope.comparingItems[i].tabName !== tab.tabName) {
                             cleanedArray.push($scope.comparingItems[i]);
                         } else {
-                            $rootScope.files[$scope.comparingItems[i].fileName].meta[tab.type].comparing = false;
+                            $scope.files[$scope.comparingItems[i].fileName].meta[tab.type].comparing = false;
                         }
                     }
                     $scope.comparingItems.splice(0, $scope.comparingItems.length);
@@ -823,14 +1159,14 @@
                 }
 
                 function showItem(file, tab) {
-                    if (file.state != RenderState.RENDERING) {
+                    if (file.state !== RenderState.RENDERING) {
                         $scope.comparingItems.push({
                             fileName: file.fileName,
                             tabName: tab.tabName,
                             place: tab.comparingPlace,
                             uid: file.uid
                         });
-                        $rootScope.files[file.fileName].meta[tab.type].comparing = true;
+                        file.meta[tab.type].comparing = true;
                         var param = {
                             fileName: file.fileName,
                             id: file.uid + '_comparing',
@@ -845,18 +1181,18 @@
 
                 function showAllItems(tab) {
                     var shown = 0;
-                    angular.forEach($rootScope.files, function (file) {
+                    angular.forEach($scope.files, function (file) {
                         if (!file.meta[tab.type].comparing) {
                             showItem(file, tab);
                             shown++;
                         }
                     });
-                    if (shown == 0) {
+                    if (shown === 0) {
                         deleteAllItems(tab);
                     }
                 }
             }]
-        }
+        };
     });
 
     //Block account page Directive
@@ -889,19 +1225,17 @@
                                 '</div>' +
                             '</div>' +
                         '</div>',
-            transclude: true,
-            require: '^accountPage',
-            controller: ['$scope', '$rootScope', function($scope, $rootScope) {
+            controller: ['$scope', 'accountInfo', function($scope, accountInfo) {
                 $scope.blockPage = function() {
-                    return !$rootScope.initialized;
+                    return !accountInfo.isInitialized();
                 };
 
                 $scope.error = function() {
-                    return $rootScope.errorInit;
-                }
+                    return accountInfo.isInitializeError();
+                };
 
             }]
-        }
+        };
     });
 
     //Filter for comparing files
@@ -920,6 +1254,7 @@
 
 //Request data from server
 function getData(handleData, param, file) {
+        "use strict";
         loading(param.place);
         $.ajax({
             url: "/account/api/data",
@@ -935,7 +1270,7 @@ function getData(handleData, param, file) {
                 if (!data) {
                     location.reload();
                 }
-                switch (data["result"]) {
+                switch (data.result) {
                     case "success" :
                         handleData(data.data, param);
                         break;
@@ -944,19 +1279,20 @@ function getData(handleData, param, file) {
                         break;
                 }
             },
-            error: function (data) {
+            error: function () {
                 noDataAvailable(param, file);
             },
             complete: function(data) {
                 //For automatic reload on logout
-                if (data == null || typeof data.responseJSON === 'undefined') location.reload();
-                if (data.responseJSON.message != null) console.log(data.responseJSON.message);
+                if (data === null || typeof data.responseJSON === 'undefined') location.reload();
+                if (data.responseJSON.message !== null) console.log(data.responseJSON.message);
                 loaded(param.place);
             }
         });
 }
 
 function spectratype(data, param) {
+    "use strict";
     nv.addGraph(function () {
 
         var place = d3.select(param.place);
@@ -975,9 +1311,7 @@ function spectratype(data, param) {
 
         var legend = nv.models.legend()
             .key(function(d) {
-                if (d['cdr3aa'])
-                    return d['cdr3aa'];
-                return 'Other'
+                return d['cdr3aa'] ? d['cdr3aa'] : 'Other';
             })
             .oneColumn(true)
             .margin({right: 100, top: 10})
@@ -996,8 +1330,8 @@ function spectratype(data, param) {
                 .stacked(true)
                 .legendOnChart(true)
                 .tooltip(function (key, x, y, e) {
-                    if (key != "Other") {
-                        if (e.series.values[e.pointIndex].y != 0) {
+                    if (key !== "Other") {
+                        if (e.series.values[e.pointIndex].y !== 0) {
                             return '<h3>CDR3AA: ' + e.series.cdr3aa + '</h3>' +
                                 '<p>Top :' + e.series.key + '</p>' +
                                 '<p>Length : ' + x + '</p>' +
@@ -1020,7 +1354,7 @@ function spectratype(data, param) {
 
         var xValues = [];
         for (var i = 1; i < 100; i++) {
-            if (i % 3 == 0) {
+            if (i % 3 === 0) {
                 xValues.push(i);
             }
         }
@@ -1041,6 +1375,7 @@ function spectratype(data, param) {
 }
 
 function spectratypeV(data, param) {
+    "use strict";
     nv.addGraph(function () {
         var place = d3.select(param.place);
         place.html("");
@@ -1068,7 +1403,7 @@ function spectratypeV(data, param) {
                 .height(height)
                 .stacked(true)
                 .tooltip(function (key, x, y, e) {
-                    if (e.series.values[e.pointIndex].y != 0) {
+                    if (e.series.values[e.pointIndex].y !== 0) {
                         return '<h3>' + key + '</h3>' +
                             '<p>Length : ' + x + '</p>' +
                             '<p>Frequency : ' + e.series.values[e.pointIndex].y + '</p>';
@@ -1080,7 +1415,7 @@ function spectratypeV(data, param) {
 
         var xValues = [];
         for (var i = 0; i < 100; i++) {
-            if (i % 3 == 0) {
+            if (i % 3 === 0) {
                 xValues.push(i);
             }
         }
@@ -1092,7 +1427,7 @@ function spectratypeV(data, param) {
 
         chart.yAxis
             .tickFormat(function (d) {
-                return Math.round(d * 10) + "%"
+                return Math.round(d * 10) + "%";
             });
 
         svg.datum(data)
@@ -1186,14 +1521,14 @@ function quantileSunbirstChart(data, param) {
                 var found = false;
                 var color = "#ffffff";
                 keys.forEach(function(d) {
-                    if (d.key === name) { color = d.color; found = true; };
+                    if (d.key === name) { color = d.color; found = true; }
                 });
                 if (found) return color;
                 return colors[topCount++ % colors.length];
             })
             .style("cursor", function(d) {
-                if (d.children != null) {
-                    return "pointer"
+                if (d.children !== null) {
+                    return "pointer";
                 }
                 return null;
             })
@@ -1220,9 +1555,9 @@ function quantileSunbirstChart(data, param) {
         textEnter.append("tspan")
             .attr("x", 0)
             .text(function(d) {
-                if (d.name == "data") return null;
+                if (d.name === "data") return null;
                 var label = d.name;
-                if (d.size != 0) {
+                if (d.size !== 0) {
                     label += "  " + (d.size.toPrecision(2) * 100).toPrecision(2) + "%";
                 }
                 return label;
@@ -1259,7 +1594,7 @@ function quantileSunbirstChart(data, param) {
         }
 
         function isParentOf(p, c) {
-            if (p === c) return true;
+            if (p == c) return true;
             if (p.children != null) {
                 return p.children.some(function(d) {
                     return isParentOf(d, c);
@@ -1276,8 +1611,7 @@ function quantileSunbirstChart(data, param) {
                 yd = d3.interpolate(y.domain(), [d.y, 1]),
                 yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
             return function (d, i) {
-                return i
-                    ? function (t) {
+                return i ? function (t) {
                     return arc(d);
                 }
                     : function (t) {
@@ -1292,6 +1626,7 @@ function quantileSunbirstChart(data, param) {
 }
 
 function annotationTable(data, param) {
+    "use strict";
     var place = d3.select(param.place);
         place.html("");
 
@@ -1324,7 +1659,7 @@ function annotationTable(data, param) {
     var dataTable = $('#annotation_table_' + param.id).dataTable({
         dom: '<"pull-left"f><"clear">TrtS',
         scrollY: '600px',
-        "data": data["data"],
+        "data": data.data,
         "columns": column,
         'order': [
             [2, "decs"]
@@ -1367,7 +1702,7 @@ function annotationTable(data, param) {
                             end: end,
                             color: color,
                             substring: cdr3aa.substring(start, end + 1)
-                        }
+                        };
                     };
 
                     var insert = function (index, str, insertString) {
@@ -1434,7 +1769,7 @@ function annotationTable(data, param) {
                             end: end,
                             color: color,
                             substring: cdr3aa.substring(start, end + 1)
-                        }
+                        };
                     };
 
                     var insert = function (index, str, insertString) {
@@ -1483,11 +1818,41 @@ function annotationTable(data, param) {
             }
         ]
     });
+
+    /*
+    var $scrollViewer = $('#annotation_table_' + param.id + '_wrapper .dataTables_scrollBody');
+
+    $scrollViewer.scroll(function() {
+
+        if ($scrollViewer.scrollTop() - displayLength * 30 > 0) {
+            $.ajax({
+                url: "/account/api/annotation",
+                type: "post",
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    "action": "data",
+                    "fileName": param.fileName,
+                    "index": 1
+                }),
+                success: function (data) {
+                    console.log(data);
+                },
+                complete: function(data) {
+                    //For automatic reload on logout
+                    if (data === null || typeof data.responseJSON === 'undefined') location.reload();
+                    if (data.responseJSON.message !== null) console.log(data.responseJSON.message);
+                }
+            });
+            $scrollViewer.unbind('scroll');
+        }
+
+    })
+    */
+
 }
 
 function vjUsage(data, param) {
-
-    //var fill = d3.scale.category20c();
+    "use strict";
     var fill = function(i) {
         return data.colors[i % data.colors.length];
     };
@@ -1547,9 +1912,9 @@ function vjUsage(data, param) {
             return ((d.startAngle + d.endAngle) / 2) > Math.PI ? "end" : null;
         })
         .attr("transform", function (d) {
-            return "rotate(" + (((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90) + ")"
-                + "translate(" + (r1 - 15) + ")"
-                + (((d.startAngle + d.endAngle) / 2) > Math.PI ? "rotate(180)" : "");
+            return "rotate(" + (((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90) + ")" +
+                "translate(" + (r1 - 15) + ")" +
+                (((d.startAngle + d.endAngle) / 2) > Math.PI ? "rotate(180)" : "");
         })
         .text(function (d) {
             return data.labels[d.index];
@@ -1560,7 +1925,7 @@ function vjUsage(data, param) {
         return function (g, i) {
             svg.selectAll(".chord path")
                 .filter(function (d) {
-                    return d.source.index != i && d.target.index != i;
+                    return d.source.index !== i && d.target.index !== i;
                 })
                 .transition()
                 .style("opacity", opacity);
@@ -1569,11 +1934,12 @@ function vjUsage(data, param) {
 }
 
 function rarefactionPlot(data, param) {
+    "use strict";
     nv.addGraph(function () {
         var place = d3.select(param.place);
         place.html(""); //cleanup old chart
 
-        var width = place.style('width');
+        var width = $(document).width() - 350;
 
         var svg = d3.select(param.place)
             .append("svg")
@@ -1605,9 +1971,9 @@ function rarefactionPlot(data, param) {
     });
 }
 
-function summaryStats(data, param) {
-
-    var place = d3.select(param.place);
+function summaryStats(data) {
+    "use strict";
+    var place = d3.select('.summary-visualisation-tab');
     place.html("");
 
     var table = place.append("table")
@@ -1667,7 +2033,7 @@ function summaryStats(data, param) {
             },
             {
                 "render": function (data) {
-                    return parseFloat(data).toFixed(2)
+                    return parseFloat(data).toFixed(2);
                 },
                 "targets": [7, 8, 9]
             },
@@ -1688,26 +2054,30 @@ function summaryStats(data, param) {
 }
 
 function loading(place) {
+    "use strict";
     var d3Place = d3.select(place);
         d3Place.html("");
         d3Place.style("display", "block");
 
-    var loading = d3Place.append("div").attr("class", "loading");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_4").append("div").attr("class", "wInnerBall");
-    loading.append("div").attr("class", "wBall").attr("id", "wBall_5").append("div").attr("class", "wInnerBall");
+    var loadingPlace = d3Place.append("div").attr("class", "loading");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_1").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_2").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_3").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_4").append("div").attr("class", "wInnerBall");
+    loadingPlace.append("div").attr("class", "wBall").attr("id", "wBall_5").append("div").attr("class", "wInnerBall");
 }
 
 function loaded(place) {
+    "use strict";
     d3.select(place)
         .select(".loading")
         .remove();
 }
 
 function noDataAvailable(param, file) {
-    var place = d3.select(param.place);
+    "use strict";
+    var p = param.place ? param.place : param;
+    var place = d3.select(p);
         place.html("");
         place.append("div")
             .style("width", "100%")
@@ -1722,6 +2092,7 @@ function noDataAvailable(param, file) {
 }
 
 $(document).bind('dragover', function (e) {
+    "use strict";
     var dropZone = $('#new-files-dropzone'),
         timeout = window.dropZoneTimeout;
     if (!timeout) {
@@ -1737,7 +2108,7 @@ $(document).bind('dragover', function (e) {
             break;
         }
         node = node.parentNode;
-    } while (node != null);
+    } while (node !== null);
     if (found) {
         dropZone.addClass('hover');
     } else {

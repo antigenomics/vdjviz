@@ -3,7 +3,6 @@ package graph.AnnotationTable;
 
 import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.Sample;
-import models.Account;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;
@@ -22,14 +21,22 @@ public class AnnotationTable {
     private Boolean created;
     private String cacheName;
     private UserFile file;
+    private Integer shift;
 
-    public AnnotationTable(UserFile file, Sample sample) {
+    public AnnotationTable(UserFile file, Sample sample, Integer shift) {
         this.created = false;
         this.sample = sample;
         this.file = file;
         this.cacheName = CacheType.annotation.getCacheFileName();
         this.data = new ArrayList<>();
+        this.shift = shift;
     }
+
+    public AnnotationTable(UserFile file, Sample sample) {
+        this(file, sample, 0);
+    }
+
+
 
     public List<AnnotationTableRow> getData() {
         return data;
@@ -37,10 +44,10 @@ public class AnnotationTable {
 
     public AnnotationTable create() {
         int count = 0;
-        for (Clonotype clonotype : sample) {
-            data.add(new AnnotationTableRow(clonotype, count + 1));
+        for (int i = 1000 * shift; i < sample.getCount(); i++) {
+            data.add(new AnnotationTableRow(sample.getAt(i), count + shift * 1000 + 1));
             count++;
-            if (count >= 1000) break;
+            if (count > 1000) break;
         }
         created = true;
         return this;
