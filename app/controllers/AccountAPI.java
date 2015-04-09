@@ -4,6 +4,7 @@ import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.AnnotationTable.AnnotationTable;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
@@ -15,6 +16,7 @@ import play.libs.Json;
 import play.mvc.*;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
+import securesocial.core.java.SecureSocial.UserAware;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -265,6 +267,7 @@ public class AccountAPI extends Controller {
         }
     }
 
+
     public static Result annotationData() {
         //Identifying user using the Secure Social API
         //Return data for chart
@@ -275,7 +278,7 @@ public class AccountAPI extends Controller {
         JsonNode request = request().body().asJson();
         if (!request.findValue("action").asText().equals("data")
                 || request.findValue("fileName") == null
-                || request.findValue("index") == null) {
+                || request.findValue("shift") == null) {
             return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
         }
 
@@ -287,7 +290,7 @@ public class AccountAPI extends Controller {
             List<String> sampleFileNames = new ArrayList<>();
             sampleFileNames.add(file.getPath());
             SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-            AnnotationTable annotationTable = new AnnotationTable(file, sampleCollection.getAt(0), request.findValue("index").asInt());
+            AnnotationTable annotationTable = new AnnotationTable(file, sampleCollection.getAt(0), request.findValue("shift").asInt());
             annotationTable.create();
             return ok(Json.toJson(annotationTable.getData()));
         } else {

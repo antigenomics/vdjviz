@@ -4,6 +4,17 @@ html, body {
     padding-top: 0;
 }
 
+#clonotypes_table_wrapper {
+    position: relative;
+    padding-top: 20px;
+}
+
+#clonotypes_table_scroll {
+    height: 500px;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
 #notifications_wrapper {
     z-index: 50;
     left: 85%;

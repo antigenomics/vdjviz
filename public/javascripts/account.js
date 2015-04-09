@@ -18,7 +18,7 @@ var CONSOLE_INFO = true;
         COMPARING: 4
     });
 
-    var app = angular.module('accountPage', ['ngAnimate', 'datatables']);
+    var app = angular.module('accountPage', ['ngAnimate']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -384,7 +384,7 @@ var CONSOLE_INFO = true;
     }]);
 
     //This factory requests data from server
-    app.factory('chartInfo', ['$log', '$http', 'notifications', 'summaryStatsFactory',function($log, $http, notifications, summaryStatsFactory) {
+    app.factory('chartInfo', ['$log', '$http', 'notifications', 'summaryStatsFactory', 'clonotypesTableFactory', function($log, $http, notifications, summaryStatsFactory, clonotypesTableFactory) {
 
         var oldFile = null;
 
@@ -417,7 +417,9 @@ var CONSOLE_INFO = true;
                         switch (data.result) {
                             case 'success':
                                 file.meta[type].cached = true;
-                                dataHandler(data.data, parameters);
+                                if (type === 'annotation') {
+                                    clonotypesTableFactory.addData(file.fileName, data.data);
+                                } else dataHandler(data.data, parameters);
                                 break;
                             default:
                                 noDataAvailable(parameters, file);
@@ -675,7 +677,9 @@ var CONSOLE_INFO = true;
         }
 
         function isActiveTab(t) {
-            return activeTab === t;
+            if (typeof t === 'string') {
+                return activeTab.type === t;
+            } else return activeTab === t;
         }
 
         function getTabs() {
@@ -708,12 +712,322 @@ var CONSOLE_INFO = true;
 
                 $scope.isActiveTab = mainVisualisationTabs.isActiveTab;
 
+                $scope.showClonotypesTable = function() {
+                    return $scope.isActiveTab('annotation');
+                };
+
                 $scope.showFile = function (file) {
                     return stateInfo.isActiveFile(file);
                 };
             }]
         };
     });
+
+    app.factory('clonotypesTableFactory', ['$sce', function($sce) {
+        var data = {};
+        var load = false;
+        var loadError = false;
+        var loadBlock = false;
+
+        function cdr3aa_transform(data) {
+            var cdr3aa = data["cdr3aa"];
+            var vend = Math.floor(data["vend"] / 3);
+            var dstart = Math.floor(data["dstart"] / 3);
+            var dend = Math.floor(data["dend"] / 3);
+            var jstart = Math.floor(data["jstart"] / 3);
+            var pos = data["pos"];
+            jstart = (jstart < 0) ? 10000 : jstart;
+            dstart = (dstart < 0) ? vend + 1 : dstart;
+            dend = (dend < 0) ? vend : dend;
+            while (vend >= jstart) jstart++;
+            while (dstart <= vend) dstart++;
+            while (dend >= jstart) dend--;
+
+            var createSubString = function (start, end, color) {
+                return {
+                    start: start,
+                    end: end,
+                    color: color,
+                    substring: cdr3aa.substring(start, end + 1)
+                };
+            };
+
+            var insert = function (index, str, insertString) {
+                if (index > 0)
+                    return str.substring(0, index) + insertString + str.substring(index, str.length);
+                else
+                    return insertString + str;
+            };
+
+            var arr = [];
+
+            if (vend >= 0) {
+                arr.push(createSubString(0, vend, "#4daf4a"));
+            }
+
+            if (dstart - vend > 1) {
+                arr.push(createSubString(vend + 1, dstart - 1, "black"));
+            }
+
+            if (dstart > 0 && dend > 0 && dend >= dstart) {
+                arr.push(createSubString(dstart, dend, "#ec7014"));
+            }
+
+            if (jstart - dend > 1) {
+                arr.push(createSubString(dend + 1, jstart - 1, "black"));
+            }
+
+            if (jstart > 0) {
+                arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
+            }
+
+            var result = "";
+            for (var i = 0; i < arr.length; i++) {
+                var element = arr[i];
+                if (pos >= element.start && pos <= element.end) {
+                    var newPos = pos - element.start;
+                    element.substring = insert(newPos + 1, element.substring, '</u></b>');
+                    element.substring = insert(newPos, element.substring, '<b><u>');
+                }
+                result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+            }
+            return $sce.trustAsHtml(result);
+        }
+
+        function cdr3nt_transform(data) {
+            var cdr3aa = data["cdr3nt"];
+            var vend = data["vend"];
+            var dstart = data["dstart"];
+            var dend = data["dend"];
+            var jstart = data["jstart"];
+            var pos = data["pos"];
+            jstart = (jstart < 0) ? 10000 : jstart;
+            dstart = (dstart < 0) ? vend + 1 : dstart;
+            dend = (dend < 0) ? vend : dend;
+            while (vend >= jstart) jstart++;
+            while (dstart <= vend) dstart++;
+            while (dend >= jstart) dend--;
+            var createSubString = function (start, end, color) {
+                return {
+                    start: start,
+                    end: end,
+                    color: color,
+                    substring: cdr3aa.substring(start, end + 1)
+                };
+            };
+
+            var insert = function (index, str, insertString) {
+                if (index > 0)
+                    return str.substring(0, index) + insertString + str.substring(index, str.length);
+                else
+                    return insertString + str;
+            };
+
+            var arr = [];
+
+            if (vend >= 0) {
+                arr.push(createSubString(0, vend, "#4daf4a"));
+            }
+
+            if (dstart - vend > 1) {
+                arr.push(createSubString(vend + 1, dstart - 1, "black"));
+            }
+
+            if (dstart > 0 && dend > 0 && dend >= dstart) {
+                arr.push(createSubString(dstart, dend, "#ec7014"));
+            }
+
+            if (jstart - dend > 1) {
+                arr.push(createSubString(dend + 1, jstart - 1, "black"));
+            }
+
+            if (jstart > 0) {
+                arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
+            }
+
+            var result = "";
+            for (var i = 0; i < arr.length; i++) {
+                var element = arr[i];
+                if (pos >= element.start && pos <= element.end) {
+                    var newPos = pos - element.start;
+                    element.substring = insert(newPos + 1, element.substring, '</u></b>');
+                    element.substring = insert(newPos, element.substring, '<b><u>');
+                }
+                result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+            }
+            return $sce.trustAsHtml(result);
+        }
+
+        function getData(fileName) {
+            if (typeof data[fileName] === 'undefined') data[fileName] = [];
+            return data[fileName];
+        }
+
+        function loading() {
+            load = true;
+        }
+
+        function loaded() {
+            load = false;
+        }
+
+        function isLoading() {
+            return load
+        }
+
+        function isLoadingBlocked() {
+            return loadBlock;
+        }
+
+        function loadingError() {
+            loadError = true;
+        }
+
+        function isLoadingError() {
+            return loadError;
+        }
+
+        function modifyData(fileName, d, shift) {
+            if (shift > 0) {
+                data[fileName].splice(0, 100);
+            }
+        }
+
+        function switchLoadBlock() {
+            loadBlock = !loadBlock;
+        }
+
+        function concatData(fileName, d, shift) {
+            var i;
+            if (shift > 0) {
+                data[fileName].splice(0, 100);
+                for (i = 0; i < d.length; i++) {
+                    d[i].cdr3aa = cdr3aa_transform(d[i].cdr3aa);
+                    d[i].cdr3nt = cdr3nt_transform(d[i].cdr3nt);
+                    data[fileName].push(d[i]);
+                }
+            } else {
+                data[fileName].splice(900, 1000);
+                for (i = d.length - 1; i >=0; i--) {
+                    d[i].cdr3aa = cdr3aa_transform(d[i].cdr3aa);
+                    d[i].cdr3nt = cdr3nt_transform(d[i].cdr3nt);
+                    data[fileName].unshift(d[i]);
+                }
+            }
+        }
+
+        function addData(fileName, d) {
+            d.data.forEach(function(v) {
+                v.cdr3aa = cdr3aa_transform(v.cdr3aa);
+                v.cdr3nt = cdr3nt_transform(v.cdr3nt);
+            });
+            angular.copy(d.data, data[fileName]);
+        }
+
+        return {
+            getData: getData,
+            addData: addData,
+            concatData: concatData,
+            modifyData: modifyData,
+            loading: loading,
+            loaded: loaded,
+            isLoading: isLoading,
+            loadingError: loadingError,
+            isLoadingError: isLoadingError,
+            isLoadingBlocked: isLoadingBlocked,
+            switchLoadBlock: switchLoadBlock
+        };
+
+    }]);
+
+    app.directive('clonotypesTable', function() {
+        return {
+            restrict: 'E',
+            scope: true,
+            controller: ['$scope', '$log', 'clonotypesTableFactory', function($scope, $log, clonotypesTableFactory) {
+                $scope.data = clonotypesTableFactory.getData($scope.file.fileName);
+
+                $scope.isLoading = clonotypesTableFactory.isLoading;
+                $scope.isLoadingBlocked = clonotypesTableFactory.isLoadingBlocked;
+                $scope.switchLoadBlock = clonotypesTableFactory.switchLoadBlock;
+
+            }]
+        };
+    });
+
+    app.directive('clonotypesTableScroll', ['$http', '$log', 'clonotypesTableFactory', 'notifications', function($http, $log, clonotypesTableFactory, notifications) {
+        return {
+            restrict: 'A',
+            scope: true,
+            link: function($scope, $element, $attrs) {
+                var visibleHeight = $element.height();
+                var bottomTreshhold = 15000;
+                var topTreshhold = 3000;
+                var shift = 0;
+                var fileName = $scope.file.fileName;
+                $element.scroll(function() {
+                    var scrollableHeight = $element.prop('scrollHeight');
+                    var hiddenContentHeight = scrollableHeight - visibleHeight;
+
+                    if (shift > 0) {
+                        if ($element.scrollTop() < topTreshhold) {
+                            if (!clonotypesTableFactory.isLoading() && !clonotypesTableFactory.isLoadingBlocked()) {
+                                clonotypesTableFactory.loading();
+                                $http.post('/account/api/annotation', {
+                                    action: 'data',
+                                    fileName: fileName,
+                                    shift: -shift
+                                })
+                                    .success(function(dataArray) {
+                                        clonotypesTableFactory.loaded();
+                                        if (dataArray.length > 0) {
+                                            $element.scrollTop(3000);
+                                            clonotypesTableFactory.concatData(fileName, dataArray, -1);
+                                        }
+                                        shift--;
+                                    })
+                                    .error(function() {
+                                        clonotypesTableFactory.loadingError();
+                                        notifications.addErrorNotification('Clonotypes table', 'Error while downloading additional data');
+                                        if (CONSOLE_INFO) {
+                                            $log.error('Clonotypes table: error while downloading additional data');
+                                        }
+                                    });
+                            }
+                        }
+                    }
+
+                    if (hiddenContentHeight - $element.scrollTop() < bottomTreshhold) {
+                        $scope.$apply(function() {
+                            if (!clonotypesTableFactory.isLoading() && !clonotypesTableFactory.isLoadingBlocked()) {
+                                clonotypesTableFactory.loading();
+                                $http.post('/account/api/annotation', {
+                                    action: 'data',
+                                    fileName: fileName,
+                                    shift: shift + 1
+                                })
+                                    .success(function(dataArray) {
+                                        shift++;
+                                        clonotypesTableFactory.loaded();
+                                        if (dataArray.length > 0) {
+                                            $element.scrollTop(18000);
+                                            clonotypesTableFactory.concatData(fileName, dataArray, 1);
+                                        }
+                                    })
+                                    .error(function() {
+                                        clonotypesTableFactory.loadingError();
+                                        notifications.addErrorNotification('Clonotypes table', 'Error while downloading additional data');
+                                        if (CONSOLE_INFO) {
+                                            $log.error('Clonotypes table: error while downloading additional data');
+                                        }
+                                    });
+                            }
+                        });
+                    }
+                });
+            }
+        };
+    }]);
 
     //Account information Directive
     app.directive('accountInformation', function () {
@@ -762,11 +1076,28 @@ var CONSOLE_INFO = true;
     });
 
 
+    //Summary content directive and factory
+    //--------------------------------------------------------//
     app.factory('summaryStatsFactory', function() {
         var data = [];
 
 
         function addData(d) {
+            d = d.map(function(value) {
+                return {
+                    Name: value.Name,
+                    count: value.count,
+                    diversity: value.diversity,
+                    mean_frequency: parseFloat(value.mean_frequency).toExponential(2),
+                    geomen_frequency: parseFloat(value.geomen_frequency).toExponential(2),
+                    nc_diversity: value.nc_diversity,
+                    nc_frequency: parseFloat(value.nc_frequency).toFixed(2) * 100 + "%",
+                    mean_insert_size: parseFloat(value.mean_insert_size).toFixed(2),
+                    mean_ndn_size: parseFloat(value.mean_ndn_size).toFixed(2),
+                    mean_cdr3nt_length: parseFloat(value.mean_cdr3nt_length).toFixed(2),
+                    convergence: value.convergence.substring(0, 6)
+                };
+            });
             angular.copy(d, data);
         }
 
@@ -781,47 +1112,21 @@ var CONSOLE_INFO = true;
 
     });
 
-    //Summary content directive
+
     app.directive('summaryStats', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', 'summaryStatsFactory', 'DTOptionsBuilder', 'DTColumnDefBuilder', function($scope, summaryStatsFactory, DTOptionsBuilder, DTColumnDefBuilder) {
+            controller: ['$scope', 'summaryStatsFactory', function($scope, summaryStatsFactory) {
                 $scope.data = summaryStatsFactory.getData();
 
-                $scope.dtOptions = DTOptionsBuilder.newOptions()
-                    .withDisplayLength(25);
-                $scope.dtColumnsDefs = [
-                    DTColumnDefBuilder.newColumnDef(0),
-                    DTColumnDefBuilder.newColumnDef(1),
-                    DTColumnDefBuilder.newColumnDef(2),
-                    DTColumnDefBuilder.newColumnDef(3).renderWith(function(data) {
-                        return parseFloat(data).toExponential(2);
-                    }),
-                    DTColumnDefBuilder.newColumnDef(4).renderWith(function(data) {
-                        return parseFloat(data).toExponential(2);
-                    }),
-                    DTColumnDefBuilder.newColumnDef(5),
-                    DTColumnDefBuilder.newColumnDef(6).renderWith(function (data) {
-                        return parseFloat(data).toFixed(2) * 100 + "%";
-                    }),
-                    DTColumnDefBuilder.newColumnDef(7).renderWith(function (data) {
-                        return parseFloat(data).toFixed(2);
-                    }),
-                    DTColumnDefBuilder.newColumnDef(8).renderWith(function (data) {
-                        return parseFloat(data).toFixed(2);
-                    }),
-                    DTColumnDefBuilder.newColumnDef(9).renderWith(function (data) {
-                        return parseFloat(data).toFixed(2);
-                    }),
-                    DTColumnDefBuilder.newColumnDef(10).renderWith(function(data) {
-                        return data.substring(0, 6);
-                    })
-                ];
             }]
         };
     });
+    //--------------------------------------------------------//
+
 
     //Upload support Directive
+    //--------------------------------------------------------//
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
@@ -1157,8 +1462,11 @@ var CONSOLE_INFO = true;
 
         };
     });
+    //--------------------------------------------------------//
+
 
     //Comparing Directive
+    //--------------------------------------------------------//
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
@@ -1256,8 +1564,11 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
+
 
     //Block account page Directive
+    //--------------------------------------------------------//
     app.directive('blockPage', function() {
         return {
             restrict: 'E',
@@ -1299,8 +1610,11 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
+
 
     //Filter for comparing files
+    //--------------------------------------------------------//
     app.filter('comparingFilter', function () {
         return function (input) {
             var filteredInput = [];
@@ -1311,6 +1625,7 @@ var CONSOLE_INFO = true;
             return filteredInput;
         };
     });
+    //--------------------------------------------------------//
 
 })();
 

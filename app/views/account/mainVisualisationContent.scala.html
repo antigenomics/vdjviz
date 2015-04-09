@@ -15,10 +15,10 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="panel panel-info separated">
                 <div class="panel-body">
-                    <div class="col-lg-12">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
                         <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
                             <p>This plot shows a chord diagram of Variable-Joining (V-J) segment combination frequencies.</p>
                             <p>Each chord represent a set of clonotypes with a given V-J junction and is scaled according to the frequency of reads with such junction.</p>
@@ -53,7 +53,7 @@
                             <p>Nucleotide and amino acid sequences of CDR3 region are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.</p>
                         </div>
                     </div>
-                    <div class="col-lg-12" ng-repeat="file in files">
+                    <div class="col-lg-12 col-md-12 col-sm-12" ng-repeat="file in files">
                         <div id="id{{ file.uid }}" ng-show="showFile(file)" class="visualisation-results">
                             <div ng-repeat="tab in visualisationTabs" ng-show="isActiveTab(tab)">
                                 <p>
@@ -62,6 +62,44 @@
                                 <hr>
                                 <div class="viusalisation-results {{ tab.mainPlace }}"></div>
                             </div>
+                            <clonotypes-table ng-show="showClonotypesTable()">
+                                <button class="btn btn-info sharp" ng-click="switchLoadBlock()" ng-class="{'disable':isLoading()}">
+                                    <text ng-show="!isLoadingBlocked()">Block updating</text>
+                                    <text ng-show="isLoadingBlocked()">Unblock updating</text>
+                                </button>
+                                <div id="clonotypes_table_wrapper">
+                                    <div id="clonotypes_table_scroll" clonotypes-table-scroll>
+                                <table id="clonotypes_table_{{ file.uid }}" class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Index</th>
+                                            <th>Frequency</th>
+                                            <th>Count</th>
+                                            <th>CDR3AA</th>
+                                            <th>V</th>
+                                            <th>D</th>
+                                            <th>J</th>
+                                            <th>CDR3NT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="row in data">
+                                            <td>{{ row.index }}</td>
+                                            <td>{{ row.freq }}</td>
+                                            <td>{{ row.count }}</td>
+                                            <td ng-bind-html="row.cdr3aa"></td>
+                                            <td>{{ row.v }}</td>
+                                            <td>{{ row.d }}</td>
+                                            <td>{{ row.j }}</td>
+                                            <td ng-bind-html="row.cdr3nt"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                    </div>
+                                </div>
+                                <h3 ng-show="isLoading() && !isLoadingError()">Loading additional rows</h3>
+                                <h3 ng-show="isLoadingError()">Loading error</h3>
+                            </clonotypes-table>
                         </div>
                     </div>
                 </div>

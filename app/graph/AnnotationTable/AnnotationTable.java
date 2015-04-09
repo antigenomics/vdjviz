@@ -43,11 +43,27 @@ public class AnnotationTable {
     }
 
     public AnnotationTable create() {
-        int count = 0;
-        for (int i = 1000 * shift; i < sample.getCount(); i++) {
-            data.add(new AnnotationTableRow(sample.getAt(i), count + shift * 1000 + 1));
-            count++;
-            if (count > 1000) break;
+        int count = 0, i;
+        if (shift == 0) {
+            for (i = 0; i < sample.getCount(); i++) {
+                data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
+                count++;
+                if (count >= 1000) break;
+            }
+        } else {
+            if (shift > 0) {
+                for (i = 1000 + 100 * (shift - 1); i < sample.getCount(); i++) {
+                    data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
+                    count++;
+                    if (count >= 100) break;
+                }
+            } else {
+                for (i = (-shift) * 100 - 100; i < sample.getCount(); i++) {
+                    data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
+                    count++;
+                    if (count >= 100) break;
+                }
+            }
         }
         created = true;
         return this;
