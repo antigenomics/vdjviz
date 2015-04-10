@@ -18,7 +18,7 @@ var CONSOLE_INFO = true;
         COMPARING: 4
     });
 
-    var app = angular.module('accountPage', ['ngAnimate']);
+    var app = angular.module('accountPage', ['ngAnimate', 'ui.bootstrap']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -418,7 +418,7 @@ var CONSOLE_INFO = true;
                             case 'success':
                                 file.meta[type].cached = true;
                                 if (type === 'annotation') {
-                                    clonotypesTableFactory.addData(file.fileName, data.data);
+                                    clonotypesTableFactory.addData(file.fileName, data.data.data);
                                 } else dataHandler(data.data, parameters);
                                 break;
                             default:
@@ -723,11 +723,8 @@ var CONSOLE_INFO = true;
         };
     });
 
-    app.factory('clonotypesTableFactory', ['$sce', function($sce) {
+    app.factory('clonotypesTableFactory', ['$sce', 'notifications', '$http', '$log', function($sce, notifications, $http, $log) {
         var data = {};
-        var load = false;
-        var loadError = false;
-        var loadBlock = false;
 
         function cdr3aa_transform(data) {
             var cdr3aa = data["cdr3aa"];
@@ -859,83 +856,68 @@ var CONSOLE_INFO = true;
         }
 
         function getData(fileName) {
-            if (typeof data[fileName] === 'undefined') data[fileName] = [];
+            if (typeof data[fileName] === 'undefined') data[fileName] = {
+                loading: false,
+                loadError: false,
+                proccessing: false,
+                sampleCount: 0,
+                numberOfPages: 0,
+                shift: 0,
+                displayLength: 0,
+                rows: []
+            };
             return data[fileName];
         }
 
-        function loading() {
-            load = true;
-        }
-
-        function loaded() {
-            load = false;
-        }
-
-        function isLoading() {
-            return load
-        }
-
-        function isLoadingBlocked() {
-            return loadBlock;
-        }
-
-        function loadingError() {
-            loadError = true;
-        }
-
-        function isLoadingError() {
-            return loadError;
-        }
-
-        function modifyData(fileName, d, shift) {
-            if (shift > 0) {
-                data[fileName].splice(0, 100);
+        function isLoading(fileName) {
+            return function() {
+                return data[fileName].loading;
             }
         }
 
-        function switchLoadBlock() {
-            loadBlock = !loadBlock;
-        }
-
-        function concatData(fileName, d, shift) {
-            var i;
-            if (shift > 0) {
-                data[fileName].splice(0, 100);
-                for (i = 0; i < d.length; i++) {
-                    d[i].cdr3aa = cdr3aa_transform(d[i].cdr3aa);
-                    d[i].cdr3nt = cdr3nt_transform(d[i].cdr3nt);
-                    data[fileName].push(d[i]);
-                }
-            } else {
-                data[fileName].splice(900, 1000);
-                for (i = d.length - 1; i >=0; i--) {
-                    d[i].cdr3aa = cdr3aa_transform(d[i].cdr3aa);
-                    d[i].cdr3nt = cdr3nt_transform(d[i].cdr3nt);
-                    data[fileName].unshift(d[i]);
-                }
+        function isLoadingError(fileName) {
+            return function() {
+                return data[fileName].loadError;
             }
         }
 
         function addData(fileName, d) {
-            d.data.forEach(function(v) {
+            d.rows.forEach(function(v) {
                 v.cdr3aa = cdr3aa_transform(v.cdr3aa);
                 v.cdr3nt = cdr3nt_transform(v.cdr3nt);
             });
-            angular.copy(d.data, data[fileName]);
+            angular.extend(data[fileName], d);
+        }
+
+        function loadData(fileName, page) {
+            data[fileName].loading = true;
+            $http.post('/account/api/annotation', {
+                action: 'data',
+                fileName: fileName,
+                shift: page - 1
+            })
+                .success(function(response) {
+                    data[fileName].loading = false;
+                    addData(fileName, response);
+                })
+                .error(function() {
+                    data[fileName].loading = false;
+                    data[fileName].loadError = true;
+                    notifications.addErrorNotification('Clonotypes table', 'Error while downloading page ' + page);
+                    if (CONSOLE_INFO) {
+                        $log.error('Clonotypes table: Error while downloading page ' + page);
+                    }
+                });
         }
 
         return {
             getData: getData,
             addData: addData,
-            concatData: concatData,
-            modifyData: modifyData,
+            loadData: loadData,
             loading: loading,
             loaded: loaded,
             isLoading: isLoading,
-            loadingError: loadingError,
-            isLoadingError: isLoadingError,
-            isLoadingBlocked: isLoadingBlocked,
-            switchLoadBlock: switchLoadBlock
+            isLoadingError: isLoadingError
         };
 
     }]);
@@ -945,16 +927,23 @@ var CONSOLE_INFO = true;
             restrict: 'E',
             scope: true,
             controller: ['$scope', '$log', 'clonotypesTableFactory', function($scope, $log, clonotypesTableFactory) {
-                $scope.data = clonotypesTableFactory.getData($scope.file.fileName);
+                var fileName = $scope.file.fileName;
 
-                $scope.isLoading = clonotypesTableFactory.isLoading;
-                $scope.isLoadingBlocked = clonotypesTableFactory.isLoadingBlocked;
-                $scope.switchLoadBlock = clonotypesTableFactory.switchLoadBlock;
+                $scope.data = clonotypesTableFactory.getData(fileName);
+                $scope.isLoading = clonotypesTableFactory.isLoading(fileName);
+                $scope.isLoadingError = clonotypesTableFactory.isLoadingError(fileName);
+                $scope.page = 1;
+
+                $scope.pageChanged = function() {
+                    clonotypesTableFactory.loadData(fileName, $scope.page);
+                };
 
             }]
         };
     });
 
+
+    /*
     app.directive('clonotypesTableScroll', ['$http', '$log', 'clonotypesTableFactory', 'notifications', function($http, $log, clonotypesTableFactory, notifications) {
         return {
             restrict: 'A',
@@ -1028,6 +1017,7 @@ var CONSOLE_INFO = true;
             }
         };
     }]);
+    */
 
     //Account information Directive
     app.directive('accountInformation', function () {

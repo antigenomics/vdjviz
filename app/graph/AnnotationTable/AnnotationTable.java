@@ -15,13 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AnnotationTable {
-    public List<AnnotationTableRow> data;
+    private static final int displayLength = 1000;
 
+    private List<AnnotationTableRow> data;
     private Sample sample;
-    private Boolean created;
+    private boolean created;
     private String cacheName;
     private UserFile file;
-    private Integer shift;
+    private int shift;
+    private long numberOfPages;
 
     public AnnotationTable(UserFile file, Sample sample, Integer shift) {
         this.created = false;
@@ -30,6 +32,7 @@ public class AnnotationTable {
         this.cacheName = CacheType.annotation.getCacheFileName();
         this.data = new ArrayList<>();
         this.shift = shift;
+        this.numberOfPages = (sample.getCount() / displayLength) + 1;
     }
 
     public AnnotationTable(UserFile file, Sample sample) {
@@ -37,32 +40,33 @@ public class AnnotationTable {
     }
 
 
+    class AnnotationData {
+        public long sampleCount;
+        public long numberOfPages;
+        public long displayLength;
+        public int shift;
+        public List<AnnotationTableRow> rows;
 
-    public List<AnnotationTableRow> getData() {
-        return data;
+        public AnnotationData(long sampleCount, long numberOfPages, long displayLength, int shift, List<AnnotationTableRow> rows) {
+            this.sampleCount = sampleCount;
+            this.numberOfPages = numberOfPages;
+            this.displayLength = displayLength;
+            this.shift = shift;
+            this.rows = rows;
+        }
+    }
+
+    public AnnotationData getData() {
+        return new AnnotationData(sample.getCount(), numberOfPages, displayLength, shift, data);
     }
 
     public AnnotationTable create() {
         int count = 0, i;
-        if (shift == 0) {
-            for (i = 0; i < sample.getCount(); i++) {
+        if (shift < numberOfPages) {
+            for (i = displayLength * shift; i < sample.getCount(); i++) {
                 data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
                 count++;
-                if (count >= 1000) break;
-            }
-        } else {
-            if (shift > 0) {
-                for (i = 1000 + 100 * (shift - 1); i < sample.getCount(); i++) {
-                    data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
-                    count++;
-                    if (count >= 100) break;
-                }
-            } else {
-                for (i = (-shift) * 100 - 100; i < sample.getCount(); i++) {
-                    data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
-                    count++;
-                    if (count >= 100) break;
-                }
+                if (count >= displayLength) break;
             }
         }
         created = true;
