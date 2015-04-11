@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AnnotationTable {
-    private static final int displayLength = 1000;
+    private static final int displayLength = 100;
 
     private List<AnnotationTableRow> data;
     private Sample sample;
@@ -57,13 +57,13 @@ public class AnnotationTable {
     }
 
     public AnnotationData getData() {
-        return new AnnotationData(sample.getCount(), numberOfPages, displayLength, shift, data);
+        return new AnnotationData(sample.getDiversity(), numberOfPages, displayLength, shift, data);
     }
 
     public AnnotationTable create() {
-        int count = 0, i;
+        int count = 0, i = 0;
         if (shift < numberOfPages) {
-            for (i = displayLength * shift; i < sample.getCount(); i++) {
+            for (i = displayLength * shift; i < sample.getDiversity(); i++) {
                 data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
                 count++;
                 if (count >= displayLength) break;

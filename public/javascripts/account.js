@@ -882,7 +882,7 @@ var CONSOLE_INFO = true;
         }
 
         function addData(fileName, d) {
-            d.rows.forEach(function(v) {
+            d.rows.forEach(function (v) {
                 v.cdr3aa = cdr3aa_transform(v.cdr3aa);
                 v.cdr3nt = cdr3nt_transform(v.cdr3nt);
             });
