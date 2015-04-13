@@ -67,7 +67,7 @@ public class Account extends Model {
         public Integer maxFilesCount;
         public Boolean rarefactionCache;
 
-        public FilesInformation(List<FileInformation> files, Integer maxFileSize, Integer maxFilesCount, Boolean rarefactionCache) {
+        public FilesInformation(List<FileInformation> files, Boolean rarefactionCache) {
             this.files = files;
             this.maxFileSize = getMaxFilesSize();
             this.maxFilesCount = getMaxFilesCount();
@@ -78,13 +78,13 @@ public class Account extends Model {
     public FilesInformation getFilesInformation() {
         List<UserFile.FileInformation> files = new ArrayList<>();
         for (UserFile userFile : getUserfiles()) {
-            files.add(new UserFile.FileInformation(userFile.getFileName(), userFile.getSoftwareTypeName(), userFile.getRenderState().ordinal()));
+            files.add(userFile.getFileInformation());
         }
 
         File jsonFile = new File(getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
-        Boolean rarefactionCache = !jsonFile.exists();
+        Boolean rarefactionCache = jsonFile.exists();
 
-        return new FilesInformation(files, maxFilesSize, maxFilesCount, rarefactionCache);
+        return new FilesInformation(files, rarefactionCache);
     }
 
     public Boolean isPrivilege() {

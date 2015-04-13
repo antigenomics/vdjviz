@@ -137,6 +137,7 @@ var CONSOLE_INFO = true;
                 maxFilesCount = info.filesInformation.maxFilesCount;
                 maxFileSize = info.filesInformation.maxFileSize;
                 rarefactionCache = info.filesInformation.rarefactionCache;
+                $log.info(info.filesInformation.rarefactionCache);
                 angular.forEach(info.filesInformation.files, function(file) {
                     files[file.fileName] = {
                         uid: uid++,
@@ -408,6 +409,7 @@ var CONSOLE_INFO = true;
                 };
 
             if (!file.meta[type].cached) {
+                loading(parameters.place);
                 $http.post('/account/api/data', {
                     action: 'data',
                     fileName: file.fileName,
@@ -660,7 +662,7 @@ var CONSOLE_INFO = true;
             spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
             spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
             quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
-            annotation: createTab('Clonotypes', 'annotation', annotationTable, 'visualisation-results-annotation', false, false)
+            annotation: createTab('Clonotypes', 'annotation', null, 'visualisation-results-annotation', false, false)
         };
         var activeTab = visualisationTabs.vjusage;
 
@@ -857,9 +859,8 @@ var CONSOLE_INFO = true;
 
         function getData(fileName) {
             if (typeof data[fileName] === 'undefined') data[fileName] = {
-                loading: false,
+                loading: true,
                 loadError: false,
-                proccessing: false,
                 sampleCount: 0,
                 numberOfPages: 0,
                 shift: 0,
@@ -883,10 +884,12 @@ var CONSOLE_INFO = true;
 
         function addData(fileName, d) {
             d.rows.forEach(function (v) {
+                v.freq = (v.freq * 100).toPrecision(2) + '%';
                 v.cdr3aa = cdr3aa_transform(v.cdr3aa);
                 v.cdr3nt = cdr3nt_transform(v.cdr3nt);
             });
             angular.extend(data[fileName], d);
+            data[fileName].loading = false;
         }
 
         function loadData(fileName, page) {
@@ -1079,7 +1082,7 @@ var CONSOLE_INFO = true;
                     count: value.count,
                     diversity: value.diversity,
                     mean_frequency: parseFloat(value.mean_frequency).toExponential(2),
-                    geomen_frequency: parseFloat(value.geomen_frequency).toExponential(2),
+                    geomean_frequency: parseFloat(value.geomean_frequency).toExponential(2),
                     nc_diversity: value.nc_diversity,
                     nc_frequency: parseFloat(value.nc_frequency).toFixed(2) * 100 + "%",
                     mean_insert_size: parseFloat(value.mean_insert_size).toFixed(2),
@@ -1990,232 +1993,6 @@ function quantileSunbirstChart(data, param) {
         }
 
     });
-}
-
-function annotationTable(data, param) {
-    "use strict";
-    var place = d3.select(param.place);
-        place.html("");
-
-    var table = place
-            .append("table")
-            .attr("id", "annotation_table_" + param.id)
-            .attr("class", "table table-striped table-hover"),
-        thead = table.append("thead").append("tr");
-
-    thead.append("th").html("Index");
-    thead.append("th").html("Frequency");
-    thead.append("th").html("Count");
-    thead.append("th").html("CDR3AA");
-    thead.append("th").html("V");
-    thead.append("th").html("D");
-    thead.append("th").html("J");
-    thead.append("th").html("CDR3NT");
-
-    var column = [
-        {"data": "index"},
-        {"data": "freq"},
-        {"data": "count"},
-        {"data": "cdr3aa"},
-        {"data": "v"},
-        {"data": "d"},
-        {"data": "j"},
-        {"data": "cdr3nt"}
-    ];
-
-    var dataTable = $('#annotation_table_' + param.id).dataTable({
-        dom: '<"pull-left"f><"clear">TrtS',
-        scrollY: '600px',
-        "data": data.data,
-        "columns": column,
-        'order': [
-            [2, "decs"]
-        ],
-        iDisplayLength: 1000,
-        responsive: true,
-        tableTools: {
-            "sSwfPath": "../../assets/lib/dataTable/extensions/TableTools/swf/copy_csv_xls_pdf.swf"
-        },
-        "columnDefs": [
-            {
-                "width": "6%",
-                "render": function(data) {
-                    return (data * 100).toPrecision(2) + '%';
-                },
-                "targets": 1
-            },
-            {
-                "width": "6%",
-                "targets": 2
-            },
-            {
-                "render": function (data) {
-                    var cdr3aa = data["cdr3aa"];
-                    var vend = Math.floor(data["vend"] / 3);
-                    var dstart = Math.floor(data["dstart"] / 3);
-                    var dend = Math.floor(data["dend"] / 3);
-                    var jstart = Math.floor(data["jstart"] / 3);
-                    var pos = data["pos"];
-                    jstart = (jstart < 0) ? 10000 : jstart;
-                    dstart = (dstart < 0) ? vend + 1 : dstart;
-                    dend = (dend < 0) ? vend : dend;
-                    while (vend >= jstart) jstart++;
-                    while (dstart <= vend) dstart++;
-                    while (dend >= jstart) dend--;
-
-                    var createSubString = function (start, end, color) {
-                        return {
-                            start: start,
-                            end: end,
-                            color: color,
-                            substring: cdr3aa.substring(start, end + 1)
-                        };
-                    };
-
-                    var insert = function (index, str, insertString) {
-                        if (index > 0)
-                            return str.substring(0, index) + insertString + str.substring(index, str.length);
-                        else
-                            return insertString + str;
-                    };
-
-                    var arr = [];
-
-                    if (vend >= 0) {
-                        arr.push(createSubString(0, vend, "#4daf4a"));
-                    }
-
-                    if (dstart - vend > 1) {
-                        arr.push(createSubString(vend + 1, dstart - 1, "black"));
-                    }
-
-                    if (dstart > 0 && dend > 0 && dend >= dstart) {
-                        arr.push(createSubString(dstart, dend, "#ec7014"));
-                    }
-
-                    if (jstart - dend > 1) {
-                        arr.push(createSubString(dend + 1, jstart - 1, "black"));
-                    }
-
-                    if (jstart > 0) {
-                        arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
-                    }
-
-                    var result = "";
-                    for (var i = 0; i < arr.length; i++) {
-                        var element = arr[i];
-                        if (pos >= element.start && pos <= element.end) {
-                            var newPos = pos - element.start;
-                            element.substring = insert(newPos + 1, element.substring, '</u></b>');
-                            element.substring = insert(newPos, element.substring, '<b><u>');
-                        }
-                        result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
-                    }
-                    return result;
-                },
-                "width": "20%",
-                "targets": 3
-            },
-            {
-                "render": function(data) {
-                    var cdr3aa = data["cdr3nt"];
-                    var vend = data["vend"];
-                    var dstart = data["dstart"];
-                    var dend = data["dend"];
-                    var jstart = data["jstart"];
-                    var pos = data["pos"];
-                    jstart = (jstart < 0) ? 10000 : jstart;
-                    dstart = (dstart < 0) ? vend + 1 : dstart;
-                    dend = (dend < 0) ? vend : dend;
-                    while (vend >= jstart) jstart++;
-                    while (dstart <= vend) dstart++;
-                    while (dend >= jstart) dend--;
-                    var createSubString = function (start, end, color) {
-                        return {
-                            start: start,
-                            end: end,
-                            color: color,
-                            substring: cdr3aa.substring(start, end + 1)
-                        };
-                    };
-
-                    var insert = function (index, str, insertString) {
-                        if (index > 0)
-                            return str.substring(0, index) + insertString + str.substring(index, str.length);
-                        else
-                            return insertString + str;
-                    };
-
-                    var arr = [];
-
-                    if (vend >= 0) {
-                        arr.push(createSubString(0, vend, "#4daf4a"));
-                    }
-
-                    if (dstart - vend > 1) {
-                        arr.push(createSubString(vend + 1, dstart - 1, "black"));
-                    }
-
-                    if (dstart > 0 && dend > 0 && dend >= dstart) {
-                        arr.push(createSubString(dstart, dend, "#ec7014"));
-                    }
-
-                    if (jstart - dend > 1) {
-                        arr.push(createSubString(dend + 1, jstart - 1, "black"));
-                    }
-
-                    if (jstart > 0) {
-                        arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
-                    }
-
-                    var result = "";
-                    for (var i = 0; i < arr.length; i++) {
-                        var element = arr[i];
-                        if (pos >= element.start && pos <= element.end) {
-                            var newPos = pos - element.start;
-                            element.substring = insert(newPos + 1, element.substring, '</u></b>');
-                            element.substring = insert(newPos, element.substring, '<b><u>');
-                        }
-                        result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
-                    }
-                    return result;
-                },
-                "targets": 7
-
-            }
-        ]
-    });
-
-    /*
-    var $scrollViewer = $('#annotation_table_' + param.id + '_wrapper .dataTables_scrollBody');
-
-    $scrollViewer.scroll(function() {
-
-        if ($scrollViewer.scrollTop() - displayLength * 30 > 0) {
-            $.ajax({
-                url: "/account/api/annotation",
-                type: "post",
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({
-                    "action": "data",
-                    "fileName": param.fileName,
-                    "index": 1
-                }),
-                success: function (data) {
-                    console.log(data);
-                },
-                complete: function(data) {
-                    //For automatic reload on logout
-                    if (data === null || typeof data.responseJSON === 'undefined') location.reload();
-                    if (data.responseJSON.message !== null) console.log(data.responseJSON.message);
-                }
-            });
-            $scrollViewer.unbind('scroll');
-        }
-
-    })
-    */
-
 }
 
 function vjUsage(data, param) {

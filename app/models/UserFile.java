@@ -70,6 +70,10 @@ public class UserFile extends Model {
         }
     }
 
+    public FileInformation getFileInformation() {
+        return new FileInformation(fileName, softwareTypeName, renderState.ordinal());
+    }
+
     public RenderState getRenderState() {
         return renderState;
     }
