@@ -1,6 +1,7 @@
 package controllers;
 
 import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,6 +11,9 @@ import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.sax.BodyContentHandler;
 import play.Logger;
 import play.libs.F;
 import play.libs.Json;
@@ -29,6 +33,7 @@ import utils.server.WSResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.*;
 
 
@@ -141,20 +146,6 @@ public class AccountAPI extends Controller {
                     account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension,
                     fileDir.getAbsolutePath(), fileExtension);
 
-            try {
-                newFile.setSampleCount();
-            } catch (Exception e) {
-                return ok(Json.toJson(new ServerResponse("error", "Error while rendering")));
-            }
-
-            //Long maxFileSize = Play.application().configuration().getLong("maxFileSize");;
-
-            if (account.getMaxClonotypesCount() > 0) {
-                if (newFile.getClonotypesCount() > account.getMaxClonotypesCount()) {
-                    UserFile.cleanTemporaryFiles(newFile);
-                    return ok(Json.toJson(new ServerResponse("error", "Number of clonotypes should be less than " + Configuration.getMaxClonotypesCount())));
-                }
-            }
 
             //Updating database UserFile <-> Account
             Ebean.save(newFile);
@@ -162,7 +153,7 @@ public class AccountAPI extends Controller {
         } catch (Exception e) {
             e.printStackTrace();
             Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
-            return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
+            return ok(Json.toJson(new ServerResponse("error", "Error while uploading new file")));
         }
     }
 
@@ -353,6 +344,23 @@ public class AccountAPI extends Controller {
         return ok(Json.toJson(new CacheServerResponse("success", rarefactionChart.create(needToCreateNew))));
     }
 
+    private static F.Promise<WebSocket.Out<JsonNode>> asyncCompute(final ComputationUtil computationUtil, final WebSocket.Out<JsonNode> out) {
+        F.Promise<ComputationUtil> promise = F.Promise.promise(new F.Function0<ComputationUtil>() {
+            @Override
+            public ComputationUtil apply() throws Throwable {
+                computationUtil.createSampleCache();
+                return computationUtil;
+            }
+        });
+        return promise.map(new F.Function<ComputationUtil, WebSocket.Out<JsonNode>>() {
+            @Override
+            public WebSocket.Out<JsonNode> apply(ComputationUtil computationUtil) throws Throwable {
+                out.close();
+                return out;
+            }
+        });
+    }
+
     public static WebSocket<JsonNode> ws() {
         //Socket for updating information about computation progress
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
@@ -378,11 +386,39 @@ public class AccountAPI extends Controller {
                                 }
                                 file.rendering();
                                 Ebean.update(file);
+                                out.write(Json.toJson(new WSResponse("ok", "render", fileName, "start")));
                                 try {
+
+                                    SampleCollection sampleCollection;
+                                    Sample sample;
+
+                                    try {
+                                        Software software = file.getSoftwareType();
+                                        List<String> sampleFileNames = new ArrayList<>();
+                                        sampleFileNames.add(file.getPath());
+                                        sampleCollection = new SampleCollection(sampleFileNames, software, false);
+                                        sample = sampleCollection.getAt(0);
+                                        file.setSampleCount(sample.getDiversity(), sample.getCount());
+
+                                        if (account.getMaxClonotypesCount() > 0) {
+                                            if (file.getClonotypesCount() > account.getMaxClonotypesCount()) {
+                                                UserFile.deleteFile(file);
+                                                out.write(Json.toJson(new WSResponse("error", "render", fileName, "Number of clonotypes should be less than " + Configuration.getMaxClonotypesCount())));
+                                                out.close();
+                                                return;
+                                            }
+                                        }
+
+                                    } catch (Exception e) {
+                                        UserFile.deleteFile(file);
+                                        out.write(Json.toJson(new WSResponse("error", "render", fileName, "Error while parsing: wrong software type")));
+                                        out.close();
+                                        return;
+                                    }
+
                                     //Trying to render cache files for sample
-                                    ComputationUtil computationUtil = new ComputationUtil(file, out);
-                                    computationUtil.createSampleCache();
-                                    out.close();
+                                    ComputationUtil computationUtil = new ComputationUtil(file, sampleCollection, out);
+                                    asyncCompute(computationUtil, out);
                                     return;
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail

@@ -137,7 +137,6 @@ var CONSOLE_INFO = true;
                 maxFilesCount = info.filesInformation.maxFilesCount;
                 maxFileSize = info.filesInformation.maxFileSize;
                 rarefactionCache = info.filesInformation.rarefactionCache;
-                $log.info(info.filesInformation.rarefactionCache);
                 angular.forEach(info.filesInformation.files, function(file) {
                     files[file.fileName] = {
                         uid: uid++,
@@ -339,7 +338,7 @@ var CONSOLE_INFO = true;
         //------------------------------//
         //Setter for active file
         function setActiveFile(file) {
-            if (activeFile !== file) {
+            if (activeFile !== file && file.state !== RenderState.RENDERING) {
                 state = htmlState.FILE;
                 activeFile = file;
                 chartInfo.update_file(mainVisualisationTabs.getActiveTab(), file);
@@ -409,7 +408,8 @@ var CONSOLE_INFO = true;
                 };
 
             if (!file.meta[type].cached) {
-                loading(parameters.place);
+                if (type !== 'annotation')
+                    loading(parameters.place);
                 $http.post('/account/api/data', {
                     action: 'data',
                     fileName: file.fileName,
@@ -728,133 +728,91 @@ var CONSOLE_INFO = true;
     app.factory('clonotypesTableFactory', ['$sce', 'notifications', '$http', '$log', function($sce, notifications, $http, $log) {
         var data = {};
 
-        function cdr3aa_transform(data) {
-            var cdr3aa = data["cdr3aa"];
-            var vend = Math.floor(data["vend"] / 3);
-            var dstart = Math.floor(data["dstart"] / 3);
-            var dend = Math.floor(data["dend"] / 3);
-            var jstart = Math.floor(data["jstart"] / 3);
-            var pos = data["pos"];
-            jstart = (jstart < 0) ? 10000 : jstart;
-            dstart = (dstart < 0) ? vend + 1 : dstart;
-            dend = (dend < 0) ? vend : dend;
-            while (vend >= jstart) jstart++;
-            while (dstart <= vend) dstart++;
-            while (dend >= jstart) dend--;
-
-            var createSubString = function (start, end, color) {
-                return {
-                    start: start,
-                    end: end,
-                    color: color,
-                    substring: cdr3aa.substring(start, end + 1)
-                };
+        function createSubstring(cdr, start, end, color) {
+            return {
+                start: start,
+                end: end,
+                color: color,
+                substring: cdr.substring(start, end + 1)
             };
-
-            var insert = function (index, str, insertString) {
-                if (index > 0)
-                    return str.substring(0, index) + insertString + str.substring(index, str.length);
-                else
-                    return insertString + str;
-            };
-
-            var arr = [];
-
-            if (vend >= 0) {
-                arr.push(createSubString(0, vend, "#4daf4a"));
-            }
-
-            if (dstart - vend > 1) {
-                arr.push(createSubString(vend + 1, dstart - 1, "black"));
-            }
-
-            if (dstart > 0 && dend > 0 && dend >= dstart) {
-                arr.push(createSubString(dstart, dend, "#ec7014"));
-            }
-
-            if (jstart - dend > 1) {
-                arr.push(createSubString(dend + 1, jstart - 1, "black"));
-            }
-
-            if (jstart > 0) {
-                arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
-            }
-
-            var result = "";
-            for (var i = 0; i < arr.length; i++) {
-                var element = arr[i];
-                if (pos >= element.start && pos <= element.end) {
-                    var newPos = pos - element.start;
-                    element.substring = insert(newPos + 1, element.substring, '</u></b>');
-                    element.substring = insert(newPos, element.substring, '<b><u>');
-                }
-                result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
-            }
-            return $sce.trustAsHtml(result);
         }
 
-        function cdr3nt_transform(data) {
-            var cdr3aa = data["cdr3nt"];
-            var vend = data["vend"];
-            var dstart = data["dstart"];
-            var dend = data["dend"];
-            var jstart = data["jstart"];
-            var pos = data["pos"];
-            jstart = (jstart < 0) ? 10000 : jstart;
-            dstart = (dstart < 0) ? vend + 1 : dstart;
-            dend = (dend < 0) ? vend : dend;
-            while (vend >= jstart) jstart++;
-            while (dstart <= vend) dstart++;
-            while (dend >= jstart) dend--;
-            var createSubString = function (start, end, color) {
-                return {
-                    start: start,
-                    end: end,
-                    color: color,
-                    substring: cdr3aa.substring(start, end + 1)
-                };
-            };
+        function cdr3Transform(cdr) {
+            var cdr3aa = cdr.cdr3aa,
+                cdr3nt = cdr.cdr3nt,
+                vend_nt = cdr.vend,
+                dstart_nt = (cdr.dstart < 0) ? vend_nt + 1 : cdr.dstart,
+                dend_nt = (cdr.dend < 0) ? vend_nt : cdr.dend,
+                jstart_nt = (cdr.jstart < 0) ? 10000 : cdr.jstart,
+                vend_aa = cdr.vend / 3,
+                dstart_aa = ((cdr.dstart / 3) < 0) ? vend_aa + 1 : cdr.dstart / 3,
+                dend_aa = ((cdr.dend / 3) < 0) ? vend_aa : cdr.dend / 3,
+                jstart_aa = ((cdr.jstart / 3) < 0) ? 10000 : cdr.jstart / 3;
 
-            var insert = function (index, str, insertString) {
-                if (index > 0)
-                    return str.substring(0, index) + insertString + str.substring(index, str.length);
-                else
-                    return insertString + str;
-            };
+            var cdr3nt_arr = [],
+                cdr3aa_arr = [];
 
-            var arr = [];
+            while (vend_nt >= jstart_nt) jstart_nt++;
+            while (vend_aa >= jstart_aa) jstart_aa++;
+            while (dstart_nt <= vend_nt) dstart_nt++;
+            while (dstart_aa <= vend_aa) dstart_aa++;
+            while (dend_nt >= jstart_nt) dend_nt--;
+            while (dend_aa >= jstart_aa) dend_aa--;
 
-            if (vend >= 0) {
-                arr.push(createSubString(0, vend, "#4daf4a"));
+            if (vend_nt >= 0) {
+                cdr3nt_arr.push(createSubstring(cdr3nt, 0, vend_nt, "#4daf4a"));
             }
 
-            if (dstart - vend > 1) {
-                arr.push(createSubString(vend + 1, dstart - 1, "black"));
+            if (vend_aa >= 0) {
+                cdr3aa_arr.push(createSubstring(cdr3aa, 0, vend_aa, "#4daf4a"));
             }
 
-            if (dstart > 0 && dend > 0 && dend >= dstart) {
-                arr.push(createSubString(dstart, dend, "#ec7014"));
+            if (dstart_nt - vend_nt > 1) {
+                cdr3nt_arr.push(createSubstring(cdr3nt, vend_nt + 1, dstart_nt - 1, "black"));
             }
 
-            if (jstart - dend > 1) {
-                arr.push(createSubString(dend + 1, jstart - 1, "black"));
+            if (dstart_aa - vend_aa > 1) {
+                cdr3aa_arr.push(createSubstring(cdr3aa, vend_aa + 1, dstart_aa - 1, "black"));
             }
 
-            if (jstart > 0) {
-                arr.push(createSubString(jstart, cdr3aa.length, "#377eb8"));
+            if (dstart_nt > 0 && dend_nt > 0 && dend_nt >= dstart_nt) {
+                cdr3nt_arr.push(createSubstring(cdr3nt, dstart_nt, dend_nt, "#ec7014"));
             }
 
-            var result = "";
-            for (var i = 0; i < arr.length; i++) {
-                var element = arr[i];
-                if (pos >= element.start && pos <= element.end) {
-                    var newPos = pos - element.start;
-                    element.substring = insert(newPos + 1, element.substring, '</u></b>');
-                    element.substring = insert(newPos, element.substring, '<b><u>');
-                }
-                result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+            if (dstart_aa > 0 && dend_aa > 0 && dend_aa >= dstart_aa) {
+                cdr3aa_arr.push(createSubstring(cdr3aa, dstart_aa, dend_aa, "#ec7014"));
             }
-            return $sce.trustAsHtml(result);
+
+            if (jstart_nt - dend_nt > 1) {
+                cdr3nt_arr.push(createSubstring(cdr3nt, dend_nt + 1, jstart_nt - 1, "black"));
+            }
+
+            if (jstart_aa - dend_aa > 1) {
+                cdr3aa_arr.push(createSubstring(cdr3aa, dend_aa + 1, jstart_aa - 1, "black"));
+            }
+
+            if (jstart_nt > 0) {
+                cdr3nt_arr.push(createSubstring(cdr3nt, jstart_nt, cdr3nt.length, "#377eb8"));
+            }
+
+            if (jstart_aa > 0) {
+                cdr3aa_arr.push(createSubstring(cdr3aa, jstart_aa, cdr3aa.length, "#377eb8"));
+            }
+
+            var cdr3nt_result = "", element, i = 0;
+            for (i = 0; i < cdr3nt_arr.length; i++) {
+                element = cdr3nt_arr[i];
+                cdr3nt_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+            }
+            var cdr3aa_result = "";
+            for (i = 0; i < cdr3aa_arr.length; i++) {
+                element = cdr3aa_arr[i];
+                cdr3aa_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+            }
+            cdr.cdr3aa = $sce.trustAsHtml(cdr3aa_result);
+            cdr.cdr3nt = $sce.trustAsHtml(cdr3nt_result);
+            return cdr;
+
         }
 
         function getData(fileName) {
@@ -883,10 +841,9 @@ var CONSOLE_INFO = true;
         }
 
         function addData(fileName, d) {
-            d.rows.forEach(function (v) {
-                v.freq = (v.freq * 100).toPrecision(2) + '%';
-                v.cdr3aa = cdr3aa_transform(v.cdr3aa);
-                v.cdr3nt = cdr3nt_transform(v.cdr3nt);
+            d.rows.forEach(function(row) {
+                row.freq = (row.freq * 100).toPrecision(2) + '%';
+                row.cdr = cdr3Transform(row.cdr);
             });
             angular.extend(data[fileName], d);
             data[fileName].loading = false;
@@ -1259,16 +1216,12 @@ var CONSOLE_INFO = true;
                 }
 
                 function updateProgress(file, progress) {
-                    $scope.$apply(function () {
-                        file.progress = progress;
-                    });
+                    file.progress = progress;
                 }
 
                 function updateResult(file, result) {
-                    $scope.$apply(function () {
-                        file.result = result;
-                        file.state = RenderState.RENDERED;
-                    });
+                    file.result = result;
+                    file.state = RenderState.RENDERED;
                 }
 
                 function updateState(file, state) {
@@ -1276,9 +1229,7 @@ var CONSOLE_INFO = true;
                 }
 
                 function updateResultTooltip(file, resultTooltip) {
-                    $scope.$apply(function () {
-                        file.resultTooltip = resultTooltip;
-                    });
+                    file.resultTooltip = resultTooltip;
                 }
 
                 function addNewError(uid, fileName, error) {
@@ -1353,7 +1304,9 @@ var CONSOLE_INFO = true;
                     },
                     progress: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
-                        updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
+                        $scope.$apply(function() {
+                            updateProgress(file, parseInt(data.loaded / data.total * 50, 10));
+                        })
                     },
                     done: function (e, data) {
                         var file = $scope.newFiles[data.formData.uid];
@@ -1364,17 +1317,20 @@ var CONSOLE_INFO = true;
                                     var event = JSON.parse(message.data);
                                     switch (event.result) {
                                         case "ok" :
-                                            switch (event.progress) {
+                                            switch (event.message) {
                                                 case "start" :
-                                                    updateState(file, RenderState.RENDERING);
-                                                    updateTooltip(file, "Computation");
                                                     accountInfo.addNewFile(file);
+                                                    $scope.$apply(function() {
+                                                        updateTooltip(file, "Computation");
+                                                        updateState(file, RenderState.RENDERING);
+                                                    });
                                                     break;
                                                 case "end" :
                                                     accountInfo.changeFileState(file, RenderState.RENDERED);
-                                                    updateTooltip(file, "Success");
-                                                    updateResult(file, 'success');
-                                                    socket.close();
+                                                    $scope.$apply(function() {
+                                                        updateTooltip(file, "Success");
+                                                        updateResult(file, 'success');
+                                                    });
                                                     if (!isRenderingFilesExist()) {
                                                         if (!isWaitingFilesExist()) {
                                                             notifications.addSuccessNotification('Uploading', 'All files have been uploaded and rendered');
@@ -1382,22 +1338,29 @@ var CONSOLE_INFO = true;
                                                         chartInfo.update_rarefaction(true);
                                                         chartInfo.update_summary();
                                                     }
+                                                    socket.close();
                                                     break;
                                                 default:
-                                                    updateProgress(file, 50 + (event.progress / 2));
+                                                    $scope.$apply(function() {
+                                                        updateProgress(file, 50 + (event.message / 2));
+                                                    });
                                             }
                                             break;
                                         case "error" :
-                                            socket.close();
                                             accountInfo.deleteFile_client(file);
-                                            updateResult(file, 'error');
-                                            updateResultTooltip(file, event.message);
                                             notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
+                                            $scope.$apply(function() {
+                                                updateResult(file, 'error');
+                                                updateResultTooltip(file, event.message);
+                                            });
+                                            socket.close();
                                             break;
                                         default:
                                             accountInfo.deleteFile_client(file);
                                             notifications.addErrorNotification('Rendering', 'Server is unavailable');
-                                            updateTooltip(file, "Server is unavailable");
+                                            $scope.$apply(function() {
+                                                updateTooltip(file, "Server is unavailable");
+                                            });
                                             break;
                                     }
 

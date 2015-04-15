@@ -1,30 +1,20 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
-import com.antigenomics.vdjdb.core.db.CdrDatabase;
-import com.antigenomics.vdjdb.core.query.CdrDatabaseSearcher;
-import com.antigenomics.vdjdb.core.query.CdrSearchResult;
-import com.antigenomics.vdjtools.db.BrowserResult;
-import com.antigenomics.vdjtools.db.CdrMatch;
-import com.antigenomics.vdjtools.db.DatabaseBrowser;
-import com.antigenomics.vdjtools.sample.Sample;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.milaboratory.core.tree.TreeSearchParameters;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.CountingInputStream;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.sax.SecureContentHandler;
 import org.junit.*;
 
-import play.mvc.*;
-import play.test.*;
-import play.data.DynamicForm;
-import play.data.validation.ValidationError;
-import play.data.validation.Constraints.RequiredValidator;
-import play.i18n.Lang;
-import play.libs.F;
-import play.libs.F.*;
-
-import static play.test.Helpers.*;
-import static org.fest.assertions.Assertions.*;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -36,8 +26,21 @@ import static org.fest.assertions.Assertions.*;
 public class ApplicationTest {
 
     @Test
-    public void annotationTest() {
-        
+    public void analysingTest() {
+        try {
+            FileInputStream fileInputStream = new FileInputStream("/home/bvdmitri/42.zip");
+            BodyContentHandler bodyContentHandler = new BodyContentHandler(Integer.MAX_VALUE);
+            CountingInputStream countingInputStream = new CountingInputStream(fileInputStream);
+            TikaInputStream tikaInputStream = TikaInputStream.get(countingInputStream);
+            SecureContentHandler secureContentHandler = new SecureContentHandler(bodyContentHandler, tikaInputStream);
+            AutoDetectParser autoDetectParser = new AutoDetectParser();
+            Metadata metadata = new Metadata();
+            autoDetectParser.parse(countingInputStream, secureContentHandler, metadata);
+            System.out.println(secureContentHandler.getMaximumCompressionRatio());
+        } catch (SAXException | TikaException | IOException e) {
+            System.out.println("catched");
+            e.printStackTrace();
+        }
     }
 
 

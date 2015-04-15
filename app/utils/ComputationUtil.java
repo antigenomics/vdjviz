@@ -32,13 +32,12 @@ public class ComputationUtil {
     private SampleCollection sampleCollection;
     private UserFile file;
     private WebSocket.Out<JsonNode> out;
-    private Data serverResponse;
     private ProgressResponse progressResponse;
 
     private class ProgressResponse {
         public String result;
         public String action;
-        public String progress;
+        public String message;
         public String fileName;
         private WebSocket.Out<JsonNode> out;
 
@@ -47,11 +46,11 @@ public class ComputationUtil {
             this.out = out;
             this.result = "ok";
             this.action = "render";
-            this.progress = "start";
+            this.message = "start";
         }
 
-        public void sendMessage(String progress) {
-            this.progress = progress;
+        public void sendMessage(String message) {
+            this.message = message;
             sendMessage();
         }
 
@@ -61,18 +60,13 @@ public class ComputationUtil {
 
     }
 
-    public ComputationUtil(UserFile file, WebSocket.Out<JsonNode> out) {
-        Software software = file.getSoftwareType();
-        List<String> sampleFileNames = new ArrayList<>();
-        sampleFileNames.add(file.getPath());
-        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
+    public ComputationUtil(UserFile file, SampleCollection sampleCollection, WebSocket.Out<JsonNode> out) {
+        this.progressResponse = new ProgressResponse(file.getFileName(), out);
         this.sample = sampleCollection.getAt(0);
         this.sampleCollection = sampleCollection;
         this.file = file;
         this.account = file.getAccount();
         this.out = out;
-        this.serverResponse = new Data(new String[]{"result", "action", "progress", "fileName"});
-        this.progressResponse = new ProgressResponse(file.getFileName(), out);
     }
 
     public Sample getSample() {
@@ -89,10 +83,6 @@ public class ComputationUtil {
 
     public WebSocket.Out<JsonNode> getWebSocketOut() {
         return this.out;
-    }
-
-    public Data getServerResponse() {
-        return this.serverResponse;
     }
 
     private void vjUsageData() throws Exception {
@@ -153,7 +143,6 @@ public class ComputationUtil {
     }
 
     public void createSampleCache() throws Exception {
-        progressResponse.sendMessage("start");
         vjUsageData();
         spectratype();
         spectratypeV();

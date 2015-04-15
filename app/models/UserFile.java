@@ -86,6 +86,11 @@ public class UserFile extends Model {
         this.sampleCount = sampleCollection.getAt(0).getCount();
     }
 
+    public void setSampleCount(int diversity, long count) {
+        this.clonotypesCount = diversity;
+        this.sampleCount = count;
+    }
+
     public Integer getClonotypesCount() {
         return clonotypesCount;
     }
