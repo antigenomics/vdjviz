@@ -29,7 +29,6 @@ public class ComputationUtil {
 
     private Sample sample;
     private Account account;
-    private SampleCollection sampleCollection;
     private UserFile file;
     private WebSocket.Out<JsonNode> out;
     private ProgressResponse progressResponse;
@@ -60,10 +59,9 @@ public class ComputationUtil {
 
     }
 
-    public ComputationUtil(UserFile file, SampleCollection sampleCollection, WebSocket.Out<JsonNode> out) {
+    public ComputationUtil(UserFile file, Sample sample, WebSocket.Out<JsonNode> out) {
         this.progressResponse = new ProgressResponse(file.getFileName(), out);
-        this.sample = sampleCollection.getAt(0);
-        this.sampleCollection = sampleCollection;
+        this.sample = sample;
         this.file = file;
         this.account = file.getAccount();
         this.out = out;
@@ -71,10 +69,6 @@ public class ComputationUtil {
 
     public Sample getSample() {
         return this.sample;
-    }
-
-    public SampleCollection getSampleCollection() {
-        return this.sampleCollection;
     }
 
     public UserFile getFile() {
@@ -86,7 +80,7 @@ public class ComputationUtil {
     }
 
     private void vjUsageData() throws Exception {
-        VJUsageChartCreator vjUsageChartCreator = new VJUsageChartCreator(file, sampleCollection);
+        VJUsageChartCreator vjUsageChartCreator = new VJUsageChartCreator(file, sample);
         vjUsageChartCreator.create().saveCache();
         progressResponse.sendMessage("20");
 

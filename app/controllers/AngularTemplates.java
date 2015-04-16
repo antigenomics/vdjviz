@@ -1,7 +1,8 @@
 package controllers;
 
 import models.LocalUser;
-import play.mvc.*;
+import play.mvc.Controller;
+import play.mvc.Result;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 

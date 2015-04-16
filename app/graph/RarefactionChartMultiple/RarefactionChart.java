@@ -4,8 +4,10 @@ package graph.RarefactionChartMultiple;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.diversity.FrequencyTable;
 import com.antigenomics.vdjtools.diversity.Rarefaction;
+import com.antigenomics.vdjtools.io.SampleFileConnection;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
+import com.antigenomics.vdjtools.sample.metadata.MetadataUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Account;
 import models.UserFile;
@@ -57,11 +59,8 @@ public class RarefactionChart {
             Long maxCount = account.getMaxSampleCount();
             RarefactionColor rarefactionColor = new RarefactionColor();
             for (UserFile userFile : account.getRenderedUserFiles()) {
-                Software software = userFile.getSoftwareType();
-                List<String> sampleFileNames = new ArrayList<>();
-                sampleFileNames.add(userFile.getPath());
-                SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-                Sample sample = sampleCollection.getAt(0);
+                SampleFileConnection sampleFileConnection= new SampleFileConnection(userFile.getPath(), userFile.getSoftwareType(), MetadataUtil.createSampleMetadata(MetadataUtil.fileName2id(userFile.getFileName())), true, false);
+                Sample sample = sampleFileConnection.getSample();
                 FrequencyTable frequencyTable = new FrequencyTable(sample);
                 Rarefaction rarefaction = new Rarefaction(frequencyTable);
                 ArrayList<Rarefaction.RarefactionPoint> values = rarefaction.build(0, maxCount, 80);

@@ -17,22 +17,22 @@ import java.util.List;
 
 public class VJUsageChartCreator {
     private UserFile file;
-    private SampleCollection sampleCollection;
     private Sample sample;
     private VJUsageChart vjUsageChart;
     private String cacheName = CacheType.vjUsage.getCacheFileName();
     private boolean created;
 
 
-    public VJUsageChartCreator(UserFile file, SampleCollection sampleCollection) {
+    public VJUsageChartCreator(UserFile file, Sample sample) {
         this.file = file;
-        this.sampleCollection = sampleCollection;
-        this.sample = sampleCollection.getAt(0);
+        this.sample = sample;
         this.created = false;
     }
 
     public VJUsageChartCreator create() {
-        SegmentUsage segmentUsage = new SegmentUsage(sampleCollection, false);
+        Sample sampleArray[] = new Sample[1];
+        sampleArray[0] = sample;
+        SegmentUsage segmentUsage = new SegmentUsage(sampleArray, false);
         List<String> labels = new ArrayList<>();
         String sampleId = sample.getSampleMetadata().getSampleId();
         MatrixMath matrixMath = new MatrixMath(segmentUsage.vjUsageMatrix(sampleId),

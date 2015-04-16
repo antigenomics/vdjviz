@@ -1,30 +1,30 @@
 package controllers;
 
 import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.io.SampleFileConnection;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SampleCollection;
+import com.antigenomics.vdjtools.sample.metadata.MetadataUtil;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.AnnotationTable.AnnotationTable;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.sax.BodyContentHandler;
+import org.apache.commons.io.FilenameUtils;
 import play.Logger;
 import play.libs.F;
 import play.libs.Json;
-import play.mvc.*;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.WebSocket;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
-import securesocial.core.java.SecureSocial.UserAware;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
-import org.apache.commons.io.FilenameUtils;
 import utils.server.CacheServerResponse;
 import utils.server.Configuration;
 import utils.server.ServerResponse;
@@ -33,8 +33,8 @@ import utils.server.WSResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @SecureSocial.SecuredAction
@@ -277,11 +277,8 @@ public class AccountAPI extends Controller {
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
         if (file != null) {
-            Software software = file.getSoftwareType();
-            List<String> sampleFileNames = new ArrayList<>();
-            sampleFileNames.add(file.getPath());
-            SampleCollection sampleCollection = new SampleCollection(sampleFileNames, software, false);
-            AnnotationTable annotationTable = new AnnotationTable(file, sampleCollection.getAt(0), request.findValue("shift").asInt());
+            SampleFileConnection sampleFileConnection = new SampleFileConnection(file.getPath(), file.getSoftwareType(), MetadataUtil.createSampleMetadata(MetadataUtil.fileName2id(file.getFileName())), true, false);
+            AnnotationTable annotationTable = new AnnotationTable(file, sampleFileConnection.getSample(), request.findValue("shift").asInt());
             annotationTable.create();
             return ok(Json.toJson(annotationTable.getData()));
         } else {
@@ -389,15 +386,12 @@ public class AccountAPI extends Controller {
                                 out.write(Json.toJson(new WSResponse("ok", "render", fileName, "start")));
                                 try {
 
-                                    SampleCollection sampleCollection;
+                                    SampleFileConnection sampleFileConnection;
                                     Sample sample;
 
                                     try {
-                                        Software software = file.getSoftwareType();
-                                        List<String> sampleFileNames = new ArrayList<>();
-                                        sampleFileNames.add(file.getPath());
-                                        sampleCollection = new SampleCollection(sampleFileNames, software, false);
-                                        sample = sampleCollection.getAt(0);
+                                        sampleFileConnection  = new SampleFileConnection(file.getPath(), file.getSoftwareType(), MetadataUtil.createSampleMetadata(MetadataUtil.fileName2id(file.getFileName())), true, false);
+                                        sample = sampleFileConnection.getSample();
                                         file.setSampleCount(sample.getDiversity(), sample.getCount());
 
                                         if (account.getMaxClonotypesCount() > 0) {
@@ -417,7 +411,7 @@ public class AccountAPI extends Controller {
                                     }
 
                                     //Trying to render cache files for sample
-                                    ComputationUtil computationUtil = new ComputationUtil(file, sampleCollection, out);
+                                    ComputationUtil computationUtil = new ComputationUtil(file, sample, out);
                                     asyncCompute(computationUtil, out);
                                     return;
                                 } catch (Exception e) {
