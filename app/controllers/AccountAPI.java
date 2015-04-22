@@ -1,9 +1,7 @@
 package controllers;
 
-import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.io.SampleFileConnection;
 import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.antigenomics.vdjtools.sample.metadata.MetadataUtil;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -77,8 +75,7 @@ public class AccountAPI extends Controller {
 
         if (file == null) {
             return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
-        };
-
+        }
         if (account.getMaxFilesSize() > 0) {
             Long sizeMB = file.getFile().length() / 1024;
             if (sizeMB > account.getMaxFilesSize()) {
@@ -286,6 +283,15 @@ public class AccountAPI extends Controller {
         }
     }
 
+    public static Result searchAnnotationData() {
+        Account account = getCurrentAccount();
+        List<Integer> list = new ArrayList<>();
+        list.add(0);
+        list.add(1);
+        list.add(2);
+        return ok(Json.toJson(list));
+    }
+
     private static Result cache(UserFile file, String cacheName, Account account) {
         //Return cache file transformed into json format
         if (file == null) {
@@ -358,7 +364,7 @@ public class AccountAPI extends Controller {
         });
     }
 
-    public static WebSocket<JsonNode> ws() {
+    public static WebSocket<JsonNode> render() {
         //Socket for updating information about computation progress
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
         final Account account = localUser.account;

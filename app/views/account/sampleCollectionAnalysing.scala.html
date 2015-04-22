@@ -1,0 +1,65 @@
+<div class="row" ng-show="isSampleCollection()">
+    <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-3 col-sm-offset-3" ng-show="!isInitialized() && !isConnectionError()">
+        <div class="jumbotron single-window text-center sharp">
+            <h2>Connecting..</h2>
+        </div>
+    </div>
+    <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-3 col-sm-offset-3" ng-show="isConnectionError()">
+        <div class="jumbotron single-window text-center sharp">
+            <h2>Connection error</h2>
+            <h3>Please refresh the page to reconnect</h3>
+        </div>
+    </div>
+    <div class="col-lg-12" ng-show="isInitialized() && !isConnectionError()">
+        <div ng-show="isJoinInformationStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-body">
+                    <button class="btn btn-default sharp" ng-click="openAnotherFiles()">Open another files</button>
+                    <button class="btn btn-default sharp">Change parameters</button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="isFilesSelectStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-body">
+                    <div ng-repeat="file in files" style="float : left ; margin: 5px">
+                        <button class="btn btn-default sharp" ng-class="{'btn-info':isSelected(file)}" ng-click="selectFile(file)">{{ file.fileName }}</button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-info sharp" ng-click="openGroup()">Join samples</button>
+        </div>
+        <div ng-show="isFilesOpeningStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-heading">
+                    Opening.. {{ getOpeningFile() }}
+                </div>
+                <div class="panel-body">
+                    <div class="progress progress-sm">
+                        <div class="progress-bar progress-bar-success" style="width: {{ getOpenProgress() }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="isJoinRenderingStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-heading">
+                    Rendering
+                </div>
+                <div class="panel-body">
+                    <button class="btn btn-info sharp" ng-click="joinSamples()">Join</button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="isJoinInformationStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-heading">Histograms</div>
+                <div class="panel-body">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

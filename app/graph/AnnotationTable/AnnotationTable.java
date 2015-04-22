@@ -1,7 +1,6 @@
 package graph.AnnotationTable;
 
 
-import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.Sample;
 import models.UserFile;
 import play.Logger;

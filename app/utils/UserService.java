@@ -1,27 +1,24 @@
 package utils;
 
 
-import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.List;
 import com.avaje.ebean.Ebean;
 import models.Account;
-import org.joda.time.DateTime;
 import models.LocalToken;
 import models.LocalUser;
+import org.joda.time.DateTime;
 import play.Application;
 import play.Logger;
 import play.Play;
 import scala.Option;
 import scala.Some;
-import securesocial.core.AuthenticationMethod;
-import securesocial.core.Identity;
-import securesocial.core.PasswordInfo;
-import securesocial.core.SocialUser;
-import securesocial.core.IdentityId;
+import securesocial.core.*;
 import securesocial.core.java.BaseUserService;
 import securesocial.core.java.Token;
+
+import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.List;
 
 public class UserService extends BaseUserService {
 
@@ -93,7 +90,7 @@ public class UserService extends BaseUserService {
                 Boolean created = userDir.mkdir();
                 if (!created) {
                     Logger.of(UserService.class).error("Error while creating directory for user " + user.email().get());
-                    return user;
+                    throw new RuntimeException("Error while creating directory");
                 }
             }
             localUser = new LocalUser(user.identityId().userId(), user.identityId().providerId(),

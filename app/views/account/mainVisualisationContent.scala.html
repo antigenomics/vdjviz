@@ -99,6 +99,29 @@
                                 </div>
                                 <pagination total-items="data.sampleCount" items-per-page="data.displayLength" ng-model="page" max-size="6" class="pagination-sm" boundary-links="true" rotate="true" ng-click="pageChanged()">
                                 </pagination>
+                                <hr>
+                                <div class="form-group">
+                                    <h2>Search</h2>
+                                    <div class="col-lg-6 col-md-6 col-sm-6">
+                                        <input class="form-control" type="text" placeholder="Input string" ng-model="searchText">
+                                    </div>
+                                </div>
+                                <button class="btn btn-info sharp" ng-click="search()">Search</button>
+                                <p ng-show="isSearchError()">No matches found</p>
+                                <table class="table table-responsive" ng-show="isResults()">
+                                    <thead>
+                                        <tr>
+                                            <th>placeholder</th>
+                                            <th>placeholder</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="result in searchResults">
+                                            <td>asd</td>
+                                            <td>asd</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </clonotypes-table>
                         </div>
                     </div>

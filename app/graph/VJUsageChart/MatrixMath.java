@@ -1,8 +1,5 @@
 package graph.VJUsageChart;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 public class MatrixMath {
     private double[][] matrix;
     private String[] rowNames;

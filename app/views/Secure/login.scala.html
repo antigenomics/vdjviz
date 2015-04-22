@@ -1,8 +1,6 @@
 @(loginForm: play.api.data.Form[(String, String)], errorMsg: Option[String] = None)(implicit request: play.api.mvc.RequestHeader)
 
-@import helper._
 @import securesocial.core.Registry
-@import securesocial.core.AuthenticationMethod._
 @import securesocial.core.providers.UsernamePasswordProvider.UsernamePassword
 
 @Secure.main(Messages("securesocial.login.title")) {

@@ -1,7 +1,6 @@
 @(signUpForm: play.api.data.Form[securesocial.controllers.Registration.RegistrationInfo], token: String)(implicit request: play.api.mvc.RequestHeader)
-@import securesocial.core.providers.UsernamePasswordProvider
 @import securesocial.core.IdentityProvider
-@import helper._
+@import views.html.helper._
 @implicitFieldConstructor = @{
     FieldConstructor(securesocial.views.html.inputFieldConstructor.f)
 }
@@ -50,7 +49,7 @@
                                         </ol>
                                     </div>
                                 }
-                                <button type="submit" class="btn btn-info btn-lg btn-block">Done!</button>
+                                <button type="submit" class="btn btn-info btn-lg btn-block sharp">Done!</button>
                             </fieldset>
                         </form>
                         <hr class="wide">

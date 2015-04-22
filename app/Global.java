@@ -1,4 +1,3 @@
-
 import models.Account;
 import models.IPAddress;
 import models.UserFile;
@@ -6,24 +5,20 @@ import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import play.Application;
 import play.GlobalSettings;
+import play.Logger;
 import play.Play;
 import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
-
-import java.io.File;
-import java.lang.reflect.Method;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
-import play.Logger;
 import play.libs.Akka;
 import play.libs.F;
 import play.mvc.Action;
 import play.mvc.Http;
-import play.mvc.Result;
 import play.mvc.SimpleResult;
-import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+
+import java.io.File;
+import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 
 
 public class Global extends GlobalSettings {

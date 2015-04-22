@@ -1,9 +1,7 @@
 package utils;
 
-import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.BasicStats;
 import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import graph.AnnotationTable.AnnotationTable;
@@ -12,18 +10,16 @@ import graph.SpectratypeChart.SpectratypeChartCreator;
 import graph.SpectratypeVChart.SpectratypeVChartCreator;
 import graph.VJUsageChart.VJUsageChartCreator;
 import models.Account;
-import play.Logger;
-import play.mvc.WebSocket;
 import models.UserFile;
+import play.Logger;
 import play.libs.Json;
-import utils.ArrayUtils.Data;
+import play.mvc.WebSocket;
 import utils.CacheType.CacheType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.*;
-import java.util.List;
+import java.util.HashMap;
 
 public class ComputationUtil {
 

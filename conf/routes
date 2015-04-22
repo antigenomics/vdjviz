@@ -3,49 +3,46 @@
 # ~~~~
 
 # Home page
-GET         /                                        controllers.Application.index()
-GET         /contacts                                controllers.Application.contacts()
-GET         /about                                   controllers.Application.about()
-GET         /badbrowser                              controllers.Application.badBrowser()
-
-
-# Angular directives urls
-
-GET         /account/accountInformation              controllers.AngularTemplates.accountInformation()
+GET         /                                     controllers.Application.index()
+GET         /contacts                             controllers.Application.contacts()
+GET         /about                                controllers.Application.about()
+GET         /badbrowser                           controllers.Application.badBrowser()
 
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /assets/*file                            controllers.Assets.at(path="/public", file)
+GET         /assets/*file                         controllers.Assets.at(path="/public", file)
 
 # Account API
-GET         /account                                 controllers.AccountAPI.account()
-GET         /account/api/ws                          controllers.AccountAPI.ws()
-POST        /account/api/upload                      controllers.AccountAPI.upload()
-POST        /account/api/delete                      controllers.AccountAPI.delete()
-POST        /account/api/data                        controllers.AccountAPI.data()
-GET         /account/api/files                       controllers.AccountAPI.files()
-GET         /account/api/info                        controllers.AccountAPI.accountInformation()
-POST        /account/api/annotation                  controllers.AccountAPI.annotationData()
+GET         /account                              controllers.AccountAPI.account()
+GET         /account/api/rendering/ws             controllers.AccountAPI.render()
+POST        /account/api/upload                   controllers.AccountAPI.upload()
+POST        /account/api/delete                   controllers.AccountAPI.delete()
+POST        /account/api/data                     controllers.AccountAPI.data()
+GET         /account/api/files                    controllers.AccountAPI.files()
+GET         /account/api/info                     controllers.AccountAPI.accountInformation()
+POST        /account/api/annotation               controllers.AccountAPI.annotationData()
+POST        /account/api/annotation/search        controllers.AccountAPI.searchAnnotationData()
+GET         /account/api/samplecollection/ws      controllers.SampleCollectionAPI.SampleCollectionAPI.open()
 
 # Robots.txt route
 
-GET         /robots.txt                              controllers.Assets.at(path="/public", file="robots.txt")
+GET         /robots.txt                           controllers.Assets.at(path="/public", file="robots.txt")
 
 # Auth routes
-GET         /signin                                  securesocial.controllers.LoginPage.login
-GET         /logout                                  securesocial.controllers.LoginPage.logout
-GET         /authenticate/:provider                  securesocial.controllers.ProviderController.authenticate(provider)
-POST        /authenticate/:provider                  securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET         /signup                                  securesocial.controllers.Registration.startSignUp
-POST        /signup                                  securesocial.controllers.Registration.handleStartSignUp
-GET         /signup/:token                           securesocial.controllers.Registration.signUp(token)
-POST        /signup/:token                           securesocial.controllers.Registration.handleSignUp(token)
-GET         /password                                securesocial.controllers.PasswordChange.page
-POST        /password                                securesocial.controllers.PasswordChange.handlePasswordChange
-GET         /reset                                   securesocial.controllers.Registration.startResetPassword
-POST        /reset                                   securesocial.controllers.Registration.handleStartResetPassword
-GET         /reset/:token                            securesocial.controllers.Registration.resetPassword(token)
-POST        /reset/:token                            securesocial.controllers.Registration.handleResetPassword(token)
+GET         /signin                               securesocial.controllers.LoginPage.login
+GET         /logout                               securesocial.controllers.LoginPage.logout
+GET         /authenticate/:provider               securesocial.controllers.ProviderController.authenticate(provider)
+POST        /authenticate/:provider               securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET         /signup                               securesocial.controllers.Registration.startSignUp
+POST        /signup                               securesocial.controllers.Registration.handleStartSignUp
+GET         /signup/:token                        securesocial.controllers.Registration.signUp(token)
+POST        /signup/:token                        securesocial.controllers.Registration.handleSignUp(token)
+GET         /password                             securesocial.controllers.PasswordChange.page
+POST        /password                             securesocial.controllers.PasswordChange.handlePasswordChange
+GET         /reset                                securesocial.controllers.Registration.startResetPassword
+POST        /reset                                securesocial.controllers.Registration.handleStartResetPassword
+GET         /reset/:token                         securesocial.controllers.Registration.resetPassword(token)
+POST        /reset/:token                         securesocial.controllers.Registration.handleResetPassword(token)
 
 
-GET         /*path                                   controllers.Application.notFound404(path: String)
+GET         /*path                                controllers.Application.notFound404(path: String)

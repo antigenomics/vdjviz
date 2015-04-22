@@ -1,7 +1,7 @@
 package graph.QuantileStatsChart;
 
-import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.diversity.QuantileStats;
+import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.Sample;
 import models.UserFile;
 import play.Logger;

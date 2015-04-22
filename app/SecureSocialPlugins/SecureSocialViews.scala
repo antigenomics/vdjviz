@@ -1,13 +1,12 @@
 package SecureSocialPlugins
 
-import play.api.mvc.{RequestHeader, Request}
-import play.api.templates.{Txt, Html}
+import play.api.data.Form
+import play.api.mvc.{Request, RequestHeader}
+import play.api.templates.{Html, Txt}
+import securesocial.controllers.PasswordChange.ChangeInfo
 import securesocial.controllers.Registration.RegistrationInfo
 import securesocial.controllers.TemplatesPlugin
-import securesocial.core.{Identity, SecuredRequest, SocialUser}
-import play.api.data.Form
-import securesocial.core.SecureSocial._
-import securesocial.controllers.PasswordChange.ChangeInfo
+import securesocial.core.{Identity, SecuredRequest}
 
 class SecureSocialViews(application: play.Application) extends TemplatesPlugin {
 

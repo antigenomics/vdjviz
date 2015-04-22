@@ -7,12 +7,14 @@ import com.avaje.ebean.Ebean;
 import org.joda.time.DateTime;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class UserFile extends Model {

@@ -5,55 +5,42 @@
     <head>
         <title>Bad browser</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.css")">
+        <link rel="shortcut icon" type="image/x-icon" href="@routes.Assets.at("images/favicon.ico")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/FontAwesome/css/font-awesome.min.css")" >
+        <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,700' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Raleway:200,300,400' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/theme/styleo.css")">
         <script>
-        function getBrowser(){
-            var ua = navigator.userAgent;
-            if (ua.search(/MSIE/) > 0) return 'badbrowser';
-            return 'ok';
-        }
-
-        var browser = getBrowser();
-
-        if (browser == 'ok') {
+        if (!(navigator.userAgent.search(/MSIE/) > 0)) {
             window.location.replace("/");
         }
         </script>
-        <style>
-            .logo_img {
-                width: 100%;
-            }
-
-            .logo_link {
-                cursor: pointer;
-                text-decoration: none;
-            }
-        </style>
     </head>
     <body>
         <div class="container">
             <div class="row">
-                <h2>Ooops :(</h2>
-                <hr>
-                <h1>Sorry, but your browser is not supported yet</h1>
-                <h3>We recommend using the following browsers, also check that you have JavaScript enabled</h3>
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                    <img src="@routes.Assets.at("images/chrome.png")" class="logo_img">
-                    <h3 class="text-center"><a class="logo_link" href="https://www.google.ru/chrome/browser/">Chrome</a></h3>
-                </div>
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                    <img src="@routes.Assets.at("images/firefox.png")" class="logo_img">
-                    <h3 class="text-center"><a class="logo_link" href="https://www.mozilla.org/ru/firefox/new/">Firefox</a></h3>
-                </div>
-                <div class="col-sm-4 col-md-4 col-lg-4">
-                    <img src="@routes.Assets.at("images/opera.png")" class="logo_img">
-                    <h3 class="text-center"><a class="logo_link" href="http://www.opera.com/ru">Opera</a></h3>
-                </div>
-                <div class="col-sm-12 col-md-12 col-lg-12">
-                <hr>
+                <div class="col-md-10 col-md-offset-1">
+                    <div class="single-window jumbotron">
+                        <h2>Sorry, but your browser is not supported yet</h2>
+                        <h3>We recommend using the following browsers, also check that you have JavaScript enabled</h3>
+                        <div class="row">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <img src="@routes.Assets.at("images/chrome.png")" class="logo_img">
+                                <h3 class="text-center"><a class="logo_link" href="https://www.google.ru/chrome/browser/">Chrome</a></h3>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <img src="@routes.Assets.at("images/firefox.png")" class="logo_img">
+                                <h3 class="text-center"><a class="logo_link" href="https://www.mozilla.org/ru/firefox/new/">Firefox</a></h3>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <img src="@routes.Assets.at("images/opera.png")" class="logo_img">
+                                <h3 class="text-center"><a class="logo_link" href="http://www.opera.com/ru">Opera</a></h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
     </body>
 </html>

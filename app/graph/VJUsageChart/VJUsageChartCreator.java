@@ -2,7 +2,6 @@ package graph.VJUsageChart;
 
 import com.antigenomics.vdjtools.basic.SegmentUsage;
 import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;
