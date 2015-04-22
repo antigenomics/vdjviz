@@ -6,10 +6,10 @@ public class AnnotationTableCdr {
 
     public String cdr3aa;
     public String cdr3nt;
-    public Integer vend;
-    public Integer jstart;
-    public Integer dstart;
-    public Integer dend;
+    public int vend;
+    public int jstart;
+    public int dstart;
+    public int dend;
 
 
     public AnnotationTableCdr(Clonotype clonotype) {

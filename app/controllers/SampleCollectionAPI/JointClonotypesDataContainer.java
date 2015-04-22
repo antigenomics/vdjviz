@@ -6,21 +6,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JointClonotypesDataContainer {
-    List<JointClonotypeHistogramChart> histogramCharts;
+    List<JointClonotypeHistogramChart> clonotypes;
 
     public JointClonotypesDataContainer() {
-        histogramCharts = new ArrayList<>();
+        clonotypes = new ArrayList<>();
     }
 
-    public void setHistogramCharts(List<JointClonotypeHistogramChart> histogramCharts) {
-        this.histogramCharts = histogramCharts;
+    public void setClonotypes(List<JointClonotypeHistogramChart> clonotypes) {
+        this.clonotypes = clonotypes;
     }
 
     public void addHistogramChart(JointClonotypeHistogramChart jointClonotypeHistogramChart) {
-        histogramCharts.add(jointClonotypeHistogramChart);
+        clonotypes.add(jointClonotypeHistogramChart);
     }
 
-    public List<JointClonotypeHistogramChart> getHistogramCharts() {
-        return histogramCharts;
+    public List<JointClonotypeHistogramChart> getClonotypes() {
+        return clonotypes;
     }
 }

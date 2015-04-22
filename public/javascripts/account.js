@@ -743,93 +743,6 @@ var CONSOLE_INFO = true;
     app.factory('clonotypesTableFactory', ['$sce', 'notifications', '$http', '$log', function($sce, notifications, $http, $log) {
         var data = {};
 
-        function createSubstring(cdr, start, end, color) {
-            return {
-                start: start,
-                end: end,
-                color: color,
-                substring: cdr.substring(start, end + 1)
-            };
-        }
-
-        function cdr3Transform(cdr) {
-            var cdr3aa = cdr.cdr3aa,
-                cdr3nt = cdr.cdr3nt,
-                vend_nt = cdr.vend,
-                dstart_nt = (cdr.dstart < 0) ? vend_nt + 1 : cdr.dstart,
-                dend_nt = (cdr.dend < 0) ? vend_nt : cdr.dend,
-                jstart_nt = (cdr.jstart < 0) ? 10000 : cdr.jstart,
-                vend_aa = cdr.vend / 3,
-                dstart_aa = ((cdr.dstart / 3) < 0) ? vend_aa + 1 : cdr.dstart / 3,
-                dend_aa = ((cdr.dend / 3) < 0) ? vend_aa : cdr.dend / 3,
-                jstart_aa = ((cdr.jstart / 3) < 0) ? 10000 : cdr.jstart / 3;
-
-            var cdr3nt_arr = [],
-                cdr3aa_arr = [];
-
-            while (vend_nt >= jstart_nt) jstart_nt++;
-            while (vend_aa >= jstart_aa) jstart_aa++;
-            while (dstart_nt <= vend_nt) dstart_nt++;
-            while (dstart_aa <= vend_aa) dstart_aa++;
-            while (dend_nt >= jstart_nt) dend_nt--;
-            while (dend_aa >= jstart_aa) dend_aa--;
-
-            if (vend_nt >= 0) {
-                cdr3nt_arr.push(createSubstring(cdr3nt, 0, vend_nt, "#4daf4a"));
-            }
-
-            if (vend_aa >= 0) {
-                cdr3aa_arr.push(createSubstring(cdr3aa, 0, vend_aa, "#4daf4a"));
-            }
-
-            if (dstart_nt - vend_nt > 1) {
-                cdr3nt_arr.push(createSubstring(cdr3nt, vend_nt + 1, dstart_nt - 1, "black"));
-            }
-
-            if (dstart_aa - vend_aa > 1) {
-                cdr3aa_arr.push(createSubstring(cdr3aa, vend_aa + 1, dstart_aa - 1, "black"));
-            }
-
-            if (dstart_nt > 0 && dend_nt > 0 && dend_nt >= dstart_nt) {
-                cdr3nt_arr.push(createSubstring(cdr3nt, dstart_nt, dend_nt, "#ec7014"));
-            }
-
-            if (dstart_aa > 0 && dend_aa > 0 && dend_aa >= dstart_aa) {
-                cdr3aa_arr.push(createSubstring(cdr3aa, dstart_aa, dend_aa, "#ec7014"));
-            }
-
-            if (jstart_nt - dend_nt > 1) {
-                cdr3nt_arr.push(createSubstring(cdr3nt, dend_nt + 1, jstart_nt - 1, "black"));
-            }
-
-            if (jstart_aa - dend_aa > 1) {
-                cdr3aa_arr.push(createSubstring(cdr3aa, dend_aa + 1, jstart_aa - 1, "black"));
-            }
-
-            if (jstart_nt > 0) {
-                cdr3nt_arr.push(createSubstring(cdr3nt, jstart_nt, cdr3nt.length, "#377eb8"));
-            }
-
-            if (jstart_aa > 0) {
-                cdr3aa_arr.push(createSubstring(cdr3aa, jstart_aa, cdr3aa.length, "#377eb8"));
-            }
-
-            var cdr3nt_result = "", element, i = 0;
-            for (i = 0; i < cdr3nt_arr.length; i++) {
-                element = cdr3nt_arr[i];
-                cdr3nt_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
-            }
-            var cdr3aa_result = "";
-            for (i = 0; i < cdr3aa_arr.length; i++) {
-                element = cdr3aa_arr[i];
-                cdr3aa_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
-            }
-            cdr.cdr3aa = $sce.trustAsHtml(cdr3aa_result);
-            cdr.cdr3nt = $sce.trustAsHtml(cdr3nt_result);
-            return cdr;
-
-        }
-
         function getData(fileName) {
             if (typeof data[fileName] === 'undefined') data[fileName] = {
                 loading: true,
@@ -858,7 +771,7 @@ var CONSOLE_INFO = true;
         function addData(fileName, d) {
             d.rows.forEach(function(row) {
                 row.freq = (row.freq * 100).toPrecision(2) + '%';
-                row.cdr = cdr3Transform(row.cdr);
+                row.cdr = cdr3Transform(row.cdr, $sce);
             });
             angular.extend(data[fileName], d);
             data[fileName].loading = false;
@@ -1480,7 +1393,7 @@ var CONSOLE_INFO = true;
 
     //Comparing Directive
     //--------------------------------------------------------//
-    app.factory('sampleCollectionFactory', ['$http', '$log', '$websocket', 'notifications', function($http, $log, $websocket, notifications) {
+    app.factory('sampleCollectionFactory', ['$http', '$log', '$websocket', 'notifications', '$sce', function($http, $log, $websocket, notifications, $sce) {
 
         var steps = Object.freeze({
             FILES_SELECT: 0,
@@ -1493,10 +1406,11 @@ var CONSOLE_INFO = true;
         var initialized = false;
         var connectionError = false;
         var openProgress = 0;
+        var jointrendering = false;
         var openingFile = '';
         var names = [];
         var treshData = {
-            histogramCharts: []
+            clonotypes: []
         };
         var data = {};
         angular.copy(treshData, data);
@@ -1528,7 +1442,13 @@ var CONSOLE_INFO = true;
                     step = steps.JOIN_RENDERING;
                     break;
                 case 'rendered':
+                    jointrendering = false;
                     step = steps.JOIN_INFORMATION;
+                    angular.forEach(response.data.clonotypes, function(clonotype) {
+                        var cdr = cdr3Transform(clonotype.clonotypeMetadata, $sce);
+                        clonotype.clonotypeMetadata.cdr3aa = cdr.cdr3aa;
+                        clonotype.clonotypeMetadata.cdr3nt = cdr.cdr3nt;
+                    });
                     angular.copy(response.data, data);
                     break;
                 case 'error':
@@ -1557,6 +1477,7 @@ var CONSOLE_INFO = true;
         }
 
         function joinSamples() {
+            jointrendering = true;
             ws.send(JSON.stringify({
                 action: 'render',
                 joinParameters: {
@@ -1567,8 +1488,13 @@ var CONSOLE_INFO = true;
         }
 
         function openAnotherFiles() {
+            openProgress = 0;
             step = steps.FILES_SELECT;
             angular.copy(treshData, data);
+        }
+
+        function isJointRendering() {
+            return jointrendering;
         }
 
         function getData() {
@@ -1612,6 +1538,7 @@ var CONSOLE_INFO = true;
             isConnectionError: isConnectionError,
             openGroup: openGroup,
             getOpenProgress: getOpenProgress,
+            isJointRendering: isJointRendering,
             getOpeningFile: getOpeningFile,
             getStep: getStep,
             isFilesSelectStep: isFilesSelectStep,
@@ -1638,6 +1565,7 @@ var CONSOLE_INFO = true;
                 //Sample collection factory API
                 $scope.getData = sampleCollectionFactory.getData;
                 $scope.getOpenProgress = sampleCollectionFactory.getOpenProgress;
+                $scope.isJointRendering = sampleCollectionFactory.isJointRendering;
                 $scope.getOpeningFile = sampleCollectionFactory.getOpeningFile;
                 $scope.isInitialized = sampleCollectionFactory.isInitialized;
                 $scope.isConnectionError = sampleCollectionFactory.isConnectionError;
@@ -1646,6 +1574,7 @@ var CONSOLE_INFO = true;
                 $scope.isJoinRenderingStep = sampleCollectionFactory.isJoinRenderingStep;
                 $scope.isJoinInformationStep = sampleCollectionFactory.isJoinInformationStep;
                 $scope.openAnotherFiles = function() {
+                    $scope.selectedClonotypes.splice(0, $scope.selectedClonotypes.length);
                     $scope.selectedFiles.splice(0, $scope.selectedFiles.length);
                     sampleCollectionFactory.openAnotherFiles();
                 };
@@ -1668,6 +1597,12 @@ var CONSOLE_INFO = true;
                 //Directive API
                 $scope.selectedFiles = [];
 
+                $scope.selectAll = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if (!$scope.isFileSelected(file)) $scope.selectFile(file);
+                    });
+                };
+
                 $scope.selectFile = function(file) {
                     var index = $scope.selectedFiles.indexOf(file);
                     if (index >= 0) {
@@ -1677,25 +1612,49 @@ var CONSOLE_INFO = true;
                     }
                 };
 
-                $scope.isSelected = function(file) {
+                $scope.isFileSelected = function(file) {
                     return $scope.selectedFiles.indexOf(file) >= 0;
                 };
 
 
                 //Chart options
+                $scope.selectedClonotypes = [];
+
+                $scope.isClonotypeSelected = function(clonotype) {
+                    for (var i = 0; i < $scope.selectedClonotypes.length; i++) {
+                        if (clonotype.key === $scope.selectedClonotypes[i].key) {
+                            return i + 1;
+                        }
+                    }
+                    return 0;
+                };
+
+                $scope.selectClonotype = function(clonotype) {
+                    var index = $scope.isClonotypeSelected(clonotype);
+                    if (index >= 1) {
+                        $scope.selectedClonotypes.splice(index - 1, 1);
+                    } else {
+                        $scope.selectedClonotypes.push({
+                            name: clonotype.clonotypeMetadata.cdr3aa,
+                            key: clonotype.key,
+                            data: [clonotype]
+                        });
+                    }
+                };
 
                 $scope.options = {
                     chart: {
                         type: 'multiBarChart',
-                        height: 800,
-                        stacked: true,
+                        height: 400,
                         margin : {
                             top: 20,
                             right: 20,
                             bottom: 60,
                             left: 45
                         },
-                        transitionDuration: 500
+                        transitionDuration: 500,
+                        showLegend: false,
+                        showControls: false
                     }
                 };
 
@@ -2259,6 +2218,95 @@ function rarefactionPlot(data, param) {
 
         return chart;
     });
+}
+
+function createSubstring(cdr, start, end, color) {
+    "use strict";
+    return {
+        start: start,
+        end: end,
+        color: color,
+        substring: cdr.substring(start, end + 1)
+    };
+}
+
+function cdr3Transform(cdr, $sce) {
+    "use strict";
+    var cdr3aa = cdr.cdr3aa,
+        cdr3nt = cdr.cdr3nt,
+        vend_nt = cdr.vend,
+        dstart_nt = (cdr.dstart < 0) ? vend_nt + 1 : cdr.dstart,
+        dend_nt = (cdr.dend < 0) ? vend_nt : cdr.dend,
+        jstart_nt = (cdr.jstart < 0) ? 10000 : cdr.jstart,
+        vend_aa = cdr.vend / 3,
+        dstart_aa = ((cdr.dstart / 3) < 0) ? vend_aa + 1 : cdr.dstart / 3,
+        dend_aa = ((cdr.dend / 3) < 0) ? vend_aa : cdr.dend / 3,
+        jstart_aa = ((cdr.jstart / 3) < 0) ? 10000 : cdr.jstart / 3;
+
+    var cdr3nt_arr = [],
+        cdr3aa_arr = [];
+
+    while (vend_nt >= jstart_nt) jstart_nt++;
+    while (vend_aa >= jstart_aa) jstart_aa++;
+    while (dstart_nt <= vend_nt) dstart_nt++;
+    while (dstart_aa <= vend_aa) dstart_aa++;
+    while (dend_nt >= jstart_nt) dend_nt--;
+    while (dend_aa >= jstart_aa) dend_aa--;
+
+    if (vend_nt >= 0) {
+        cdr3nt_arr.push(createSubstring(cdr3nt, 0, vend_nt, "#4daf4a"));
+    }
+
+    if (vend_aa >= 0) {
+        cdr3aa_arr.push(createSubstring(cdr3aa, 0, vend_aa, "#4daf4a"));
+    }
+
+    if (dstart_nt - vend_nt > 1) {
+        cdr3nt_arr.push(createSubstring(cdr3nt, vend_nt + 1, dstart_nt - 1, "black"));
+    }
+
+    if (dstart_aa - vend_aa > 1) {
+        cdr3aa_arr.push(createSubstring(cdr3aa, vend_aa + 1, dstart_aa - 1, "black"));
+    }
+
+    if (dstart_nt > 0 && dend_nt > 0 && dend_nt >= dstart_nt) {
+        cdr3nt_arr.push(createSubstring(cdr3nt, dstart_nt, dend_nt, "#ec7014"));
+    }
+
+    if (dstart_aa > 0 && dend_aa > 0 && dend_aa >= dstart_aa) {
+        cdr3aa_arr.push(createSubstring(cdr3aa, dstart_aa, dend_aa, "#ec7014"));
+    }
+
+    if (jstart_nt - dend_nt > 1) {
+        cdr3nt_arr.push(createSubstring(cdr3nt, dend_nt + 1, jstart_nt - 1, "black"));
+    }
+
+    if (jstart_aa - dend_aa > 1) {
+        cdr3aa_arr.push(createSubstring(cdr3aa, dend_aa + 1, jstart_aa - 1, "black"));
+    }
+
+    if (jstart_nt > 0) {
+        cdr3nt_arr.push(createSubstring(cdr3nt, jstart_nt, cdr3nt.length, "#377eb8"));
+    }
+
+    if (jstart_aa > 0) {
+        cdr3aa_arr.push(createSubstring(cdr3aa, jstart_aa, cdr3aa.length, "#377eb8"));
+    }
+
+    var cdr3nt_result = "", element, i = 0;
+    for (i = 0; i < cdr3nt_arr.length; i++) {
+        element = cdr3nt_arr[i];
+        cdr3nt_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+    }
+    var cdr3aa_result = "";
+    for (i = 0; i < cdr3aa_arr.length; i++) {
+        element = cdr3aa_arr[i];
+        cdr3aa_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+    }
+    cdr.cdr3aa = $sce.trustAsHtml(cdr3aa_result);
+    cdr.cdr3nt = $sce.trustAsHtml(cdr3nt_result);
+    return cdr;
+
 }
 
 function loading(place) {
