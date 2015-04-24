@@ -19,7 +19,7 @@ var CONSOLE_INFO = true;
         SAMPLE_COLLECTION: 5
     });
 
-    var app = angular.module('accountPage', ['ngAnimate', 'ui.bootstrap', 'ngWebSocket', 'nvd3']);
+    var app = angular.module('accountPage', ['ngAnimate', 'ui.bootstrap', 'ngWebSocket']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -1444,12 +1444,8 @@ var CONSOLE_INFO = true;
                 case 'rendered':
                     jointrendering = false;
                     step = steps.JOIN_INFORMATION;
-                    angular.forEach(response.data.clonotypes, function(clonotype) {
-                        var cdr = cdr3Transform(clonotype.clonotypeMetadata, $sce);
-                        clonotype.clonotypeMetadata.cdr3aa = cdr.cdr3aa;
-                        clonotype.clonotypeMetadata.cdr3nt = cdr.cdr3nt;
-                    });
-                    angular.copy(response.data, data);
+                    joinHeapMap(response.data);
+                    $log.info(response.data);
                     break;
                 case 'error':
                     if (CONSOLE_INFO) {
@@ -1574,7 +1570,6 @@ var CONSOLE_INFO = true;
                 $scope.isJoinRenderingStep = sampleCollectionFactory.isJoinRenderingStep;
                 $scope.isJoinInformationStep = sampleCollectionFactory.isJoinInformationStep;
                 $scope.openAnotherFiles = function() {
-                    $scope.selectedClonotypes.splice(0, $scope.selectedClonotypes.length);
                     $scope.selectedFiles.splice(0, $scope.selectedFiles.length);
                     sampleCollectionFactory.openAnotherFiles();
                 };
@@ -1614,48 +1609,6 @@ var CONSOLE_INFO = true;
 
                 $scope.isFileSelected = function(file) {
                     return $scope.selectedFiles.indexOf(file) >= 0;
-                };
-
-
-                //Chart options
-                $scope.selectedClonotypes = [];
-
-                $scope.isClonotypeSelected = function(clonotype) {
-                    for (var i = 0; i < $scope.selectedClonotypes.length; i++) {
-                        if (clonotype.key === $scope.selectedClonotypes[i].key) {
-                            return i + 1;
-                        }
-                    }
-                    return 0;
-                };
-
-                $scope.selectClonotype = function(clonotype) {
-                    var index = $scope.isClonotypeSelected(clonotype);
-                    if (index >= 1) {
-                        $scope.selectedClonotypes.splice(index - 1, 1);
-                    } else {
-                        $scope.selectedClonotypes.push({
-                            name: clonotype.clonotypeMetadata.cdr3aa,
-                            key: clonotype.key,
-                            data: [clonotype]
-                        });
-                    }
-                };
-
-                $scope.options = {
-                    chart: {
-                        type: 'multiBarChart',
-                        height: 400,
-                        margin : {
-                            top: 20,
-                            right: 20,
-                            bottom: 60,
-                            left: 45
-                        },
-                        transitionDuration: 500,
-                        showLegend: false,
-                        showControls: false
-                    }
                 };
 
 
@@ -2220,6 +2173,148 @@ function rarefactionPlot(data, param) {
     });
 }
 
+function joinHeapMap(data) {
+    "use strict";
+
+    var margin = { top: 0, right: 10, bottom: 50, left: 150 },
+        col_number = data.colLabel.length,
+        row_number = data.rowLabel.length,
+        cellSize = 15,
+        width = cellSize * col_number, // - margin.left - margin.right,
+        height = cellSize * row_number , // - margin.top - margin.bottom,
+        //gridSize = Math.floor(width / 24),
+        legendElementWidth = cellSize * 1.5,
+        colorBuckets = 21,
+        hcrow = data.rowLabel.map(function(d, i) {
+            return i + 1;
+        }),
+        hccol = data.colLabel.map(function(d, i) {
+            return i + 1;
+        }),
+        colors = [
+            "#ffffff",
+            "#f7fcf0",
+            "#e0f3db",
+            "#ccebc5",
+            "#a8ddb5",
+            "#7bccc4",
+            "#4eb3d3",
+            "#2b8cbe",
+            "#0868ac",
+            "#084081",
+            "black"
+        ],
+        rowLabel = data.rowLabel,
+        colLabel = data.colLabel;
+
+    var colorScale = d3.scale.quantile()
+        .domain([-10 , 0])
+        .range(colors);
+
+    var place = d3.select(".joinHeapMap");
+        place.html("");
+    var svg = place.append("svg")
+            .attr("width", width + margin.left + margin.right + 700)
+            .attr("height", height + margin.top + margin.bottom + 300)
+            .append("g")
+            .style("overflow", "visible")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+        ;
+
+    var legend = svg.selectAll(".legend")
+        .data([-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0])
+        .enter().append("g")
+        .attr("class", "legend");
+
+    legend.append("rect")
+        .attr("x", function(d, i) { return legendElementWidth * i; })
+        .attr("y", 0)
+        .attr("width", legendElementWidth)
+        .attr("height", cellSize)
+        .style("fill", function(d, i) { return colors[i]; });
+
+    legend.append("text")
+        .attr("class", "mono")
+        .text(function(d) { return d; })
+        .attr("width", legendElementWidth)
+        .attr("x", function(d, i) { return legendElementWidth * i; })
+        .attr("y", (cellSize*2));
+
+    var rowLabels = svg.append("g")
+            .selectAll(".rowLabelg")
+            .data(rowLabel)
+            .enter()
+            .append("text")
+            .text(function (d) { return d; })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return hcrow.indexOf(i+1) * cellSize + 200; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + cellSize / 1.5 + ")")
+            .attr("class", function (d,i) { return "rowLabel mono r"+i;} )
+            .on("mouseover", function(d) {d3.select(this).classed("text-hover",true);})
+            .on("mouseout" , function(d) {d3.select(this).classed("text-hover",false);});
+            //.on("click", function(d,i) {rowSortOrder=!rowSortOrder; sortbylabel("r",i,rowSortOrder);d3.select("#order").property("selectedIndex", 4).node().focus();;})
+
+
+    var colLabels = svg.append("g")
+            .selectAll(".colLabelg")
+            .data(colLabel)
+            .enter()
+            .append("text")
+            .text(function (d) { return d; })
+            .attr("x", -200)
+            .attr("y", function (d, i) { return hccol.indexOf(i+1) * cellSize; })
+            .style("text-anchor", "left")
+            .attr("transform", "translate("+cellSize/2 + ",-6) rotate (-90)")
+            .attr("class",  function (d,i) { return "colLabel mono c"+i;} )
+            .on("mouseover", function(d) {d3.select(this).classed("text-hover",true);})
+            .on("mouseout" , function(d) {d3.select(this).classed("text-hover",false);});
+            //.on("click", function(d,i) {colSortOrder=!colSortOrder;  sortbylabel("c",i,colSortOrder);d3.select("#order").property("selectedIndex", 4).node().focus();;})
+
+    var heatMap = svg.append("g").attr("class","g3")
+            .selectAll(".cellg")
+            .data(data.values ,function(d){return d.row+":"+d.col;})
+            .enter()
+            .append("rect")
+            .attr("x", function(d) { return hccol.indexOf(d.col) * cellSize; })
+            .attr("y", function(d) { return hcrow.indexOf(d.row) * cellSize + 200; })
+            .attr("class", function(d){return "cell cell-border cr"+(d.row-1)+" cc"+(d.col-1);})
+            .attr("width", cellSize)
+            .attr("height", cellSize)
+            .style("fill", function(d) { return colorScale(d.value); })
+            /* .on("click", function(d) {
+             var rowtext=d3.select(".r"+(d.row-1));
+             if(rowtext.classed("text-selected")==false){
+             rowtext.classed("text-selected",true);
+             }else{
+             rowtext.classed("text-selected",false);
+             }
+             })*/
+            .on("mouseover", function(d){
+                //highlight text
+                d3.select(this).classed("cell-hover",true);
+                d3.selectAll(".rowLabel").classed("text-highlight",function(r,ri){ return ri==(d.row-1);});
+                d3.selectAll(".colLabel").classed("text-highlight",function(c,ci){ return ci==(d.col-1);});
+
+                //Update the tooltip position and value
+                d3.select("#tooltip")
+                    .style("left", (d3.event.pageX+10) + "px")
+                    .style("top", (d3.event.pageY-10) + "px")
+                    .select("#value")
+                    .text("CDR3AA: "+rowLabel[d.row-1]+"\n Sample: "+colLabel[d.col-1]+"\ndata:"+d.value+"\nrow-col-idx:"+d.col+","+d.row+"\ncell-xy "+this.x.baseVal.value+", "+this.y.baseVal.value);
+                //Show the tooltip
+                d3.select("#tooltip").classed("hidden", false);
+            })
+            .on("mouseout", function(){
+                d3.select(this).classed("cell-hover",false);
+                d3.selectAll(".rowLabel").classed("text-highlight",false);
+                d3.selectAll(".colLabel").classed("text-highlight",false);
+                d3.select("#tooltip").classed("hidden", true);
+            })
+        ;
+
+}
+
 function createSubstring(cdr, start, end, color) {
     "use strict";
     return {
@@ -2306,7 +2401,6 @@ function cdr3Transform(cdr, $sce) {
     cdr.cdr3aa = $sce.trustAsHtml(cdr3aa_result);
     cdr.cdr3nt = $sce.trustAsHtml(cdr3nt_result);
     return cdr;
-
 }
 
 function loading(place) {

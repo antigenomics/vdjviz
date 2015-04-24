@@ -2,28 +2,25 @@ package controllers.SampleCollectionAPI;
 
 import com.antigenomics.vdjtools.join.JointClonotype;
 import com.antigenomics.vdjtools.join.JointSample;
+import com.antigenomics.vdjtools.sample.Sample;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import graph.JointClonotypeHeatMap.JointClonotypeHeatMap;
 import graph.JointClonotypeHistogramChart.JointClonotypeHistogramChart;
 import models.Account;
 import models.LocalUser;
+import models.UserFile;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.WebSocket;
 import securesocial.core.java.SecureSocial;
 
+import java.util.HashMap;
+import java.util.List;
+
 
 public class SampleCollectionAPI extends Controller {
-
-    private static Object requestData(JointSamplesContainer jointSamplesContainer) {
-        JointClonotypesDataContainer jointClonotypesDataContainer = new JointClonotypesDataContainer();
-        JointSample jointClonotypes = jointSamplesContainer.getJointClonotypes();
-        for (JointClonotype jointClonotype : jointClonotypes) {
-            jointClonotypesDataContainer.addHistogramChart(new JointClonotypeHistogramChart(jointClonotype));
-        }
-        return jointClonotypesDataContainer;
-    }
 
     public static WebSocket<JsonNode> open() {
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
@@ -55,7 +52,8 @@ public class SampleCollectionAPI extends Controller {
                             case "render":
                                 try {
                                     jointSamplesContainer.join(filesGroup.getSamples(), sampleCollectionRequest.joinParameters);
-                                    out.write(Json.toJson(new SampleCollectionResponse(requestData(jointSamplesContainer))));
+                                    Object data = new JointClonotypeHeatMap(jointSamplesContainer.getJointClonotypes(), filesGroup.getFiles());
+                                    out.write(Json.toJson(new SampleCollectionResponse(data)));
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     out.write(Json.toJson(new SampleCollectionResponse("Error while joining", "error")));
