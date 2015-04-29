@@ -22,9 +22,17 @@
         <div ng-show="isFilesSelectStep()">
             <div class="panel panel-info separated">
                 <div class="panel-body">
-                    <p>Tooltip placeholder</p>
-                    <div ng-repeat="file in files" style="float : left ; margin: 5px">
-                        <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected(file)}" ng-click="selectFile(file)">{{ file.fileName }}</button>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <p>Tooltip placeholder</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div ng-repeat="file in files" style="float : left ; margin : 5 px">
+                                <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected(file)}" ng-click="selectFile(file)">{{ file.fileName }}</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,6 +62,11 @@
                         <div class="cube2"></div>
                     </div>
                     <div ng-hide="isJointRendering()" class="col-lg-10" id="joinParameters">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                                <p>Tooltip placeholder</p>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Occurence Treshhold</label>
@@ -127,20 +140,25 @@
                     </h4>
                 </div>
                 <div class="panel-body">
-                    <div class="joinHeapMapParameters">
-                        <p>Join parameters</p>
-                        <p>Overlap Type: {{ overlapType }}</p>
-                        <p>Occurence treshold: {{ occurenceTreshold }}</p>
-                        <p ng-show="selectedVGenes.length">VFilter: {{ selectedVGenes }}</p>
-                        <p ng-show="selectedJGenes.length">JFilter: {{ selectedJGenes }}</p>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="joinHeapMapParameters">
+                                <p>Tooltip placeholder</p>
+                                <p><b>Join parameters</b></p>
+                                <p><b>Overlap Type:</b> {{ overlapType }}</p>
+                                <p><b>Occurence treshold:</b> {{ occurenceTreshold }}</p>
+                                <p ng-show="selectedVGenes.length"><b>VFilter:</b> {{ selectedVGenes.join() }}</p>
+                                <p ng-show="selectedJGenes.length"><b>JFilter:</b> {{ arrayToString.join()}}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="joinHeapMap">
-
-                    </div>
-                    <div id="heatmap_tooltip" class="hidden">
-                        <p>
-                            <span id="heatmap_tooltip_value"></span>
-                        </p>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="joinHeapMap"></div>
+                            <div id="heatmap_tooltip" class="hidden">
+                                <p><span id="heatmap_tooltip_value"></span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

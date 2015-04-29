@@ -1430,6 +1430,15 @@ var CONSOLE_INFO = true;
 
         ws.onError(function() {
             connectionError = true;
+            notifications.addErrorNotification('Join sample', 'Connection error');
+            if (CONSOLE_INFO) {
+                $log.error('Error: WebSocket for sample collection is down');
+            }
+        });
+
+        ws.onClose(function() {
+            connectionError = true;
+            notifications.addErrorNotification('Join sample', 'Connection error');
             if (CONSOLE_INFO) {
                 $log.error('Error: WebSocket for sample collection is down');
             }
@@ -1446,6 +1455,7 @@ var CONSOLE_INFO = true;
                     step = steps.JOIN_RENDERING;
                     angular.copy(response.data.vGenesList, vGenes);
                     angular.copy(response.data.jGenesList, jGenes);
+                    notifications.addSuccessNotification('Join samples', 'All files were opened');
                     break;
                 case 'rendered':
                     jointrendering = false;
@@ -1453,6 +1463,7 @@ var CONSOLE_INFO = true;
                     joinHeapMap(response.data);
                     break;
                 case 'error':
+                    notifications.addErrorNotification('Join samples', response.message);
                     if (CONSOLE_INFO) {
                         $log.error('Error: ' + response.message);
                     }
@@ -1594,14 +1605,12 @@ var CONSOLE_INFO = true;
                 $scope.isFilesOpeningStep = sampleCollectionFactory.isFilesOpeningStep;
                 $scope.isJoinRenderingStep = sampleCollectionFactory.isJoinRenderingStep;
                 $scope.isJoinInformationStep = sampleCollectionFactory.isJoinInformationStep;
+                $scope.changeJoinParameters = sampleCollectionFactory.changeJoinParameters;
                 $scope.openAnotherFiles = function() {
                     $scope.selectedFiles.splice(0, $scope.selectedFiles.length);
                     $scope.selectedVGenes.splice(0, $scope.selectedVGenes.length);
                     $scope.selectedJGenes.splice(0, $scope.selectedJGenes.length);
                     sampleCollectionFactory.openAnotherFiles();
-                };
-                $scope.changeJoinParameters = function() {
-                    sampleCollectionFactory.changeJoinParameters();
                 };
 
                 $scope.openGroup = function() {
