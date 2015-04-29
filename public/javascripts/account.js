@@ -19,7 +19,7 @@ var CONSOLE_INFO = true;
         SAMPLE_COLLECTION: 5
     });
 
-    var app = angular.module('accountPage', ['ngAnimate', 'ui.bootstrap', 'ngWebSocket']);
+    var app = angular.module('accountPage', ['ngAnimate', 'ui.bootstrap', 'ngWebSocket', 'ui.select']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -1413,6 +1413,10 @@ var CONSOLE_INFO = true;
             clonotypes: []
         };
         var data = {};
+
+        var vGenes = [];
+        var jGenes = [];
+
         angular.copy(treshData, data);
 
         var ws = $websocket("ws://" + location.host + "/account/api/samplecollection/ws");
@@ -1440,12 +1444,13 @@ var CONSOLE_INFO = true;
                     break;
                 case 'opened':
                     step = steps.JOIN_RENDERING;
+                    angular.copy(response.data.vGenesList, vGenes);
+                    angular.copy(response.data.jGenesList, jGenes);
                     break;
                 case 'rendered':
                     jointrendering = false;
                     step = steps.JOIN_INFORMATION;
                     joinHeapMap(response.data);
-                    $log.info(response.data);
                     break;
                 case 'error':
                     if (CONSOLE_INFO) {
@@ -1458,6 +1463,14 @@ var CONSOLE_INFO = true;
                     }
             }
         });
+
+        function getVGenes() {
+            return vGenes;
+        }
+
+        function getJGenes() {
+            return jGenes;
+        }
 
         function getStep() {
             return step;
@@ -1472,13 +1485,15 @@ var CONSOLE_INFO = true;
             }));
         }
 
-        function joinSamples() {
+        function joinSamples(overlapType, occurenceTreshold, vGenes, jGenes) {
             jointrendering = true;
             ws.send(JSON.stringify({
                 action: 'render',
                 joinParameters: {
-                    overlapType: 'Strict',
-                    occurenceTreshold: 2
+                    overlapType: overlapType,
+                    occurenceTreshold: occurenceTreshold,
+                    vGenes: vGenes,
+                    jGenes: jGenes
                 }
             }));
         }
@@ -1486,6 +1501,11 @@ var CONSOLE_INFO = true;
         function openAnotherFiles() {
             openProgress = 0;
             step = steps.FILES_SELECT;
+            angular.copy(treshData, data);
+        }
+
+        function changeJoinParameters() {
+            step = steps.JOIN_RENDERING;
             angular.copy(treshData, data);
         }
 
@@ -1543,7 +1563,10 @@ var CONSOLE_INFO = true;
             isJoinInformationStep: isJoinInformationStep,
             joinSamples: joinSamples,
             getData: getData,
-            openAnotherFiles: openAnotherFiles
+            getVGenes: getVGenes,
+            getJGenes: getJGenes,
+            openAnotherFiles: openAnotherFiles,
+            changeJoinParameters: changeJoinParameters
         };
     }]);
 
@@ -1560,6 +1583,8 @@ var CONSOLE_INFO = true;
 
                 //Sample collection factory API
                 $scope.getData = sampleCollectionFactory.getData;
+                $scope.getVGenes = sampleCollectionFactory.getVGenes;
+                $scope.getJGenes = sampleCollectionFactory.getJGenes;
                 $scope.getOpenProgress = sampleCollectionFactory.getOpenProgress;
                 $scope.isJointRendering = sampleCollectionFactory.isJointRendering;
                 $scope.getOpeningFile = sampleCollectionFactory.getOpeningFile;
@@ -1571,7 +1596,12 @@ var CONSOLE_INFO = true;
                 $scope.isJoinInformationStep = sampleCollectionFactory.isJoinInformationStep;
                 $scope.openAnotherFiles = function() {
                     $scope.selectedFiles.splice(0, $scope.selectedFiles.length);
+                    $scope.selectedVGenes.splice(0, $scope.selectedVGenes.length);
+                    $scope.selectedJGenes.splice(0, $scope.selectedJGenes.length);
                     sampleCollectionFactory.openAnotherFiles();
+                };
+                $scope.changeJoinParameters = function() {
+                    sampleCollectionFactory.changeJoinParameters();
                 };
 
                 $scope.openGroup = function() {
@@ -1583,7 +1613,7 @@ var CONSOLE_INFO = true;
                 };
 
                 $scope.joinSamples = function() {
-                    sampleCollectionFactory.joinSamples();
+                    sampleCollectionFactory.joinSamples($scope.overlapType, $scope.occurenceTreshold, $scope.selectedVGenes, $scope.selectedJGenes);
                 };
 
                 //Account info API
@@ -1591,6 +1621,61 @@ var CONSOLE_INFO = true;
 
                 //Directive API
                 $scope.selectedFiles = [];
+                $scope.selectedVGenes = [];
+                $scope.selectedJGenes = [];
+                $scope.occurenceTreshold = 2;
+                $scope.overlapType = "Strict";
+
+                $scope.addJGene = function(j) {
+                    var index = $scope.selectedJGenes.indexOf(j);
+                    if (index >= 0) {
+                        $scope.selectedJGenes.splice(index, 1);
+                    } else {
+                        $scope.selectedJGenes.push(j);
+                    }
+                };
+
+                $scope.addVGene = function(v) {
+                    var index = $scope.selectedVGenes.indexOf(v);
+                    if (index >= 0) {
+                        $scope.selectedVGenes.splice(index, 1);
+                    } else {
+                        $scope.selectedVGenes.push(v);
+                    }
+                };
+
+                $scope.selectAllJGenes =  function($parent) {
+                    $log.info($parent);
+                    angular.forEach($scope.getJGenes(), function(j) {
+                        if ($scope.selectedJGenes.indexOf(j) < 0) {
+                            $scope.addJGene(j);
+                        }
+                    })
+                };
+
+                $scope.selectAllVGenes =  function() {
+                    angular.forEach($scope.getVGenes(), function(v) {
+                        if ($scope.selectedVGenes.indexOf(v) < 0) {
+                            $scope.addVGene(v);
+                        }
+                    });
+                };
+
+                $scope.invertVGenes = function() {
+                    angular.forEach($scope.getVGenes(), $scope.addVGene);
+                };
+
+                $scope.invertJGenes = function() {
+                    angular.forEach($scope.getJGenes(), $scope.addJGene);
+                };
+
+                $scope.selectNoneVGenes = function() {
+                    $scope.selectedVGenes.splice(0, $scope.selectedVGenes.length);
+                };
+
+                $scope.selectNoneJGenes = function() {
+                    $scope.selectedJGenes.splice(0, $scope.selectedJGenes.length);
+                };
 
                 $scope.selectAll = function() {
                     angular.forEach($scope.files, function(file) {
@@ -2176,7 +2261,7 @@ function rarefactionPlot(data, param) {
 function joinHeapMap(data) {
     "use strict";
 
-    var margin = { top: 0, right: 10, bottom: 50, left: 150 },
+    var margin = { top: 0, right: 10, bottom: 50, left: 300 },
         col_number = data.colLabel.length,
         row_number = data.rowLabel.length,
         cellSize = 15,
@@ -2184,7 +2269,6 @@ function joinHeapMap(data) {
         height = cellSize * row_number , // - margin.top - margin.bottom,
         //gridSize = Math.floor(width / 24),
         legendElementWidth = cellSize * 1.5,
-        colorBuckets = 21,
         hcrow = data.rowLabel.map(function(d, i) {
             return i + 1;
         }),
@@ -2204,7 +2288,9 @@ function joinHeapMap(data) {
             "#084081",
             "black"
         ],
-        rowLabel = data.rowLabel,
+        rowLabel = data.rowLabel.map(function(el) {
+            return cdrTransform(el);
+        }),
         colLabel = data.colLabel;
 
     var colorScale = d3.scale.quantile()
@@ -2213,13 +2299,21 @@ function joinHeapMap(data) {
 
     var place = d3.select(".joinHeapMap");
         place.html("");
+
+    if (rowLabel.length == 0) {
+        place.append("text").text("No data available");
+        return;
+    }
+
     var svg = place.append("svg")
-            .attr("width", width + margin.left + margin.right + 700)
+            .attr("width", "100%")
             .attr("height", height + margin.top + margin.bottom + 300)
             .append("g")
             .style("overflow", "visible")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
         ;
+
+
 
     var legend = svg.selectAll(".legend")
         .data([-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0])
@@ -2245,15 +2339,15 @@ function joinHeapMap(data) {
             .data(rowLabel)
             .enter()
             .append("text")
-            .text(function (d) { return d; })
+            .html(function (d) {
+                return d.cdr3aa_tspan;
+            })
             .attr("x", 0)
             .attr("y", function (d, i) { return hcrow.indexOf(i+1) * cellSize + 200; })
             .style("text-anchor", "end")
             .attr("transform", "translate(-6," + cellSize / 1.5 + ")")
             .attr("class", function (d,i) { return "rowLabel mono r"+i;} )
-            .on("mouseover", function(d) {d3.select(this).classed("text-hover",true);})
-            .on("mouseout" , function(d) {d3.select(this).classed("text-hover",false);});
-            //.on("click", function(d,i) {rowSortOrder=!rowSortOrder; sortbylabel("r",i,rowSortOrder);d3.select("#order").property("selectedIndex", 4).node().focus();;})
+    ;
 
 
     var colLabels = svg.append("g")
@@ -2267,9 +2361,7 @@ function joinHeapMap(data) {
             .style("text-anchor", "left")
             .attr("transform", "translate("+cellSize/2 + ",-6) rotate (-90)")
             .attr("class",  function (d,i) { return "colLabel mono c"+i;} )
-            .on("mouseover", function(d) {d3.select(this).classed("text-hover",true);})
-            .on("mouseout" , function(d) {d3.select(this).classed("text-hover",false);});
-            //.on("click", function(d,i) {colSortOrder=!colSortOrder;  sortbylabel("c",i,colSortOrder);d3.select("#order").property("selectedIndex", 4).node().focus();;})
+    ;
 
     var heatMap = svg.append("g").attr("class","g3")
             .selectAll(".cellg")
@@ -2297,22 +2389,108 @@ function joinHeapMap(data) {
                 d3.selectAll(".colLabel").classed("text-highlight",function(c,ci){ return ci==(d.col-1);});
 
                 //Update the tooltip position and value
-                d3.select("#tooltip")
+                d3.select("#heatmap_tooltip")
                     .style("left", (d3.event.pageX+10) + "px")
                     .style("top", (d3.event.pageY-10) + "px")
-                    .select("#value")
-                    .text("CDR3AA: "+rowLabel[d.row-1]+"\n Sample: "+colLabel[d.col-1]+"\ndata:"+d.value+"\nrow-col-idx:"+d.col+","+d.row+"\ncell-xy "+this.x.baseVal.value+", "+this.y.baseVal.value);
+                    .select("#heatmap_tooltip_value")
+                    .html("CDR3AA: " +
+                        rowLabel[d.row-1].cdr3aa_text +
+                        "<br> V: " + rowLabel[d.row - 1].v +
+                        "<br> J: " + rowLabel[d.row - 1].j +
+                        "<br> Sample: " + colLabel[d.col-1] +
+                        "<br> Log10: " + d.value);
                 //Show the tooltip
-                d3.select("#tooltip").classed("hidden", false);
+                d3.select("#heatmap_tooltip").classed("hidden", false);
             })
             .on("mouseout", function(){
                 d3.select(this).classed("cell-hover",false);
                 d3.selectAll(".rowLabel").classed("text-highlight",false);
                 d3.selectAll(".colLabel").classed("text-highlight",false);
-                d3.select("#tooltip").classed("hidden", true);
+                d3.select("#heatmap_tooltip").classed("hidden", true);
             })
         ;
 
+    function cdrTransform(cdr) {
+        var cdr3aa = cdr.cdr3aa,
+            //cdr3nt = cdr.cdr3nt,
+            //vend_nt = cdr.vend,
+            //dstart_nt = (cdr.dstart < 0) ? vend_nt + 1 : cdr.dstart,
+            //dend_nt = (cdr.dend < 0) ? vend_nt : cdr.dend,
+            //jstart_nt = (cdr.jstart < 0) ? 10000 : cdr.jstart,
+            vend_aa = cdr.vend / 3,
+            dstart_aa = ((cdr.dstart / 3) < 0) ? vend_aa + 1 : cdr.dstart / 3,
+            dend_aa = ((cdr.dend / 3) < 0) ? vend_aa : cdr.dend / 3,
+            jstart_aa = ((cdr.jstart / 3) < 0) ? 10000 : cdr.jstart / 3;
+
+        var //cdr3nt_arr = [],
+            cdr3aa_arr = [];
+
+        //while (vend_nt >= jstart_nt) jstart_nt++;
+        while (vend_aa >= jstart_aa) jstart_aa++;
+        //while (dstart_nt <= vend_nt) dstart_nt++;
+        while (dstart_aa <= vend_aa) dstart_aa++;
+        //while (dend_nt >= jstart_nt) dend_nt--;
+        while (dend_aa >= jstart_aa) dend_aa--;
+
+        //if (vend_nt >= 0) {
+        //    cdr3nt_arr.push(createSubstring(cdr3nt, 0, vend_nt, "#4daf4a"));
+        //}
+
+        if (vend_aa >= 0) {
+            cdr3aa_arr.push(createSubstring(cdr3aa, 0, vend_aa, "#4daf4a"));
+        }
+
+        //if (dstart_nt - vend_nt > 1) {
+        //    cdr3nt_arr.push(createSubstring(cdr3nt, vend_nt + 1, dstart_nt - 1, "black"));
+        //}
+
+        if (dstart_aa - vend_aa > 1) {
+            cdr3aa_arr.push(createSubstring(cdr3aa, vend_aa + 1, dstart_aa - 1, "black"));
+        }
+
+        //if (dstart_nt > 0 && dend_nt > 0 && dend_nt >= dstart_nt) {
+        //    cdr3nt_arr.push(createSubstring(cdr3nt, dstart_nt, dend_nt, "#ec7014"));
+        //}
+
+        if (dstart_aa > 0 && dend_aa > 0 && dend_aa >= dstart_aa) {
+            cdr3aa_arr.push(createSubstring(cdr3aa, dstart_aa, dend_aa, "#ec7014"));
+        }
+
+        //if (jstart_nt - dend_nt > 1) {
+        //    cdr3nt_arr.push(createSubstring(cdr3nt, dend_nt + 1, jstart_nt - 1, "black"));
+        //}
+
+        if (jstart_aa - dend_aa > 1) {
+            cdr3aa_arr.push(createSubstring(cdr3aa, dend_aa + 1, jstart_aa - 1, "black"));
+        }
+
+        //if (jstart_nt > 0) {
+        //    cdr3nt_arr.push(createSubstring(cdr3nt, jstart_nt, cdr3nt.length, "#377eb8"));
+        //}
+
+        if (jstart_aa > 0) {
+            cdr3aa_arr.push(createSubstring(cdr3aa, jstart_aa, cdr3aa.length, "#377eb8"));
+        }
+
+        //var cdr3nt_result = "", element, i = 0;
+        //for (i = 0; i < cdr3nt_arr.length; i++) {
+            //element = cdr3nt_arr[i];
+            //cdr3nt_result += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+        //}
+        var cdr3aa_result_tspan = "";
+        var cdr3aa_result_text = "";
+        var element;
+        for (var i = 0; i < cdr3aa_arr.length; i++) {
+            element = cdr3aa_arr[i];
+            cdr3aa_result_tspan += '<tspan fill="' + element.color + '">' + element.substring + '</tspan>';
+            cdr3aa_result_text += '<text style="color: ' + element.color + '">' + element.substring + '</text>';
+        }
+        //cdr.cdr3aa = $sce.trustAsHtml(cdr3aa_result);
+        //cdr.cdr3nt = $sce.trustAsHtml(cdr3nt_result);
+        cdr.cdr3aa_tspan = cdr3aa_result_tspan;
+        cdr.cdr3aa_text = cdr3aa_result_text;
+        return cdr;
+    }
 }
 
 function createSubstring(cdr, start, end, color) {

@@ -30,4 +30,11 @@ public class SampleCollectionResponse {
         this.action = action;
         this.progress = progress;
     }
+
+    public SampleCollectionResponse(String message, String action, Object data, int progress) {
+        this.message = message;
+        this.action = action;
+        this.data = data;
+        this.progress = progress;
+    }
 }

@@ -15,7 +15,7 @@
             <div class="panel panel-info separated">
                 <div class="panel-body">
                     <button class="btn btn-default sharp" ng-click="openAnotherFiles()">Open another files</button>
-                    <button class="btn btn-default sharp">Change parameters</button>
+                    <button class="btn btn-default sharp" ng-click="changeJoinParameters()">Change parameters</button>
                 </div>
             </div>
         </div>
@@ -46,14 +46,76 @@
         <div ng-show="isJoinRenderingStep()">
             <div class="panel panel-info separated">
                 <div class="panel-heading">
-                    Rendering
+                    Join parameters
                 </div>
                 <div class="panel-body">
                     <div class="spinner" ng-show="isJointRendering()">
                         <div class="cube1"></div>
                         <div class="cube2"></div>
                     </div>
-                    <button class="btn btn-info sharp" ng-click="joinSamples()" ng-hide="isJointRendering()">Join</button>
+                    <div ng-hide="isJointRendering()" class="col-lg-10" id="joinParameters">
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Occurence Treshhold</label>
+                                <div class="col-sm-6">
+                                    <input type="number" class="form-control" ng-model="occurenceTreshold" max="{{ selectedFiles.length }}" min="2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Overlap type</label>
+                                <div class="col-sm-6">
+                                    <select ng-model="overlapType" ng-hide="isJointRendering()">
+                                        <option value="Nucleotide">Nucleotide</option>
+                                        <option value="NucleotideV" >NucleotideV</option>
+                                        <option value="NucleotideVJ" >NucleotideVJ</option>
+                                        <option value="AminoAcid" >AminoAcide</option>
+                                        <option value="AminoAcidV" >AminoAcideV</option>
+                                        <option value="AminoAcidVJ" >AminoAcideVJ</option>
+                                        <option value="AminoAcidNonNucleotide" >AminoAcideNonNucleotide</option>
+                                        <option value="Strict" >Strict</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">V Filter</label>
+                                <div class="col-sm-6">
+                                    <ui-select multiple ng-model="$parent.selectedVGenes">
+                                        <ui-select-match placeholder="Select V genes...">{{ $item }}</ui-select-match>
+                                        <ui-select-choices repeat="v in getVGenes() | filter:$select.search">
+                                            {{ v }}
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <button class="btn btn-default sharp" ng-click="selectAllVGenes($parent)">Select all</button>
+                                <button class="btn btn-default sharp" ng-click="invertVGenes()">Invert</button>
+                                <button class="btn btn-default sharp" ng-click="selectNoneVGenes()">Select none</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">J Filter</label>
+                                <div class="col-sm-6">
+                                    <ui-select multiple ng-model="$parent.selectedJGenes">
+                                        <ui-select-match placeholder="Select J genes...">{{ $item }}</ui-select-match>
+                                        <ui-select-choices repeat="j in getJGenes() | filter:$select.search">
+                                    {{ j }}
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <button class="btn btn-default sharp" ng-click="selectAllJGenes()">Select all</button>
+                                <button class="btn btn-default sharp" ng-click="invertJGenes()">Invert</button>
+                                <button class="btn btn-default sharp" ng-click="selectNoneJGenes()">Select none</button>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="btn btn-info sharp" ng-click="joinSamples()">Join</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -61,16 +123,23 @@
             <div class="panel panel-info separated">
                 <div class="panel-heading">
                     <h4 class="panel-title">
-                        Clonotypes
+                        Results
                     </h4>
                 </div>
                 <div class="panel-body">
+                    <div class="joinHeapMapParameters">
+                        <p>Join parameters</p>
+                        <p>Overlap Type: {{ overlapType }}</p>
+                        <p>Occurence treshold: {{ occurenceTreshold }}</p>
+                        <p ng-show="selectedVGenes.length">VFilter: {{ selectedVGenes }}</p>
+                        <p ng-show="selectedJGenes.length">JFilter: {{ selectedJGenes }}</p>
+                    </div>
                     <div class="joinHeapMap">
 
                     </div>
-                    <div id="tooltip" class="hidden">
+                    <div id="heatmap_tooltip" class="hidden">
                         <p>
-                            <span id="value"></span>
+                            <span id="heatmap_tooltip_value"></span>
                         </p>
                     </div>
                 </div>
