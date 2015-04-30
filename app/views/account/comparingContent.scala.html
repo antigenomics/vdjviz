@@ -10,10 +10,10 @@
                         <hr>
                     </div>
                     <div class="comparing-tab-body col-lg-12">
-                        <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ item.uid }}" style="font-size: 15px">
-                            <h2>{{ item.fileName }} {{ item.tabName }}</h2>
+                        <div ng-repeat="item in comparingItems" class="col-lg-6 comparing-tab" id="id{{ ::item.uid }}" style="font-size: 15px">
+                            <h2>{{ ::item.fileName }} {{ ::item.tabName }}</h2>
                             <hr>
-                            <div class="{{ item.place }}"></div>
+                            <div class="{{ ::item.place }}"></div>
                         </div>
                     </div>
                 </div>
@@ -30,14 +30,14 @@
                                         <tr>
                                             <td><b>Show all</b></td>
                                             <td ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showAllItems(tab)">
-                                                {{ tab.tabName }}
+                                                {{ ::tab.tabName }}
                                             </td>
                                         </tr>
                                         <tr ng-repeat="file in files">
-                                            <td>{{ file.fileName }}</td>
+                                            <td>{{ ::file.fileName }}</td>
                                             <td ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="switchItem(file, tab)" ng-class="{'info':isComparing(file, tab)}">
                                                 <div ng-show="isRendering(file)">File is rendering</div>
-                                                <div ng-show="isRendered(file)">{{tab.tabName}}</div>
+                                                <div ng-show="isRendered(file)">{{ ::tab.tabName }}</div>
                                             </td>
 
                                         </tr>

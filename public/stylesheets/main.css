@@ -33,6 +33,14 @@ html, body {
     z-index: 26;
 }
 
+.sidebar_file .sidebar_file_trash_i {
+    visibility: hidden;
+}
+
+.sidebar_file:hover .sidebar_file_trash_i {
+    visibility: visible;
+}
+
 .clonotypes_table_proccessing > .h3 {
     vertical-align: middle;
 }

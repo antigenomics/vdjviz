@@ -567,6 +567,7 @@ var CONSOLE_INFO = true;
     app.directive('filesSidebar', function () {
         return {
             restrict: 'E',
+            scope: false,
             controller: ['$scope', 'accountInfo', 'stateInfo', function ($scope, accountInfo, stateInfo) {
                 //Variables
                 $scope.files = accountInfo.getFiles();
@@ -2656,3 +2657,25 @@ $(document).bind('dragover', function (e) {
         dropZone.removeClass('in hover');
     }, 100);
 });
+
+function testWatchers() {
+    "use strict";
+    var root = $(document.getElementsByTagName('body'));
+    var watchers = [];
+
+    var f = function (element) {
+        if (element.data().hasOwnProperty('$scope')) {
+            angular.forEach(element.data().$scope.$$watchers, function (watcher) {
+                watchers.push(watcher);
+            });
+        }
+
+        angular.forEach(element.children(), function (childElement) {
+            f($(childElement));
+        });
+    };
+
+    f(root);
+
+    return watchers.length;
+}

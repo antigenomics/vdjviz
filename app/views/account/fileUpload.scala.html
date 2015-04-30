@@ -98,8 +98,8 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="file in uploadedFiles">
-                                <td>{{ file.fileName }}</td>
-                                <td>{{ file.softwareTypeName }}</td>
+                                <td>{{ ::file.fileName }}</td>
+                                <td>{{ ::file.softwareTypeName }}</td>
                             </tr>
                         </tbody>
                     </table>
