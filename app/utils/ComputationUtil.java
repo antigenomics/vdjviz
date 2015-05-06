@@ -14,6 +14,7 @@ import models.UserFile;
 import play.Logger;
 import play.libs.Json;
 import play.mvc.WebSocket;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 import utils.CacheType.CacheType;
 
 import java.io.File;
@@ -101,8 +102,9 @@ public class ComputationUtil {
     }
 
     private void annotation() throws Exception {
-        AnnotationTable annotationTable = new AnnotationTable(file, sample);
-        annotationTable.create().saveCache();
+        ClonotypeBinaryUtils.saveClonotypesToBinaryFile(file, sample);
+        //AnnotationTable annotationTable = new AnnotationTable(file);
+        //annotationTable.saveCache();
         progressResponse.sendMessage("60");
     }
 

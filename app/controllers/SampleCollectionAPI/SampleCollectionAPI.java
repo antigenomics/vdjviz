@@ -1,23 +1,16 @@
 package controllers.SampleCollectionAPI;
 
-import com.antigenomics.vdjtools.join.JointClonotype;
-import com.antigenomics.vdjtools.join.JointSample;
-import com.antigenomics.vdjtools.sample.Sample;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.JointClonotypeHeatMap.JointClonotypeHeatMap;
-import graph.JointClonotypeHistogramChart.JointClonotypeHistogramChart;
 import models.Account;
 import models.LocalUser;
-import models.UserFile;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.WebSocket;
 import securesocial.core.java.SecureSocial;
 
-import java.util.HashMap;
-import java.util.List;
 
 
 public class SampleCollectionAPI extends Controller {

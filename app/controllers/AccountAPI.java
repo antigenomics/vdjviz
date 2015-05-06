@@ -274,8 +274,7 @@ public class AccountAPI extends Controller {
         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
 
         if (file != null) {
-            SampleFileConnection sampleFileConnection = new SampleFileConnection(file.getPath(), file.getSoftwareType(), MetadataUtil.createSampleMetadata(MetadataUtil.fileName2id(file.getFileName())), true, false);
-            AnnotationTable annotationTable = new AnnotationTable(file, sampleFileConnection.getSample(), request.findValue("shift").asInt());
+            AnnotationTable annotationTable = new AnnotationTable(file, request.findValue("shift").asInt());
             annotationTable.create();
             return ok(Json.toJson(annotationTable.getData()));
         } else {

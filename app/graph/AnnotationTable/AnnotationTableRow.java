@@ -1,6 +1,8 @@
 package graph.AnnotationTable;
 
 import com.antigenomics.vdjtools.sample.Clonotype;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinary;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 
 public class AnnotationTableRow {
     public Integer index;
@@ -19,5 +21,15 @@ public class AnnotationTableRow {
         this.v = clonotype.getV();
         this.j = clonotype.getJ();
         this.d = clonotype.getD();
+    }
+
+    public AnnotationTableRow(ClonotypeBinary clonotypeBinary, Integer index) {
+        this.index = index;
+        this.freq = clonotypeBinary.getFreq();
+        this.count = clonotypeBinary.getCount();
+        this.cdr = new AnnotationTableCdr(clonotypeBinary);
+        this.v = ClonotypeBinaryUtils.byteToString(clonotypeBinary.getV());
+        this.j = ClonotypeBinaryUtils.byteToString(clonotypeBinary.getJ());
+        this.d = ClonotypeBinaryUtils.byteToString(clonotypeBinary.getD());
     }
 }

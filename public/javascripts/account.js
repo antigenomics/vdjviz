@@ -409,34 +409,38 @@ var CONSOLE_INFO = true;
                 };
 
             if (!file.meta[type].cached) {
-                if (type !== 'annotation')
+                if (type !== 'annotation') {
                     loading(parameters.place);
-                $http.post('/account/api/data', {
-                    action: 'data',
-                    fileName: file.fileName,
-                    type: type
-                })
-                    .success(function (data) {
-                        switch (data.result) {
-                            case 'success':
-                                file.meta[type].cached = true;
-                                if (type === 'annotation') {
-                                    clonotypesTableFactory.addData(file.fileName, data.data.data);
-                                } else dataHandler(data.data, parameters);
-                                break;
-                            default:
-                                noDataAvailable(parameters, file);
-                        }
-                        loaded(parameters.place);
+                    $http.post('/account/api/data', {
+                        action: 'data',
+                        fileName: file.fileName,
+                        type: type
                     })
-                    .error(function () {
-                        if (CONSOLE_INFO) {
-                            $log.error('Error while requesting data for file ' + parameters.file.fileName);
-                        }
-                        notifications.addErrorNotification(type, 'Error while requesting data for file ' + parameters.file.fileName);
-                        noDataAvailable(parameters, parameters.file);
-                        loaded(parameters.place);
-                    });
+                        .success(function (data) {
+                            switch (data.result) {
+                                case 'success':
+                                    file.meta[type].cached = true;
+                                    if (type === 'annotation') {
+                                        clonotypesTableFactory.addData(file.fileName, data.data.data);
+                                    } else dataHandler(data.data, parameters);
+                                    break;
+                                default:
+                                    noDataAvailable(parameters, file);
+                            }
+                            loaded(parameters.place);
+                        })
+                        .error(function () {
+                            if (CONSOLE_INFO) {
+                                $log.error('Error while requesting data for file ' + parameters.file.fileName);
+                            }
+                            notifications.addErrorNotification(type, 'Error while requesting data for file ' + parameters.file.fileName);
+                            noDataAvailable(parameters, parameters.file);
+                            loaded(parameters.place);
+                        });
+                } else {
+                    clonotypesTableFactory.loadData(file.fileName, 1);
+                    file.meta[type].cached = true;
+                }
             }
 
         }

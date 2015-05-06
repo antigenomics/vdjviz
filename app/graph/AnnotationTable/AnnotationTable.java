@@ -5,6 +5,8 @@ import com.antigenomics.vdjtools.sample.Sample;
 import models.UserFile;
 import play.Logger;
 import play.libs.Json;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinary;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 import utils.CacheType.CacheType;
 
 import java.io.File;
@@ -17,25 +19,23 @@ public class AnnotationTable {
     private static final int displayLength = 100;
 
     private List<AnnotationTableRow> data;
-    private Sample sample;
     private boolean created;
     private String cacheName;
     private UserFile file;
     private int shift;
-    private long numberOfPages;
+    private int diversity = 0;
+    private long numberOfPages = 0;
 
-    public AnnotationTable(UserFile file, Sample sample, Integer shift) {
+    public AnnotationTable(UserFile file, Integer shift) {
         this.created = false;
-        this.sample = sample;
         this.file = file;
         this.cacheName = CacheType.annotation.getCacheFileName();
         this.data = new ArrayList<>();
         this.shift = shift;
-        this.numberOfPages = (sample.getCount() / displayLength) + 1;
     }
 
-    public AnnotationTable(UserFile file, Sample sample) {
-        this(file, sample, 0);
+    public AnnotationTable(UserFile file) {
+        this(file, 0);
     }
 
 
@@ -56,16 +56,18 @@ public class AnnotationTable {
     }
 
     public AnnotationData getData() {
-        return new AnnotationData(sample.getDiversity(), numberOfPages, displayLength, shift, data);
+        return new AnnotationData(diversity, numberOfPages, displayLength, shift, data);
     }
 
     public AnnotationTable create() {
-        int count = 0, i = 0;
-        if (shift < numberOfPages) {
-            for (i = displayLength * shift; i < sample.getDiversity(); i++) {
-                data.add(new AnnotationTableRow(sample.getAt(i), i + 1));
-                count++;
-                if (count >= displayLength) break;
+        int index = shift * displayLength + 1;
+        this.diversity = ClonotypeBinaryUtils.getDiversity(file);
+        this.numberOfPages = diversity / displayLength + 1;
+        List<ClonotypeBinary> clonotypeBinaries = ClonotypeBinaryUtils.openBinaryFiles(file, shift, displayLength);
+        if (clonotypeBinaries != null) {
+            for (ClonotypeBinary clonotypeBinary : clonotypeBinaries) {
+                data.add(new AnnotationTableRow(clonotypeBinary, index));
+                index++;
             }
         }
         created = true;
