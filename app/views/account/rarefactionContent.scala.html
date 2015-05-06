@@ -7,7 +7,7 @@
                     <p><b>Interpolation</b> (solid line) and <b>extrapolation</b> (dashed lines) are performed using multinomial model. All samples are extrapolated up to the size of largest sample.</p>
                     <p>Tooltip displays the observed sample diversity.</p>
                     <hr>
-                    <button ng-repeat="type in rarefactionExportTypes" class="btn btn-default pull-right" ng-click="exportRarefaction(type)">Export to {{ ::type }}</button>
+                    <button ng-repeat="type in ::rarefactionExportTypes" class="btn btn-default pull-right" ng-click="exportRarefaction(type)">Export to {{ ::type }}</button>
                     <button class="btn btn-default pull-right" ng-click="changeArea()">{{ area }} area</button>
                 </div>
                 <div class="rarefaction-visualisation-tab"></div>

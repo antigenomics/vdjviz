@@ -29,17 +29,16 @@
                                     <tbody>
                                         <tr>
                                             <td><b>Show all</b></td>
-                                            <td ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="showAllItems(tab)">
+                                            <td ng-repeat="tab in ::visualisationTabs|comparingFilter" ng-click="showAllItems(tab)">
                                                 {{ ::tab.tabName }}
                                             </td>
                                         </tr>
                                         <tr ng-repeat="file in files">
                                             <td>{{ ::file.fileName }}</td>
-                                            <td ng-repeat="tab in visualisationTabs|comparingFilter" ng-click="switchItem(file, tab)" ng-class="{'info':isComparing(file, tab)}">
+                                            <td ng-repeat="tab in ::visualisationTabs|comparingFilter" ng-click="switchItem(file, tab)" ng-class="{'info':isComparing(file, tab)}">
                                                 <div ng-show="isRendering(file)">File is rendering</div>
                                                 <div ng-show="isRendered(file)">{{ ::tab.tabName }}</div>
                                             </td>
-
                                         </tr>
                                     </tbody>
                                 </table>

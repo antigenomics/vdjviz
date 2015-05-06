@@ -19,7 +19,7 @@ var CONSOLE_INFO = true;
         SAMPLE_COLLECTION: 5
     });
 
-    var app = angular.module('accountPage', ['ngAnimate', 'ui.bootstrap', 'ngWebSocket', 'ui.select']);
+    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ui.select']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -198,13 +198,13 @@ var CONSOLE_INFO = true;
             }
             $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
                 .success(function () {
+                    delete files[file.fileName];
                     if (stateInfo.isActiveFile(file) || Object.keys(files).length === 1) {
                         stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     } else if (Object.keys(files).length > 0) {
                         chartInfo.update_rarefaction(true);
                         chartInfo.update_summary();
                     }
-                    delete files[file.fileName];
                     notifications.addSuccessNotification('Deleting', file.fileName + ' have been successfully deleted');
                     if (CONSOLE_INFO) {
                         $log.info('File ' + file.fileName + ' successfully deleted');

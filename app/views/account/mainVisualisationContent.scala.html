@@ -5,7 +5,7 @@
         <div class="col-lg-12">
             <div class="panel panel-info separated">
                 <div class="panel-body">
-                    <div class="col-lg-2 col-md-2 col-sm-2" ng-repeat="tab in visualisationTabs">
+                    <div class="col-lg-2 col-md-2 col-sm-2" ng-repeat="tab in ::visualisationTabs">
                         <button class="btn btn-default btn-block sharp" ng-click="setActiveTab(tab)" ng-class="{'btn-info':isActiveTab(tab)}">
                         {{ ::tab.tabName }}
                         </button>
@@ -54,10 +54,10 @@
                         </div>
                     </div>
                     <div class="col-lg-12 col-md-12 col-sm-12" ng-repeat="file in files">
-                        <div id="id{{ file.uid }}" ng-show="showFile(file)" class="visualisation-results">
-                            <div ng-repeat="tab in visualisationTabs" ng-show="isActiveTab(tab)">
+                        <div id="id{{ ::file.uid }}" ng-show="showFile(file)" class="visualisation-results">
+                            <div ng-repeat="tab in ::visualisationTabs" ng-show="isActiveTab(tab)">
                                 <p>
-                                    <button ng-repeat="type in tab.exportType" class="btn btn-default pull-right" ng-click="exportChartPng(file, tab, type)" ng-show="tab.exportPng">Export to {{ ::type }}</button>
+                                    <button ng-repeat="type in ::tab.exportType" class="btn btn-default pull-right" ng-click="exportChartPng(file, tab, type)" ng-show="tab.exportPng">Export to {{ ::type }}</button>
                                 </p>
                                 <hr>
                                 <div class="viusalisation-results {{ ::tab.mainPlace }}"></div>
