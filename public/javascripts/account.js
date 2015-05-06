@@ -1434,7 +1434,7 @@ var CONSOLE_INFO = true;
 
         ws.onError(function() {
             connectionError = true;
-            notifications.addErrorNotification('Join sample', 'Connection error');
+            notifications.addErrorNotification('Join samples', 'Connection error');
             if (CONSOLE_INFO) {
                 $log.error('Error: WebSocket for sample collection is down');
             }
@@ -1442,7 +1442,7 @@ var CONSOLE_INFO = true;
 
         ws.onClose(function() {
             connectionError = true;
-            notifications.addErrorNotification('Join sample', 'Connection error');
+            notifications.addErrorNotification('Join samples', 'Connection error');
             if (CONSOLE_INFO) {
                 $log.error('Error: WebSocket for sample collection is down');
             }
@@ -1492,6 +1492,10 @@ var CONSOLE_INFO = true;
         }
 
         function openGroup(n) {
+            if (n.length < 2) {
+                notifications.addInfoNotification('Join samples', 'You should choose at least 2 samples');
+                return;
+            }
             names = n;
             step = steps.FILES_OPENING;
             ws.send(JSON.stringify({
