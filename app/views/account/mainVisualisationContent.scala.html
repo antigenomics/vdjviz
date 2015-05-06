@@ -1,9 +1,7 @@
-
-
 <div class="visualisation-tab" ng-show="isFileInformation()">
     <div class="row">
-        <div class="col-lg-12">
-            <div class="panel panel-info separated">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="panel panel-info separated sharp">
                 <div class="panel-body">
                     <div class="col-lg-2 col-md-2 col-sm-2" ng-repeat="tab in ::visualisationTabs">
                         <button class="btn btn-default btn-block sharp" ng-click="setActiveTab(tab)" ng-class="{'btn-info':isActiveTab(tab)}">
@@ -16,92 +14,87 @@
     </div>
     <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="panel panel-info separated">
-                <div class="panel-body">
-                    <div class="col-lg-12 col-md-12 col-sm-12">
-                        <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
-                            <p>This plot shows a chord diagram of Variable-Joining (V-J) segment combination frequencies.</p>
-                            <p>Each chord represent a set of clonotypes with a given V-J junction and is scaled according to the frequency of reads with such junction.</p>
-                            <p>Each arc represents a V or J segment and is scaled to the relative number of reads that contain corresponding segment.</p>
-                            <p>Hover any sector to show only relevant V-J pairings.</p>
-                        </div>
-                        <div class="visualisation-description-spectratype" ng-show="isActiveTab(visualisationTabs.spectratype)">
-                            <p>This histogram shows the distribution of reads by CDR3 length.</p>
-                            <p>Several top clonotypes are shown explicitly by colored bars.</p>
-                            <p><b>Click</b> on the clonotype name in the legend to hide/show it on the histogram.</p>
-                            <p><b>Double click</b> will show only selected clonotype.</p>
-                        </div>
-                        <div class="visualisation-description-spectratypeV" ng-show="isActiveTab(visualisationTabs.spectratypev)">
-                            <p>This plot shows the distribution of reads by CDR3 length.</p>
-                            <p>Separate histograms are shown that correspond to top Variable segment families.</p>
-                            <p><b>Click</b>
-                                on the Variable segment name in the legend to hide/show it on the histogram.</p>
-                            <p><b>Double click</b> will show only selected Variable segment.</p>
-                        </div>
-                        <div class="visualisation-description-quantileStats" ng-show="isActiveTab(visualisationTabs.quantilestats)">
-                            <p>A sunburst plot showing the the clonality of sample.</p>
-                            <p>Inner level shows the read frequency of <b>singletons</b> (clonotypes met once), <b>doubletons</b>
-                                (clonotypes met twice) and <b>high-order</b> clonotypes.</p>
-                            <p><b>Singletons</b> and <b>doubletons</b>
-                                are the basis for estimating the number of unseen species (clonotypes) for the sample.</p>
-                            <p>The second level shows <b>high order</b> clonotypes are divided into 5 quantiles based on clonotype rank.</p>
-                            <p><b>Click</b> on the <b>high-order</b> sector will show it in more details, while <b>click</b>
-                                on the center of graph will hide them.</p>
-                        </div>
-                        <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
-                            <p>This table displays top 1000 most abundant clonotypes in the selected sample.</p>
-                            <p>Nucleotide and amino acid sequences of CDR3 region are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.</p>
-                        </div>
+            <div class="well sharp">
+                <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
+                    <p>This plot shows a chord diagram of Variable-Joining (V-J) segment combination frequencies.</p>
+                    <p>Each chord represent a set of clonotypes with a given V-J junction and is scaled according to the frequency of reads with such junction.</p>
+                    <p>Each arc represents a V or J segment and is scaled to the relative number of reads that contain corresponding segment.</p>
+                    <p>Hover any sector to show only relevant V-J pairings.</p>
+                </div>
+                <div class="visualisation-description-spectratype" ng-show="isActiveTab(visualisationTabs.spectratype)">
+                    <p>This histogram shows the distribution of reads by CDR3 length.</p>
+                    <p>Several top clonotypes are shown explicitly by colored bars.</p>
+                    <p><b>Click</b> on the clonotype name in the legend to hide/show it on the histogram.</p>
+                    <p><b>Double click</b> will show only selected clonotype.</p>
+                </div>
+                <div class="visualisation-description-spectratypeV" ng-show="isActiveTab(visualisationTabs.spectratypev)">
+                    <p>This plot shows the distribution of reads by CDR3 length.</p>
+                    <p>Separate histograms are shown that correspond to top Variable segment families.</p>
+                    <p><b>Click</b>
+                        on the Variable segment name in the legend to hide/show it on the histogram.</p>
+                    <p><b>Double click</b> will show only selected Variable segment.</p>
+                </div>
+                <div class="visualisation-description-quantileStats" ng-show="isActiveTab(visualisationTabs.quantilestats)">
+                    <p>A sunburst plot showing the the clonality of sample.</p>
+                    <p>Inner level shows the read frequency of <b>singletons</b> (clonotypes met once), <b>doubletons</b>
+                        (clonotypes met twice) and <b>high-order</b> clonotypes.</p>
+                    <p><b>Singletons</b> and <b>doubletons</b>
+                        are the basis for estimating the number of unseen species (clonotypes) for the sample.</p>
+                    <p>The second level shows <b>high order</b> clonotypes are divided into 5 quantiles based on clonotype rank.</p>
+                    <p><b>Click</b> on the <b>high-order</b> sector will show it in more details, while <b>click</b>
+                        on the center of graph will hide them.</p>
+                </div>
+                <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
+                    <p>This table displays top 1000 most abundant clonotypes in the selected sample.</p>
+                    <p>Nucleotide and amino acid sequences of CDR3 region are marked for Variable, Diversity and Joining segments with green, orange and blue respecively.</p>
+                </div>
+
+                <div ng-repeat="file in files" id="id{{ ::file.uid }}" ng-show="showFile(file)" class="visualisation-results">
+                    <div ng-repeat="tab in ::visualisationTabs" ng-show="isActiveTab(tab)">
+                        <p>
+                            <button ng-repeat="type in ::tab.exportType" class="btn btn-default sharp pull-right" ng-click="exportChartPng(file, tab, type)">Export to {{ ::type }}</button>
+                        </p>
+                        <hr>
+                        <div class="viusalisation-results {{ ::tab.mainPlace }}"></div>
                     </div>
-                    <div class="col-lg-12 col-md-12 col-sm-12" ng-repeat="file in files">
-                        <div id="id{{ ::file.uid }}" ng-show="showFile(file)" class="visualisation-results">
-                            <div ng-repeat="tab in ::visualisationTabs" ng-show="isActiveTab(tab)">
-                                <p>
-                                    <button ng-repeat="type in ::tab.exportType" class="btn btn-default pull-right" ng-click="exportChartPng(file, tab, type)" ng-show="tab.exportPng">Export to {{ ::type }}</button>
-                                </p>
-                                <hr>
-                                <div class="viusalisation-results {{ ::tab.mainPlace }}"></div>
+                    <clonotypes-table ng-show="showClonotypesTable()">
+                        <div id="clonotypes_table_wrapper">
+                            <div class="clonotypes_table_background" ng-show="isLoading()"></div>
+                            <div class="clonotypes_table_proccessing" ng-show="isLoading()">
+                                <h3>Loading..</h3>
                             </div>
-                            <clonotypes-table ng-show="showClonotypesTable()">
-                                <div id="clonotypes_table_wrapper">
-                                    <div class="clonotypes_table_background" ng-show="isLoading()"></div>
-                                    <div class="clonotypes_table_proccessing" ng-show="isLoading()">
-                                        <h3>Loading..</h3>
-                                    </div>
-                                    <div id="clonotypes_table_scroll" clonotypes-table-scroll>
-                                        <table id="clonotypes_table_{{ ::file.uid }}" class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Index</th>
-                                                    <th>Frequency</th>
-                                                    <th>Count</th>
-                                                    <th>CDR3AA</th>
-                                                    <th>V</th>
-                                                    <th>D</th>
-                                                    <th>J</th>
-                                                    <th>CDR3NT</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr ng-repeat="row in data.rows">
-                                                    <td>{{ ::row.index }}</td>
-                                                    <td>{{ ::row.freq }}</td>
-                                                    <td>{{ ::row.count }}</td>
-                                                    <td ng-bind-html="::row.cdr.cdr3aa"></td>
-                                                    <td>{{ ::row.v }}</td>
-                                                    <td>{{ ::row.d }}</td>
-                                                    <td>{{ ::row.j }}</td>
-                                                    <td ng-bind-html="::row.cdr.cdr3nt"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <pagination total-items="data.sampleCount" items-per-page="data.displayLength" ng-model="page" max-size="6" class="pagination-sm" boundary-links="true" rotate="true" ng-click="pageChanged()">
-                                </pagination>
-                            </clonotypes-table>
+                            <div id="clonotypes_table_scroll" clonotypes-table-scroll>
+                                <table id="clonotypes_table_{{ ::file.uid }}" class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Index</th>
+                                            <th>Frequency</th>
+                                            <th>Count</th>
+                                            <th>CDR3AA</th>
+                                            <th>V</th>
+                                            <th>D</th>
+                                            <th>J</th>
+                                            <th>CDR3NT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="row in data.rows">
+                                            <td>{{ ::row.index }}</td>
+                                            <td>{{ ::row.freq }}</td>
+                                            <td>{{ ::row.count }}</td>
+                                            <td ng-bind-html="::row.cdr.cdr3aa"></td>
+                                            <td>{{ ::row.v }}</td>
+                                            <td>{{ ::row.d }}</td>
+                                            <td>{{ ::row.j }}</td>
+                                            <td ng-bind-html="::row.cdr.cdr3nt"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
+                        <pagination total-items="data.sampleCount" items-per-page="data.displayLength" ng-model="page" max-size="6" class="pagination-sm" boundary-links="true" rotate="true" ng-click="pageChanged()">
+                                </pagination>
+                    </clonotypes-table>
                 </div>
             </div>
         </div>

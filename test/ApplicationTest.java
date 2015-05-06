@@ -29,32 +29,4 @@ import java.util.List;
 */
 public class ApplicationTest {
 
-    @Test
-    public void binaryTest() throws IOException {
-        SampleFileConnection sampleFileConnection = new SampleFileConnection("/home/bvdmitri/test.txt.gz", Software.MiTcr);
-        Sample sample = sampleFileConnection.getSample();
-        File file = new File("/home/bvdmitri/clonotype.bin");
-        if (!file.exists()) {
-            assert file.createNewFile();
-            FileOutputStream fileOutputStream = new FileOutputStream(file, false);
-            ClonotypeBinaryUtils.writeToStream(fileOutputStream, sample);
-            System.out.println("Writed");
-        } else {
-            for (int i = 0; i < 10; i++) {
-                System.out.println(new ClonotypeBinary(sample.getAt(i)).toString());
-            }
-            System.out.println("\n\n");
-            FileInputStream fileInputStream = new FileInputStream(file);
-            List<ClonotypeBinary> clonotypeBinaries = ClonotypeBinaryUtils.readFromStream(fileInputStream, 9900, 1000);
-            for (ClonotypeBinary clonotypeBinary : clonotypeBinaries) {
-                System.out.println(clonotypeBinary.toString());
-            }
-
-        }
-    }
-
-    @Test
-    public void intBinaryTest() {
-
-    }
 }

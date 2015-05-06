@@ -10,7 +10,7 @@
             <h3>Please refresh the page to reconnect</h3>
         </div>
     </div>
-    <div class="col-lg-12" ng-show="isInitialized() && !isConnectionError()">
+    <div class="col-lg-12 col-md-12 col-sm-12" ng-show="isInitialized() && !isConnectionError()">
         <div ng-show="isJoinInformationStep()">
             <div class="panel panel-info separated">
                 <div class="panel-body">
@@ -29,7 +29,7 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12">
-                            <div ng-repeat="file in files" style="float : left ; margin : 5 px">
+                            <div ng-repeat="file in files" style="float : left ; margin : 5px">
                                 <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected(file)}" ng-click="selectFile(file)">{{ ::file.fileName }}</button>
                             </div>
                         </div>

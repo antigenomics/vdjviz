@@ -665,24 +665,23 @@ var CONSOLE_INFO = true;
 
     //File visualisation directive and factory
     app.factory('mainVisualisationTabs', ['chartInfo', function(chartInfo) {
-        var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportPng, exportType, comparingPlace) {
+        var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportType, comparingPlace) {
             return {
                 tabName: tabName,
                 type: type,
                 dataHandler: dataHandler,
                 mainPlace: mainPlace,
                 comparing: comparing,
-                exportPng: exportPng,
                 exportType: exportType,
                 comparingPlace: comparingPlace
             };
         };
         var visualisationTabs = {
-            vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, true, ['JPEG'], 'comparing-vjusage-tab'),
-            spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
-            spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
-            quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
-            annotation: createTab('Clonotypes', 'annotation', null, 'visualisation-results-annotation', false, false)
+            vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, ['JPEG'], 'comparing-vjusage-tab'),
+            spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
+            spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
+            quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
+            annotation: createTab('Clonotypes', 'annotation', null, 'visualisation-results-annotation', false, [], '')
         };
         var activeTab = visualisationTabs.vjusage;
 
