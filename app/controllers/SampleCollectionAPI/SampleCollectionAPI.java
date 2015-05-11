@@ -57,7 +57,17 @@ public class SampleCollectionAPI extends Controller {
                         }
                     }
                 });
+
+                in.onClose(new F.Callback0() {
+                    @Override
+                    public void invoke() throws Throwable {
+                        out.close();
+                    }
+                });
             }
+
+
+
         };
     }
 }

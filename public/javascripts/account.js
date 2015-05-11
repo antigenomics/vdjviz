@@ -663,6 +663,40 @@ var CONSOLE_INFO = true;
         };
     });
 
+    app.directive('ngShowRendering', function() {
+        return {
+            restrict: 'A',
+            multiElement: true,
+            link: function($scope, $element, $attrs) {
+                var watcher = $scope.$watch($attrs.ngShowRendering, function ngShowRenderingAction(value) {
+                    if (value) {
+                        $element.removeClass('ng-hide');
+                    } else {
+                        $element.addClass('ng-hide');
+                        watcher();
+                    }
+                });
+            }
+        };
+    });
+
+    app.directive('ngShowRendered', function() {
+        return {
+            restrict: 'A',
+            multiElement: true,
+            link: function($scope, $element, $attrs) {
+                var watcher = $scope.$watch($attrs.ngShowRendered, function ngShowRenderedAction(value) {
+                    if (value) {
+                        $element.removeClass('ng-hide');
+                        watcher();
+                    } else {
+                        $element.addClass('ng-hide');
+                    }
+                });
+            }
+        };
+    });
+
     //File visualisation directive and factory
     app.factory('mainVisualisationTabs', ['chartInfo', function(chartInfo) {
         var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportType, comparingPlace) {
@@ -714,7 +748,6 @@ var CONSOLE_INFO = true;
             getTabs: getTabs
         };
     }]);
-
 
     app.directive('mainVisualisationContent', function () {
         return {

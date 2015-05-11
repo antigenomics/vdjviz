@@ -1,15 +1,11 @@
 package utils.BinaryUtils.ClonotypeBinaryUtils;
 
 import com.antigenomics.vdjtools.sample.Clonotype;
-import groovy.json.internal.ByteScanner;
 import utils.BinaryUtils.BytesHelper.BytesReaderHelper;
 import utils.BinaryUtils.BytesHelper.BytesWriterHelper;
+import java.io.Serializable;
 
-import java.io.DataOutputStream;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-public class ClonotypeBinary {
+public class ClonotypeBinary implements Serializable {
     private int size;
     private int sizeCdr3aa;
     private byte[] cdr3aa;

@@ -27,7 +27,6 @@ public class ComputationUtil {
     private Sample sample;
     private Account account;
     private UserFile file;
-    private WebSocket.Out<JsonNode> out;
     private ProgressResponse progressResponse;
 
     private class ProgressResponse {
@@ -61,7 +60,6 @@ public class ComputationUtil {
         this.sample = sample;
         this.file = file;
         this.account = file.getAccount();
-        this.out = out;
     }
 
     public Sample getSample() {
@@ -70,10 +68,6 @@ public class ComputationUtil {
 
     public UserFile getFile() {
         return this.file;
-    }
-
-    public WebSocket.Out<JsonNode> getWebSocketOut() {
-        return this.out;
     }
 
     private void vjUsageData() throws Exception {
