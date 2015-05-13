@@ -32,20 +32,16 @@ public class SearchClonotypes {
         SequenceMatchFilter sequenceMatchFilter = new SequenceMatchFilter(searchClonotypesRequest.sequence, searchClonotypesRequest.aminoAcid, searchClonotypesRequest.maxMismatches);
         CompositeClonotypeFilter compositeClonotypeFilter;
         if (searchClonotypesRequest.vFilter.length > 0 && searchClonotypesRequest.jFilter.length > 0) {
-            System.out.println(1);
-            VFilter vFilter = new VFilter(searchClonotypesRequest.vFilter);
-            JFilter jFilter = new JFilter(searchClonotypesRequest.jFilter);
+            VFilterRegex vFilter = new VFilterRegex(searchClonotypesRequest.vFilter);
+            JFilterRegex jFilter = new JFilterRegex(searchClonotypesRequest.jFilter);
             compositeClonotypeFilter = new CompositeClonotypeFilter(sequenceMatchFilter, vFilter, jFilter);
         } else if (searchClonotypesRequest.vFilter.length > 0) {
-            System.out.println(2);
-            VFilter vFilter = new VFilter(searchClonotypesRequest.vFilter);
+            VFilterRegex vFilter = new VFilterRegex(searchClonotypesRequest.vFilter);
             compositeClonotypeFilter = new CompositeClonotypeFilter(sequenceMatchFilter, vFilter);
         } else if (searchClonotypesRequest.jFilter.length > 0) {
-            System.out.println(3);
-            JFilter jFilter = new JFilter(searchClonotypesRequest.jFilter);
+            JFilterRegex jFilter = new JFilterRegex(searchClonotypesRequest.jFilter);
             compositeClonotypeFilter = new CompositeClonotypeFilter(sequenceMatchFilter, jFilter);
         } else {
-            System.out.println(4);
             compositeClonotypeFilter = new CompositeClonotypeFilter(sequenceMatchFilter);
         }
 

@@ -43,7 +43,14 @@ public class ApplicationTest {
         long memoryAfter = runtime.totalMemory() - runtime.freeMemory();
         System.out.println("Time: " + (finishTime-startTime) + " ms");
         System.out.println("Memory: " + (memoryAfter - memoryBefore));
+    }
 
+    @Test
+    public void regexTest() {
+        String vGene = "TRBV*";
+        String s = vGene.replaceAll("[*]", "[a-zA-z1-9-_+]+");
+        String checkString = "TRBV9-2";
+        System.out.println(checkString.matches(s));
     }
 
 }

@@ -17,13 +17,25 @@
                 <div class="col-sm-6 col-md-6 col-lg-6">
                     <div class="form-group">
                         <label class="control-label">VFilter</label>
-                        <input type="text" class="form-control sharp" ng-model="filters.vFilter">
+                        <input type="text" class="form-control sharp filterPopover" ng-model="filters.vFilter"
+                        data-toggle="popover"
+                        data-html="true"
+                        data-placement="top"
+                        data-container="body"
+                        data-content="Filter tooltip"
+                        />
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
                     <div class="form-group">
                         <label class="control-label">JFilter</label>
-                        <input type="text" class="form-control sharp" ng-model="filters.jFilter">
+                        <input type="text" class="form-control sharp filterPopover" ng-model="filters.jFilter"
+                        data-toggle="popover"
+                        data-html="true"
+                        data-placement="top"
+                        data-container="body"
+                        data-content="Filter tooltip"
+                        />
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
@@ -40,8 +52,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-12 col-md-12 col-sm-12" id="clonotypes_table_wrapper">
-            <h3>Results</h3>
+        <div class="col-lg-12 col-md-12 col-sm-12" id="clonotypes_table_wrapper" ng-show="isClonotypesSearchInit()">
             <div class="well sharp" ng-show="isLoading()">
                 <div class="spinner">
                     <div class="cube1"></div>
@@ -51,7 +62,7 @@
             <div class="well sharp text-center" ng-show="isNoMatchesFound()">
                 <b>No matches found</b>
             </div>
-            <div class="well sharp" ng-show="isInit() && !isNoMatchesFound() && !isLoading()" id="clonotypes_table_scroll">
+            <div class="well sharp" ng-show="!isNoMatchesFound() && !isLoading()" id="clonotypes_table_scroll">
                 <table class="table table-hover">
                     <thead>
                         <tr>

@@ -394,7 +394,7 @@ var CONSOLE_INFO = true;
         var oldFile = null;
 
         function update_file(tab, file) {
-
+            if (tab.type === 'searchclonotypes') {return};
             if (typeof file === 'undefined') {
                 file = oldFile;
             } else {
@@ -656,6 +656,9 @@ var CONSOLE_INFO = true;
                 }
 
                 $scope.$on('onRepeatLast', function () {
+                    $('.filterPopover').popover({
+                        trigger: 'focus'
+                    });
                     $('#side-menu').slimScroll({
                         height: '100%',
                         color: '#1abc9c',
@@ -757,8 +760,7 @@ var CONSOLE_INFO = true;
         function setActiveTab(t) {
             if (activeTab !== t) {
                 activeTab = t;
-                if (t !== visualisationTabs.searchclonotypes)
-                    chartInfo.update_file(t);
+                chartInfo.update_file(t);
             }
 
         }
@@ -883,7 +885,7 @@ var CONSOLE_INFO = true;
                         });
                 };
 
-                $scope.isInit = function() {
+                $scope.isClonotypesSearchInit = function() {
                     return init;
                 };
 
