@@ -1,9 +1,7 @@
 package utils;
 
-import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.basic.BasicStats;
 import com.antigenomics.vdjtools.sample.Sample;
-import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import graph.AnnotationTable.AnnotationTable;
@@ -12,25 +10,23 @@ import graph.SpectratypeChart.SpectratypeChartCreator;
 import graph.SpectratypeVChart.SpectratypeVChartCreator;
 import graph.VJUsageChart.VJUsageChartCreator;
 import models.Account;
-import play.Logger;
-import play.mvc.WebSocket;
 import models.UserFile;
+import play.Logger;
 import play.libs.Json;
-import utils.ArrayUtils.Data;
+import play.mvc.WebSocket;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 import utils.CacheType.CacheType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.*;
-import java.util.List;
+import java.util.HashMap;
 
 public class ComputationUtil {
 
     private Sample sample;
     private Account account;
     private UserFile file;
-    private WebSocket.Out<JsonNode> out;
     private ProgressResponse progressResponse;
 
     private class ProgressResponse {
@@ -64,7 +60,6 @@ public class ComputationUtil {
         this.sample = sample;
         this.file = file;
         this.account = file.getAccount();
-        this.out = out;
     }
 
     public Sample getSample() {
@@ -73,10 +68,6 @@ public class ComputationUtil {
 
     public UserFile getFile() {
         return this.file;
-    }
-
-    public WebSocket.Out<JsonNode> getWebSocketOut() {
-        return this.out;
     }
 
     private void vjUsageData() throws Exception {
@@ -105,8 +96,9 @@ public class ComputationUtil {
     }
 
     private void annotation() throws Exception {
-        AnnotationTable annotationTable = new AnnotationTable(file, sample);
-        annotationTable.create().saveCache();
+        ClonotypeBinaryUtils.saveClonotypesToBinaryFile(file, sample);
+        //AnnotationTable annotationTable = new AnnotationTable(file);
+        //annotationTable.saveCache();
         progressResponse.sendMessage("60");
     }
 

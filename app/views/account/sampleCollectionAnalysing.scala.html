@@ -1,0 +1,173 @@
+<div class="row" ng-show="isSampleCollection()">
+    <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-3 col-sm-offset-3" ng-show="!isInitialized() && !isConnectionError()">
+        <div class="jumbotron single-window text-center sharp">
+            <h2>Connecting..</h2>
+        </div>
+    </div>
+    <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-3 col-sm-offset-3" ng-show="isConnectionError()">
+        <div class="jumbotron single-window text-center sharp">
+            <h2>Connection error</h2>
+            <h3>Please refresh the page to reconnect</h3>
+        </div>
+    </div>
+    <div class="col-lg-12 col-md-12 col-sm-12" ng-show="isInitialized() && !isConnectionError()">
+        <div ng-show="isJoinInformationStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-body">
+                    <button class="btn btn-default sharp" ng-click="openAnotherFiles()">Open another files</button>
+                    <button class="btn btn-default sharp" ng-click="changeJoinParameters()">Change parameters</button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="isFilesSelectStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <p>
+                                <!-- tooltip placeholder -->
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div ng-repeat="file in files" style="float : left ; margin : 5px">
+                                <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected(file)}" ng-click="selectFile(file)">{{ ::file.fileName }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-info sharp" ng-click="selectAll()">Select all</button>
+            <button class="btn btn-info sharp" ng-click="openGroup()">Join samples</button>
+        </div>
+        <div ng-show="isFilesOpeningStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-heading">
+                    Opening.. {{ getOpeningFile() }}
+                </div>
+                <div class="panel-body">
+                    <div class="progress progress-sm">
+                        <div class="progress-bar progress-bar-success" style="width: {{ getOpenProgress() }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="isJoinRenderingStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-heading">
+                    Join parameters
+                </div>
+                <div class="panel-body">
+                    <div class="spinner" ng-show="isJointRendering()">
+                        <div class="cube1"></div>
+                        <div class="cube2"></div>
+                    </div>
+                    <div ng-hide="isJointRendering()" class="col-lg-10" id="joinParameters">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                                <p>
+                                        <!-- tooltip placeholder -->
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Occurence Treshhold</label>
+                                <div class="col-sm-6">
+                                    <input type="number" class="form-control" ng-model="occurenceTreshold" max="{{ selectedFiles.length }}" min="2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Overlap type</label>
+                                <div class="col-sm-6">
+                                    <select ng-model="overlapType" ng-hide="isJointRendering()">
+                                        <option value="Nucleotide">Nucleotide</option>
+                                        <option value="NucleotideV" >NucleotideV</option>
+                                        <option value="NucleotideVJ" >NucleotideVJ</option>
+                                        <option value="AminoAcid" >AminoAcide</option>
+                                        <option value="AminoAcidV" >AminoAcideV</option>
+                                        <option value="AminoAcidVJ" >AminoAcideVJ</option>
+                                        <option value="AminoAcidNonNucleotide" >AminoAcideNonNucleotide</option>
+                                        <option value="Strict" >Strict</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">V Filter</label>
+                                <div class="col-sm-6">
+                                    <ui-select multiple ng-model="$parent.selectedVGenes">
+                                        <ui-select-match placeholder="Select V genes...">{{ ::$item }}</ui-select-match>
+                                        <ui-select-choices repeat="v in getVGenes() | filter:$select.search">
+                                            {{ ::v }}
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <button class="btn btn-default sharp" ng-click="selectAllVGenes($parent)">Select all</button>
+                                <button class="btn btn-default sharp" ng-click="invertVGenes()">Invert</button>
+                                <button class="btn btn-default sharp" ng-click="selectNoneVGenes()">Select none</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">J Filter</label>
+                                <div class="col-sm-6">
+                                    <ui-select multiple ng-model="$parent.selectedJGenes">
+                                        <ui-select-match placeholder="Select J genes...">{{ ::$item }}</ui-select-match>
+                                        <ui-select-choices repeat="j in getJGenes() | filter:$select.search">
+                                    {{ ::j }}
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                                <button class="btn btn-default sharp" ng-click="selectAllJGenes()">Select all</button>
+                                <button class="btn btn-default sharp" ng-click="invertJGenes()">Invert</button>
+                                <button class="btn btn-default sharp" ng-click="selectNoneJGenes()">Select none</button>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="btn btn-info sharp" ng-click="joinSamples()">Join</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="isJoinInformationStep()">
+            <div class="panel panel-info separated">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        Results
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="joinHeapMapParameters">
+                                <p>
+                                        <!-- tooltip placeholder -->
+                                </p>
+                                <p><b>Join parameters</b></p>
+                                <p><b>Overlap Type:</b> {{ overlapType }}</p>
+                                <p><b>Occurence treshold:</b> {{ occurenceTreshold }}</p>
+                                <p ng-show="selectedVGenes.length"><b>VFilter:</b> {{ selectedVGenes.join() }}</p>
+                                <p ng-show="selectedJGenes.length"><b>JFilter:</b> {{ selectedJGenes.join()}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="joinHeapMap"></div>
+                            <div id="heatmap_tooltip" class="hidden">
+                                <p><span id="heatmap_tooltip_value"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

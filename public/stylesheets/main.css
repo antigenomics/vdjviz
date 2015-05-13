@@ -33,6 +33,19 @@ html, body {
     z-index: 26;
 }
 
+.sidebar_file {
+    cursor: pointer;
+    transition: border-bottom 0.2s;
+}
+
+.sidebar_file .sidebar_file_trash_i {
+    visibility: hidden;
+}
+
+.sidebar_file:hover .sidebar_file_trash_i {
+    visibility: visible;
+}
+
 .clonotypes_table_proccessing > .h3 {
     vertical-align: middle;
 }
@@ -168,7 +181,7 @@ html, body {
 #slider_page_wrapper {
     position: absolute;
     left: 0;
-    top: 75px;
+    top: 50px;
     width: 100%;
 }
 
@@ -177,7 +190,7 @@ html, body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 75px;
+    height: 50px;
     z-index: 20000;
     background-color: #ffffff;
     border-bottom: 2px solid #1abc9c;
@@ -185,10 +198,10 @@ html, body {
 
 .index_navbar {
     position: fixed;
-    top: 25px;
+    top: 15px;
     left: 15%;
     width: 70%;
-    height: 50px;
+    height: 35px;
     z-index: 20000;
     color: #1abc9c;
 }
@@ -201,7 +214,6 @@ html, body {
     margin: auto;
     text-align: center;
     transition: border-bottom 0.2s;
-    font-size: large;
 }
 
 
@@ -221,7 +233,7 @@ img.blur {
 .brand_cell {
     position: fixed;
     left: 100px;
-    top: 15px;
+    top: 0px;
     font-size: xx-large;
     width: 150px !important;
 }
@@ -243,46 +255,6 @@ img.blur {
     position: absolute;
     top: 650px;
     width: 100%;
-}
-
-
-.round-button {
-    width: 200px;
-    height: 200px;
-}
-.round-button-circle {
-    width: 200px;
-    height: 200px;
-    padding-bottom: 100%;
-    border-radius: 50%;
-    border:10px solid #cfdcec;
-    overflow:hidden;
-
-    background: #4679BD;
-    box-shadow: 0 0 3px gray;
-}
-.round-button-circle:hover {
-    background:#30588e;
-}
-.round-button a {
-    display:block;
-    float:left;
-    width:100%;
-    padding-top:55%;
-    padding-bottom:50%;
-    line-height:1em;
-    margin-top:-0.5em;
-
-    text-align:center;
-    color:#e2eaf3;
-    font-size:1.0em;
-    font-weight:bold;
-    text-decoration:none;
-}
-
-.round-button a:hover {
-    color:#e2eaf3;
-    text-decoration: none;
 }
 
 .about_description > p {
@@ -874,6 +846,133 @@ img.blur {
 
 }
 
-.dataTables_scrollBody thead {
-    visibility: hidden;
+.spinner {
+    margin: 100px auto;
+    width: 32px;
+    height: 32px;
+    position: relative;
+}
+
+.cube1, .cube2 {
+    background-color: #1abc9c;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    -webkit-animation: cubemove 1.8s infinite ease-in-out;
+    animation: cubemove 1.8s infinite ease-in-out;
+}
+
+.cube2 {
+    -webkit-animation-delay: -0.9s;
+    animation-delay: -0.9s;
+}
+
+@-webkit-keyframes cubemove {
+    25% { -webkit-transform: translateX(42px) rotate(-90deg) scale(0.5) }
+    50% { -webkit-transform: translateX(42px) translateY(42px) rotate(-180deg) }
+    75% { -webkit-transform: translateX(0px) translateY(42px) rotate(-270deg) scale(0.5) }
+    100% { -webkit-transform: rotate(-360deg) }
+}
+
+@keyframes cubemove {
+    25% {
+        transform: translateX(42px) rotate(-90deg) scale(0.5);
+        -webkit-transform: translateX(42px) rotate(-90deg) scale(0.5);
+    } 50% {
+          transform: translateX(42px) translateY(42px) rotate(-179deg);
+          -webkit-transform: translateX(42px) translateY(42px) rotate(-179deg);
+      } 50.1% {
+            transform: translateX(42px) translateY(42px) rotate(-180deg);
+            -webkit-transform: translateX(42px) translateY(42px) rotate(-180deg);
+        } 75% {
+              transform: translateX(0px) translateY(42px) rotate(-270deg) scale(0.5);
+              -webkit-transform: translateX(0px) translateY(42px) rotate(-270deg) scale(0.5);
+          } 100% {
+                transform: rotate(-360deg);
+                -webkit-transform: rotate(-360deg);
+            }
+}
+
+svg *::selection {
+    background : transparent;
+}
+
+svg *::-moz-selection {
+    background:transparent;
+}
+
+svg *::-webkit-selection {
+    background:transparent;
+}
+rect.selection {
+    stroke          : #333;
+    stroke-dasharray: 4px;
+    stroke-opacity  : 0.5;
+    fill            : transparent;
+}
+
+rect.cell-border {
+    stroke: #eee;
+    stroke-width:0.3px;
+}
+
+rect.cell-selected {
+    stroke: rgb(51,102,153);
+    stroke-width:0.5px;
+}
+
+rect.cell-hover {
+    stroke: #F00;
+    stroke-width:0.3px;
+}
+
+text.mono {
+    font-size: 9pt;
+    font-family: Consolas, courier;
+    fill: #aaa;
+}
+
+text.text-selected {
+    fill: #000;
+}
+
+text.text-highlight {
+    fill: #c00;
+    text-decoration: underline;
+}
+text.text-hover {
+    fill: #00C;
+}
+#heatmap_tooltip {
+    position: absolute;
+    width: 400px;
+    height: auto;
+    padding: 10px;
+    background-color: white;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+#heatmap_tooltip.hidden {
+    display: none;
+}
+
+#heatmap_tooltip p {
+    margin: 0;
+    font-family: sans-serif;
+    font-size: 12px;
+    line-height: 20px;
+}
+
+.select2 > .select2-choice.ui-select-match {
+    /* Because of the inclusion of Bootstrap */
+    height: 29px;
 }

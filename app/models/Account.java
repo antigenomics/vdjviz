@@ -1,18 +1,22 @@
 package models;
 
+import models.UserFile.FileInformation;
+import play.db.ebean.Model;
+import utils.CacheType.CacheType;
+import utils.server.Configuration;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import play.Play;
-import play.mvc.PathBindable;
-import static play.data.validation.Constraints.*;
-import javax.persistence.*;
-import play.db.ebean.Model;
-import models.UserFile.FileInformation;
-import utils.CacheType.CacheType;
-import utils.server.Configuration;
+import static play.data.validation.Constraints.Required;
 
 
 @Entity

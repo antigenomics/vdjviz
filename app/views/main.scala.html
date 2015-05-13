@@ -8,18 +8,9 @@
             <meta http-equiv="refresh" content="0;url=/badbrowser">
         </noscript>
         <script>
-            function getBrowser(){
-                var ua = navigator.userAgent;
-                if (ua.search(/MSIE/) > 0) return 'badbrowser';
-                return 'ok';
-            }
-
-            var browser = getBrowser();
-
-            if (browser == 'badbrowser') {
-                window.location.replace("/badbrowser")
-            }
-
+        if (navigator.userAgent.search(/MSIE/) > 0) {
+            window.location.replace("/badbrowser")
+        }
         </script>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">

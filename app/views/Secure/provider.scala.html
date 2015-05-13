@@ -1,12 +1,10 @@
 @(providerId: String, loginForm: Option[play.api.data.Form[(String, String)]] = None)(implicit request: play.api.mvc.RequestHeader)
 
-@import securesocial.core.Registry
-@import securesocial.core.IdentityProvider
-@import securesocial.core.providers.UsernamePasswordProvider
-@import securesocial.core.AuthenticationMethod._
-@import securesocial.core.providers.utils.RoutesHelper
 @import play.api.Logger
-@import helper._
+@import securesocial.core.AuthenticationMethod._
+@import securesocial.core.{IdentityProvider, Registry}
+@import securesocial.core.providers.utils.RoutesHelper
+@import views.html.helper._
 @implicitFieldConstructor = @{
     FieldConstructor(securesocial.views.html.inputFieldConstructor.f)
 }
@@ -31,7 +29,7 @@
                     <a href="@securesocial.core.providers.utils.RoutesHelper.startResetPassword()"><p>
                         Forgot password?</a>
                 </div>
-                <button class="btn btn-info btn-lg btn-block">Sign in<i class="fa fa-fw fa-sign-in"></i></button>
+                <button class="btn btn-info btn-lg btn-block sharp">Sign in<i class="fa fa-fw fa-sign-in"></i></button>
             </fieldset>
         </form>
         <hr class="wide">

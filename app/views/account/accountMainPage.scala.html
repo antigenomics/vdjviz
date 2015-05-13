@@ -8,10 +8,10 @@
                         <i class="fa fa-times"></i>
                     </div>
                     <div class="notification_header">
-                        <p>{{ notification.header }}</p>
+                        <p>{{ ::notification.header }}</p>
                     </div>
                     <div class="notification_body">
-                        <p>{{ notification.body }}</p>
+                        <p>{{ ::notification.body }}</p>
                     </div>
                 </div>
             </div>
@@ -27,7 +27,9 @@
             <main-visualisation-content>
                 @views.html.account.mainVisualisationContent()
             </main-visualisation-content>
-            <account-information></account-information>
+            <account-information>
+                @views.html.account.accountInformation()
+            </account-information>
             <rarefaction-content>
                 @views.html.account.rarefactionContent()
             </rarefaction-content>
@@ -37,6 +39,9 @@
             <comparing-content>
                 @views.html.account.comparingContent()
             </comparing-content>
+            <sample-collection>
+                @views.html.account.sampleCollectionAnalysing()
+            </sample-collection>
         </div>
 
     </account-page>

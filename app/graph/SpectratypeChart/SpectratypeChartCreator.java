@@ -1,7 +1,7 @@
 package graph.SpectratypeChart;
 
-import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.basic.Spectratype;
+import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.Sample;
 import models.UserFile;
 import play.Logger;
