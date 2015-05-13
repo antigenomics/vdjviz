@@ -5,6 +5,7 @@ import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.metadata.MetadataUtil;
 import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.AnnotationTable.AnnotationTable;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import graph.SearchClonotypes.SearchClonotypes;
@@ -33,6 +34,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -272,19 +274,36 @@ public class AccountAPI extends Controller {
         }
     }
 
+    public static class SearchClonotypesRequest {
+        public String fileName;
+        public String sequence;
+        public boolean aminoAcid;
+        public int maxMismatches;
+        public String[] vFilter;
+        public String[] jFilter;
+    }
+
     public static F.Promise<Result> searchClonotypes() {
         return F.Promise.promise(new F.Function0<Result>() {
             @Override
             public Result apply() throws Throwable {
+
                 Account account = getCurrentAccount();
                 JsonNode request = request().body().asJson();
 
-                if (!request.has("fileName") || !request.has("sequence"))
-                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+                SearchClonotypesRequest searchClonotypesRequest;
 
-                String fileName = request.get("fileName").asText();
-                String sequence = request.get("sequence").asText();
-                boolean aminoAcid = !request.has("aminoAcid") || request.get("aminoAcid").asBoolean();
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    searchClonotypesRequest = objectMapper.convertValue(request, SearchClonotypesRequest.class);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+                }
+
+                String fileName = searchClonotypesRequest.fileName;
+                String sequence = searchClonotypesRequest.sequence;
+                boolean aminoAcid = searchClonotypesRequest.aminoAcid;
 
                 if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_]+"))
                     return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for aminoacid sequence")));
@@ -292,13 +311,13 @@ public class AccountAPI extends Controller {
                 if (!aminoAcid && !sequence.toUpperCase().matches("[ATGC]+"))
                     return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for nucleotide sequence")));
 
-                Integer maxMismatches = request.has("maxMismatches") ? request.get("maxMismatches").asInt() : 2;
+                Integer maxMismatches = searchClonotypesRequest.maxMismatches;
 
                 UserFile userFile = UserFile.fyndByNameAndAccount(account, fileName);
                 if (userFile == null)
                     return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
 
-                return ok(Json.toJson(SearchClonotypes.searchSingleSample(userFile, sequence, aminoAcid, maxMismatches)));
+                return ok(Json.toJson(SearchClonotypes.searchSingleSample(userFile, searchClonotypesRequest)));
             }
         });
 
@@ -378,7 +397,8 @@ public class AccountAPI extends Controller {
 
     public static WebSocket<JsonNode> render() {
         //Socket for updating information about computation progress
-        final Account account = getCurrentAccount();
+        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
+        final Account account = localUser.account;
         return new WebSocket<JsonNode>() {
 
             @Override

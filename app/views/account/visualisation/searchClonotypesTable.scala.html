@@ -2,25 +2,46 @@
     <div class="row search-clonotypes-tab">
         <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="well sharp">
-                <div class="form-group">
-                    <div class="col-sm-4 col-md-4 col-lg-4">
-                        <label>Sequence</label>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">Sequence</label>
                         <input type="text" class="form-control sharp" ng-model="sequenceString" placeholder="Enter your sequence here..">
-                        <label>Max mismatches</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">Max mismatches</label>
                         <input type="number" class="form-control sharp" ng-model="maxMismatches" min="0" max="7">
-                        <label>Sequence type</label>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">VFilter</label>
+                        <input type="text" class="form-control sharp" ng-model="filters.vFilter">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">JFilter</label>
+                        <input type="text" class="form-control sharp" ng-model="filters.jFilter">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">Sequence type</label>
                         <select ng-model="aminoAcid">
                             <option value="true">AminoAcid</option>
                             <option value="false" >Nucleotide</option>
                         </select>
-                        <br>
-                        <button class="btn btn-default sharp" ng-click="searchSequence()">Search</button>
-
                     </div>
+                </div>
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                    <button class="btn btn-default sharp" ng-click="searchSequence()">Search</button>
                 </div>
             </div>
         </div>
         <div class="col-lg-12 col-md-12 col-sm-12" id="clonotypes_table_wrapper">
+            <h3>Results</h3>
             <div class="well sharp" ng-show="isLoading()">
                 <div class="spinner">
                     <div class="cube1"></div>
@@ -30,8 +51,7 @@
             <div class="well sharp text-center" ng-show="isNoMatchesFound()">
                 <b>No matches found</b>
             </div>
-            <div class="well sharp" id="clonotypes_table_scroll" ng-show="isInit() && !isNoMatchesFound() && !isLoading()">
-                <h3>Results</h3>
+            <div class="well sharp" ng-show="isInit() && !isNoMatchesFound() && !isLoading()" id="clonotypes_table_scroll">
                 <table class="table table-hover">
                     <thead>
                         <tr>

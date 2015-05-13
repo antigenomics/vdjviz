@@ -838,6 +838,10 @@ var CONSOLE_INFO = true;
                 $scope.searchResults = {};
                 $scope.maxMismatches = 2;
                 $scope.aminoAcid = 'true';
+                $scope.filters = {
+                    vFilter: '',
+                    jFilter: ''
+                };
 
                 $scope.searchSequence = function() {
                     if ($scope.sequenceString.length <= 0) {
@@ -847,7 +851,14 @@ var CONSOLE_INFO = true;
                     loading = true;
                     noMatchesFound = false;
                     angular.extend($scope.searchResults, {});
-                    $http.post('/account/api/annotation/search', { fileName: $scope.file.fileName, sequence: $scope.sequenceString, maxMismatches: $scope.maxMismatches, aminoAcid: $scope.aminoAcid  })
+                    $http.post('/account/api/annotation/search', {
+                        fileName: $scope.file.fileName,
+                        sequence: $scope.sequenceString,
+                        maxMismatches: $scope.maxMismatches,
+                        aminoAcid: $scope.aminoAcid,
+                        vFilter: $scope.filters.vFilter.replace(/ /g,'') !== '' ? $scope.filters.vFilter.replace(/ /g,'').split(',') : [],
+                        jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : []
+                    })
                         .success(function(response) {
                             init = true;
                             loading = false;
