@@ -90,9 +90,6 @@ public class Global extends GlobalSettings {
                                     }
                                 }
                             }
-                            for (IPAddress ipAddress : IPAddress.find().all()) {
-                                ipAddress.flushCount();
-                            }
                         }
                     },
                     Akka.system().dispatcher()

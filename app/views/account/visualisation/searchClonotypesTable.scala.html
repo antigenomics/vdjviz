@@ -1,0 +1,64 @@
+<search-clonotypes-table ng-show="showSearchClonotypesTable()">
+    <div class="row search-clonotypes-tab">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="well sharp">
+                <div class="form-group">
+                    <div class="col-sm-4 col-md-4 col-lg-4">
+                        <label>Sequence</label>
+                        <input type="text" class="form-control sharp" ng-model="sequenceString" placeholder="Enter your sequence here..">
+                        <label>Max mismatches</label>
+                        <input type="number" class="form-control sharp" ng-model="maxMismatches" min="0" max="7">
+                        <label>Sequence type</label>
+                        <select ng-model="aminoAcid">
+                            <option value="true">AminoAcid</option>
+                            <option value="false" >Nucleotide</option>
+                        </select>
+                        <br>
+                        <button class="btn btn-default sharp" ng-click="searchSequence()">Search</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12 col-md-12 col-sm-12" id="clonotypes_table_wrapper">
+            <div class="well sharp" ng-show="isLoading()">
+                <div class="spinner">
+                    <div class="cube1"></div>
+                    <div class="cube2"></div>
+                </div>
+            </div>
+            <div class="well sharp text-center" ng-show="isNoMatchesFound()">
+                <b>No matches found</b>
+            </div>
+            <div class="well sharp" id="clonotypes_table_scroll" ng-show="isInit() && !isNoMatchesFound() && !isLoading()">
+                <h3>Results</h3>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Index</th>
+                            <th>Frequency</th>
+                            <th>Count</th>
+                            <th>CDR3AA</th>
+                            <th>V</th>
+                            <th>D</th>
+                            <th>J</th>
+                            <th>CDR3NT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="row in searchResults.rows">
+                            <td>{{ ::row.index }}</td>
+                            <td>{{ ::row.freq }}</td>
+                            <td>{{ ::row.count }}</td>
+                            <td ng-bind-html="::row.cdr.cdr3aa"></td>
+                            <td>{{ ::row.v }}</td>
+                            <td>{{ ::row.d }}</td>
+                            <td>{{ ::row.j }}</td>
+                            <td ng-bind-html="::row.cdr.cdr3nt"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</search-clonotypes-table>

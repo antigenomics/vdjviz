@@ -18,16 +18,16 @@
             <li ng-hide="isFilesEmpty()" class="sidebar_block_blue">
                 <a>Samples</a>
             </li>
-            <li class="li_pointer sidebar_file" id="sidebar_file_{{ ::file.uid }}" ng-repeat="file in files" ng-class="{'current':isActiveFile(file), 'disabled':isFileRendering(file)}" ng-click="setActiveFile(file)" on-last-repeat>
+            <li sidebar-click="setActiveFile(file)" class="li_pointer sidebar_file" id="sidebar_file_{{ ::file.uid }}" ng-repeat="file in files" ng-class="{'disabled':isFileRendering(file)}" on-last-repeat>
                 <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text> <i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i></a>
             </li>
             <li ng-hide="isFilesEmpty()">
                 <a></a>
             </li>
-            <li class="li_pointer" ng-hide="isFilesEmpty()" ng-class="{'current':isRarefactionState()}" ng-click="setRarefactionState()"><a>Rarefaction<i class="fa fa-area-chart pull-right"></i></a></li>
-            <li class="li_pointer" ng-hide="isFilesEmpty()" ng-class="{'current':isSummaryState()}" ng-click="setSummaryState()"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
-            <li class="li_pointer" ng-hide="isFilesEmpty()" ng-class="{'current':isCompareState()}" ng-click="setCompareState()"><a>Compare<i class="fa fa-plus add-new-compare-button pull-right" ng-class="{'show-compare-button':isCompareState()}" ng-click="showCompareModal()"></i></a></li>
-            <li class="li_pointer" ng-hide="isFilesEmpty()" ng-class="{'current':isSampleCollectionState()}" ng-click="setSampleCollectionState()"><a>Join samples</a></li>
+            <li sidebar-click="setRarefactionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Rarefaction<i class="fa fa-area-chart pull-right"></i></a></li>
+            <li sidebar-click="setSummaryState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
+            <li sidebar-click="setCompareState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Compare<i class="fa fa-plus add-new-compare-button pull-right" ng-class="{'show-compare-button':isCompareState()}" ng-click="showCompareModal()"></i></a></li>
+            <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Join samples</a></li>
             <li>
                 <a></a>
             </li>
@@ -35,7 +35,6 @@
                 <a>Delete all</a>
             </li>
         </ul>
-        <li ng-show="false">
-            <a href="#new-files-table" role="button" class="btn" data-toggle="modal" id="add-new-file">Upload new samples</a>
-        </li>
+        <a href="#new-files-table" role="button" class="btn ng-hide" data-toggle="modal" id="add-new-file">Upload new samples</a>
+
 </div>

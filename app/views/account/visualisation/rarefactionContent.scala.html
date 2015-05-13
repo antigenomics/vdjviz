@@ -7,7 +7,6 @@
             <p>Tooltip displays the observed sample diversity.</p>
             <hr>
             <button ng-repeat="type in ::rarefactionExportTypes" class="btn btn-default sharp pull-right" ng-click="exportRarefaction(type)">Export to {{ ::type }}</button>
-            <button class="btn btn-default sharp pull-right" ng-click="changeArea()">{{ area }} area</button>
             <div class="rarefaction-visualisation-tab"></div>
         </div>
     </div>

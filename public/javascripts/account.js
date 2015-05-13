@@ -29,6 +29,7 @@ var CONSOLE_INFO = true;
         };
     });
 
+    //Notifications factory and directive
     app.factory('notifications', ['$log', '$timeout', function($log, $timeout) {
         var notifications = [];
 
@@ -109,6 +110,7 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
 
 
     //This factory handle account information and user's files
@@ -327,6 +329,7 @@ var CONSOLE_INFO = true;
 
         };
     }]);
+    //--------------------------------------------------------//
 
     //This factory handles global state of application
     app.factory('stateInfo', ['chartInfo', 'mainVisualisationTabs', function(chartInfo, mainVisualisationTabs) {
@@ -383,6 +386,7 @@ var CONSOLE_INFO = true;
             isActiveState: isActiveState
         };
     }]);
+    //--------------------------------------------------------//
 
     //This factory requests data from server
     app.factory('chartInfo', ['$log', '$http', 'notifications', 'summaryStatsFactory', 'clonotypesTableFactory', function($log, $http, notifications, summaryStatsFactory, clonotypesTableFactory) {
@@ -504,8 +508,9 @@ var CONSOLE_INFO = true;
             update_summary: update_summary
         };
     }]);
+    //--------------------------------------------------------//
 
-    //Main Directive
+    //Main Directives
     app.directive('accountPage', function () {
         return {
             restrict: 'E',
@@ -566,8 +571,9 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
 
-    //Sidebar Directive
+    //Sidebar Directives
     app.directive('filesSidebar', function () {
         return {
             restrict: 'E',
@@ -663,6 +669,25 @@ var CONSOLE_INFO = true;
         };
     });
 
+    app.directive('sidebarClick', ['$parse', function($parse) {
+        return {
+            restrict: 'A',
+            compile: function($element, attr) {
+                var fn = $parse(attr['sidebarClick'], null, true);
+                return function ngEventHandler(scope, element) {
+                    element.on('click', function(event) {
+                        element.parent().find('li.li_pointer').removeClass('current');
+                        element.addClass('current');
+                        var callback = function() {
+                            fn(scope, {$event:event});
+                        };
+                        scope.$apply(callback);
+                    });
+                };
+            }
+        };
+    }]);
+
     app.directive('ngShowRendering', function() {
         return {
             restrict: 'A',
@@ -696,6 +721,7 @@ var CONSOLE_INFO = true;
             }
         };
     });
+    //--------------------------------------------------------//
 
     //File visualisation directive and factory
     app.factory('mainVisualisationTabs', ['chartInfo', function(chartInfo) {
@@ -715,14 +741,24 @@ var CONSOLE_INFO = true;
             spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
             spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
             quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
-            annotation: createTab('Clonotypes', 'annotation', null, 'visualisation-results-annotation', false, [], '')
+            annotation: createTab('Clonotypes', 'annotation', null, 'visualisation-results-annotation', false, [], ''),
+            searchclonotypes: createTab('Search clonotypes', 'searchclonotypes', null, 'visualisation-results-searchclonotypes', false, [], '')
         };
+        var sortedTabs = [
+            visualisationTabs.vjusage,
+            visualisationTabs.spectratype,
+            visualisationTabs.spectratypev,
+            visualisationTabs.quantilestats,
+            visualisationTabs.annotation,
+            visualisationTabs.searchclonotypes
+        ];
         var activeTab = visualisationTabs.vjusage;
 
         function setActiveTab(t) {
             if (activeTab !== t) {
                 activeTab = t;
-                chartInfo.update_file(t);
+                if (t !== visualisationTabs.searchclonotypes)
+                    chartInfo.update_file(t);
             }
 
         }
@@ -741,11 +777,16 @@ var CONSOLE_INFO = true;
             return visualisationTabs;
         }
 
+        function getSortedTabs() {
+            return sortedTabs;
+        }
+
         return {
             setActiveTab: setActiveTab,
             getActiveTab: getActiveTab,
             isActiveTab: isActiveTab,
-            getTabs: getTabs
+            getTabs: getTabs,
+            getSortedTabs: getSortedTabs
         };
     }]);
 
@@ -754,6 +795,7 @@ var CONSOLE_INFO = true;
             restrict: 'E',
             controller: ['$scope', 'stateInfo', 'mainVisualisationTabs', function ($scope, stateInfo, mainVisualisationTabs) {
                 $scope.visualisationTabs = mainVisualisationTabs.getTabs();
+                $scope.sortedTabs = mainVisualisationTabs.getSortedTabs();
 
                 $scope.exportChartPng = function (file, tab, exportType) {
                     saveSvgAsPng(document.getElementById('svg_' + tab.type + '_' + file.uid), file.fileName + "_" + tab.type, 3, exportType);
@@ -770,13 +812,86 @@ var CONSOLE_INFO = true;
                     return $scope.isActiveTab('annotation');
                 };
 
+                $scope.showSearchClonotypesTable = function() {
+                    return $scope.isActiveTab('searchclonotypes');
+                };
+
                 $scope.showFile = function (file) {
                     return stateInfo.isActiveFile(file);
                 };
             }]
         };
     });
+    //--------------------------------------------------------//
 
+    //Clonotypes search directive (single sample)
+    app.directive('searchClonotypesTable', function() {
+        return {
+            restrict: 'E',
+            scope: true,
+            controller: ['$scope', '$http', '$log', 'notifications', '$sce', function($scope, $http, $log, notifications, $sce) {
+                var noMatchesFound = false;
+                var loading = false;
+                var init = false;
+
+                $scope.sequenceString = '';
+                $scope.searchResults = {};
+                $scope.maxMismatches = 2;
+                $scope.aminoAcid = 'true';
+
+                $scope.searchSequence = function() {
+                    if ($scope.sequenceString.length <= 0) {
+                        notifications.addInfoNotification('Search clonotypes', 'Enter your sequence');
+                        return;
+                    }
+                    loading = true;
+                    noMatchesFound = false;
+                    angular.extend($scope.searchResults, {});
+                    $http.post('/account/api/annotation/search', { fileName: $scope.file.fileName, sequence: $scope.sequenceString, maxMismatches: $scope.maxMismatches, aminoAcid: $scope.aminoAcid  })
+                        .success(function(response) {
+                            init = true;
+                            loading = false;
+                            if (response.rows.length === 0) {
+                                noMatchesFound = true;
+                            } else {
+                                angular.forEach(response.rows, function(row) {
+                                    row.freq = (row.freq * 100).toPrecision(2) + '%';
+                                    row.cdr = cdr3Transform(row.cdr, $sce);
+                                });
+                                angular.extend($scope.searchResults, response);
+                            }
+                        })
+                        .error(function(response) {
+                            init = true;
+                            loading = false;
+                            noMatchesFound = true;
+                            if (CONSOLE_INFO) {
+                                $log.error(response.message);
+                            }
+                            notifications.addErrorNotification('Search clonotypes', response.message);
+                        });
+                };
+
+                $scope.isInit = function() {
+                    return init;
+                };
+
+                $scope.isLoading = function() {
+                    return loading;
+                };
+
+                $scope.isNoMatchesFound = function() {
+                    return noMatchesFound;
+                }
+
+
+            }]
+        };
+    });
+    //--------------------------------------------------------//
+
+
+    //Clonotypes table factory and directive
     app.factory('clonotypesTableFactory', ['$sce', 'notifications', '$http', '$log', function($sce, notifications, $http, $log) {
         var data = {};
 
@@ -892,6 +1007,7 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
 
     //Rarefaction tab Directive
     app.directive('rarefactionContent', function () {
@@ -900,29 +1016,6 @@ var CONSOLE_INFO = true;
             controller: ['$scope', function ($scope) {
 
                 $scope.rarefactionExportTypes = ['JPEG'];
-                $scope.area = 'Hide';
-
-                $scope.changeArea = function() {
-                    d3.select('.rarefaction-visualisation-tab')
-                        .selectAll('.nv-area')
-                        .style('visibility', function() {
-                            switch ($scope.area) {
-                                case 'Hide':
-                                    return 'hidden';
-                                case 'Show':
-                                    return 'visible';
-                                default:
-                                    return 'visible';
-                            }
-                        });
-
-                    if ($scope.area === 'Show') {
-                        $scope.area = 'Hide';
-                    } else {
-                        $scope.area = 'Show';
-                    }
-
-                };
 
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
@@ -930,7 +1023,7 @@ var CONSOLE_INFO = true;
             }]
         };
     });
-
+    //--------------------------------------------------------//
 
     //Summary content directive and factory
     //--------------------------------------------------------//
@@ -968,7 +1061,6 @@ var CONSOLE_INFO = true;
 
     });
 
-
     app.directive('summaryStats', function() {
         return {
             restrict: 'E',
@@ -979,7 +1071,6 @@ var CONSOLE_INFO = true;
         };
     });
     //--------------------------------------------------------//
-
 
     //Upload support Directive
     //--------------------------------------------------------//
@@ -1325,7 +1416,6 @@ var CONSOLE_INFO = true;
         };
     });
     //--------------------------------------------------------//
-
 
     //Comparing Directive
     //--------------------------------------------------------//
@@ -2350,7 +2440,7 @@ function joinHeapMap(data) {
     var place = d3.select(".joinHeapMap");
         place.html("");
 
-    if (rowLabel.length == 0) {
+    if (rowLabel.length === 0) {
         place.append("text").text("No data available");
         return;
     }
@@ -2440,8 +2530,8 @@ function joinHeapMap(data) {
 
                 //Update the tooltip position and value
                 d3.select("#heatmap_tooltip")
-                    .style("left", (d3.event.pageX+10) + "px")
-                    .style("top", (d3.event.pageY-10) + "px")
+                    .style("left", (d3.event.pageX - 250) + "px")
+                    .style("top", (d3.event.pageY - 250) + "px")
                     .select("#heatmap_tooltip_value")
                     .html("CDR3AA: " +
                         rowLabel[d.row-1].cdr3aa_text +

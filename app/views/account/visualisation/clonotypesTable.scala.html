@@ -1,0 +1,38 @@
+<clonotypes-table ng-show="showClonotypesTable()">
+    <div id="clonotypes_table_wrapper">
+        <div class="clonotypes_table_background" ng-show="isLoading()"></div>
+        <div class="clonotypes_table_proccessing" ng-show="isLoading()">
+            <h3>Loading..</h3>
+        </div>
+        <div id="clonotypes_table_scroll">
+            <table id="clonotypes_table_{{ ::file.uid }}" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>Frequency</th>
+                        <th>Count</th>
+                        <th>CDR3AA</th>
+                        <th>V</th>
+                        <th>D</th>
+                        <th>J</th>
+                        <th>CDR3NT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="row in data.rows">
+                        <td>{{ ::row.index }}</td>
+                        <td>{{ ::row.freq }}</td>
+                        <td>{{ ::row.count }}</td>
+                        <td ng-bind-html="::row.cdr.cdr3aa"></td>
+                        <td>{{ ::row.v }}</td>
+                        <td>{{ ::row.d }}</td>
+                        <td>{{ ::row.j }}</td>
+                        <td ng-bind-html="::row.cdr.cdr3nt"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <pagination total-items="data.sampleCount" items-per-page="data.displayLength" ng-model="page" max-size="6" class="pagination-sm" boundary-links="true" rotate="true" ng-click="pageChanged()">
+                                </pagination>
+</clonotypes-table>

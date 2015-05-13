@@ -7,6 +7,7 @@ import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import graph.AnnotationTable.AnnotationTable;
 import graph.RarefactionChartMultiple.RarefactionChart;
+import graph.SearchClonotypes.SearchClonotypes;
 import models.Account;
 import models.LocalUser;
 import models.UserFile;
@@ -53,9 +54,7 @@ public class AccountAPI extends Controller {
     public static Result upload() {
 
         //Identifying user using the SecureSocial API
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
+        Account account = getCurrentAccount();
 
 
         if (account == null) {
@@ -156,9 +155,7 @@ public class AccountAPI extends Controller {
 
     public static Result delete() {
         //Identifying user using the Secure Social API
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
+        Account account = getCurrentAccount();
 
         JsonNode request = request().body().asJson();
 
@@ -205,9 +202,7 @@ public class AccountAPI extends Controller {
     public static Result files() {
         //Identifying user using the Secure Social API
         //Return meta information about all files
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
+        Account account = getCurrentAccount();
         return ok(Json.toJson(account.getFilesInformation()));
     }
 
@@ -218,9 +213,7 @@ public class AccountAPI extends Controller {
     public static Result data() throws Exception {
         //Identifying user using the Secure Social API
         //Return data for chart
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
+        Account account = getCurrentAccount();
 
         JsonNode request = request().body().asJson();
         if (!request.findValue("action").asText().equals("data")
@@ -255,13 +248,10 @@ public class AccountAPI extends Controller {
         }
     }
 
-
     public static Result annotationData() {
         //Identifying user using the Secure Social API
         //Return data for chart
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        Account account = localUser.account;
+        Account account = getCurrentAccount();
 
         JsonNode request = request().body().asJson();
         if (!request.findValue("action").asText().equals("data")
@@ -282,13 +272,36 @@ public class AccountAPI extends Controller {
         }
     }
 
-    public static Result searchAnnotationData() {
-        Account account = getCurrentAccount();
-        List<Integer> list = new ArrayList<>();
-        list.add(0);
-        list.add(1);
-        list.add(2);
-        return ok(Json.toJson(list));
+    public static F.Promise<Result> searchClonotypes() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
+                JsonNode request = request().body().asJson();
+
+                if (!request.has("fileName") || !request.has("sequence"))
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+
+                String fileName = request.get("fileName").asText();
+                String sequence = request.get("sequence").asText();
+                boolean aminoAcid = !request.has("aminoAcid") || request.get("aminoAcid").asBoolean();
+
+                if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_]+"))
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for aminoacid sequence")));
+
+                if (!aminoAcid && !sequence.toUpperCase().matches("[ATGC]+"))
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for nucleotide sequence")));
+
+                Integer maxMismatches = request.has("maxMismatches") ? request.get("maxMismatches").asInt() : 2;
+
+                UserFile userFile = UserFile.fyndByNameAndAccount(account, fileName);
+                if (userFile == null)
+                    return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
+
+                return ok(Json.toJson(SearchClonotypes.searchSingleSample(userFile, sequence, aminoAcid, maxMismatches)));
+            }
+        });
+
     }
 
     private static Result cache(UserFile file, String cacheName, Account account) {
@@ -365,8 +378,7 @@ public class AccountAPI extends Controller {
 
     public static WebSocket<JsonNode> render() {
         //Socket for updating information about computation progress
-        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
-        final Account account = localUser.account;
+        final Account account = getCurrentAccount();
         return new WebSocket<JsonNode>() {
 
             @Override

@@ -51,7 +51,7 @@ html, body {
 }
 
 #clonotypes_table_scroll {
-    height: 500px;
+    max-height: 500px;
     overflow-y: auto;
     margin-top: 20px;
 }
@@ -896,17 +896,11 @@ img.blur {
             }
 }
 
-svg *::selection {
-    background : transparent;
+
+#rarefaction-png-export {
+    overflow: visible;
 }
 
-svg *::-moz-selection {
-    background:transparent;
-}
-
-svg *::-webkit-selection {
-    background:transparent;
-}
 rect.selection {
     stroke          : #333;
     stroke-dasharray: 4px;

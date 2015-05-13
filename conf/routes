@@ -21,7 +21,7 @@ POST        /account/api/data                       controllers.AccountAPI.data(
 GET         /account/api/files                      controllers.AccountAPI.files()
 GET         /account/api/info                       controllers.AccountAPI.accountInformation()
 POST        /account/api/annotation                 controllers.AccountAPI.annotationData()
-POST        /account/api/annotation/search          controllers.AccountAPI.searchAnnotationData()
+POST        /account/api/annotation/search          controllers.AccountAPI.searchClonotypes()
 GET         /account/api/samplecollection/ws        controllers.SampleCollectionAPI.SampleCollectionAPI.open()
 
 # Robots.txt route

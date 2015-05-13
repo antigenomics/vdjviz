@@ -25,7 +25,7 @@
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12">
                             <p>
-                                <!-- tooltip placeholder -->
+                                    <!-- tooltip placeholder -->
                             </p>
                         </div>
                     </div>
@@ -73,16 +73,16 @@
                         </div>
                         <div class="row">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Occurence Treshhold</label>
-                                <div class="col-sm-6">
+                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">Occurence Treshhold</label>
+                                <div class="col-sm-4 col-md-4 col-lg-4">
                                     <input type="number" class="form-control" ng-model="occurenceTreshold" max="{{ selectedFiles.length }}" min="2">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Overlap type</label>
-                                <div class="col-sm-6">
+                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">Overlap type</label>
+                                <div class="col-sm-4 col-md-4 col-lg-4">
                                     <select ng-model="overlapType" ng-hide="isJointRendering()">
                                         <option value="Nucleotide">Nucleotide</option>
                                         <option value="NucleotideV" >NucleotideV</option>
@@ -98,8 +98,8 @@
                         </div>
                         <div class="row">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">V Filter</label>
-                                <div class="col-sm-6">
+                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">V Filter</label>
+                                <div class="col-sm-4 col-md-4 col-lg-4">
                                     <ui-select multiple ng-model="$parent.selectedVGenes">
                                         <ui-select-match placeholder="Select V genes...">{{ ::$item }}</ui-select-match>
                                         <ui-select-choices repeat="v in getVGenes() | filter:$select.search">
@@ -114,8 +114,8 @@
                         </div>
                         <div class="row">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">J Filter</label>
-                                <div class="col-sm-6">
+                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">J Filter</label>
+                                <div class="col-sm-4 col-md-4 col-lg-4">
                                     <ui-select multiple ng-model="$parent.selectedJGenes">
                                         <ui-select-match placeholder="Select J genes...">{{ ::$item }}</ui-select-match>
                                         <ui-select-choices repeat="j in getJGenes() | filter:$select.search">

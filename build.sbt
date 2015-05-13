@@ -19,7 +19,6 @@ libraryDependencies ++= Seq(
   "ws.securesocial" %% "securesocial" % "2.1.4",
   "com.typesafe.play.plugins" %% "play-plugins-mailer" % "2.3.0",
   "mysql" % "mysql-connector-java" % "5.1.18",
-  "org.mapdb" % "mapdb" % "1.0.7",
   filters,
   javaJdbc,
   javaEbean,
