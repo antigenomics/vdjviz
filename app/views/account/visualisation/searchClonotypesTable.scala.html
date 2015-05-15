@@ -4,14 +4,8 @@
             <div class="well sharp">
                 <div class="col-sm-6 col-md-6 col-lg-6">
                     <div class="form-group">
-                        <label class="control-label">Sequence</label>
-                        <input type="text" class="form-control sharp" ng-model="sequenceString" placeholder="Enter your sequence here..">
-                    </div>
-                </div>
-                <div class="col-sm-6 col-md-6 col-lg-6">
-                    <div class="form-group">
-                        <label class="control-label">Max mismatches</label>
-                        <input type="number" class="form-control sharp" ng-model="maxMismatches" min="0" max="7">
+                        <label class="control-label">CDR3 Sequence</label>
+                        <input type="text" class="form-control sharp" ng-model="sequenceString" placeholder="Enter CDR3 sequence here..">
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
@@ -22,7 +16,7 @@
                         data-html="true"
                         data-placement="top"
                         data-container="body"
-                        data-content="Filter tooltip"
+                        data-content="@views.html.account.tooltips.vFilterTooltip()"
                         />
                     </div>
                 </div>
@@ -34,14 +28,14 @@
                         data-html="true"
                         data-placement="top"
                         data-container="body"
-                        data-content="Filter tooltip"
+                        data-content="@views.html.account.tooltips.jFilterTooltip()"
                         />
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
                     <div class="form-group">
                         <label class="control-label">Sequence type</label>
-                        <select ng-model="aminoAcid">
+                        <select class="form-control" ng-model="aminoAcid">
                             <option value="true">AminoAcid</option>
                             <option value="false" >Nucleotide</option>
                         </select>
@@ -63,6 +57,7 @@
                 <b>No matches found</b>
             </div>
             <div class="well sharp" ng-show="!isNoMatchesFound() && !isLoading()" id="clonotypes_table_scroll">
+                <p>Top {{ searchResults.rows.length }}</p>
                 <table class="table table-hover">
                     <thead>
                         <tr>

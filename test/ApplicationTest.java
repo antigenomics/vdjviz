@@ -5,8 +5,19 @@ import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.CompositeClonotypeFilter;
 import com.antigenomics.vdjtools.sample.Sample;
 import com.antigenomics.vdjtools.sample.SequenceMatchFilter;
+import graph.SearchClonotypes.JFilterRegex;
+import graph.SearchClonotypes.VFilterRegex;
 import org.junit.Test;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinary;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryContainer;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeFilters.*;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 /**
 *
@@ -17,40 +28,39 @@ import java.io.IOException;
 public class ApplicationTest {
 
     @Test
-    public void clonotypeSearchTest() throws IOException {
-        String fileName = "/home/bvdmitri/A2-i129.txt.gz";
-        SampleFileConnection sampleFileConnection = new SampleFileConnection(fileName, Software.MiTcr);
-        Sample sample = sampleFileConnection.getSample();
-        SequenceMatchFilter sequenceMatchFilter = new SequenceMatchFilter("CSDGDG*YS", true, 2);
-        CompositeClonotypeFilter compositeClonotypeFilter = new CompositeClonotypeFilter(sequenceMatchFilter);
-        Sample sample1 = new Sample(sample, compositeClonotypeFilter);
-        for (Clonotype clonotype : sample1) {
-            System.out.println(clonotype.getCdr3aa());
-        }
-    }
-
-    @Test
-    public void speedTest() {
-        System.gc();
-        Runtime runtime = Runtime.getRuntime();
-        long memoryBefore = runtime.totalMemory() - runtime.freeMemory();
+    public void clonotypeBinaryIterationTest() {
         long startTime = System.currentTimeMillis();
-        String fileName = "/home/bvdmitri/A2-i129.txt.gz";
-        SampleFileConnection sampleFileConnection = new SampleFileConnection(fileName, Software.VDJtools);
-        Sample sample = sampleFileConnection.getSample();
-        long finishTime = System.currentTimeMillis();
-        System.gc();
-        long memoryAfter = runtime.totalMemory() - runtime.freeMemory();
-        System.out.println("Time: " + (finishTime-startTime) + " ms");
-        System.out.println("Memory: " + (memoryAfter - memoryBefore));
+        String path = "/home/bvdmitri/clonotype.bin";
+        ClonotypeBinaryContainer container = new ClonotypeBinaryContainer(path);
+        List<BinaryClonotypeFilter> filters = new ArrayList<>();
+        filters.add(new BinaryClonotypeVFilter("TRBV4-1", "TRBV4-2"));
+        filters.add(new BinaryClonotypeJFilter("TRBJ2-3"));
+        filters.add(new BinaryClonotypeSequenceFilter("CASSQEVREPSTDTQYF", true));
+        FilteredBinaryClonotypes filteredBinaryClonotypes = new FilteredBinaryClonotypes(container, filters);
+        for (ClonotypeBinary clonotypeBinary : filteredBinaryClonotypes.getFiltered(100)) {
+            System.out.println(
+                    ClonotypeBinaryUtils.byteToString(clonotypeBinary.getCdr3aa()) + "| |" +
+                    ClonotypeBinaryUtils.byteToString(clonotypeBinary.getV()) + "| |" + ClonotypeBinaryUtils.byteToString(clonotypeBinary.getJ()));
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("Time: " + (endTime - startTime) + "ms");
     }
 
     @Test
-    public void regexTest() {
-        String vGene = "TRBV*";
-        String s = vGene.replaceAll("[*]", "[a-zA-z1-9-_+]+");
-        String checkString = "TRBV9-2";
-        System.out.println(checkString.matches(s));
+    public void gg() {
+        long startTime = System.currentTimeMillis();
+        String path = "/home/bvdmitri/A2-i129.txt.gz";
+        SampleFileConnection sampleFileConnection = new SampleFileConnection(path, Software.MiTcr);
+        Sample sample = sampleFileConnection.getSample();
+        VFilterRegex vFilterRegex = new VFilterRegex("TRBV4-1", "TRBV4-2");
+        JFilterRegex jFilterRegex = new JFilterRegex("TRBJ2-3");
+        SequenceMatchFilter sequenceMatchFilter = new SequenceMatchFilter("CASSQEVREPSTDTQYF", true, 2);
+        CompositeClonotypeFilter compositeClonotypeFilter = new CompositeClonotypeFilter(vFilterRegex, jFilterRegex, sequenceMatchFilter);
+        Sample filteredSample = new Sample(sample, compositeClonotypeFilter);
+        for (Clonotype clonotype : filteredSample) {
+            System.out.println(clonotype.getCdr3aa() + "| |" + clonotype.getV() + "| |" + clonotype.getJ());
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("Time: " + (endTime - startTime) + "ms");
     }
-
 }

@@ -305,11 +305,47 @@ public class AccountAPI extends Controller {
                 String sequence = searchClonotypesRequest.sequence;
                 boolean aminoAcid = searchClonotypesRequest.aminoAcid;
 
-                if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_]+"))
-                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for aminoacid sequence")));
+                if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_\\[\\]]+")) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                } else {
+                    int leftCount = 0;
+                    int rightCount = 0;
+                    for (char c : sequence.toCharArray()) {
+                        if (c == '[') {
+                            leftCount++;
+                            continue;
+                        }
+                        if (c == ']') {
+                            rightCount++;
+                            if (rightCount > leftCount)
+                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                        }
+                    }
+                    if (leftCount != rightCount) {
+                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                    }
+                }
 
-                if (!aminoAcid && !sequence.toUpperCase().matches("[ATGC]+"))
-                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for nucleotide sequence")));
+                if (!aminoAcid && !sequence.toUpperCase().matches("[ATGC\\[\\]]+")) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                } else {
+                    int leftCount = 0;
+                    int rightCount = 0;
+                    for (char c : sequence.toCharArray()) {
+                        if (c == '[') {
+                            leftCount++;
+                            continue;
+                        }
+                        if (c == ']') {
+                            rightCount++;
+                            if (rightCount > leftCount)
+                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                        }
+                    }
+                    if (leftCount != rightCount) {
+                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                    }
+                }
 
                 Integer maxMismatches = searchClonotypesRequest.maxMismatches;
 

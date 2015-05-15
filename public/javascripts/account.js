@@ -2570,10 +2570,10 @@ function joinHeapMap(data) {
             //dstart_nt = (cdr.dstart < 0) ? vend_nt + 1 : cdr.dstart,
             //dend_nt = (cdr.dend < 0) ? vend_nt : cdr.dend,
             //jstart_nt = (cdr.jstart < 0) ? 10000 : cdr.jstart,
-            vend_aa = cdr.vend / 3,
-            dstart_aa = ((cdr.dstart / 3) < 0) ? vend_aa + 1 : cdr.dstart / 3,
-            dend_aa = ((cdr.dend / 3) < 0) ? vend_aa : cdr.dend / 3,
-            jstart_aa = ((cdr.jstart / 3) < 0) ? 10000 : cdr.jstart / 3;
+            vend_aa = Math.floor(cdr.vend / 3),
+            dstart_aa = (Math.floor(cdr.dstart / 3) < 0) ? vend_aa + 1 : Math.floor(cdr.dstart / 3),
+            dend_aa = (Math.floor(cdr.dend / 3) < 0) ? vend_aa : Math.floor(cdr.dend / 3),
+            jstart_aa = (Math.floor(cdr.jstart / 3) < 0) ? 10000 : Math.floor(cdr.jstart / 3);
 
         var //cdr3nt_arr = [],
             cdr3aa_arr = [];
@@ -2664,10 +2664,10 @@ function cdr3Transform(cdr, $sce) {
         dstart_nt = (cdr.dstart < 0) ? vend_nt + 1 : cdr.dstart,
         dend_nt = (cdr.dend < 0) ? vend_nt : cdr.dend,
         jstart_nt = (cdr.jstart < 0) ? 10000 : cdr.jstart,
-        vend_aa = cdr.vend / 3,
-        dstart_aa = ((cdr.dstart / 3) < 0) ? vend_aa + 1 : cdr.dstart / 3,
-        dend_aa = ((cdr.dend / 3) < 0) ? vend_aa : cdr.dend / 3,
-        jstart_aa = ((cdr.jstart / 3) < 0) ? 10000 : cdr.jstart / 3;
+        vend_aa = Math.floor(cdr.vend / 3),
+        dstart_aa = (Math.floor(cdr.dstart / 3) < 0) ? vend_aa + 1 : Math.floor(cdr.dstart / 3),
+        dend_aa = (Math.floor(cdr.dend / 3) < 0) ? vend_aa : Math.floor(cdr.dend / 3),
+        jstart_aa = (Math.floor(cdr.jstart / 3) < 0) ? 10000 : Math.floor(cdr.jstart / 3);
 
     var cdr3nt_arr = [],
         cdr3aa_arr = [];
