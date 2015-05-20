@@ -1,47 +1,30 @@
 @(userName: String)
 @main("Account") {
     <account-page ng-app="accountPage">
-        <notifications ng-show="isNotificationsExist()">
-            <div id="notifications_wrapper">
-                <div class="notification" ng-repeat="notification in notifications" ng-class="{'error':isNotificationError(notification), 'info':isNotificationInfo(notification), 'success':isNotificationSuccess(notification)}">
-                    <div class="close_notification" ng-click="deleteNotification(notification)">
-                        <i class="fa fa-times"></i>
-                    </div>
-                    <div class="notification_header">
-                        <p>{{ ::notification.header }}</p>
-                    </div>
-                    <div class="notification_body">
-                        <p>{{ ::notification.body }}</p>
-                    </div>
-                </div>
-            </div>
-        </notifications>
         <block-page></block-page>
-        <files-sidebar>
-            @views.html.account.filesSidebar()
-        </files-sidebar>
-        <file-upload>
+
+        @views.html.account.notifications()
+
+        @views.html.account.filesSidebar()
+
         @views.html.account.fileUpload()
-        </file-upload>
+
         <div id="account_wrapper" >
-            <main-visualisation-content>
-                @views.html.account.visualisation.sampleContent()
-            </main-visualisation-content>
-            <account-information>
-                @views.html.account.accountInformation()
-            </account-information>
-            <rarefaction-content>
-                @views.html.account.visualisation.rarefactionContent()
-            </rarefaction-content>
-            <summary-content>
-                @views.html.account.visualisation.summaryContent()
-            </summary-content>
-            <comparing-content>
-                @views.html.account.visualisation.comparingContent()
-            </comparing-content>
-            <sample-collection>
-                @views.html.account.visualisation.sampleCollectionAnalysing()
-            </sample-collection>
+
+            @views.html.account.visualisation.sampleContent()
+
+            @views.html.account.accountInformation()
+
+            @views.html.account.visualisation.rarefactionContent()
+
+            @views.html.account.visualisation.summaryContent()
+
+            @views.html.account.visualisation.comparingContent()
+
+            @views.html.account.visualisation.sampleCollectionAnalysing()
+
+            @views.html.account.visualisation.multipleSampleSearchClonotypes()
+
         </div>
 
     </account-page>

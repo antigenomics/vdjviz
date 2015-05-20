@@ -1,48 +1,44 @@
-<div class="row summary-tab" ng-show="isSummaryInformation()">
-    <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="well sharp">
-            <p>The table below holds some basic statistics for all currently uploaded samples, including:</p>
-            <ul>
-                <li>Number and frequency of non-coding clonotypes - clonotypes characterized by sequences that contain stop codon or frameshift</li>
-                <li>Mean insert size - mean number of nucleotides inserted in V-D and D-J junctions for TRB, IGH, etc or V-J junction for TRA, IGL, etc</li>
-                <li>Mean N(D)N size - mean number of nucleotides between V segment end and J segment start.</li>
-                <li>Convergence - mean number of CDR3 nucleotide sequences coding for the same CDR3 amino acid sequence.</li>
-            </ul>
-            <hr>
-            <summary-stats>
-                <table class="table table-responsive">
-                    <thead>
-                        <tr>
-                            <th>Sample</th>
-                            <th>Reads</th>
-                            <th>Diversity</th>
-                            <th>Mean clonotype frequency</th>
-                            <th>Geo.mean clonotype frequency</th>
-                            <th>Non-coding clonotypes</th>
-                            <th>NC clonotypes frequency</th>
-                            <th>Mean insert size</th>
-                            <th>Mean N(D)N size</th>
-                            <th>Mean CDR3 length</th>
-                            <th>Convergence</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat="row in data">
-                            <td>{{ ::row.Name }}</td>
-                            <td>{{ ::row.count }}</td>
-                            <td>{{ ::row.diversity }}</td>
-                            <td>{{ ::row.mean_frequency }}</td>
-                            <td>{{ ::row.geomean_frequency }}</td>
-                            <td>{{ ::row.nc_diversity }}</td>
-                            <td>{{ ::row.nc_frequency }}</td>
-                            <td>{{ ::row.mean_insert_size }}</td>
-                            <td>{{ ::row.mean_ndn_size }}</td>
-                            <td>{{ ::row.mean_cdr3nt_length }}</td>
-                            <td>{{ ::row.convergence }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </summary-stats>
+<summary-content>
+    <div class="row summary-tab" ng-show="isSummaryInformation()">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="well sharp">
+                @views.html.account.descriptions.summaryDescription()
+                <hr>
+                <summary-stats>
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <th>Sample</th>
+                                <th>Reads</th>
+                                <th>Diversity</th>
+                                <th>Mean clonotype frequency</th>
+                                <th>Geo.mean clonotype frequency</th>
+                                <th>Non-coding clonotypes</th>
+                                <th>NC clonotypes frequency</th>
+                                <th>Mean insert size</th>
+                                <th>Mean N(D)N size</th>
+                                <th>Mean CDR3 length</th>
+                                <th>Convergence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="row in data">
+                                <td>{{ ::row.Name }}</td>
+                                <td>{{ ::row.count }}</td>
+                                <td>{{ ::row.diversity }}</td>
+                                <td>{{ ::row.mean_frequency }}</td>
+                                <td>{{ ::row.geomean_frequency }}</td>
+                                <td>{{ ::row.nc_diversity }}</td>
+                                <td>{{ ::row.nc_frequency }}</td>
+                                <td>{{ ::row.mean_insert_size }}</td>
+                                <td>{{ ::row.mean_ndn_size }}</td>
+                                <td>{{ ::row.mean_cdr3nt_length }}</td>
+                                <td>{{ ::row.convergence }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </summary-stats>
+            </div>
         </div>
     </div>
-</div>
+</summary-content>

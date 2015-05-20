@@ -1,3 +1,4 @@
+<sample-collection>
 <div class="row" ng-show="isSampleCollection()">
     <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-3 col-sm-offset-3" ng-show="!isInitialized() && !isConnectionError()">
         <div class="jumbotron single-window text-center sharp">
@@ -64,7 +65,7 @@
                         <div class="cube2"></div>
                     </div>
                     <div ng-hide="isJointRendering()" class="col-lg-10" id="joinParameters">
-                        <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
                             <div class="col-lg-12 col-md-12 col-sm-12">
                                 <p>
                                         <!-- tooltip placeholder -->
@@ -72,65 +73,63 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="form-group">
-                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">Occurence Treshhold</label>
-                                <div class="col-sm-4 col-md-4 col-lg-4">
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <div class="form-group">
+                                    <label class="control-label">Occurence Treshhold</label>
                                     <input type="number" class="form-control" ng-model="occurenceTreshold" max="{{ selectedFiles.length }}" min="2">
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="form-group">
-                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">Overlap type</label>
-                                <div class="col-sm-4 col-md-4 col-lg-4">
-                                    <select ng-model="overlapType" ng-hide="isJointRendering()">
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <div class="form-group">
+                                    <label class="control-label">Overlap type</label>
+                                    <select class="form-control" ng-model="overlapType" ng-hide="isJointRendering()">
                                         <option value="Nucleotide">Nucleotide</option>
                                         <option value="NucleotideV" >NucleotideV</option>
                                         <option value="NucleotideVJ" >NucleotideVJ</option>
-                                        <option value="AminoAcid" >AminoAcide</option>
-                                        <option value="AminoAcidV" >AminoAcideV</option>
-                                        <option value="AminoAcidVJ" >AminoAcideVJ</option>
-                                        <option value="AminoAcidNonNucleotide" >AminoAcideNonNucleotide</option>
+                                        <option value="AminoAcid" >AminoAcid</option>
+                                        <option value="AminoAcidV" >AminoAcidV</option>
+                                        <option value="AminoAcidVJ" >AminoAcidVJ</option>
+                                        <option value="AminoAcidNonNucleotide" >AminoAcidNonNucleotide</option>
                                         <option value="Strict" >Strict</option>
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="form-group">
-                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">V Filter</label>
-                                <div class="col-sm-4 col-md-4 col-lg-4">
-                                    <ui-select multiple ng-model="$parent.selectedVGenes">
-                                        <ui-select-match placeholder="Select V genes...">{{ ::$item }}</ui-select-match>
-                                        <ui-select-choices repeat="v in getVGenes() | filter:$select.search">
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label class="col-lg-12 col-md-12 col-sm-12 control-label">V Filter</label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6">
+                                        <ui-select multiple ng-model="$parent.selectedVGenes">
+                                            <ui-select-match placeholder="Select V genes...">{{ ::$item }}</ui-select-match>
+                                            <ui-select-choices repeat="v in getVGenes() | filter:$select.search">
                                             {{ ::v }}
-                                        </ui-select-choices>
-                                    </ui-select>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                    </div>
+                                    <button class="btn btn-default sharp" ng-click="selectAllVGenes($parent)">Select all</button>
+                                    <button class="btn btn-default sharp" ng-click="invertVGenes()">Invert</button>
+                                    <button class="btn btn-default sharp" ng-click="selectNoneVGenes()">Select none</button>
                                 </div>
-                                <button class="btn btn-default sharp" ng-click="selectAllVGenes($parent)">Select all</button>
-                                <button class="btn btn-default sharp" ng-click="invertVGenes()">Invert</button>
-                                <button class="btn btn-default sharp" ng-click="selectNoneVGenes()">Select none</button>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="form-group">
-                                <label class="col-sm-3 col-md-3 col-lg-3 control-label">J Filter</label>
-                                <div class="col-sm-4 col-md-4 col-lg-4">
-                                    <ui-select multiple ng-model="$parent.selectedJGenes">
-                                        <ui-select-match placeholder="Select J genes...">{{ ::$item }}</ui-select-match>
-                                        <ui-select-choices repeat="j in getJGenes() | filter:$select.search">
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label class="col-lg-12 col-md-12 col-sm-12 control-label">J Filter</label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6">
+                                        <ui-select multiple ng-model="$parent.selectedJGenes">
+                                            <ui-select-match placeholder="Select J genes...">{{ ::$item }}</ui-select-match>
+                                            <ui-select-choices repeat="j in getJGenes() | filter:$select.search">
                                     {{ ::j }}
-                                        </ui-select-choices>
-                                    </ui-select>
-                                </div>
-                                <button class="btn btn-default sharp" ng-click="selectAllJGenes()">Select all</button>
-                                <button class="btn btn-default sharp" ng-click="invertJGenes()">Invert</button>
-                                <button class="btn btn-default sharp" ng-click="selectNoneJGenes()">Select none</button>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                    </div>
+                                    <button class="btn btn-default sharp" ng-click="selectAllJGenes()">Select all</button>
+                                    <button class="btn btn-default sharp" ng-click="invertJGenes()">Invert</button>
+                                    <button class="btn btn-default sharp" ng-click="selectNoneJGenes()">Select none</button>
 
+                                </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <button class="btn btn-info sharp" ng-click="joinSamples()">Join</button>
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                                <button class="btn btn-info sharp" ng-click="joinSamples()">Join</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -171,3 +170,4 @@
         </div>
     </div>
 </div>
+</sample-collection>

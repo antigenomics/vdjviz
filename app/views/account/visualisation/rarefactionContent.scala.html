@@ -1,13 +1,12 @@
-<div class="row rarefaction-tab" ng-show="isRarefactionInformation()">
-    <div class="col-lg-12 col-md-12 col-sm-12">
-        <div class="well sharp">
-            <p>This interactive plot shows rarefaction curves for all currently uploaded samples, i.e. sample diversity (number of unique clonotypes) that is observed under a given sampling depth (number of reads).</p>
-            <p><b>Interpolation</b> (solid line) and <b>extrapolation</b>
-                (dashed lines) are performed using multinomial model. All samples are extrapolated up to the size of largest sample.</p>
-            <p>Tooltip displays the observed sample diversity.</p>
-            <hr>
-            <button ng-repeat="type in ::rarefactionExportTypes" class="btn btn-default sharp pull-right" ng-click="exportRarefaction(type)">Export to {{ ::type }}</button>
-            <div class="rarefaction-visualisation-tab"></div>
+<rarefaction-content>
+    <div class="row rarefaction-tab" ng-show="isRarefactionInformation()">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="well sharp">
+                @views.html.account.descriptions.rarefactionDescription()
+                <hr>
+                <button ng-repeat="type in ::rarefactionExportTypes" class="btn btn-default sharp pull-right" ng-click="exportRarefaction(type)">Export to {{ ::type }}</button>
+                <div class="rarefaction-visualisation-tab"></div>
+            </div>
         </div>
     </div>
-</div>
+</rarefaction-content>

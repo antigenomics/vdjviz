@@ -16,7 +16,8 @@ var CONSOLE_INFO = true;
         RAREFACTION: 2,
         SUMMARY: 3,
         COMPARING: 4,
-        SAMPLE_COLLECTION: 5
+        SAMPLE_COLLECTION: 5,
+        MULTIPLE_SEARCH: 6
     });
 
     var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ui.select']);
@@ -544,6 +545,10 @@ var CONSOLE_INFO = true;
                     return stateInfo.isActiveState(htmlState.RAREFACTION);
                 };
 
+                $scope.isMultipleSampleSearch = function() {
+                    return stateInfo.isActiveState(htmlState.MULTIPLE_SEARCH);
+                }
+
                 $scope.showStartPage = function() {
                     $scope.state = htmlState.ACCOUNT_INFORMATION;
                 };
@@ -601,10 +606,7 @@ var CONSOLE_INFO = true;
                 $scope.setSummaryState = setSummaryState;
                 $scope.setCompareState = setCompareState;
                 $scope.setSampleCollectionState = setSampleCollectionState;
-                $scope.isRarefactionState = isRarefactionState;
-                $scope.isSummaryState = isSummaryState;
-                $scope.isCompareState = isCompareState;
-                $scope.isSampleCollectionState = isSampleCollectionState;
+                $scope.setMultipleSampleSearchState = setMultipleSampleSearchState;
                 $scope.showCompareModal = showCompareModal;
 
                 function showCompareModal() {
@@ -627,20 +629,8 @@ var CONSOLE_INFO = true;
                     stateInfo.setActiveState(htmlState.SAMPLE_COLLECTION);
                 }
 
-                function isRarefactionState() {
-                    return stateInfo.isActiveState(htmlState.RAREFACTION);
-                }
-
-                function isSummaryState() {
-                    return stateInfo.isActiveState(htmlState.SUMMARY);
-                }
-
-                function isCompareState() {
-                    return stateInfo.isActiveState(htmlState.COMPARING);
-                }
-
-                function isSampleCollectionState() {
-                    return stateInfo.isActiveState(htmlState.SAMPLE_COLLECTION);
+                function setMultipleSampleSearchState() {
+                    stateInfo.setActiveState(htmlState.MULTIPLE_SEARCH);
                 }
 
                 function showNewFilesTable() {
@@ -838,7 +828,6 @@ var CONSOLE_INFO = true;
 
                 $scope.sequenceString = '';
                 $scope.searchResults = {};
-                $scope.maxMismatches = 2;
                 $scope.aminoAcid = 'true';
                 $scope.filters = {
                     vFilter: '',
@@ -856,7 +845,6 @@ var CONSOLE_INFO = true;
                     $http.post('/account/api/annotation/search', {
                         fileName: $scope.file.fileName,
                         sequence: $scope.sequenceString,
-                        maxMismatches: $scope.maxMismatches,
                         aminoAcid: $scope.aminoAcid,
                         vFilter: $scope.filters.vFilter.replace(/ /g,'') !== '' ? $scope.filters.vFilter.replace(/ /g,'').split(',') : [],
                         jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : []
@@ -1531,7 +1519,7 @@ var CONSOLE_INFO = true;
     });
     //--------------------------------------------------------//
 
-    //Comparing Directive
+    //Join samples factory and directive
     //--------------------------------------------------------//
     app.factory('sampleCollectionFactory', ['$http', '$log', '$websocket', 'notifications', '$sce', function($http, $log, $websocket, notifications, $sce) {
 
@@ -1855,6 +1843,24 @@ var CONSOLE_INFO = true;
     });
     //--------------------------------------------------------//
 
+    //Multiple samples search factory and directive
+    //--------------------------------------------------------//
+    app.factory('multipleSampleSearchFactory', ['$http', '$log', function($http, $log) {
+        var a = 0;
+        return {
+
+        };
+    }]);
+
+    app.directive('multipleSampleSearch', function() {
+        return {
+            restrict: 'E',
+            controller: ['$scope', '$log', function($scope, $log) {
+                $scope.testDirectiveMessage = 'Test directive message';
+            }]
+        };
+    });
+    //--------------------------------------------------------//
 
     //Block account page Directive
     //--------------------------------------------------------//

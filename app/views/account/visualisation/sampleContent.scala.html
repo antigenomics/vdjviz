@@ -1,69 +1,71 @@
-<div class="visualisation-tab" ng-show="isFileInformation()">
-    <div class="row">
-        <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="panel panel-info separated sharp">
-                <div class="panel-body">
-                    <div class="col-lg-2 col-md-2 col-sm-2" ng-repeat="tab in ::sortedTabs">
-                        <button class="btn btn-default btn-block sharp" ng-click="setActiveTab(tab)" ng-class="{'btn-info':isActiveTab(tab)}">
+<main-visualisation-content>
+    <div class="visualisation-tab" ng-show="isFileInformation()">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="panel panel-info separated sharp">
+                    <div class="panel-body">
+                        <div class="col-lg-2 col-md-2 col-sm-2" ng-repeat="tab in ::sortedTabs">
+                            <button class="btn btn-default btn-block sharp" ng-click="setActiveTab(tab)" ng-class="{'btn-info':isActiveTab(tab)}">
                         {{ ::tab.tabName }}
-                        </button>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="well sharp">
+                    <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
+                            <!-- vjUsage description start -->
+                        @views.html.account.descriptions.vjusageDescription()
+                            <!-- vjUsage description end -->
+                    </div>
+                    <div class="visualisation-description-spectratype" ng-show="isActiveTab(visualisationTabs.spectratype)">
+                            <!-- spectratype description start -->
+                        @views.html.account.descriptions.spectratypeDescription()
+                            <!-- spectratype description end -->
+                    </div>
+                    <div class="visualisation-description-spectratypeV" ng-show="isActiveTab(visualisationTabs.spectratypev)">
+                            <!-- spectratypeV description start -->
+                        @views.html.account.descriptions.spectratypeVDescription()
+                            <!-- spectratypeV description end -->
+                    </div>
+                    <div class="visualisation-description-quantileStats" ng-show="isActiveTab(visualisationTabs.quantilestats)">
+                            <!-- quantileStats description start -->
+                        @views.html.account.descriptions.quantileStatsDescription()
+                            <!-- quantileStats description end -->
+                    </div>
+                    <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
+                            <!-- annotation description start -->
+                        @views.html.account.descriptions.annotationDescription()
+                            <!-- annotation description end -->
+                    </div>
+                    <div class="visualisation-description-searchclonotypes" ng-show="isActiveTab(visualisationTabs.searchclonotypes)">
+                            <!-- search clonotypes description start -->
+                        @views.html.account.descriptions.searchClonotypesTableDescription()
+                            <!-- search clonotypes description end -->
+                    </div>
+
+                    <div ng-repeat="file in files" id="id{{ ::file.uid }}" ng-show="showFile(file)" class="visualisation-results">
+                        <div ng-repeat="tab in ::visualisationTabs" ng-show="isActiveTab(tab)">
+                            <p>
+                                <button ng-repeat="type in ::tab.exportType" class="btn btn-default sharp pull-right" ng-click="exportChartPng(file, tab, type)">Export to {{ ::type }}</button>
+                            </p>
+                            <hr>
+                            <div class="viusalisation-results {{ ::tab.mainPlace }}"></div>
+                        </div>
+
+                            <!-- Search clonotypes table directive start -->
+                        @views.html.account.visualisation.searchClonotypesTable()
+                            <!-- Search clonotypes table directive end -->
+
+                            <!-- Clonotypes table directive start -->
+                        @views.html.account.visualisation.clonotypesTable()
+                            <!-- Clonotypes table directive end-->
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="well sharp">
-                <div class="visualisation-description-vjusage" ng-show="isActiveTab(visualisationTabs.vjusage)">
-                        <!-- vjUsage description start -->
-                    @views.html.account.descriptions.vjusageDescription()
-                        <!-- vjUsage description end -->
-                </div>
-                <div class="visualisation-description-spectratype" ng-show="isActiveTab(visualisationTabs.spectratype)">
-                        <!-- spectratype description start -->
-                    @views.html.account.descriptions.spectratypeDescription()
-                        <!-- spectratype description end -->
-                </div>
-                <div class="visualisation-description-spectratypeV" ng-show="isActiveTab(visualisationTabs.spectratypev)">
-                        <!-- spectratypeV description start -->
-                    @views.html.account.descriptions.spectratypeVDescription()
-                        <!-- spectratypeV description end -->
-                </div>
-                <div class="visualisation-description-quantileStats" ng-show="isActiveTab(visualisationTabs.quantilestats)">
-                        <!-- quantileStats description start -->
-                    @views.html.account.descriptions.quantileStatsDescription()
-                        <!-- quantileStats description end -->
-                </div>
-                <div class="visualisation-description-annotation" ng-show="isActiveTab(visualisationTabs.annotation)">
-                        <!-- annotation description start -->
-                    @views.html.account.descriptions.annotationDescription()
-                        <!-- annotation description end -->
-                </div>
-                <div class="visualisation-description-searchclonotypes" ng-show="isActiveTab(visualisationTabs.searchclonotypes)">
-                        <!-- search clonotypes description start -->
-                    @views.html.account.descriptions.searchClonotypesTableDescription()
-                        <!-- search clonotypes description end -->
-                </div>
-
-                <div ng-repeat="file in files" id="id{{ ::file.uid }}" ng-show="showFile(file)" class="visualisation-results">
-                    <div ng-repeat="tab in ::visualisationTabs" ng-show="isActiveTab(tab)">
-                        <p>
-                            <button ng-repeat="type in ::tab.exportType" class="btn btn-default sharp pull-right" ng-click="exportChartPng(file, tab, type)">Export to {{ ::type }}</button>
-                        </p>
-                        <hr>
-                        <div class="viusalisation-results {{ ::tab.mainPlace }}"></div>
-                    </div>
-
-                        <!-- Search clonotypes table directive start -->
-                    @views.html.account.visualisation.searchClonotypesTable()
-                        <!-- Search clonotypes table directive end -->
-
-                        <!-- Clonotypes table directive start -->
-                    @views.html.account.visualisation.clonotypesTable()
-                        <!-- Clonotypes table directive end-->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+</main-visualisation-content>

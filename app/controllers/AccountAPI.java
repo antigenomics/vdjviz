@@ -278,7 +278,6 @@ public class AccountAPI extends Controller {
         public String fileName;
         public String sequence;
         public boolean aminoAcid;
-        public int maxMismatches;
         public String[] vFilter;
         public String[] jFilter;
     }
@@ -326,7 +325,7 @@ public class AccountAPI extends Controller {
                     }
                 }
 
-                if (!aminoAcid && !sequence.toUpperCase().matches("[ATGC\\[\\]]+")) {
+                if (!aminoAcid && !sequence.toUpperCase().matches("[ATGCN\\[\\]]+")) {
                     return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
                 } else {
                     int leftCount = 0;
@@ -347,8 +346,6 @@ public class AccountAPI extends Controller {
                     }
                 }
 
-                Integer maxMismatches = searchClonotypesRequest.maxMismatches;
-
                 UserFile userFile = UserFile.fyndByNameAndAccount(account, fileName);
                 if (userFile == null)
                     return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
@@ -356,7 +353,15 @@ public class AccountAPI extends Controller {
                 return ok(Json.toJson(SearchClonotypes.searchSingleSample(userFile, searchClonotypesRequest)));
             }
         });
+    }
 
+    public static F.Promise<Result> multipleSearchClonotypes() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                return ok();
+            }
+        });
     }
 
     private static Result cache(UserFile file, String cacheName, Account account) {
@@ -436,7 +441,6 @@ public class AccountAPI extends Controller {
         LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
         final Account account = localUser.account;
         return new WebSocket<JsonNode>() {
-
             @Override
             public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
                 in.onMessage(new F.Callback<JsonNode>() {
