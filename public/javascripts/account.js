@@ -208,12 +208,12 @@ var CONSOLE_INFO = true;
                         chartInfo.update_rarefaction(true);
                         chartInfo.update_summary();
                     }
-                    notifications.addSuccessNotification('Deleting', file.fileName + ' have been successfully deleted');
+                    notifications.addSuccessNotification('Deleting', 'Sample ' + file.fileName + ' has been successfully deleted');
                     if (CONSOLE_INFO) {
                         $log.info('File ' + file.fileName + ' successfully deleted');
                     }
                 }).error(function(response) {
-                    notifications.addErrorNotification('Deleting', 'Error while deleting file ' + file.fileName);
+                    notifications.addErrorNotification('Deleting', 'Error while deleting sample ' + file.fileName);
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting file ' + file.fileName);
                     }
@@ -235,13 +235,13 @@ var CONSOLE_INFO = true;
                     var file;
                     for (file in files) { if (files.hasOwnProperty(file)) { delete files[file]; } }
                     stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
-                    notifications.addSuccessNotification('Deleting', 'All files have been successfully deleted');
+                    notifications.addSuccessNotification('Deleting', 'All samples have been successfully deleted');
                     if (CONSOLE_INFO) {
                         $log.info('All files successfully deleted');
                     }
                 })
                 .error(function() {
-                    notifications.addErrorNotification('Deleting', 'Error while deleting all files');
+                    notifications.addErrorNotification('Deleting', 'Error while deleting samples');
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting files');
                     }
@@ -438,7 +438,7 @@ var CONSOLE_INFO = true;
                             if (CONSOLE_INFO) {
                                 $log.error('Error while requesting data for file ' + parameters.file.fileName);
                             }
-                            notifications.addErrorNotification(type, 'Error while requesting data for file ' + parameters.file.fileName);
+                            notifications.addErrorNotification(type, 'Error while requesting data for sample ' + parameters.file.fileName);
                             noDataAvailable(parameters, parameters.file);
                             loaded(parameters.place);
                         });
@@ -474,7 +474,7 @@ var CONSOLE_INFO = true;
                     loaded(parameters.place);
                 })
                 .error(function() {
-                    notifications.addErrorNotification('Rarefaction', 'Error while requesting rarefaction data');
+                    notifications.addErrorNotification('Rarefaction', 'Error while loading rarefaction data');
                     loaded(parameters.place);
                 });
 
@@ -498,7 +498,7 @@ var CONSOLE_INFO = true;
                     loaded('.summary-visualisation-tab');
                 })
                 .error(function() {
-                    notifications.addErrorNotification('Summary', 'Error while requesting summary data');
+                    notifications.addErrorNotification('Summary', 'Error while loading summary data');
                     loaded('.summary-visualisation-tab');
                 });
         }
@@ -836,7 +836,7 @@ var CONSOLE_INFO = true;
 
                 $scope.searchSequence = function() {
                     if ($scope.sequenceString.length <= 0) {
-                        notifications.addInfoNotification('Search clonotypes', 'Empty CDR3 pattern');
+                        notifications.addInfoNotification('Search clonotypes', 'Missing CDR3 pattern');
                         return;
                     }
                     init = true;
@@ -944,7 +944,7 @@ var CONSOLE_INFO = true;
                 .error(function() {
                     data[fileName].loading = false;
                     data[fileName].loadError = true;
-                    notifications.addErrorNotification('Clonotypes table', 'Error while downloading page ' + page);
+                    notifications.addErrorNotification('Clonotypes table', 'Error while loading page ' + page);
                     if (CONSOLE_INFO) {
                         $log.error('Clonotypes table: Error while downloading page ' + page);
                     }
@@ -1331,7 +1331,7 @@ var CONSOLE_INFO = true;
                                                     });
                                                     if (!isRenderingFilesExist()) {
                                                         if (!isWaitingFilesExist()) {
-                                                            notifications.addSuccessNotification('Uploading', 'All files have been uploaded and rendered');
+                                                            notifications.addSuccessNotification('Uploading', 'All samples have been uploaded and rendered successfully');
                                                         }
                                                         chartInfo.update_rarefaction(true);
                                                         chartInfo.update_summary();
@@ -1346,7 +1346,7 @@ var CONSOLE_INFO = true;
                                             break;
                                         case "error" :
                                             accountInfo.deleteFile_client(file);
-                                            notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
+                                            notifications.addErrorNotification('Rendering', 'Error while rendering sample ' + file.fileName);
                                             $scope.$apply(function() {
                                                 updateResult(file, 'error');
                                                 updateResultTooltip(file, event.message);
@@ -1377,7 +1377,7 @@ var CONSOLE_INFO = true;
                             case "error" :
                                 updateResult(file, 'error');
                                 updateResultTooltip(file, data.result.message);
-                                notifications.addErrorNotification('Rendering', 'Error while rendering file ' + file.fileName);
+                                notifications.addErrorNotification('Rendering', 'Error while rendering sample ' + file.fileName);
                                 break;
                             default:
                                 updateResult(file, 'error');
@@ -1583,7 +1583,7 @@ var CONSOLE_INFO = true;
                     step = steps.JOIN_RENDERING;
                     angular.copy(response.data.vGenes, vGenes);
                     angular.copy(response.data.jGenes, jGenes);
-                    notifications.addSuccessNotification('Join samples', 'All files were opened');
+                    notifications.addSuccessNotification('Join samples', 'Loaded samples');
                     break;
                 case 'rendered':
                     jointrendering = false;
@@ -1617,7 +1617,7 @@ var CONSOLE_INFO = true;
 
         function openGroup(n) {
             if (n.length < 2) {
-                notifications.addInfoNotification('Join samples', 'You should choose at least 2 samples');
+                notifications.addInfoNotification('Join samples', 'You should select at least two samples');
                 return;
             }
             names = n;
@@ -1802,11 +1802,11 @@ var CONSOLE_INFO = true;
 
         function search(searchParameters) {
             if (searchParameters.selectedFiles.length === 0) {
-                notifications.addInfoNotification('Multiple sample search', 'You should choose at least 1 sample');
+                notifications.addInfoNotification('Multiple sample search', 'You should select at least one sample');
                 return;
             }
             if (searchParameters.sequenceString.length === 0) {
-                notifications.addInfoNotification('Multiple sample search', 'Empty CDR3 pattern');
+                notifications.addInfoNotification('Multiple sample search', 'Missing CDR3 pattern');
                 return;
             }
             initialized = true;
