@@ -20,7 +20,7 @@ var CONSOLE_INFO = true;
         MULTIPLE_SEARCH: 6
     });
 
-    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ui.select']);
+    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket']);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -1542,8 +1542,8 @@ var CONSOLE_INFO = true;
         };
         var data = {};
 
-        var vGenes = [];
-        var jGenes = [];
+        var vGenes = '';
+        var jGenes = '';
 
         angular.copy(treshData, data);
 
@@ -1581,8 +1581,8 @@ var CONSOLE_INFO = true;
                     break;
                 case 'opened':
                     step = steps.JOIN_RENDERING;
-                    angular.copy(response.data.vGenesList, vGenes);
-                    angular.copy(response.data.jGenesList, jGenes);
+                    angular.copy(response.data.vGenes, vGenes);
+                    angular.copy(response.data.jGenes, jGenes);
                     notifications.addSuccessNotification('Join samples', 'All files were opened');
                     break;
                 case 'rendered':
@@ -1628,15 +1628,15 @@ var CONSOLE_INFO = true;
             }));
         }
 
-        function joinSamples(overlapType, occurenceTreshold, vGenes, jGenes) {
+        function joinSamples(overlapType, occurenceTreshold, filters) {
             jointrendering = true;
             ws.send(JSON.stringify({
                 action: 'render',
                 joinParameters: {
                     overlapType: overlapType,
                     occurenceTreshold: occurenceTreshold,
-                    vGenes: vGenes,
-                    jGenes: jGenes
+                    vFilter: filters.vFilter.replace(/ /g,'') !== '' ? filters.vFilter.replace(/ /g,'').split(',') : [],
+                    jFilter: filters.jFilter.replace(/ /g,'') !== '' ? filters.jFilter.replace(/ /g,'').split(',') : []
                 }
             }));
         }
@@ -1754,7 +1754,7 @@ var CONSOLE_INFO = true;
                 };
 
                 $scope.joinSamples = function() {
-                    sampleCollectionFactory.joinSamples($scope.overlapType, $scope.occurenceTreshold, $scope.selectedVGenes, $scope.selectedJGenes);
+                    sampleCollectionFactory.joinSamples($scope.overlapType, $scope.occurenceTreshold, $scope.filters);
                 };
 
                 //Account info API
@@ -1762,61 +1762,12 @@ var CONSOLE_INFO = true;
 
                 //Directive API
                 $scope.selectedFiles = [];
-                $scope.selectedVGenes = [];
-                $scope.selectedJGenes = [];
+                $scope.filters = {
+                    vFilter: '',
+                    jFilter: ''
+                };
                 $scope.occurenceTreshold = 2;
-                $scope.overlapType = "Strict";
-
-                $scope.addJGene = function(j) {
-                    var index = $scope.selectedJGenes.indexOf(j);
-                    if (index >= 0) {
-                        $scope.selectedJGenes.splice(index, 1);
-                    } else {
-                        $scope.selectedJGenes.push(j);
-                    }
-                };
-
-                $scope.addVGene = function(v) {
-                    var index = $scope.selectedVGenes.indexOf(v);
-                    if (index >= 0) {
-                        $scope.selectedVGenes.splice(index, 1);
-                    } else {
-                        $scope.selectedVGenes.push(v);
-                    }
-                };
-
-                $scope.selectAllJGenes =  function($parent) {
-                    $log.info($parent);
-                    angular.forEach($scope.getJGenes(), function(j) {
-                        if ($scope.selectedJGenes.indexOf(j) < 0) {
-                            $scope.addJGene(j);
-                        }
-                    })
-                };
-
-                $scope.selectAllVGenes =  function() {
-                    angular.forEach($scope.getVGenes(), function(v) {
-                        if ($scope.selectedVGenes.indexOf(v) < 0) {
-                            $scope.addVGene(v);
-                        }
-                    });
-                };
-
-                $scope.invertVGenes = function() {
-                    angular.forEach($scope.getVGenes(), $scope.addVGene);
-                };
-
-                $scope.invertJGenes = function() {
-                    angular.forEach($scope.getJGenes(), $scope.addJGene);
-                };
-
-                $scope.selectNoneVGenes = function() {
-                    $scope.selectedVGenes.splice(0, $scope.selectedVGenes.length);
-                };
-
-                $scope.selectNoneJGenes = function() {
-                    $scope.selectedJGenes.splice(0, $scope.selectedJGenes.length);
-                };
+                $scope.overlapType = "AminoAcid";
 
                 $scope.selectAll = function() {
                     angular.forEach($scope.files, function(file) {
@@ -2557,7 +2508,7 @@ function joinHeapMap(data) {
                         "<br> V: " + rowLabel[d.row - 1].v +
                         "<br> J: " + rowLabel[d.row - 1].j +
                         "<br> Sample: " + colLabel[d.col-1] +
-                        "<br> Log10: " + d.value);
+                        "<br> Log10 frequency: " + d.value);
                 //Show the tooltip
                 d3.select("#heatmap_tooltip").classed("hidden", false);
             })
@@ -2778,34 +2729,42 @@ function noDataAvailable(param, file) {
     }
 }
 
-$(document).bind('dragover', function (e) {
-    "use strict";
-    var dropZone = $('#new-files-dropzone'),
-        timeout = window.dropZoneTimeout;
-    if (!timeout) {
-        dropZone.addClass('in');
-    } else {
-        clearTimeout(timeout);
-    }
-    var found = false,
-        node = e.target;
-    do {
-        if (node === dropZone[0]) {
-            found = true;
-            break;
+$(document).ready(function() {
+    $(document).bind('dragover', function (e) {
+        "use strict";
+        var dropZone = $('#new-files-dropzone'),
+            timeout = window.dropZoneTimeout;
+        if (!timeout) {
+            dropZone.addClass('in');
+        } else {
+            clearTimeout(timeout);
         }
-        node = node.parentNode;
-    } while (node !== null);
-    if (found) {
-        dropZone.addClass('hover');
-    } else {
-        dropZone.removeClass('hover');
-    }
-    window.dropZoneTimeout = setTimeout(function () {
-        window.dropZoneTimeout = null;
-        dropZone.removeClass('in hover');
-    }, 100);
-});
+        var found = false,
+            node = e.target;
+        do {
+            if (node === dropZone[0]) {
+                found = true;
+                break;
+            }
+            node = node.parentNode;
+        } while (node !== null);
+        if (found) {
+            dropZone.addClass('hover');
+        } else {
+            dropZone.removeClass('hover');
+        }
+        window.dropZoneTimeout = setTimeout(function () {
+            window.dropZoneTimeout = null;
+            dropZone.removeClass('in hover');
+        }, 100);
+    });
+
+    $('.data_popover').popover({
+        trigger: 'focus'
+    });
+})
+
+
 
 function testWatchers() {
     "use strict";

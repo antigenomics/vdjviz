@@ -5,8 +5,8 @@ public class SampleCollectionRequest {
     public class JoinParameters {
         public String overlapType;
         public int occurenceTreshold;
-        public String[] vGenes;
-        public String[] jGenes;
+        public String[] vFilter;
+        public String[] jFilter;
     }
 
     public String[] names;

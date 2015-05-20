@@ -4,8 +4,8 @@
             <div class="well sharp">
                 <div class="col-sm-6 col-md-6 col-lg-6">
                     <div class="form-group">
-                        <label class="control-label">CDR3 Sequence</label>
-                        <input type="text" class="form-control sharp" ng-model="sequenceString" placeholder="Enter CDR3 sequence here..">
+                        <label class="control-label">CDR3 Pattern</label>
+                        <input type="text" class="form-control sharp" ng-model="sequenceString" placeholder="Enter CDR3 pattern here..">
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
@@ -57,7 +57,7 @@
                 <b>No matches found</b>
             </div>
             <div class="well sharp" ng-show="!isNoMatchesFound() && !isLoading()" id="clonotypes_table_scroll">
-                <p>Top {{ searchResults.rows.length }}</p>
+                <p>The table below is limited to top 100 hits </p>
                 <table class="table table-hover">
                     <thead>
                         <tr>

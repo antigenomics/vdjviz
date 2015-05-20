@@ -971,3 +971,8 @@ text.text-hover {
     /* Because of the inclusion of Bootstrap */
     height: 29px;
 }
+
+.popover {
+    max-width: 800px !important;
+    width: auto !important;
+}
