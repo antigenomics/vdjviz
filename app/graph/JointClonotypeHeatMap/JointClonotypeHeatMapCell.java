@@ -6,12 +6,18 @@ public class JointClonotypeHeatMapCell {
     private int row;
     private int col;
     private int value;
+    private double frequency;
 
     public JointClonotypeHeatMapCell(JointClonotype jointClonotype, int row, int col) {
         this.row = row;
         this.col = col + 1;
         double floor = Math.floor(Math.log10(jointClonotype.getFreq(col)));
         this.value = Double.isInfinite(floor) ? -10 : (int) floor;
+        this.frequency = jointClonotype.getFreq(col);
+    }
+
+    public double getFrequency() {
+        return frequency;
     }
 
     public int getRow() {

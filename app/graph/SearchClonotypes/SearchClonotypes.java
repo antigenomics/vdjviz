@@ -15,10 +15,12 @@ public class SearchClonotypes {
 
     static class SingleSampleSearchResults {
         public List<AnnotationTableRow> rows;
+        public String fileName;
         public AccountAPI.SearchClonotypesRequest parameters;
 
-        public SingleSampleSearchResults(List<AnnotationTableRow> rows, AccountAPI.SearchClonotypesRequest parameters) {
+        public SingleSampleSearchResults(List<AnnotationTableRow> rows, String fileName, AccountAPI.SearchClonotypesRequest parameters) {
             this.rows = rows;
+            this.fileName = fileName;
             this.parameters = parameters;
         }
     }
@@ -41,7 +43,15 @@ public class SearchClonotypes {
             rows.add(new AnnotationTableRow(clonotype, index));
             index++;
         }
-        return new SingleSampleSearchResults(rows, searchClonotypesRequest);
+        return new SingleSampleSearchResults(rows, file.getFileName(), searchClonotypesRequest);
+    }
+
+    public static List<SingleSampleSearchResults> searchMultipleSample(List<UserFile> files, AccountAPI.SearchClonotypesRequest searchClonotypesRequest) {
+        List<SingleSampleSearchResults> results = new ArrayList<>();
+        for (UserFile file : files) {
+            results.add(searchSingleSample(file, searchClonotypesRequest));
+        }
+        return results;
     }
 
 }

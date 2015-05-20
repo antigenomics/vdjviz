@@ -54,7 +54,7 @@ html, body {
     max-height: 500px;
     overflow-y: auto;
     margin-top: 20px;
-    min-height: 500px;
+    min-height: 100px;
 }
 
 #notifications_wrapper {

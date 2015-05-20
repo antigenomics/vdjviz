@@ -1,8 +1,117 @@
-<multiple-sample-search>
-    <div class="row" ng-show="isMultipleSampleSearch()">
-        <div class="col-lg-12 col-md-12 col-sm-12">
-            <div class="well sharp">
-                {{ testDirectiveMessage }}
+<multiple-sample-search ng-show="isMultipleSampleSearch()">
+    <div class="panel panel-info separated">
+        <div class="panel-body">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                @views.html.account.descriptions.multipleSampleClonotypeSearchDescription()
+            <hr>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <p>Select samples to be analyzed</p>
+                <div ng-repeat="file in files" style="float : left ; margin : 5px">
+                    <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected_MultipleSearchClonotypes(file)}" ng-click="selectFile_MultipleSearchClonotypes(file)">{{ ::file.fileName }}</button>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12" style="float : left ; margin : 5px">
+                <button class="btn btn-default sharp" ng-click="selectAll_MultipleSearchClonotypes()">Select all</button>
+                <button class="btn btn-default sharp" ng-click="unselectAll_MultipleSearchClonotypes()">Unselect all</button>
+                <button class="btn btn-default sharp" ng-click="revert_MultipleSearchClonotypes()">Revert</button>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <hr>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">CDR3 Pattern</label>
+                        <input type="text" class="form-control sharp" ng-model="searchParameters.sequenceString" placeholder="Enter CDR3 pattern here..">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">Sequence type</label>
+                        <select class="form-control" ng-model="searchParameters.aminoAcid">
+                            <option value="true">AminoAcid</option>
+                            <option value="false" >Nucleotide</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">VFilter</label>
+                        <input type="text" class="form-control sharp filterPopover" ng-model="searchParameters.filters.vFilter"
+                        data-toggle="popover"
+                        data-html="true"
+                        data-placement="top"
+                        data-container="body"
+                        data-content="@views.html.account.tooltips.vFilterTooltip()"
+                        />
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="form-group">
+                        <label class="control-label">JFilter</label>
+                        <input type="text" class="form-control sharp filterPopover" ng-model="searchParameters.filters.jFilter"
+                        data-toggle="popover"
+                        data-html="true"
+                        data-placement="top"
+                        data-container="body"
+                        data-content="@views.html.account.tooltips.jFilterTooltip()"
+                        />
+                    </div>
+                </div>
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                    <button class="btn btn-default sharp" ng-click="searchMultipleSampleSequence()">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div ng-show="isInitialized_MultipleSampleSearch()">
+        <div class="panel panel-info separated" ng-show="isLoading_MultipleSampleSearch()">
+            <div class="panel-body">
+                <div class="spinner">
+                    <div class="cube1"></div>
+                    <div class="cube2"></div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="!isLoading_MultipleSampleSearch()">
+            <div class="panel panel-info separated" ng-repeat="result in multipleSampleSearchResults" id="clonotypes_table_wrapper">
+                <div class="panel-heading">
+                    Sample: {{ ::result.fileName }}
+                    <button class="btn btn-default sharp pull-right" ng-click="hideTable=!hideTable">
+                        <text ng-show="hideTable">Show</text>
+                        <text ng-show="!hideTable">Hide</text>
+                    </button>
+                </div>
+                <div class="panel-body text-center" ng-hide="::result.rows.length">
+                    <b>No matches found</b>
+                </div>
+                <div class="panel-body" id="clonotypes_table_scroll"  ng-show="result.rows.length && !hideTable">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>Frequency</th>
+                                <th>Count</th>
+                                <th>CDR3AA</th>
+                                <th>V</th>
+                                <th>D</th>
+                                <th>J</th>
+                                <th>CDR3NT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="row in result.rows">
+                                <td>{{ ::row.index }}</td>
+                                <td>{{ ::row.freq }}</td>
+                                <td>{{ ::row.count }}</td>
+                                <td ng-bind-html="::row.cdr.cdr3aa"></td>
+                                <td>{{ ::row.v }}</td>
+                                <td>{{ ::row.d }}</td>
+                                <td>{{ ::row.j }}</td>
+                                <td ng-bind-html="::row.cdr.cdr3nt"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

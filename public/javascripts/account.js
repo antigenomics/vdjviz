@@ -836,9 +836,10 @@ var CONSOLE_INFO = true;
 
                 $scope.searchSequence = function() {
                     if ($scope.sequenceString.length <= 0) {
-                        notifications.addInfoNotification('Search clonotypes', 'Enter your sequence');
+                        notifications.addInfoNotification('Search clonotypes', 'Empty CDR3 pattern');
                         return;
                     }
+                    init = true;
                     loading = true;
                     noMatchesFound = false;
                     angular.extend($scope.searchResults, {});
@@ -850,7 +851,6 @@ var CONSOLE_INFO = true;
                         jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : []
                     })
                         .success(function(response) {
-                            init = true;
                             loading = false;
                             if (response.rows.length === 0) {
                                 noMatchesFound = true;
@@ -1740,8 +1740,7 @@ var CONSOLE_INFO = true;
                 $scope.changeJoinParameters = sampleCollectionFactory.changeJoinParameters;
                 $scope.openAnotherFiles = function() {
                     $scope.selectedFiles.splice(0, $scope.selectedFiles.length);
-                    $scope.selectedVGenes.splice(0, $scope.selectedVGenes.length);
-                    $scope.selectedJGenes.splice(0, $scope.selectedJGenes.length);
+                    $scope.occurenceTreshold = 2;
                     sampleCollectionFactory.openAnotherFiles();
                 };
 
@@ -1767,7 +1766,7 @@ var CONSOLE_INFO = true;
                     jFilter: ''
                 };
                 $scope.occurenceTreshold = 2;
-                $scope.overlapType = "AminoAcid";
+                $scope.overlapType = 'AminoAcid';
 
                 $scope.selectAll = function() {
                     angular.forEach($scope.files, function(file) {
@@ -1796,18 +1795,128 @@ var CONSOLE_INFO = true;
 
     //Multiple samples search factory and directive
     //--------------------------------------------------------//
-    app.factory('multipleSampleSearchFactory', ['$http', '$log', function($http, $log) {
-        var a = 0;
-        return {
+    app.factory('multipleSampleSearchFactory', ['$http', '$log', 'notifications', '$sce', function($http, $log, notifications, $sce) {
+        var initialized = false;
+        var loading = false;
+        var results = [];
 
+        function search(searchParameters) {
+            if (searchParameters.selectedFiles.length === 0) {
+                notifications.addInfoNotification('Multiple sample search', 'You should choose at least 1 sample');
+                return;
+            }
+            if (searchParameters.sequenceString.length === 0) {
+                notifications.addInfoNotification('Multiple sample search', 'Empty CDR3 pattern');
+                return;
+            }
+            initialized = true;
+            loading = true;
+            angular.copy([], results);
+            $http.post('/account/api/annotation/multipleSearch', {
+                sequence: searchParameters.sequenceString,
+                aminoAcid: searchParameters.aminoAcid,
+                selectedFiles: searchParameters.selectedFiles,
+                vFilter: searchParameters.filters.vFilter.replace(/ /g,'') !== '' ? searchParameters.filters.vFilter.replace(/ /g,'').split(',') : [],
+                jFilter: searchParameters.filters.jFilter.replace(/ /g,'') !== '' ? searchParameters.filters.jFilter.replace(/ /g,'').split(',') : []
+            })
+                .success(function(response) {
+                    angular.forEach(response, function(result) {
+                        angular.forEach(result.rows, function(row) {
+                            row.freq = (row.freq * 100).toPrecision(2) + '%';
+                            row.cdr = cdr3Transform(row.cdr, $sce);
+                        });
+                    });
+                    angular.copy(response, results);
+                    loading = false;
+                })
+                .error(function(response) {
+                    if (CONSOLE_INFO) {
+                        $log.info(response.message);
+                    }
+                    notifications.addErrorNotification('Multiple sample search', response.message);
+                    loading = false;
+                });
+        }
+
+        function isInitialized() {
+            return initialized;
+        }
+
+        function isLoading() {
+            return loading;
+        }
+
+        function getResults() {
+            return results;
+        }
+
+        return {
+            search: search,
+            isInitialized: isInitialized,
+            isLoading: isLoading,
+            getResults: getResults
         };
     }]);
 
     app.directive('multipleSampleSearch', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', '$log', function($scope, $log) {
-                $scope.testDirectiveMessage = 'Test directive message';
+            scope: false,
+            controller: ['$scope', '$log', 'multipleSampleSearchFactory', 'accountInfo', function($scope, $log, multipleSampleSearchFactory, accountInfo) {
+
+                //Multiple sample search factory API
+                $scope.isInitialized_MultipleSampleSearch = multipleSampleSearchFactory.isInitialized;
+                $scope.isLoading_MultipleSampleSearch = multipleSampleSearchFactory.isLoading;
+                $scope.multipleSampleSearchResults = multipleSampleSearchFactory.getResults();
+
+                //Directive API
+                $scope.files = accountInfo.getFiles();
+                $scope.searchParameters = {
+                    sequenceString: '',
+                    aminoAcid: 'true',
+                    selectedFiles: [],
+                    filters: {
+                        vFilter: '',
+                        jFilter: ''
+                    }
+                };
+
+                $scope.selectFile_MultipleSearchClonotypes = function(file) {
+                    var index = $scope.searchParameters.selectedFiles.indexOf(file.fileName);
+                    if (index < 0) {
+                        $scope.searchParameters.selectedFiles.push(file.fileName);
+                    } else {
+                        $scope.searchParameters.selectedFiles.splice(index, 1);
+                    }
+                };
+
+                $scope.selectAll_MultipleSearchClonotypes = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if (!$scope.isFileSelected_MultipleSearchClonotypes(file))
+                            $scope.selectFile_MultipleSearchClonotypes(file);
+                    });
+                };
+
+                $scope.unselectAll_MultipleSearchClonotypes = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if ($scope.isFileSelected_MultipleSearchClonotypes(file))
+                            $scope.selectFile_MultipleSearchClonotypes(file);
+                    });
+                };
+
+                $scope.revert_MultipleSearchClonotypes = function() {
+                    angular.forEach($scope.files, function(file) {
+                        $scope.selectFile_MultipleSearchClonotypes(file);
+                    });
+                };
+
+                $scope.isFileSelected_MultipleSearchClonotypes = function(file) {
+                    return $scope.searchParameters.selectedFiles.indexOf(file.fileName) >= 0;
+                };
+
+                $scope.searchMultipleSampleSequence = function() {
+                    multipleSampleSearchFactory.search($scope.searchParameters);
+                };
             }]
         };
     });
@@ -2508,7 +2617,8 @@ function joinHeapMap(data) {
                         "<br> V: " + rowLabel[d.row - 1].v +
                         "<br> J: " + rowLabel[d.row - 1].j +
                         "<br> Sample: " + colLabel[d.col-1] +
-                        "<br> Log10 frequency: " + d.value);
+                        "<br> Log10 frequency: " + d.value +
+                        "<br> Frequency: " + d.frequency.toPrecision(2));
                 //Show the tooltip
                 d3.select("#heatmap_tooltip").classed("hidden", false);
             })
@@ -2762,9 +2872,7 @@ $(document).ready(function() {
     $('.data_popover').popover({
         trigger: 'focus'
     });
-})
-
-
+});
 
 function testWatchers() {
     "use strict";

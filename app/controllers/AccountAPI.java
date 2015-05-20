@@ -275,11 +275,14 @@ public class AccountAPI extends Controller {
     }
 
     public static class SearchClonotypesRequest {
-        public String fileName;
         public String sequence;
         public boolean aminoAcid;
         public String[] vFilter;
         public String[] jFilter;
+        //For one sample
+        public String fileName;
+        //For multiple samples
+        public String[] selectedFiles;
     }
 
     public static F.Promise<Result> searchClonotypes() {
@@ -359,7 +362,72 @@ public class AccountAPI extends Controller {
         return F.Promise.promise(new F.Function0<Result>() {
             @Override
             public Result apply() throws Throwable {
-                return ok();
+                Account account = getCurrentAccount();
+                JsonNode request = request().body().asJson();
+
+                SearchClonotypesRequest searchClonotypesRequest;
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    searchClonotypesRequest = objectMapper.convertValue(request, SearchClonotypesRequest.class);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+                }
+                String[] selectedFiles = searchClonotypesRequest.selectedFiles;
+                String sequence = searchClonotypesRequest.sequence;
+                boolean aminoAcid = searchClonotypesRequest.aminoAcid;
+
+                if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_\\[\\]]+")) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                } else {
+                    int leftCount = 0;
+                    int rightCount = 0;
+                    for (char c : sequence.toCharArray()) {
+                        if (c == '[') {
+                            leftCount++;
+                            continue;
+                        }
+                        if (c == ']') {
+                            rightCount++;
+                            if (rightCount > leftCount)
+                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                        }
+                    }
+                    if (leftCount != rightCount) {
+                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                    }
+                }
+
+                if (!aminoAcid && !sequence.toUpperCase().matches("[ATGCN\\[\\]]+")) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                } else {
+                    int leftCount = 0;
+                    int rightCount = 0;
+                    for (char c : sequence.toCharArray()) {
+                        if (c == '[') {
+                            leftCount++;
+                            continue;
+                        }
+                        if (c == ']') {
+                            rightCount++;
+                            if (rightCount > leftCount)
+                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                        }
+                    }
+                    if (leftCount != rightCount) {
+                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                    }
+                }
+
+                List<UserFile> files = new ArrayList<>();
+                for (String fileName : selectedFiles) {
+                    UserFile userFile = UserFile.fyndByNameAndAccount(account, fileName);
+                    if (userFile == null)
+                        return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
+                    files.add(userFile);
+                }
+
+                return ok(Json.toJson(SearchClonotypes.searchMultipleSample(files, searchClonotypesRequest)));
             }
         });
     }
