@@ -1,13 +1,21 @@
-@(userName: String)
+@(shared: Boolean, link: String)
 @main("Account") {
+    <script src="@routes.Application.js(shared)"></script>
+    @if(shared){
+        <script>
+            var link = '@link';
+        </script>
+    }
     <account-page ng-app="accountPage">
         <block-page></block-page>
 
         @views.html.account.notifications()
 
-        @views.html.account.filesSidebar()
+        @views.html.account.filesSidebar(shared)
 
-        @views.html.account.fileUpload()
+        @if(!shared) {
+            @views.html.account.fileUpload()
+        }
 
         <div id="account_wrapper" >
 
@@ -21,9 +29,15 @@
 
             @views.html.account.visualisation.comparingContent()
 
-            @views.html.account.visualisation.sampleCollectionAnalysing()
+            @if(!shared) {
+                @views.html.account.visualisation.sampleCollectionAnalysing()
+            }
 
             @views.html.account.visualisation.multipleSampleSearchClonotypes()
+
+            @if(!shared) {
+                @views.html.account.visualisation.sharingPage()
+            }
 
         </div>
 

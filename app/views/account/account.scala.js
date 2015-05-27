@@ -1,6 +1,12 @@
+@(shared: Boolean)
 
-
-var CONSOLE_INFO = true;
+var CONSOLE_INFO = false;
+var api_url = 'account';
+var shared = false;
+@if(shared){
+    api_url = 'share';
+    shared = true;
+}
 
 (function () {
     "use strict";
@@ -17,7 +23,8 @@ var CONSOLE_INFO = true;
         SUMMARY: 3,
         COMPARING: 4,
         SAMPLE_COLLECTION: 5,
-        MULTIPLE_SEARCH: 6
+        MULTIPLE_SEARCH: 6,
+        SHARING_INFO: 7
     });
 
     var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket']);
@@ -123,13 +130,14 @@ var CONSOLE_INFO = true;
         var initialized = false;
         var initializeError = false;
         var files = {};
+        var sharedGroups = [];
         var uid = 0;
 
         //Initializing account information
         if (CONSOLE_INFO) {
             $log.info('Initializing account information');
         }
-        $http.get('/account/api/info')
+        $http.get('/' + api_url + '/api/info')
             .success(function(response) {
                 initialized = true;
                 var info = response.data;
@@ -171,6 +179,7 @@ var CONSOLE_INFO = true;
                         }
                     };
                 });
+                angular.copy(info.filesInformation.sharedGroups, sharedGroups);
                 if (Object.keys(files).length > 0) {
                     chartInfo.update_rarefaction(!rarefactionCache);
                     chartInfo.update_summary();
@@ -192,6 +201,11 @@ var CONSOLE_INFO = true;
         //Getter for user's files
         function getFiles() {
             return files;
+        }
+
+        //Getter for user's shared groups
+        function getSharedGroups() {
+            return sharedGroups;
         }
 
         //Delete file from server and client-side application
@@ -316,6 +330,7 @@ var CONSOLE_INFO = true;
 
         return {
             getFiles: getFiles,
+            getSharedGroups: getSharedGroups,
             deleteFile: deleteFile,
             deleteFile_client: deleteFile_client,
             deleteAll: deleteAll,
@@ -547,7 +562,11 @@ var CONSOLE_INFO = true;
 
                 $scope.isMultipleSampleSearch = function() {
                     return stateInfo.isActiveState(htmlState.MULTIPLE_SEARCH);
-                }
+                };
+
+                $scope.isSharingInformation = function() {
+                    return stateInfo.isActiveState(htmlState.SHARING_INFO);
+                };
 
                 $scope.showStartPage = function() {
                     $scope.state = htmlState.ACCOUNT_INFORMATION;
@@ -607,6 +626,7 @@ var CONSOLE_INFO = true;
                 $scope.setCompareState = setCompareState;
                 $scope.setSampleCollectionState = setSampleCollectionState;
                 $scope.setMultipleSampleSearchState = setMultipleSampleSearchState;
+                $scope.setSharingState = setSharingState;
                 $scope.showCompareModal = showCompareModal;
 
                 function showCompareModal() {
@@ -631,6 +651,10 @@ var CONSOLE_INFO = true;
 
                 function setMultipleSampleSearchState() {
                     stateInfo.setActiveState(htmlState.MULTIPLE_SEARCH);
+                }
+
+                function setSharingState() {
+                    stateInfo.setActiveState(htmlState.SHARING_INFO);
                 }
 
                 function showNewFilesTable() {
@@ -1861,8 +1885,7 @@ var CONSOLE_INFO = true;
     app.directive('multipleSampleSearch', function() {
         return {
             restrict: 'E',
-            scope: false,
-            controller: ['$scope', '$log', 'multipleSampleSearchFactory', 'accountInfo', function($scope, $log, multipleSampleSearchFactory, accountInfo) {
+            controller: ['$scope', '$log', 'multipleSampleSearchFactory', function($scope, $log, multipleSampleSearchFactory) {
 
                 //Multiple sample search factory API
                 $scope.isInitialized_MultipleSampleSearch = multipleSampleSearchFactory.isInitialized;
@@ -1870,7 +1893,6 @@ var CONSOLE_INFO = true;
                 $scope.multipleSampleSearchResults = multipleSampleSearchFactory.getResults();
 
                 //Directive API
-                $scope.files = accountInfo.getFiles();
                 $scope.searchParameters = {
                     sequenceString: '',
                     aminoAcid: 'true',
@@ -1920,6 +1942,113 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
+
+
+    //Sharing directive
+    //--------------------------------------------------------//
+    app.directive('sharing', function() {
+        return {
+            restrict: 'E',
+            scope: false,
+            controller: ['$scope', '$http', '$log', 'notifications', 'accountInfo', function($scope, $http, $log, notifications, accountInfo) {
+                var isNew = false;
+                var selectedFiles = [];
+
+                $scope.sharingDescription = '';
+                $scope.sharedGroups = accountInfo.getSharedGroups();
+
+                $scope.isNewSharingFiles = function() {
+                    return isNew;
+                };
+
+                $scope.addSharingFiles = function() {
+                    selectedFiles.splice(0, selectedFiles.length);
+                    $scope.sharingDescription = '';
+                    isNew = true;
+                };
+
+                $scope.isFileSelected_Sharing = function(file) {
+                    var index = selectedFiles.indexOf(file.fileName);
+                    return index >= 0;
+                };
+
+                $scope.selectFile_Sharing = function(file) {
+                    var index = selectedFiles.indexOf(file.fileName);
+                    if (index >= 0) {
+                        selectedFiles.splice(index, 1);
+                    } else {
+                        selectedFiles.push(file.fileName);
+                    }
+                };
+
+                $scope.selectAll_Sharing = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if (!$scope.isFileSelected_Sharing(file))
+                            $scope.selectFile_Sharing(file);
+                    });
+                };
+
+                $scope.unselectAll_Sharing = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if ($scope.isFileSelected_Sharing(file))
+                            $scope.selectFile_Sharing(file);
+                    });
+                };
+
+                $scope.revert_Sharing = function() {
+                    angular.forEach($scope.files, function(file) {
+                        $scope.selectFile_Sharing(file);
+                    });
+                };
+
+                $scope.deleteSharedGroup = function(group) {
+                    $http.post('/account/api/deleteShared', {
+                        link: group.link
+                    })
+                        .success(function(response) {
+                            $scope.sharedGroups.splice($scope.sharedGroups.indexOf(group), 1);
+                            notifications.addSuccessNotification('Sharing', 'Successfully deleted');
+                        })
+                        .error(function(error) {
+                            if (CONSOLE_INFO) {
+                                $log.error('Sharing', error.message);
+                            }
+                            notifications.addErrorNotification('Sharing', error.message);
+                        });
+                };
+
+                $scope.copyShareLinkToClip = function(link) {
+                    window.prompt("Copy to clipboard: Ctrl+C, Enter", location.host + "/share/" + link);
+                };
+
+                $scope.shareButton = function() {
+                    if (selectedFiles.length === 0) {
+                        notifications.addInfoNotification('Sharing', 'You should select at least one sample');
+                        return;
+                    }
+                    $http.post('/account/api/share', {
+                        selectedFiles: selectedFiles,
+                        description: $scope.sharingDescription
+                    })
+                        .success(function(group) {
+                            notifications.addSuccessNotification('Sharing', 'Successfully shared');
+                            $scope.sharedGroups.push(group);
+                            isNew = false;
+                        })
+                        .error(function(response) {
+                            if (CONSOLE_INFO) {
+                                $log.error('Sharing: ' + response.message);
+                            }
+                            notifications.addErrorNotification('Sharing', response.message);
+                        });
+                };
+
+
+            }]
+        };
+    });
+
     //--------------------------------------------------------//
 
     //Block account page Directive

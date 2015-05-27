@@ -9,9 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import graph.AnnotationTable.AnnotationTable;
 import graph.RarefactionChartMultiple.RarefactionChart;
 import graph.SearchClonotypes.SearchClonotypes;
-import models.Account;
-import models.LocalUser;
-import models.UserFile;
+import models.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import play.Logger;
 import play.libs.F;
@@ -36,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 
 @SecureSocial.SecuredAction
@@ -48,230 +48,338 @@ public class AccountAPI extends Controller {
     }
 
     public static Result account() {
-        Identity user = (Identity) ctx().args.get(SecureSocial.USER_KEY);
-        LocalUser localUser = LocalUser.find.byId(user.identityId().userId());
-        return ok(views.html.account.accountMainPage.render(localUser.getAccountUserName()));
+        return ok(views.html.account.accountMainPage.render(false, null));
     }
 
-    public static Result upload() {
-
-        //Identifying user using the SecureSocial API
-        Account account = getCurrentAccount();
-
-
-        if (account == null) {
-            return ok(Json.toJson(new ServerResponse("error", "Unknown error")));
-        }
-
-        //Checking files count;
-        if (account.isMaxFilesCountExceeded()) {
-            Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
-            return ok(Json.toJson(new ServerResponse("error", "You have exceeded the limit of the number of files")));
-
-        }
-
-        //Getting the file from request body
-        Http.MultipartFormData body = request().body().asMultipartFormData();
-        Http.MultipartFormData.FilePart file = body.getFile("files[]");
-
-        if (file == null) {
-            return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
-        }
-        if (account.getMaxFilesSize() > 0) {
-            Long sizeMB = file.getFile().length() / 1024;
-            if (sizeMB > account.getMaxFilesSize()) {
-                return ok(Json.toJson(new ServerResponse("error", "File is too large")));
-            }
-        }
+    public static F.Promise<Result> upload() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
 
 
-        //Getting fileName
-        //If User do not enter the name of file
-        //it will be fills automatically using current file name
-        String fileName;
-        if (file.getFilename().equals("")) {
-            fileName = FilenameUtils.removeExtension(file.getFilename());
-        } else {
-            fileName = body.asFormUrlEncoded().get("fileName")[0];
-        }
+                if (account == null) {
+                    return ok(Json.toJson(new ServerResponse("error", "Unknown error")));
+                }
 
-        String pattern = "^[a-zA-Z0-9_.+-]{1,40}$";
-        if (fileName == null || !fileName.matches(pattern)) {
-            return ok(Json.toJson(new ServerResponse("error", "Invalid name")));
-        }
+                //Checking files count;
+                if (account.isMaxFilesCountExceeded()) {
+                    Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
+                    return ok(Json.toJson(new ServerResponse("error", "You exceeded the limit of the number of files")));
+
+                }
+
+                //Getting the file from request body
+                Http.MultipartFormData body = request().body().asMultipartFormData();
+                Http.MultipartFormData.FilePart file = body.getFile("files[]");
+
+                if (file == null) {
+                    return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
+                }
+                if (account.getMaxFilesSize() > 0) {
+                    Long sizeMB = file.getFile().length() / 1024;
+                    if (sizeMB > account.getMaxFilesSize()) {
+                        return ok(Json.toJson(new ServerResponse("error", "File is too large")));
+                    }
+                }
 
 
-        List<UserFile> allFiles = UserFile.findByAccount(account);
-        for (UserFile userFile: allFiles) {
-            if (userFile.getFileName().equals(fileName)) {
-                return ok(Json.toJson(new ServerResponse("error", "You should use unique names for your files")));
-            }
-        }
+                //Getting fileName
+                //If User do not enter the name of file
+                //it will be fills automatically using current file name
+                String fileName;
+                if (file.getFilename().equals("")) {
+                    fileName = FilenameUtils.removeExtension(file.getFilename());
+                } else {
+                    fileName = body.asFormUrlEncoded().get("fileName")[0];
+                }
 
-        try {
+                String pattern = "^[a-zA-Z0-9_.+-]{1,40}$";
+                if (fileName == null || !fileName.matches(pattern)) {
+                    return ok(Json.toJson(new ServerResponse("error", "Invalid name")));
+                }
 
-            File accountDir = new File(account.getDirectoryPath());
-            if (!accountDir.exists()) {
-                Boolean accountDirCreated = accountDir.mkdir();
-                if (!accountDirCreated) {
-                    Logger.of("user." + account.getUserName()).error("Error creating main directory for user " + account.getUserName());
-                    return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
+
+                List<UserFile> allFiles = UserFile.findByAccount(account);
+                for (UserFile userFile : allFiles) {
+                    if (userFile.getFileName().equals(fileName)) {
+                        return ok(Json.toJson(new ServerResponse("error", "You should use unique names for your files")));
+                    }
+                }
+
+                try {
+
+                    File accountDir = new File(account.getDirectoryPath());
+                    if (!accountDir.exists()) {
+                        Boolean accountDirCreated = accountDir.mkdir();
+                        if (!accountDirCreated) {
+                            Logger.of("user." + account.getUserName()).error("Error creating main directory for user " + account.getUserName());
+                            return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
+                        }
+                    }
+
+                    File uploadedFile = file.getFile();
+                    String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
+                    File fileDir = (new File(account.getDirectoryPath() + "/" + unique_name + "/"));
+
+                    //Trying to create file directory
+                    if (!fileDir.exists()) {
+                        Boolean created = fileDir.mkdir();
+                        if (!created) {
+                            Logger.of("user." + account.getUserName()).error("Error creating file directory for user " + account.getUserName());
+                            return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
+                        }
+                    }
+
+                    String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
+                    Boolean uploaded = uploadedFile.renameTo(new File(account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension));
+                    if (!uploaded) {
+                        Logger.of("user." + account.getUserName()).error("Error upload file for user " + account.getUserName());
+                        return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
+                    }
+
+                    final UserFile newFile = new UserFile(account, fileName,
+                            unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
+                            account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension,
+                            fileDir.getAbsolutePath(), fileExtension);
+
+
+                    //Updating database UserFile <-> Account
+                    Ebean.save(newFile);
+                    return ok(Json.toJson(new ServerResponse("success", "Successfully uploaded")));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
+                    return ok(Json.toJson(new ServerResponse("error", "Error while uploading new file")));
                 }
             }
-
-            File uploadedFile = file.getFile();
-            String unique_name = CommonUtil.RandomStringGenerator.generateRandomString(5, CommonUtil.RandomStringGenerator.Mode.ALPHA);
-            File fileDir = (new File(account.getDirectoryPath() + "/" + unique_name + "/"));
-
-            //Trying to create file directory
-            if (!fileDir.exists()) {
-                Boolean created = fileDir.mkdir();
-                if (!created) {
-                    Logger.of("user." + account.getUserName()).error("Error creating file directory for user " + account.getUserName());
-                    return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
-                }
-            }
-
-            String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
-            Boolean uploaded = uploadedFile.renameTo(new File(account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension));
-            if (!uploaded) {
-                Logger.of("user." + account.getUserName()).error("Error upload file for user " + account.getUserName());
-                return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
-            }
-
-            final UserFile newFile = new UserFile(account, fileName,
-                    unique_name, body.asFormUrlEncoded().get("softwareTypeName")[0],
-                    account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension,
-                    fileDir.getAbsolutePath(), fileExtension);
-
-
-            //Updating database UserFile <-> Account
-            Ebean.save(newFile);
-            return ok(Json.toJson(new ServerResponse("success", "Successfully uploaded")));
-        } catch (Exception e) {
-            e.printStackTrace();
-            Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
-            return ok(Json.toJson(new ServerResponse("error", "Error while uploading new file")));
-        }
+        });
     }
 
-    public static Result delete() {
-        //Identifying user using the Secure Social API
-        Account account = getCurrentAccount();
+    public static F.Promise<Result> delete() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
 
-        JsonNode request = request().body().asJson();
+                JsonNode request = request().body().asJson();
 
-        File fileDir;
-        File[] files;
+                File fileDir;
+                File[] files;
 
-        switch (request.findValue("action").asText()) {
-            //Delete one file
-            case "delete":
+                switch (request.findValue("action").asText()) {
+                    //Delete one file
+                    case "delete":
+                        String fileName = request.findValue("fileName").asText();
+                        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+                        if (file == null) {
+                            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() + " have no file named " + fileName);
+                            return forbidden(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
+                        }
+                        fileDir = new File(file.getDirectoryPath());
+                        files = fileDir.listFiles();
+                        if (files == null) {
+                            return ok(Json.toJson(new ServerResponse("error", "File does not exist")));
+                        }
+                        try {
+                            UserFile.deleteFile(file);
+                            return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
+                        } catch (Exception e) {
+                            Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + "Error while deleting file " + fileName);
+                            e.printStackTrace();
+                            return ok(Json.toJson(new ServerResponse("error", "Error while deleteing file " + fileName)));
+                        }
+                        //Delete all files
+                    case "deleteAll":
+                        try {
+                            account.cleanAllFiles();
+                            return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
+                        } catch (Exception e) {
+                            Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while deleting files for  " + account.getUserName());
+                            e.printStackTrace();
+                            return ok(Json.toJson(new ServerResponse("error", "Error while deleting files")));
+                        }
+                    default:
+                        return badRequest(Json.toJson(new ServerResponse("error", "Invalid action")));
+                }
+            }
+        });
+    }
+
+    public static F.Promise<Result> files() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
+                return ok(Json.toJson(account.getFilesInformation()));
+            }
+        });
+    }
+
+    public static F.Promise<Result> accountInformation() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                return ok(Json.toJson(new CacheServerResponse("ok", getCurrentAccount().getAccountInformation())));
+            }
+        });
+    }
+
+    public static F.Promise<Result> data() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
+
+                JsonNode request = request().body().asJson();
+                if (!request.findValue("action").asText().equals("data")
+                        || request.findValue("fileName") == null
+                        || request.findValue("type") == null) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
+                }
+
                 String fileName = request.findValue("fileName").asText();
                 UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-                if (file == null) {
-                    Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +" have no file named " + fileName);
-                    return forbidden(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
-                }
-                fileDir = new File(file.getDirectoryPath());
-                files = fileDir.listFiles();
-                if (files == null) {
-                    return ok(Json.toJson(new ServerResponse("error", "File does not exist")));
-                }
+                String type = request.findValue("type").asText();
                 try {
-                    UserFile.deleteFile(file);
-                    return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
-                } catch (Exception e) {
-                    Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + "Error while deleting file " + fileName);
+                    CacheType cacheType = CacheType.findByType(type);
+                    if (cacheType.getSingle()) {
+                        return cache(file, cacheType.getCacheFileName(), account);
+                    } else {
+                        switch (type) {
+                            case "summary":
+                                return basicStats(account);
+                            case "rarefaction":
+                                Boolean needToCreateNew = request.findValue("new").asBoolean();
+                                return rarefaction(account, needToCreateNew);
+                            default:
+                                throw new IllegalArgumentException("Unknown type " + type);
+                        }
+                    }
+                } catch (IllegalArgumentException | FileNotFoundException e) {
                     e.printStackTrace();
-                    return ok(Json.toJson(new ServerResponse("error", "Error while deleteing file " + fileName)));
-                }
-            //Delete all files
-            case "deleteAll":
-                try {
-                    account.cleanAllFiles();
-                    return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
-                } catch (Exception e) {
-                    Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while deleting files for  " + account.getUserName());
-                    e.printStackTrace();
-                    return ok(Json.toJson(new ServerResponse("error", "Error while deleting files")));
-                }
-            default:
-                return badRequest(Json.toJson(new ServerResponse("error", "Invalid action")));
-        }
-    }
-
-    public static Result files() {
-        //Identifying user using the Secure Social API
-        //Return meta information about all files
-        Account account = getCurrentAccount();
-        return ok(Json.toJson(account.getFilesInformation()));
-    }
-
-    public static Result accountInformation() {
-        return ok(Json.toJson(new CacheServerResponse("ok", getCurrentAccount().getAccountInformation())));
-    }
-
-    public static Result data() throws Exception {
-        //Identifying user using the Secure Social API
-        //Return data for chart
-        Account account = getCurrentAccount();
-
-        JsonNode request = request().body().asJson();
-        if (!request.findValue("action").asText().equals("data")
-                || request.findValue("fileName") == null
-                || request.findValue("type") == null) {
-            return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
-        }
-
-        String fileName = request.findValue("fileName").asText();
-        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
-        String type = request.findValue("type").asText();
-        try {
-            CacheType cacheType = CacheType.findByType(type);
-            if (cacheType.getSingle()) {
-                return cache(file, cacheType.getCacheFileName(), account);
-            } else {
-                switch (type) {
-                    case "summary":
-                        return basicStats(account);
-                    case "rarefaction":
-                        Boolean needToCreateNew = request.findValue("new").asBoolean();
-                        return rarefaction(account, needToCreateNew);
-                    default:
-                        throw new IllegalArgumentException("Unknown type " + type);
+                    Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                            ": error while requesting " + type + " data");
+                    return badRequest(Json.toJson(new ServerResponse("error", "Unknown type " + type)));
                 }
             }
-        } catch (IllegalArgumentException | FileNotFoundException e) {
-            e.printStackTrace();
-            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                    ": error while requesting " + type + " data");
-            return badRequest(Json.toJson(new ServerResponse("error", "Unknown type " + type)));
-        }
+        });
     }
 
-    public static Result annotationData() {
-        //Identifying user using the Secure Social API
-        //Return data for chart
-        Account account = getCurrentAccount();
+    public static class ShareFilesRequest {
+        public String[] selectedFiles;
+        public String description;
+    }
 
-        JsonNode request = request().body().asJson();
-        if (!request.findValue("action").asText().equals("data")
-                || request.findValue("fileName") == null
-                || request.findValue("shift") == null) {
-            return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
-        }
+    public static F.Promise<Result> shareFiles() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
+                JsonNode request = request().body().asJson();
+                ShareFilesRequest shareFilesRequest;
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    shareFilesRequest = objectMapper.convertValue(request, ShareFilesRequest.class);
+                } catch (Exception e) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+                }
+                if (account.isMaxSharedFilesCountExceeded(shareFilesRequest.selectedFiles.length))
+                    return badRequest(Json.toJson(new ServerResponse("error", "You exceeded the limit of the number of shared samples")));
 
-        String fileName = request.findValue("fileName").asText();
-        UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+                List<UserFile> files = new ArrayList<>();
+                for (String selectedFile : shareFilesRequest.selectedFiles) {
+                    UserFile userFile = UserFile.fyndByNameAndAccount(account, selectedFile);
+                    if (userFile == null)
+                        return badRequest(Json.toJson(new ServerResponse("error", "You have no sample named " + selectedFile)));
+                    files.add(userFile);
+                }
 
-        if (file != null) {
-            AnnotationTable annotationTable = new AnnotationTable(file, request.findValue("shift").asInt());
-            annotationTable.create();
-            return ok(Json.toJson(annotationTable.getData()));
-        } else {
-            return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
-        }
+
+                String groupUniqueName = CommonUtil.RandomStringGenerator.generateRandomString(10, CommonUtil.RandomStringGenerator.Mode.ALPHANUMERIC);
+                String cachePath = account.getDirectoryPath() + "/" + groupUniqueName + "/";
+                File groupFolder = new File(cachePath);
+                if (!groupFolder.exists()) {
+                    if (!groupFolder.mkdir()) {
+                        Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                                " error while creating directory for sharing group");
+                        return badRequest(Json.toJson(new ServerResponse("error", "Server is unavailable")));
+                    }
+                }
+                String link = CommonUtil.RandomStringGenerator.generateRandomString(40, CommonUtil.RandomStringGenerator.Mode.ALPHA);
+                while (SharedGroup.findByLink(link) != null) {
+                    link = CommonUtil.RandomStringGenerator.generateRandomString(40, CommonUtil.RandomStringGenerator.Mode.ALPHA);
+                }
+                List<SharedFile> sharedFiles = new ArrayList<>();
+                SharedGroup sharedGroup = new SharedGroup(account, groupUniqueName, cachePath, link, sharedFiles, shareFilesRequest.description);
+                sharedGroup.save();
+                for (UserFile file : files) {
+                    String sharedFileUniqueName = CommonUtil.RandomStringGenerator.generateRandomString(10, CommonUtil.RandomStringGenerator.Mode.ALPHANUMERIC);
+                    String fileDirPath = sharedGroup.getCachePath() + "/" + sharedFileUniqueName + "/";
+                    File fileDir = new File(fileDirPath);
+                    if (!fileDir.exists()) {
+                        if (!fileDir.mkdir()) {
+                            sharedGroup.deleteGroup();
+                            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
+                                    " error while creating directory for file " + file.getFileName() + " in sharing group");
+                            return badRequest(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
+                        }
+                    }
+                    FileUtils.copyDirectory(new File(file.getDirectoryPath()), new File(fileDirPath));
+                    SharedFile sharedFile = new SharedFile(file, sharedGroup, sharedFileUniqueName, fileDirPath + file.getFileName() + "." + file.getFileExtension(), fileDirPath);
+                    sharedFile.save();
+                    sharedGroup.addFile(sharedFile);
+                }
+                sharedGroup.update();
+                return ok(Json.toJson(sharedGroup.getGroupInformation()));
+            }
+        });
+    }
+
+    public static F.Promise<Result> deleteShared() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
+                JsonNode request = request().body().asJson();
+                if (!request.has("link"))
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+                String link = request.get("link").asText();
+                SharedGroup sharedGroup = SharedGroup.findByLink(link);
+                if (sharedGroup == null || !Objects.equals(sharedGroup.getAccount(), account))
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+
+                sharedGroup.deleteGroup();
+                return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
+            }
+        });
+    }
+
+    public static F.Promise<Result> annotationData() {
+        return F.Promise.promise(new F.Function0<Result>() {
+            @Override
+            public Result apply() throws Throwable {
+                Account account = getCurrentAccount();
+
+                JsonNode request = request().body().asJson();
+                if (!request.findValue("action").asText().equals("data")
+                        || request.findValue("fileName") == null
+                        || request.findValue("shift") == null) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
+                }
+
+                String fileName = request.findValue("fileName").asText();
+                UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
+
+                if (file != null) {
+                    AnnotationTable annotationTable = new AnnotationTable(file, request.findValue("shift").asInt());
+                    annotationTable.create();
+                    return ok(Json.toJson(annotationTable.getData()));
+                } else {
+                    return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
+                }
+            }
+        });
     }
 
     public static class SearchClonotypesRequest {

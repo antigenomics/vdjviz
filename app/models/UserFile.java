@@ -70,10 +70,18 @@ public class UserFile extends Model {
             this.softwareTypeName = softwareTypeName;
             this.state = state;
         }
+
+        public FileInformation(UserFile file) {
+            this(file.fileName, file.softwareTypeName, file.renderState.ordinal());
+        }
+
+        public FileInformation(SharedFile file) {
+            this(file.getFileName(), file.getSoftwareTypeName(), RenderState.RENDERED.ordinal());
+        }
     }
 
     public FileInformation getFileInformation() {
-        return new FileInformation(fileName, softwareTypeName, renderState.ordinal());
+        return new FileInformation(this);
     }
 
     public RenderState getRenderState() {

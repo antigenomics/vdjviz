@@ -38,6 +38,10 @@ public class Application extends Controller {
         return ok(views.html.commonPages.about.render(null));
     }
 
+    public static Result js(boolean shared) {
+        return ok(views.js.account.account.render(shared)).as("application/javascript");
+    }
+
     public static Result badBrowser() {
         return ok(views.html.commonPages.badBrowserPage.render());
     }

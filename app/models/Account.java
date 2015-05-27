@@ -12,6 +12,7 @@ import javax.persistence.OneToOne;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +35,7 @@ public class Account extends Model {
     private Integer maxFilesSize;
     private Integer maxFilesCount;
     private Integer maxClonotypesCount;
+    private Integer maxSharedFiles;
     private Boolean privelegies;
 
     public Account(LocalUser user, String userName, String userDirPath) {
@@ -44,6 +46,7 @@ public class Account extends Model {
         this.maxClonotypesCount = Configuration.getMaxClonotypesCount();
         this.maxFilesSize = Configuration.getMaxFileSize();
         this.maxFilesCount = Configuration.getMaxFilesCount();
+        this.maxSharedFiles = Configuration.getMaxSharedFiles();
         this.privelegies = false;
     }
 
@@ -67,12 +70,14 @@ public class Account extends Model {
 
     public class FilesInformation {
         public List<UserFile.FileInformation> files;
+        public List<SharedGroup.GroupInformation> sharedGroups;
         public Integer maxFileSize;
         public Integer maxFilesCount;
         public Boolean rarefactionCache;
 
-        public FilesInformation(List<FileInformation> files, Boolean rarefactionCache) {
+        public FilesInformation(List<FileInformation> files, List<SharedGroup.GroupInformation> sharedGroups, Boolean rarefactionCache) {
             this.files = files;
+            this.sharedGroups = sharedGroups;
             this.maxFileSize = getMaxFilesSize();
             this.maxFilesCount = getMaxFilesCount();
             this.rarefactionCache = rarefactionCache;
@@ -85,10 +90,15 @@ public class Account extends Model {
             files.add(userFile.getFileInformation());
         }
 
+        List<SharedGroup.GroupInformation> groups = new ArrayList<>();
+        for (SharedGroup sharedGroup : SharedGroup.findByAccount(this)) {
+            groups.add(sharedGroup.getGroupInformation());
+        }
+
         File jsonFile = new File(getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
         Boolean rarefactionCache = jsonFile.exists();
 
-        return new FilesInformation(files, rarefactionCache);
+        return new FilesInformation(files, groups, rarefactionCache);
     }
 
     public Boolean isPrivilege() {
@@ -105,6 +115,26 @@ public class Account extends Model {
 
     public Integer getMaxClonotypesCount() {
         return privelegies ? 0: maxClonotypesCount;
+    }
+
+    public Integer getMaxSharedFiles() {
+        return privelegies ? 0 : maxSharedFiles;
+    }
+
+    public Boolean isMaxSharedFilesCountExceeded() {
+        return isMaxSharedFilesCountExceeded(0);
+    }
+
+    public Boolean isMaxSharedFilesCountExceeded(int c) {
+        if (getMaxSharedFiles() > 0) {
+            int count = 0;
+            List<SharedGroup> byAccount = SharedGroup.findByAccount(this);
+            for (SharedGroup sharedGroup : byAccount) {
+                count += sharedGroup.getFiles().size();
+            }
+            if ((count + c) < getMaxSharedFiles()) return true;
+        }
+        return false;
     }
 
     public Boolean isMaxFilesCountExceeded() {

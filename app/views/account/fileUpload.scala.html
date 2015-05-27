@@ -27,7 +27,7 @@
                         <tr>
                             <td></td>
                             <td>
-                                <select id="common-software-type" ng-model="commonSoftwareType" ng-click="changeCommonSoftwareType()">
+                                <select class="form-control" id="common-software-type" ng-model="commonSoftwareType" ng-click="changeCommonSoftwareType()">
                                     <option value="mitcr" >MiTcr</option>
                                     <option value="migec" >MiGec</option>
                                     <option value="vdjtools" >VDJtools</option>
@@ -51,14 +51,15 @@
                                     ng-class="{'invalid-name-input':!isNameValid(file)}"
                                     data-toggle="popover"
                                     data-html="true"
-                                    data-placement="left"
+                                    data-placement="top"
                                     data-container="body"
                                     data-content="@views.html.account.tooltips.uploadFileNameTooltip()"/>
                                 <text ng-hide="file.wait">{{ file.fileName }}</text>
                             </td>
                             <td class="select-td">
-                                <select id="new-file-software-type" ng-model="file.softwareTypeName" ng-show="file.wait">
+                                <select class="form-control" id="new-file-software-type" ng-model="file.softwareTypeName" ng-show="file.wait">
                                     <option value="mitcr">MiTcr</option>
+                                    <option value="mixcr">MiXcr</option>
                                     <option value="migec" >MiGec</option>
                                     <option value="vdjtools" >VDJtools</option>
                                     <option value="igblast" >IgBlast</option>

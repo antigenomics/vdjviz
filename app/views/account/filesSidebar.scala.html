@@ -1,3 +1,4 @@
+@(shared: Boolean)
 <files-sidebar>
 <div class="navbar-default sidebar" role="navigation" style="height : 100% ;">
         <ul class="nav" id="side-menu">
@@ -7,12 +8,14 @@
             <li>
                 <a></a>
             </li>
-            <li class="li_pointer sidebar_block_green" ng-click="showNewFilesTable()">
-                <a>Upload new samples</a>
-            </li>
-            <li ng-show="isFilesEmpty()">
-                <a>You have no any samples, just click 'Upload new samples' button to start</a>
-            </li>
+            @if(!shared) {
+                <li class="li_pointer sidebar_block_green" ng-click="showNewFilesTable()">
+                    <a>Upload new samples</a>
+                </li>
+                <li ng-show="isFilesEmpty()">
+                    <a>You have no any samples, just click 'Upload new samples' button to start</a>
+                </li>
+            }
             <li ng-hide="isFilesEmpty()">
                 <a></a>
             </li>
@@ -28,15 +31,24 @@
             <li sidebar-click="setRarefactionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Rarefaction<i class="fa fa-area-chart pull-right"></i></a></li>
             <li sidebar-click="setSummaryState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
             <li sidebar-click="setCompareState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Compare<i class="fa fa-plus add-new-compare-button pull-right" ng-class="{'show-compare-button':isCompareState()}" ng-click="showCompareModal()"></i></a></li>
-            <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Join samples</a></li>
+            @if(!shared) {
+                <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>
+                    Join samples</a></li>
+            }
             <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Multiple Sample Search<i class="fa fa-search pull-right"></i></a></li>
-            <li>
-                <a></a>
-            </li>
-            <li ng-click="deleteAll()" class="sidebar_block_red li_pointer" ng-hide="isFilesEmpty()">
-                <a>Delete all</a>
-            </li>
+            @if(!shared) {
+                <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Share</a></li>
+                <li>
+                    <a></a>
+                </li>
+                <li ng-click="deleteAll()" class="sidebar_block_red li_pointer" ng-hide="isFilesEmpty()">
+                    <a>Delete all</a>
+                </li>
+            }
         </ul>
-        <a href="#new-files-table" role="button" class="btn ng-hide" data-toggle="modal" id="add-new-file">Upload new samples</a>
+        @if(!shared) {
+            <a href="#new-files-table" role="button" class="btn ng-hide" data-toggle="modal" id="add-new-file">
+                Upload new samples</a>
+        }
 </div>
 </files-sidebar>
