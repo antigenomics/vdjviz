@@ -20,10 +20,12 @@
                 <a></a>
             </li>
             <li ng-hide="isFilesEmpty()" class="sidebar_block_blue">
-                <a>Samples</a>
+                <a>@if(shared){Shared samples}else{Samples}</a>
             </li>
             <li sidebar-click="setActiveFile(file)" class="li_pointer sidebar_file" id="sidebar_file_{{ ::file.uid }}" ng-repeat="file in files" ng-class="{'disabled':isFileRendering(file)}" on-last-repeat>
-                <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text> <i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i></a>
+                <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text>
+                    @if(!shared){<i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>}
+                </a>
             </li>
             <li ng-hide="isFilesEmpty()">
                 <a></a>

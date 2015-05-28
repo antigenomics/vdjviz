@@ -32,6 +32,10 @@ POST        /account/api/deleteShared                     controllers.AccountAPI
 # Share api
 GET         /share/:link                                  controllers.ShareAPI.sharedAccount(link)
 GET         /share/api/info/:link                         controllers.ShareAPI.info(link)
+POST        /share/api/data/:link                         controllers.ShareAPI.data(link)
+POST        /share/api/annotation/:link                   controllers.ShareAPI.annotationData(link)
+POST        /share/api/annotation/search/:link            controllers.ShareAPI.searchClonotypes(link)
+POST        /share/api/annotation/multipleSearch/:link    controllers.ShareAPI.multipleSearchClonotypes(link)
 
 # Robots.txt route
 

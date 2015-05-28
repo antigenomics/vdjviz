@@ -2,6 +2,7 @@ package utils.BinaryUtils.ClonotypeBinaryUtils;
 
 import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.Sample;
+import models.SharedFile;
 import models.UserFile;
 
 import java.io.File;
@@ -44,9 +45,35 @@ public class ClonotypeBinaryUtils {
         }
     }
 
+    public static List<ClonotypeBinary> openBinaryFiles(SharedFile file, int shift, int displayLength) {
+        try {
+            String cacheName = file.getFileDirPath() + "/clonotype.bin";
+            File cacheFile = new File(cacheName);
+            if (!cacheFile.exists()) return null;
+            FileInputStream fileInputStream = new FileInputStream(cacheFile);
+            return readFromStream(fileInputStream, shift * displayLength, displayLength);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static int getDiversity(UserFile file) {
         try {
             String cacheName = file.getDirectoryPath() + "/clonotype.bin";
+            File cacheFile = new File(cacheName);
+            if (!cacheFile.exists()) return 0;
+            FileInputStream fileInputStream = new FileInputStream(cacheFile);
+            byte[] diversityArray = new byte[4];
+            fileInputStream.read(diversityArray, 0, 4);
+            return ByteBuffer.wrap(diversityArray).getInt();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static int getDiversity(SharedFile file) {
+        try {
+            String cacheName = file.getFileDirPath() + "/clonotype.bin";
             File cacheFile = new File(cacheName);
             if (!cacheFile.exists()) return 0;
             FileInputStream fileInputStream = new FileInputStream(cacheFile);

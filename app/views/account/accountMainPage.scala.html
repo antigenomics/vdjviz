@@ -1,11 +1,11 @@
 @(shared: Boolean, link: String)
 @main("Account") {
-    <script src="@routes.Application.js(shared)"></script>
     @if(shared){
         <script>
             var link = '@link';
         </script>
     }
+    <script src="@routes.Application.js(shared)"></script>
     <account-page ng-app="accountPage">
         <block-page></block-page>
 

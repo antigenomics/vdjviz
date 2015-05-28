@@ -3,6 +3,7 @@
 var CONSOLE_INFO = false;
 var api_url = 'account';
 var shared = false;
+
 @if(shared){
     api_url = 'share';
     shared = true;
@@ -137,24 +138,70 @@ var shared = false;
         if (CONSOLE_INFO) {
             $log.info('Initializing account information');
         }
-        $http.get('/' + api_url + '/api/info')
+        $http.get('/' + api_url + '/api/info'@if(shared){+'/'+link})
             .success(function(response) {
                 initialized = true;
-                var info = response.data;
-                email = info.email;
-                firstName = info.firstName;
-                lastName = info.lastName;
-                userName = info.userName;
-                filesCount = info.filesCount;
-                maxFilesCount = info.filesInformation.maxFilesCount;
-                maxFileSize = info.filesInformation.maxFileSize;
-                rarefactionCache = info.filesInformation.rarefactionCache;
-                angular.forEach(info.filesInformation.files, function(file) {
-                    files[file.fileName] = {
+                @if(!shared) {
+                    var info = response.data;
+                    email = info.email;
+                    firstName = info.firstName;
+                    lastName = info.lastName;
+                    userName = info.userName;
+                    filesCount = info.filesCount;
+                    maxFilesCount = info.filesInformation.maxFilesCount;
+                    maxFileSize = info.filesInformation.maxFileSize;
+                    rarefactionCache = info.filesInformation.rarefactionCache;
+                    angular.forEach(info.filesInformation.files, function (file) {
+                        files[file.fileName] = {
+                            uid: uid++,
+                            fileName: file.fileName,
+                            state: file.state,
+                            softwareTypeName: file.softwareTypeName,
+                            meta: {
+                                vjusage: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                spectratype: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                spectratypeV: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                quantileStats: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                annotation: {
+                                    cached: false,
+                                    comparing: false
+                                }
+                            }
+                        };
+                    });
+                    angular.copy(info.filesInformation.sharedGroups, sharedGroups);
+                    if (Object.keys(files).length > 0) {
+                        chartInfo.update_rarefaction(!rarefactionCache);
+                        chartInfo.update_summary();
+                    }
+                    if (CONSOLE_INFO) {
+                        $log.info('Account initialized');
+                        $log.info('User: ' + userName);
+                        $log.info('Files count: ' + filesCount);
+                        $log.info('Max files count: ' + maxFilesCount);
+                        $log.info('Max file size: ' + maxFileSize);
+                    }
+                }else{
+                rarefactionCache = response.rarefactionCached;
+                chartInfo.update_rarefaction(!rarefactionCache);
+                chartInfo.update_summary();
+                angular.forEach(response.sharedFilesNames, function (fileName) {
+                    files[fileName] = {
                         uid: uid++,
-                        fileName: file.fileName,
-                        state: file.state,
-                        softwareTypeName: file.softwareTypeName,
+                        fileName: fileName,
+                        state: RenderState.Rendered,
                         meta: {
                             vjusage: {
                                 cached: false,
@@ -179,18 +226,7 @@ var shared = false;
                         }
                     };
                 });
-                angular.copy(info.filesInformation.sharedGroups, sharedGroups);
-                if (Object.keys(files).length > 0) {
-                    chartInfo.update_rarefaction(!rarefactionCache);
-                    chartInfo.update_summary();
-                }
-                if (CONSOLE_INFO) {
-                    $log.info('Account initialized');
-                    $log.info('User: ' + userName);
-                    $log.info('Files count: ' + filesCount);
-                    $log.info('Max files count: ' + maxFilesCount);
-                    $log.info('Max file size: ' + maxFileSize);
-                }
+            }
             })
             .error(function() {
                 initializeError = true;
@@ -431,7 +467,7 @@ var shared = false;
             if (!file.meta[type].cached) {
                 if (type !== 'annotation') {
                     loading(parameters.place);
-                    $http.post('/account/api/data', {
+                    $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                         action: 'data',
                         fileName: file.fileName,
                         type: type
@@ -472,7 +508,7 @@ var shared = false;
                 type: 'rarefaction'
             };
             loading(parameters.place);
-            $http.post('/account/api/data', {
+            $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                 action: 'data',
                 type: 'rarefaction',
                 fileName: 'all',
@@ -488,7 +524,8 @@ var shared = false;
                     }
                     loaded(parameters.place);
                 })
-                .error(function() {
+                .error(function(error) {
+                    $log.info(error);
                     notifications.addErrorNotification('Rarefaction', 'Error while loading rarefaction data');
                     loaded(parameters.place);
                 });
@@ -497,7 +534,7 @@ var shared = false;
 
         function update_summary() {
             loading('.summary-visualisation-tab');
-            $http.post('/account/api/data', {
+            $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                 action: 'data',
                 fileName: 'all',
                 type: 'summary'
@@ -867,7 +904,7 @@ var shared = false;
                     loading = true;
                     noMatchesFound = false;
                     angular.extend($scope.searchResults, {});
-                    $http.post('/account/api/annotation/search', {
+                    $http.post('/' + api_url + '/api/annotation/search'@if(shared){+'/'+link}, {
                         fileName: $scope.file.fileName,
                         sequence: $scope.sequenceString,
                         aminoAcid: $scope.aminoAcid,
@@ -956,7 +993,7 @@ var shared = false;
 
         function loadData(fileName, page) {
             data[fileName].loading = true;
-            $http.post('/account/api/annotation', {
+            $http.post('/' + api_url + '/api/annotation'@if(shared){+'/'+link}, {
                 action: 'data',
                 fileName: fileName,
                 shift: page - 1
@@ -1836,7 +1873,7 @@ var shared = false;
             initialized = true;
             loading = true;
             angular.copy([], results);
-            $http.post('/account/api/annotation/multipleSearch', {
+            $http.post('/' + api_url + '/api/annotation/multipleSearch'@if(shared){+'/'+link}, {
                 sequence: searchParameters.sequenceString,
                 aminoAcid: searchParameters.aminoAcid,
                 selectedFiles: searchParameters.selectedFiles,
