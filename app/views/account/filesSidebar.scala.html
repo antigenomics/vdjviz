@@ -34,7 +34,7 @@
             <li sidebar-click="setSummaryState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
             <li sidebar-click="setCompareState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Compare<i class="fa fa-plus add-new-compare-button pull-right" ng-class="{'show-compare-button':isCompareState()}" ng-click="showCompareModal()"></i></a></li>
             <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Join samples</a></li>
-            <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Multiple Sample Search<i class="fa fa-search pull-right"></i></a></li>
+            <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Search Clonotypes<i class="fa fa-search pull-right"></i></a></li>
             @if(!shared) {
                 <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Share<i class="fa fa-share-alt pull-right"></i></a></li>
                 <li>

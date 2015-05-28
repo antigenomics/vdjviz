@@ -1,6 +1,8 @@
 package models;
 
 import org.apache.commons.io.FileUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
 import play.Logger;
 import play.db.ebean.Model;
 import utils.CacheType.CacheType;
@@ -42,6 +44,7 @@ public class SharedGroup extends Model {
         public List<String> sharedFilesNames;
         public String link;
         public Boolean rarefactionCached;
+        public String createdAt;
 
         public GroupInformation(SharedGroup s) {
             SharedGroup sharedGroup = SharedGroup.findByLink(s.getLink());
@@ -59,6 +62,7 @@ public class SharedGroup extends Model {
             this.link = s.getLink();
             File jsonFile = new File(s.cachePath + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
             this.rarefactionCached = jsonFile.exists();
+            this.createdAt =  sharedGroup.files.get(0).getCreatedAt().toString("dd.MM.yyyy");
         }
     }
 
@@ -91,6 +95,10 @@ public class SharedGroup extends Model {
         }
         Collections.sort(sizes);
         return sizes;
+    }
+
+    public DateTime getCreatedAt() {
+        return files.get(0).getCreatedAt();
     }
 
     public String getLink() {

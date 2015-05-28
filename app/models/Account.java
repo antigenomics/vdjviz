@@ -46,7 +46,7 @@ public class Account extends Model {
         this.maxClonotypesCount = Configuration.getMaxClonotypesCount();
         this.maxFilesSize = Configuration.getMaxFileSize();
         this.maxFilesCount = Configuration.getMaxFilesCount();
-        this.maxSharedFiles = Configuration.getMaxSharedFiles();
+        this.maxSharedFiles = Configuration.getMaxSharedGroups();
         this.privelegies = false;
     }
 
@@ -121,18 +121,10 @@ public class Account extends Model {
         return privelegies ? 0 : maxSharedFiles;
     }
 
-    public Boolean isMaxSharedFilesCountExceeded() {
-        return isMaxSharedFilesCountExceeded(0);
-    }
-
-    public Boolean isMaxSharedFilesCountExceeded(int c) {
+    public Boolean isMaxSharedGroupsCountExceeded() {
         if (getMaxSharedFiles() > 0) {
-            int count = 0;
             List<SharedGroup> byAccount = SharedGroup.findByAccount(this);
-            for (SharedGroup sharedGroup : byAccount) {
-                count += sharedGroup.getFiles().size();
-            }
-            if ((count + c) < getMaxSharedFiles()) return true;
+            if (byAccount.size() >= getMaxSharedFiles()) return true;
         }
         return false;
     }

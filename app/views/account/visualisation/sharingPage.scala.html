@@ -10,6 +10,7 @@
                         <th>#</th>
                         <th>Shared samples</th>
                         <th>Description</th>
+                        <th>Shared at</th>
                         <th>Link</th>
                         <th></th>
                     </tr>
@@ -19,7 +20,8 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ ::group.sharedFiles }}</td>
                         <td>{{ ::group.description }}</td>
-                        <td>Copy: <a style="cursor: pointer" ng-click="copyShareLinkToClip(group.link)">{{ ::group.link }}</a></td>
+                        <td>{{ ::group.createdAt }}</td>
+                        <td style="width: 150px"><a style="cursor: pointer" clip-copy="getTextToCopy(group.link)" clip-click="showClipNotification()"  clip-click-fallback="copyShareLinkToClip(group.link)">Click to copy</a></td>
                         <td><button class="btn btn-default sharp" ng-click="deleteSharedGroup(group)">Delete</button></td>
                     </tr>
                 </tbody>

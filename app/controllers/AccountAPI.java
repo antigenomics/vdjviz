@@ -284,7 +284,7 @@ public class AccountAPI extends Controller {
                 } catch (Exception e) {
                     return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
                 }
-                if (account.isMaxSharedFilesCountExceeded(shareFilesRequest.selectedFiles.length))
+                if (account.isMaxSharedGroupsCountExceeded())
                     return badRequest(Json.toJson(new ServerResponse("error", "You exceeded the limit of the number of shared samples")));
 
                 List<UserFile> files = new ArrayList<>();

@@ -28,7 +28,9 @@ var shared = false;
         SHARING_INFO: 7
     });
 
-    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket']);
+    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ngClipboard']);
+
+    app.config(['ngClipProvider', function(ngClipProvider) { ngClipProvider.setPath('@routes.Assets.at("lib/zeroclipboard/ZeroClipboard.swf")'); }]);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -177,7 +179,12 @@ var shared = false;
                                 annotation: {
                                     cached: false,
                                     comparing: false
+                                },
+                                searchclonotypes: {
+                                    cached: false,
+                                    comparing: false
                                 }
+
                             }
                         };
                     });
@@ -220,6 +227,10 @@ var shared = false;
                                 comparing: false
                             },
                             annotation: {
+                                cached: false,
+                                comparing: false
+                            },
+                            searchclonotypes: {
                                 cached: false,
                                 comparing: false
                             }
@@ -446,7 +457,6 @@ var shared = false;
         var oldFile = null;
 
         function update_file(tab, file) {
-            if (tab.type === 'searchclonotypes') {return};
             if (typeof file === 'undefined') {
                 file = oldFile;
             } else {
@@ -465,7 +475,7 @@ var shared = false;
                 };
 
             if (!file.meta[type].cached) {
-                if (type !== 'annotation') {
+                if (type !== 'annotation' && type!='searchclonotypes') {
                     loading(parameters.place);
                     $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                         action: 'data',
@@ -494,8 +504,10 @@ var shared = false;
                             loaded(parameters.place);
                         });
                 } else {
-                    clonotypesTableFactory.loadData(file.fileName, 1);
-                    file.meta[type].cached = true;
+                    if (type == 'annotation') {
+                        clonotypesTableFactory.loadData(file.fileName, 1);
+                        file.meta[type].cached = true;
+                    }
                 }
             }
 
@@ -799,14 +811,14 @@ var shared = false;
             searchclonotypes: createTab('Search clonotypes', 'searchclonotypes', null, 'visualisation-results-searchclonotypes', false, [], '')
         };
         var sortedTabs = [
+            visualisationTabs.annotation,
+            visualisationTabs.searchclonotypes,
             visualisationTabs.vjusage,
             visualisationTabs.spectratype,
             visualisationTabs.spectratypev,
-            visualisationTabs.quantilestats,
-            visualisationTabs.annotation,
-            visualisationTabs.searchclonotypes
+            visualisationTabs.quantilestats
         ];
-        var activeTab = visualisationTabs.vjusage;
+        var activeTab = visualisationTabs.annotation;
 
         function setActiveTab(t) {
             if (activeTab !== t) {
@@ -2080,6 +2092,14 @@ var shared = false;
                             notifications.addErrorNotification('Sharing', response.message);
                         });
                 };
+
+                $scope.getTextToCopy = function(link) {
+                    return location.host + "/share/" + link;
+                };
+
+                $scope.showClipNotification = function() {
+                    notifications.addInfoNotification('Sharing', 'Link has been copied to clipboard')
+                }
 
 
             }]
