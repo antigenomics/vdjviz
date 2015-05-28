@@ -1608,7 +1608,7 @@ var shared = false;
 
         angular.copy(treshData, data);
 
-        var ws = $websocket("ws://" + location.host + "/account/api/samplecollection/ws");
+        var ws = $websocket("ws://" + location.host + "/" + api_url + "/api/samplecollection/ws"@if(shared){+"/"+link});
 
         ws.onOpen(function() {
             initialized = true;

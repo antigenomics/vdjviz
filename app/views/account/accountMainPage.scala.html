@@ -21,7 +21,11 @@
 
             @views.html.account.visualisation.sampleContent()
 
-            @views.html.account.accountInformation()
+            @if(shared){
+                @views.html.account.sharedInformation(SharedGroup.findByLink(link).getDescription)
+            }else{
+                @views.html.account.accountInformation()
+            }
 
             @views.html.account.visualisation.rarefactionContent()
 
@@ -29,9 +33,7 @@
 
             @views.html.account.visualisation.comparingContent()
 
-            @if(!shared) {
-                @views.html.account.visualisation.sampleCollectionAnalysing()
-            }
+            @views.html.account.visualisation.sampleCollectionAnalysing()
 
             @views.html.account.visualisation.multipleSampleSearchClonotypes()
 
