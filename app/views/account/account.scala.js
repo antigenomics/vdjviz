@@ -201,7 +201,7 @@ var shared = false;
                     files[fileName] = {
                         uid: uid++,
                         fileName: fileName,
-                        state: RenderState.Rendered,
+                        state: RenderState.RENDERED,
                         meta: {
                             vjusage: {
                                 cached: false,
@@ -2155,7 +2155,7 @@ function getData(handleData, param, file) {
         "use strict";
         loading(param.place);
         $.ajax({
-            url: "/account/api/data",
+            url: "/"+api_url+"/api/data"@if(shared){+"/"+link},
             type: "post",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({
