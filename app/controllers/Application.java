@@ -7,7 +7,6 @@ import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import views.html.index;
 
-
 public class Application extends Controller {
 
     @SecureSocial.UserAwareAction

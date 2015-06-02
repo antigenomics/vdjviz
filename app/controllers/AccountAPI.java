@@ -65,7 +65,7 @@ public class AccountAPI extends Controller {
                 //Checking files count;
                 if (account.isMaxFilesCountExceeded()) {
                     Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
-                    return ok(Json.toJson(new ServerResponse("error", "You exceeded the limit of the number of files")));
+                    return ok(Json.toJson(new ServerResponse("error", "You have exceeded the allowed number of samples. Remove some files to continue")));
 
                 }
 
@@ -74,7 +74,7 @@ public class AccountAPI extends Controller {
                 Http.MultipartFormData.FilePart file = body.getFile("files[]");
 
                 if (file == null) {
-                    return ok(Json.toJson(new ServerResponse("error", "You should upload the file")));
+                    return ok(Json.toJson(new ServerResponse("error", "You should upload the file first")));
                 }
                 if (account.getMaxFilesSize() > 0) {
                     Long sizeMB = file.getFile().length() / 1024;
@@ -150,7 +150,7 @@ public class AccountAPI extends Controller {
                 } catch (Exception e) {
                     e.printStackTrace();
                     Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
-                    return ok(Json.toJson(new ServerResponse("error", "Error while uploading new file")));
+                    return ok(Json.toJson(new ServerResponse("error", "Error while uploading file")));
                 }
             }
         });
@@ -285,7 +285,7 @@ public class AccountAPI extends Controller {
                     return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
                 }
                 if (account.isMaxSharedGroupsCountExceeded())
-                    return badRequest(Json.toJson(new ServerResponse("error", "You exceeded the limit of the number of shared samples")));
+                    return badRequest(Json.toJson(new ServerResponse("error", "You have exceeded the allowed number of shared samples")));
 
                 List<UserFile> files = new ArrayList<>();
                 for (String selectedFile : shareFilesRequest.selectedFiles) {
@@ -416,7 +416,7 @@ public class AccountAPI extends Controller {
                 boolean aminoAcid = searchClonotypesRequest.aminoAcid;
 
                 if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_\\[\\]]+")) {
-                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                    return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                 } else {
                     int leftCount = 0;
                     int rightCount = 0;
@@ -428,16 +428,16 @@ public class AccountAPI extends Controller {
                         if (c == ']') {
                             rightCount++;
                             if (rightCount > leftCount)
-                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                                return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                         }
                     }
                     if (leftCount != rightCount) {
-                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                        return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                     }
                 }
 
                 if (!aminoAcid && !sequence.toUpperCase().matches("[ATGCN\\[\\]]+")) {
-                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                    return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid nucleotide sequence")));
                 } else {
                     int leftCount = 0;
                     int rightCount = 0;
@@ -449,11 +449,11 @@ public class AccountAPI extends Controller {
                         if (c == ']') {
                             rightCount++;
                             if (rightCount > leftCount)
-                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                                return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid nucleotide sequence")));
                         }
                     }
                     if (leftCount != rightCount) {
-                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                        return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid nucleotide sequence")));
                     }
                 }
 
@@ -486,7 +486,7 @@ public class AccountAPI extends Controller {
                 boolean aminoAcid = searchClonotypesRequest.aminoAcid;
 
                 if (aminoAcid && !sequence.toUpperCase().matches("[FLSYCWPHQRIMTNKVADEGX\\*\\_\\[\\]]+")) {
-                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                    return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                 } else {
                     int leftCount = 0;
                     int rightCount = 0;
@@ -498,16 +498,16 @@ public class AccountAPI extends Controller {
                         if (c == ']') {
                             rightCount++;
                             if (rightCount > leftCount)
-                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                                return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                         }
                     }
                     if (leftCount != rightCount) {
-                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid aminoacid sequence")));
+                        return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                     }
                 }
 
                 if (!aminoAcid && !sequence.toUpperCase().matches("[ATGCN\\[\\]]+")) {
-                    return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                    return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid amino acid sequence")));
                 } else {
                     int leftCount = 0;
                     int rightCount = 0;
@@ -519,11 +519,11 @@ public class AccountAPI extends Controller {
                         if (c == ']') {
                             rightCount++;
                             if (rightCount > leftCount)
-                                return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                                return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid nucleotide sequence")));
                         }
                     }
                     if (leftCount != rightCount) {
-                        return badRequest(Json.toJson(new ServerResponse("error", "Sequence does not matches for valid nucleotide sequence")));
+                        return badRequest(Json.toJson(new ServerResponse("error", "The pattern is not a valid nucleotide sequence")));
                     }
                 }
 
@@ -562,7 +562,7 @@ public class AccountAPI extends Controller {
         } else {
             Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " File: "
                     + file.getFileName() + " did not rendered");
-            return ok(Json.toJson(new CacheServerResponse("error", "File did not rendered yet")));
+            return ok(Json.toJson(new CacheServerResponse("error", "The file has not been rendered yet")));
         }
     }
 
@@ -570,7 +570,7 @@ public class AccountAPI extends Controller {
         //Return basicStats cache for all files in json format
 
         if (account.getFilesCount() == 0) {
-            return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
+            return badRequest(Json.toJson(new ServerResponse("error", "You have no files :(")));
         }
 
         List<JsonNode> basicStatsData = new ArrayList<>();
@@ -588,7 +588,7 @@ public class AccountAPI extends Controller {
     private static Result rarefaction(Account account, Boolean needToCreateNew) throws Exception {
 
         if (account.getFilesCount() == 0) {
-            return badRequest(Json.toJson(new ServerResponse("error", "You have no files")));
+            return badRequest(Json.toJson(new ServerResponse("error", "You have no files :(")));
         }
 
         RarefactionChart rarefactionChart = new RarefactionChart(account);
@@ -650,7 +650,7 @@ public class AccountAPI extends Controller {
                                         if (account.getMaxClonotypesCount() > 0) {
                                             if (file.getClonotypesCount() > account.getMaxClonotypesCount()) {
                                                 UserFile.deleteFile(file);
-                                                out.write(Json.toJson(new WSResponse("error", "render", fileName, "Number of clonotypes should be less than " + Configuration.getMaxClonotypesCount())));
+                                                out.write(Json.toJson(new WSResponse("error", "render", fileName, "Number of clonotypes in a sample should be less than " + Configuration.getMaxClonotypesCount())));
                                                 out.close();
                                                 return;
                                             }
@@ -658,7 +658,7 @@ public class AccountAPI extends Controller {
 
                                     } catch (Exception e) {
                                         UserFile.deleteFile(file);
-                                        out.write(Json.toJson(new WSResponse("error", "render", fileName, "Error while parsing: wrong software type")));
+                                        out.write(Json.toJson(new WSResponse("error", "render", fileName, "Wrong file format, unable to parse")));
                                         out.close();
                                         return;
                                     }

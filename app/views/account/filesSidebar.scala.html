@@ -13,7 +13,7 @@
                     <a>Upload new samples</a>
                 </li>
                 <li ng-show="isFilesEmpty()">
-                    <a>You have no any samples, just click 'Upload new samples' button to start</a>
+                    <a>@views.html.account.tooltips.noSamplesDescription()</a>
                 </li>
             }
             <li ng-hide="isFilesEmpty()">
