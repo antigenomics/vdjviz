@@ -7,7 +7,6 @@ import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
 import views.html.index;
 
-
 public class Application extends Controller {
 
     @SecureSocial.UserAwareAction
@@ -36,6 +35,10 @@ public class Application extends Controller {
             return ok(views.html.commonPages.about.render(LocalUser.find.byId(user.identityId().userId()).getAccountUserName()));
         }
         return ok(views.html.commonPages.about.render(null));
+    }
+
+    public static Result js(boolean shared) {
+        return ok(views.js.account.account.render(shared)).as("application/javascript");
     }
 
     public static Result badBrowser() {

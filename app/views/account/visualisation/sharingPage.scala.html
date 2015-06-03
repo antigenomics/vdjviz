@@ -1,0 +1,63 @@
+<sharing ng-show="isSharingInformation()">
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="well sharp">
+                @views.html.account.descriptions.sharePageDescription()
+            <hr>
+            <table class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Shared samples</th>
+                        <th>Description</th>
+                        <th>Shared at</th>
+                        <th>Link</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="group in sharedGroups">
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ ::group.sharedFiles }}</td>
+                        <td>{{ ::group.description }}</td>
+                        <td>{{ ::group.createdAt }}</td>
+                        <td style="width: 150px"><a style="cursor: pointer" clip-copy="getTextToCopy(group.link)" clip-click="showClipNotification()"  clip-click-fallback="copyShareLinkToClip(group.link)">Click to copy</a></td>
+                        <td><button class="btn btn-default sharp" ng-click="deleteSharedGroup(group)">Delete</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="panel panel-info separated">
+                <div class="panel-body">
+                    <button class="btn btn-default sharp" ng-click="addSharingFiles()" ng-hide="isNewSharingFiles()">Add</button>
+                    <div ng-show="isNewSharingFiles()">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="form-group">
+                                <label for="sharingDescription">Description</label>
+                                <textarea class="form-control" rows="5" id="sharingDescription" placeholder="Enter your description here..." ng-model="sharingDescription"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <p>Select samples to be shared</p>
+                            <div ng-repeat="file in files" style="float : left ; margin : 5px">
+                                <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected_Sharing(file)}" ng-click="selectFile_Sharing(file)">{{ ::file.fileName }}</button>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12" style="float : left ; margin : 5px">
+                            <button class="btn btn-default sharp" ng-click="selectAll_Sharing()">Select all</button>
+                            <button class="btn btn-default sharp" ng-click="unselectAll_Sharing()">Unselect all</button>
+                            <button class="btn btn-default sharp" ng-click="revert_Sharing()">Revert</button>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <button class="btn btn-info sharp" ng-click="shareButton()">Share</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</sharing>

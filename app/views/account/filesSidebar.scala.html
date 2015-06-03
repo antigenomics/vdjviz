@@ -1,3 +1,4 @@
+@(shared: Boolean)
 <files-sidebar>
 <div class="navbar-default sidebar" role="navigation" style="height : 100% ;">
         <ul class="nav" id="side-menu">
@@ -7,20 +8,24 @@
             <li>
                 <a></a>
             </li>
-            <li class="li_pointer sidebar_block_green" ng-click="showNewFilesTable()">
-                <a>Upload new samples</a>
-            </li>
-            <li ng-show="isFilesEmpty()">
-                <a>You have no any samples, just click 'Upload new samples' button to start</a>
-            </li>
+            @if(!shared) {
+                <li class="li_pointer sidebar_block_green" ng-click="showNewFilesTable()">
+                    <a>Upload new samples</a>
+                </li>
+                <li ng-show="isFilesEmpty()">
+                    <a>@views.html.account.tooltips.noSamplesDescription()</a>
+                </li>
+            }
             <li ng-hide="isFilesEmpty()">
                 <a></a>
             </li>
             <li ng-hide="isFilesEmpty()" class="sidebar_block_blue">
-                <a>Samples</a>
+                <a>@if(shared){Shared samples}else{Samples}</a>
             </li>
             <li sidebar-click="setActiveFile(file)" class="li_pointer sidebar_file" id="sidebar_file_{{ ::file.uid }}" ng-repeat="file in files" ng-class="{'disabled':isFileRendering(file)}" on-last-repeat>
-                <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text> <i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i></a>
+                <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text>
+                    @if(!shared){<i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>}
+                </a>
             </li>
             <li ng-hide="isFilesEmpty()">
                 <a></a>
@@ -29,14 +34,20 @@
             <li sidebar-click="setSummaryState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Summary<i class="fa fa-list pull-right"></i></a></li>
             <li sidebar-click="setCompareState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Compare<i class="fa fa-plus add-new-compare-button pull-right" ng-class="{'show-compare-button':isCompareState()}" ng-click="showCompareModal()"></i></a></li>
             <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Join samples</a></li>
-            <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Multiple Sample Search<i class="fa fa-search pull-right"></i></a></li>
-            <li>
-                <a></a>
-            </li>
-            <li ng-click="deleteAll()" class="sidebar_block_red li_pointer" ng-hide="isFilesEmpty()">
-                <a>Delete all</a>
-            </li>
+            <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Search Clonotypes<i class="fa fa-search pull-right"></i></a></li>
+            @if(!shared) {
+                <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Share<i class="fa fa-share-alt pull-right"></i></a></li>
+                <li>
+                    <a></a>
+                </li>
+                <li ng-click="deleteAll()" class="sidebar_block_red li_pointer" ng-hide="isFilesEmpty()">
+                    <a>Delete all</a>
+                </li>
+            }
         </ul>
-        <a href="#new-files-table" role="button" class="btn ng-hide" data-toggle="modal" id="add-new-file">Upload new samples</a>
+        @if(!shared) {
+            <a href="#new-files-table" role="button" class="btn ng-hide" data-toggle="modal" id="add-new-file">
+                Upload new samples</a>
+        }
 </div>
 </files-sidebar>

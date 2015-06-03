@@ -1,19 +1,31 @@
-@(userName: String)
+@(shared: Boolean, link: String)
 @main("Account") {
+    @if(shared){
+        <script>
+            var link = '@link';
+        </script>
+    }
+    <script src="@routes.Application.js(shared)"></script>
     <account-page ng-app="accountPage">
         <block-page></block-page>
 
         @views.html.account.notifications()
 
-        @views.html.account.filesSidebar()
+        @views.html.account.filesSidebar(shared)
 
-        @views.html.account.fileUpload()
+        @if(!shared) {
+            @views.html.account.fileUpload()
+        }
 
         <div id="account_wrapper" >
 
             @views.html.account.visualisation.sampleContent()
 
-            @views.html.account.accountInformation()
+            @if(shared){
+                @views.html.account.sharedInformation(SharedGroup.findByLink(link).getDescription)
+            }else{
+                @views.html.account.accountInformation()
+            }
 
             @views.html.account.visualisation.rarefactionContent()
 
@@ -24,6 +36,10 @@
             @views.html.account.visualisation.sampleCollectionAnalysing()
 
             @views.html.account.visualisation.multipleSampleSearchClonotypes()
+
+            @if(!shared) {
+                @views.html.account.visualisation.sharingPage()
+            }
 
         </div>
 

@@ -1,6 +1,13 @@
+@(shared: Boolean)
 
+var CONSOLE_INFO = false;
+var api_url = 'account';
+var shared = false;
 
-var CONSOLE_INFO = true;
+@if(shared){
+    api_url = 'share';
+    shared = true;
+}
 
 (function () {
     "use strict";
@@ -17,10 +24,13 @@ var CONSOLE_INFO = true;
         SUMMARY: 3,
         COMPARING: 4,
         SAMPLE_COLLECTION: 5,
-        MULTIPLE_SEARCH: 6
+        MULTIPLE_SEARCH: 6,
+        SHARING_INFO: 7
     });
 
-    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket']);
+    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ngClipboard']);
+
+    app.config(['ngClipProvider', function(ngClipProvider) { ngClipProvider.setPath('@routes.Assets.at("lib/zeroclipboard/ZeroClipboard.swf")'); }]);
 
     app.directive('onLastRepeat', function() {
         return function(scope, element, attrs) {
@@ -123,30 +133,82 @@ var CONSOLE_INFO = true;
         var initialized = false;
         var initializeError = false;
         var files = {};
+        var sharedGroups = [];
         var uid = 0;
 
         //Initializing account information
         if (CONSOLE_INFO) {
             $log.info('Initializing account information');
         }
-        $http.get('/account/api/info')
+        $http.get('/' + api_url + '/api/info'@if(shared){+'/'+link})
             .success(function(response) {
                 initialized = true;
-                var info = response.data;
-                email = info.email;
-                firstName = info.firstName;
-                lastName = info.lastName;
-                userName = info.userName;
-                filesCount = info.filesCount;
-                maxFilesCount = info.filesInformation.maxFilesCount;
-                maxFileSize = info.filesInformation.maxFileSize;
-                rarefactionCache = info.filesInformation.rarefactionCache;
-                angular.forEach(info.filesInformation.files, function(file) {
-                    files[file.fileName] = {
+                @if(!shared) {
+                    var info = response.data;
+                    email = info.email;
+                    firstName = info.firstName;
+                    lastName = info.lastName;
+                    userName = info.userName;
+                    filesCount = info.filesCount;
+                    maxFilesCount = info.filesInformation.maxFilesCount;
+                    maxFileSize = info.filesInformation.maxFileSize;
+                    rarefactionCache = info.filesInformation.rarefactionCache;
+                    angular.forEach(info.filesInformation.files, function (file) {
+                        files[file.fileName] = {
+                            uid: uid++,
+                            fileName: file.fileName,
+                            state: file.state,
+                            softwareTypeName: file.softwareTypeName,
+                            meta: {
+                                vjusage: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                spectratype: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                spectratypeV: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                quantileStats: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                annotation: {
+                                    cached: false,
+                                    comparing: false
+                                },
+                                searchclonotypes: {
+                                    cached: false,
+                                    comparing: false
+                                }
+
+                            }
+                        };
+                    });
+                    angular.copy(info.filesInformation.sharedGroups, sharedGroups);
+                    if (Object.keys(files).length > 0) {
+                        chartInfo.update_rarefaction(!rarefactionCache);
+                        chartInfo.update_summary();
+                    }
+                    if (CONSOLE_INFO) {
+                        $log.info('Account initialized');
+                        $log.info('User: ' + userName);
+                        $log.info('Files count: ' + filesCount);
+                        $log.info('Max files count: ' + maxFilesCount);
+                        $log.info('Max file size: ' + maxFileSize);
+                    }
+                }else{
+                rarefactionCache = response.rarefactionCached;
+                chartInfo.update_rarefaction(!rarefactionCache);
+                chartInfo.update_summary();
+                angular.forEach(response.sharedFilesNames, function (fileName) {
+                    files[fileName] = {
                         uid: uid++,
-                        fileName: file.fileName,
-                        state: file.state,
-                        softwareTypeName: file.softwareTypeName,
+                        fileName: fileName,
+                        state: RenderState.RENDERED,
                         meta: {
                             vjusage: {
                                 cached: false,
@@ -167,21 +229,15 @@ var CONSOLE_INFO = true;
                             annotation: {
                                 cached: false,
                                 comparing: false
+                            },
+                            searchclonotypes: {
+                                cached: false,
+                                comparing: false
                             }
                         }
                     };
                 });
-                if (Object.keys(files).length > 0) {
-                    chartInfo.update_rarefaction(!rarefactionCache);
-                    chartInfo.update_summary();
-                }
-                if (CONSOLE_INFO) {
-                    $log.info('Account initialized');
-                    $log.info('User: ' + userName);
-                    $log.info('Files count: ' + filesCount);
-                    $log.info('Max files count: ' + maxFilesCount);
-                    $log.info('Max file size: ' + maxFileSize);
-                }
+            }
             })
             .error(function() {
                 initializeError = true;
@@ -192,6 +248,11 @@ var CONSOLE_INFO = true;
         //Getter for user's files
         function getFiles() {
             return files;
+        }
+
+        //Getter for user's shared groups
+        function getSharedGroups() {
+            return sharedGroups;
         }
 
         //Delete file from server and client-side application
@@ -316,6 +377,7 @@ var CONSOLE_INFO = true;
 
         return {
             getFiles: getFiles,
+            getSharedGroups: getSharedGroups,
             deleteFile: deleteFile,
             deleteFile_client: deleteFile_client,
             deleteAll: deleteAll,
@@ -395,7 +457,6 @@ var CONSOLE_INFO = true;
         var oldFile = null;
 
         function update_file(tab, file) {
-            if (tab.type === 'searchclonotypes') {return};
             if (typeof file === 'undefined') {
                 file = oldFile;
             } else {
@@ -414,9 +475,9 @@ var CONSOLE_INFO = true;
                 };
 
             if (!file.meta[type].cached) {
-                if (type !== 'annotation') {
+                if (type !== 'annotation' && type!='searchclonotypes') {
                     loading(parameters.place);
-                    $http.post('/account/api/data', {
+                    $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                         action: 'data',
                         fileName: file.fileName,
                         type: type
@@ -443,8 +504,10 @@ var CONSOLE_INFO = true;
                             loaded(parameters.place);
                         });
                 } else {
-                    clonotypesTableFactory.loadData(file.fileName, 1);
-                    file.meta[type].cached = true;
+                    if (type == 'annotation') {
+                        clonotypesTableFactory.loadData(file.fileName, 1);
+                        file.meta[type].cached = true;
+                    }
                 }
             }
 
@@ -457,7 +520,7 @@ var CONSOLE_INFO = true;
                 type: 'rarefaction'
             };
             loading(parameters.place);
-            $http.post('/account/api/data', {
+            $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                 action: 'data',
                 type: 'rarefaction',
                 fileName: 'all',
@@ -473,7 +536,8 @@ var CONSOLE_INFO = true;
                     }
                     loaded(parameters.place);
                 })
-                .error(function() {
+                .error(function(error) {
+                    $log.info(error);
                     notifications.addErrorNotification('Rarefaction', 'Error while loading rarefaction data');
                     loaded(parameters.place);
                 });
@@ -482,7 +546,7 @@ var CONSOLE_INFO = true;
 
         function update_summary() {
             loading('.summary-visualisation-tab');
-            $http.post('/account/api/data', {
+            $http.post('/' + api_url + '/api/data'@if(shared){+'/'+link}, {
                 action: 'data',
                 fileName: 'all',
                 type: 'summary'
@@ -547,7 +611,11 @@ var CONSOLE_INFO = true;
 
                 $scope.isMultipleSampleSearch = function() {
                     return stateInfo.isActiveState(htmlState.MULTIPLE_SEARCH);
-                }
+                };
+
+                $scope.isSharingInformation = function() {
+                    return stateInfo.isActiveState(htmlState.SHARING_INFO);
+                };
 
                 $scope.showStartPage = function() {
                     $scope.state = htmlState.ACCOUNT_INFORMATION;
@@ -607,6 +675,7 @@ var CONSOLE_INFO = true;
                 $scope.setCompareState = setCompareState;
                 $scope.setSampleCollectionState = setSampleCollectionState;
                 $scope.setMultipleSampleSearchState = setMultipleSampleSearchState;
+                $scope.setSharingState = setSharingState;
                 $scope.showCompareModal = showCompareModal;
 
                 function showCompareModal() {
@@ -631,6 +700,10 @@ var CONSOLE_INFO = true;
 
                 function setMultipleSampleSearchState() {
                     stateInfo.setActiveState(htmlState.MULTIPLE_SEARCH);
+                }
+
+                function setSharingState() {
+                    stateInfo.setActiveState(htmlState.SHARING_INFO);
                 }
 
                 function showNewFilesTable() {
@@ -738,14 +811,14 @@ var CONSOLE_INFO = true;
             searchclonotypes: createTab('Search clonotypes', 'searchclonotypes', null, 'visualisation-results-searchclonotypes', false, [], '')
         };
         var sortedTabs = [
+            visualisationTabs.annotation,
+            visualisationTabs.searchclonotypes,
             visualisationTabs.vjusage,
             visualisationTabs.spectratype,
             visualisationTabs.spectratypev,
-            visualisationTabs.quantilestats,
-            visualisationTabs.annotation,
-            visualisationTabs.searchclonotypes
+            visualisationTabs.quantilestats
         ];
-        var activeTab = visualisationTabs.vjusage;
+        var activeTab = visualisationTabs.annotation;
 
         function setActiveTab(t) {
             if (activeTab !== t) {
@@ -843,7 +916,7 @@ var CONSOLE_INFO = true;
                     loading = true;
                     noMatchesFound = false;
                     angular.extend($scope.searchResults, {});
-                    $http.post('/account/api/annotation/search', {
+                    $http.post('/' + api_url + '/api/annotation/search'@if(shared){+'/'+link}, {
                         fileName: $scope.file.fileName,
                         sequence: $scope.sequenceString,
                         aminoAcid: $scope.aminoAcid,
@@ -932,7 +1005,7 @@ var CONSOLE_INFO = true;
 
         function loadData(fileName, page) {
             data[fileName].loading = true;
-            $http.post('/account/api/annotation', {
+            $http.post('/' + api_url + '/api/annotation'@if(shared){+'/'+link}, {
                 action: 'data',
                 fileName: fileName,
                 shift: page - 1
@@ -1547,7 +1620,7 @@ var CONSOLE_INFO = true;
 
         angular.copy(treshData, data);
 
-        var ws = $websocket("ws://" + location.host + "/account/api/samplecollection/ws");
+        var ws = $websocket("ws://" + location.host + "/" + api_url + "/api/samplecollection/ws"@if(shared){+"/"+link});
 
         ws.onOpen(function() {
             initialized = true;
@@ -1812,7 +1885,7 @@ var CONSOLE_INFO = true;
             initialized = true;
             loading = true;
             angular.copy([], results);
-            $http.post('/account/api/annotation/multipleSearch', {
+            $http.post('/' + api_url + '/api/annotation/multipleSearch'@if(shared){+'/'+link}, {
                 sequence: searchParameters.sequenceString,
                 aminoAcid: searchParameters.aminoAcid,
                 selectedFiles: searchParameters.selectedFiles,
@@ -1861,8 +1934,7 @@ var CONSOLE_INFO = true;
     app.directive('multipleSampleSearch', function() {
         return {
             restrict: 'E',
-            scope: false,
-            controller: ['$scope', '$log', 'multipleSampleSearchFactory', 'accountInfo', function($scope, $log, multipleSampleSearchFactory, accountInfo) {
+            controller: ['$scope', '$log', 'multipleSampleSearchFactory', function($scope, $log, multipleSampleSearchFactory) {
 
                 //Multiple sample search factory API
                 $scope.isInitialized_MultipleSampleSearch = multipleSampleSearchFactory.isInitialized;
@@ -1870,7 +1942,6 @@ var CONSOLE_INFO = true;
                 $scope.multipleSampleSearchResults = multipleSampleSearchFactory.getResults();
 
                 //Directive API
-                $scope.files = accountInfo.getFiles();
                 $scope.searchParameters = {
                     sequenceString: '',
                     aminoAcid: 'true',
@@ -1920,6 +1991,121 @@ var CONSOLE_INFO = true;
             }]
         };
     });
+    //--------------------------------------------------------//
+
+
+    //Sharing directive
+    //--------------------------------------------------------//
+    app.directive('sharing', function() {
+        return {
+            restrict: 'E',
+            scope: false,
+            controller: ['$scope', '$http', '$log', 'notifications', 'accountInfo', function($scope, $http, $log, notifications, accountInfo) {
+                var isNew = false;
+                var selectedFiles = [];
+
+                $scope.sharingDescription = '';
+                $scope.sharedGroups = accountInfo.getSharedGroups();
+
+                $scope.isNewSharingFiles = function() {
+                    return isNew;
+                };
+
+                $scope.addSharingFiles = function() {
+                    selectedFiles.splice(0, selectedFiles.length);
+                    $scope.sharingDescription = '';
+                    isNew = true;
+                };
+
+                $scope.isFileSelected_Sharing = function(file) {
+                    var index = selectedFiles.indexOf(file.fileName);
+                    return index >= 0;
+                };
+
+                $scope.selectFile_Sharing = function(file) {
+                    var index = selectedFiles.indexOf(file.fileName);
+                    if (index >= 0) {
+                        selectedFiles.splice(index, 1);
+                    } else {
+                        selectedFiles.push(file.fileName);
+                    }
+                };
+
+                $scope.selectAll_Sharing = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if (!$scope.isFileSelected_Sharing(file))
+                            $scope.selectFile_Sharing(file);
+                    });
+                };
+
+                $scope.unselectAll_Sharing = function() {
+                    angular.forEach($scope.files, function(file) {
+                        if ($scope.isFileSelected_Sharing(file))
+                            $scope.selectFile_Sharing(file);
+                    });
+                };
+
+                $scope.revert_Sharing = function() {
+                    angular.forEach($scope.files, function(file) {
+                        $scope.selectFile_Sharing(file);
+                    });
+                };
+
+                $scope.deleteSharedGroup = function(group) {
+                    $http.post('/account/api/deleteShared', {
+                        link: group.link
+                    })
+                        .success(function(response) {
+                            $scope.sharedGroups.splice($scope.sharedGroups.indexOf(group), 1);
+                            notifications.addSuccessNotification('Sharing', 'Successfully deleted');
+                        })
+                        .error(function(error) {
+                            if (CONSOLE_INFO) {
+                                $log.error('Sharing', error.message);
+                            }
+                            notifications.addErrorNotification('Sharing', error.message);
+                        });
+                };
+
+                $scope.copyShareLinkToClip = function(link) {
+                    window.prompt("Copy to clipboard: Ctrl+C, Enter", location.host + "/share/" + link);
+                };
+
+                $scope.shareButton = function() {
+                    if (selectedFiles.length === 0) {
+                        notifications.addInfoNotification('Sharing', 'You should select at least one sample');
+                        return;
+                    }
+                    $http.post('/account/api/share', {
+                        selectedFiles: selectedFiles,
+                        description: $scope.sharingDescription
+                    })
+                        .success(function(group) {
+                            notifications.addSuccessNotification('Sharing', 'Successfully shared');
+                            $scope.sharedGroups.push(group);
+                            isNew = false;
+                        })
+                        .error(function(response) {
+                            if (CONSOLE_INFO) {
+                                $log.error('Sharing: ' + response.message);
+                            }
+                            notifications.addErrorNotification('Sharing', response.message);
+                        });
+                };
+
+                $scope.getTextToCopy = function(link) {
+                    return location.host + "/share/" + link;
+                };
+
+                $scope.showClipNotification = function() {
+                    notifications.addInfoNotification('Sharing', 'Link has been copied to clipboard')
+                }
+
+
+            }]
+        };
+    });
+
     //--------------------------------------------------------//
 
     //Block account page Directive
@@ -1989,7 +2175,7 @@ function getData(handleData, param, file) {
         "use strict";
         loading(param.place);
         $.ajax({
-            url: "/account/api/data",
+            url: "/"+api_url+"/api/data"@if(shared){+"/"+link},
             type: "post",
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({
