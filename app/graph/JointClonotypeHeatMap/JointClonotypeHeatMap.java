@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JointClonotypeHeatMap {
+
+    public static final int HEAT_MAP_ROWS_MAX = 1000;
+
     private List<JointClonotypeHeatMapCell> values;
     private List<HeatMapRowLabel> rowLabel;
     private List<String> colLabel;
@@ -44,6 +47,7 @@ public class JointClonotypeHeatMap {
                 values.add(new JointClonotypeHeatMapCell(jointClonotype, row, i));
             }
             row++;
+            if (row == HEAT_MAP_ROWS_MAX) break;
         }
     }
 
