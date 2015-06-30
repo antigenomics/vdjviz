@@ -904,7 +904,8 @@ var shared = false;
                 $scope.aminoAcid = 'true';
                 $scope.filters = {
                     vFilter: '',
-                    jFilter: ''
+                    jFilter: '',
+                    dFilter: ''
                 };
 
                 $scope.searchSequence = function() {
@@ -921,7 +922,10 @@ var shared = false;
                         sequence: $scope.sequenceString,
                         aminoAcid: $scope.aminoAcid,
                         vFilter: $scope.filters.vFilter.replace(/ /g,'') !== '' ? $scope.filters.vFilter.replace(/ /g,'').split(',') : [],
-                        jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : []
+                        jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : [],
+                        dFilter: $scope.filters.dFilter.replace(/ /g,'') !== '' ? $scope.filters.dFilter.replace(/ /g,'').split(',') : [],
+                        length: $scope.sequenceLength,
+                        lengthType: $scope.lengthType
                     })
                         .success(function(response) {
                             loading = false;
@@ -1890,7 +1894,10 @@ var shared = false;
                 aminoAcid: searchParameters.aminoAcid,
                 selectedFiles: searchParameters.selectedFiles,
                 vFilter: searchParameters.filters.vFilter.replace(/ /g,'') !== '' ? searchParameters.filters.vFilter.replace(/ /g,'').split(',') : [],
-                jFilter: searchParameters.filters.jFilter.replace(/ /g,'') !== '' ? searchParameters.filters.jFilter.replace(/ /g,'').split(',') : []
+                jFilter: searchParameters.filters.jFilter.replace(/ /g,'') !== '' ? searchParameters.filters.jFilter.replace(/ /g,'').split(',') : [],
+                dFilter: searchParameters.filters.dFilter.replace(/ /g,'') !== '' ? searchParameters.filters.dFilter.replace(/ /g,'').split(',') : [],
+                length: searchParameters.sequenceLength,
+                lengthType: searchParameters.lengthType
             })
                 .success(function(response) {
                     angular.forEach(response, function(result) {
@@ -1948,8 +1955,11 @@ var shared = false;
                     selectedFiles: [],
                     filters: {
                         vFilter: '',
-                        jFilter: ''
-                    }
+                        jFilter: '',
+                        dFilter: ''
+                    },
+                    sequenceLength: 0,
+                    lengthType: 'LESS'
                 };
 
                 $scope.selectFile_MultipleSearchClonotypes = function(file) {

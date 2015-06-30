@@ -21,6 +21,7 @@ import play.mvc.Result;
 import play.mvc.WebSocket;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeFilters.BinaryClonotypeLengthFilter;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -387,6 +388,10 @@ public class AccountAPI extends Controller {
         public boolean aminoAcid;
         public String[] vFilter;
         public String[] jFilter;
+        public String[] dFilter;
+        //Length filter parameters
+        public int length;
+        public String lengthType;
         //For one sample
         public String fileName;
         //For multiple samples
@@ -460,8 +465,12 @@ public class AccountAPI extends Controller {
                 UserFile userFile = UserFile.fyndByNameAndAccount(account, fileName);
                 if (userFile == null)
                     return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
-
-                return ok(Json.toJson(SearchClonotypes.searchSingleSample(userFile, searchClonotypesRequest)));
+                try {
+                    SearchClonotypes.SingleSampleSearchResults singleSampleSearchResults = SearchClonotypes.searchSingleSample(userFile, searchClonotypesRequest);
+                    return ok(Json.toJson(singleSampleSearchResults));
+                } catch (Exception e) {
+                    return badRequest(Json.toJson(new ServerResponse("error", e.getMessage())));
+                }
             }
         });
     }
@@ -535,7 +544,12 @@ public class AccountAPI extends Controller {
                     files.add(userFile);
                 }
 
-                return ok(Json.toJson(SearchClonotypes.searchMultipleSample(files, searchClonotypesRequest)));
+                try {
+                    List<SearchClonotypes.SingleSampleSearchResults> multipleSampleSearchResults = SearchClonotypes.searchMultipleSample(files, searchClonotypesRequest);
+                    return ok(Json.toJson(multipleSampleSearchResults));
+                } catch (Exception e) {
+                    return badRequest(Json.toJson(new ServerResponse("error", e.getMessage())));
+                }
             }
         });
     }
