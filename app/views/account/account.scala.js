@@ -255,6 +255,10 @@ var shared = false;
             return files;
         }
 
+        function getFileByName(fileName) {
+            return files[fileName];
+        }
+
         //Getter for user's shared groups
         function getSharedGroups() {
             return sharedGroups;
@@ -437,6 +441,7 @@ var shared = false;
 
         return {
             getFiles: getFiles,
+            getFileByName: getFileByName,
             getSharedGroups: getSharedGroups,
             getSharedGroupsLength: getSharedGroupsLength,
             getTags: getTags,
@@ -1319,8 +1324,9 @@ var shared = false;
     app.directive('summaryStats', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', 'summaryStatsFactory', function($scope, summaryStatsFactory) {
+            controller: ['$scope', 'summaryStatsFactory', 'accountInfo', function($scope, summaryStatsFactory, accountInfo) {
                 $scope.data = summaryStatsFactory.getData();
+                $scope.getFileByName = accountInfo.getFileByName;
 
             }]
         };
