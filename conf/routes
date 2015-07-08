@@ -28,6 +28,9 @@ POST        /account/api/annotation/multipleSearch            controllers.Accoun
 GET         /account/api/samplecollection/ws                  controllers.SampleCollectionAPI.SampleCollectionAPI.open()
 POST        /account/api/share                                controllers.AccountAPI.shareFiles()
 POST        /account/api/deleteShared                         controllers.AccountAPI.deleteShared()
+POST        /account/api/createtag                            controllers.AccountAPI.createTag()
+POST        /account/api/deletetag                            controllers.AccountAPI.deleteTag()
+POST        /account/api/tagfiles                             controllers.AccountAPI.tagFiles()
 
 # Share api
 GET         /share/:link                                      controllers.ShareAPI.sharedAccount(link)

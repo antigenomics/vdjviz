@@ -14,7 +14,7 @@ import java.util.List;
 public class SearchClonotypes {
     private final static int searchCount = 100;
 
-    static class SingleSampleSearchResults {
+    public static class SingleSampleSearchResults {
         public List<AnnotationTableRow> rows;
         public String fileName;
         public AccountAPI.SearchClonotypesRequest parameters;
@@ -35,6 +35,12 @@ public class SearchClonotypes {
             filters.add(new BinaryClonotypeVFilter(searchClonotypesRequest.vFilter));
         if (searchClonotypesRequest.jFilter.length > 0)
             filters.add(new BinaryClonotypeJFilter(searchClonotypesRequest.jFilter));
+        if (searchClonotypesRequest.dFilter.length > 0)
+            filters.add(new BinaryClonotypeDFilter(searchClonotypesRequest.dFilter));
+        if (searchClonotypesRequest.length > 0) {
+            if (searchClonotypesRequest.lengthType == null) throw new RuntimeException("Length type field is empty");
+            filters.add(new BinaryClonotypeLengthFilter(searchClonotypesRequest.length, BinaryClonotypeLengthFilter.LengthType.valueOf(searchClonotypesRequest.lengthType), searchClonotypesRequest.aminoAcid));
+        }
         filters.add(new BinaryClonotypeSequenceFilter(searchClonotypesRequest.sequence, searchClonotypesRequest.aminoAcid));
 
         FilteredBinaryClonotypes filteredBinaryClonotypes = new FilteredBinaryClonotypes(container, filters);
@@ -56,6 +62,12 @@ public class SearchClonotypes {
             filters.add(new BinaryClonotypeVFilter(searchClonotypesRequest.vFilter));
         if (searchClonotypesRequest.jFilter.length > 0)
             filters.add(new BinaryClonotypeJFilter(searchClonotypesRequest.jFilter));
+        if (searchClonotypesRequest.dFilter.length > 0)
+            filters.add(new BinaryClonotypeDFilter(searchClonotypesRequest.dFilter));
+        if (searchClonotypesRequest.length > 0) {
+            if (searchClonotypesRequest.lengthType == null) throw new RuntimeException("Length type field is empty");
+            filters.add(new BinaryClonotypeLengthFilter(searchClonotypesRequest.length, BinaryClonotypeLengthFilter.LengthType.valueOf(searchClonotypesRequest.lengthType), searchClonotypesRequest.aminoAcid));
+        }
         filters.add(new BinaryClonotypeSequenceFilter(searchClonotypesRequest.sequence, searchClonotypesRequest.aminoAcid));
 
         FilteredBinaryClonotypes filteredBinaryClonotypes = new FilteredBinaryClonotypes(container, filters);

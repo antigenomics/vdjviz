@@ -28,7 +28,7 @@ var shared = false;
         SHARING_INFO: 7
     });
 
-    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ngClipboard']);
+    var app = angular.module('accountPage', ['ui.bootstrap', 'ngWebSocket', 'ngClipboard', 'colorpicker.module']);
 
     app.config(['ngClipProvider', function(ngClipProvider) { ngClipProvider.setPath('@routes.Assets.at("lib/zeroclipboard/ZeroClipboard.swf")'); }]);
 
@@ -135,6 +135,7 @@ var shared = false;
         var files = {};
         var sharedGroups = [];
         var uid = 0;
+        var tags = [];
 
         //Initializing account information
         if (CONSOLE_INFO) {
@@ -145,9 +146,6 @@ var shared = false;
                 initialized = true;
                 @if(!shared) {
                     var info = response.data;
-                    email = info.email;
-                    firstName = info.firstName;
-                    lastName = info.lastName;
                     userName = info.userName;
                     filesCount = info.filesCount;
                     maxFilesCount = info.filesInformation.maxFilesCount;
@@ -184,9 +182,15 @@ var shared = false;
                                     cached: false,
                                     comparing: false
                                 }
-
-                            }
+                            },
+                            tags: []
                         };
+                    });
+                    angular.copy(info.tags, tags);
+                    angular.forEach(tags, function(tag) {
+                        angular.forEach(tag.files, function(fileName) {
+                            assignTagToFile(fileName, tag);
+                        });
                     });
                     angular.copy(info.filesInformation.sharedGroups, sharedGroups);
                     if (Object.keys(files).length > 0) {
@@ -234,7 +238,8 @@ var shared = false;
                                 cached: false,
                                 comparing: false
                             }
-                        }
+                        },
+                        tags: []
                     };
                 });
             }
@@ -250,9 +255,64 @@ var shared = false;
             return files;
         }
 
+        function getFileByName(fileName) {
+            return files[fileName];
+        }
+
         //Getter for user's shared groups
         function getSharedGroups() {
             return sharedGroups;
+        }
+
+        //Getter for tags
+        function getTags() {
+            return tags;
+        }
+
+        function addTag(tag) {
+            tags.push(tag);
+        }
+
+        function clearTagFiles(tag) {
+            angular.forEach(tag.files, function(fileName) {
+                unassignTagFromFile(fileName, tag);
+            });
+        }
+
+        function assignTagToFile(fileName, tag) {
+            var index = files[fileName].tags.indexOf(tag);
+            if (index < 0) {
+                files[fileName].tags.push(tag);
+            }
+        }
+
+        function unassignTagFromFile(fileName, tag) {
+            var index = files[fileName].tags.indexOf(tag);
+            if (index >= 0) {
+                files[fileName].tags.splice(index, 1);
+            }
+        }
+
+        function unassignFileFromTag(fileName, tag) {
+            var index = tag.files.indexOf(fileName);
+            if (index >= 0) {
+                tag.files.splice(index, 1);
+            }
+        }
+
+        function deleteTag(tag) {
+            var index = tags.indexOf(tag);
+            if (index >= 0) {
+                angular.forEach(tag.files, function(fileName) {
+                    unassignTagFromFile(fileName, tag);
+                });
+                tags.splice(index, 1);
+            }
+        }
+
+        //Getter for user's shared group length
+        function getSharedGroupsLength() {
+            return sharedGroups.length;
         }
 
         //Delete file from server and client-side application
@@ -262,8 +322,11 @@ var shared = false;
             }
             $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
                 .success(function () {
+                    angular.forEach(files[file.fileName].tags, function(tag) {
+                        unassignFileFromTag(file.fileName, tag);
+                    });
                     delete files[file.fileName];
-                    if (stateInfo.isActiveFile(file) || Object.keys(files).length === 1) {
+                    if (stateInfo.isActiveFile(file) || Object.keys(files).length === 0) {
                         stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     } else if (Object.keys(files).length > 0) {
                         chartInfo.update_rarefaction(true);
@@ -362,7 +425,8 @@ var shared = false;
                         cached: false,
                         comparing: false
                     }
-                }
+                },
+                tags: []
             };
         }
 
@@ -377,7 +441,16 @@ var shared = false;
 
         return {
             getFiles: getFiles,
+            getFileByName: getFileByName,
             getSharedGroups: getSharedGroups,
+            getSharedGroupsLength: getSharedGroupsLength,
+            getTags: getTags,
+            addTag: addTag,
+            deleteTag: deleteTag,
+            clearTagFiles: clearTagFiles,
+            assignTagToFile: assignTagToFile,
+            unassignTagFromFile: unassignTagFromFile,
+            unassignFileFromTag: unassignFileFromTag,
             deleteFile: deleteFile,
             deleteFile_client: deleteFile_client,
             deleteAll: deleteAll,
@@ -677,6 +750,7 @@ var shared = false;
                 $scope.setMultipleSampleSearchState = setMultipleSampleSearchState;
                 $scope.setSharingState = setSharingState;
                 $scope.showCompareModal = showCompareModal;
+                $scope.openTags = openTags;
 
                 function showCompareModal() {
                     $('#comparingAddButton').click();
@@ -710,12 +784,20 @@ var shared = false;
                     $("#add-new-file").click();
                 }
 
+                function openTags() {
+                    $("#tags-table-button").click();
+                }
+
                 function isFileRendering(file) {
                     return file.state === RenderState.RENDERING;
                 }
 
                 function isFilesEmpty() {
                     return Object.keys($scope.files).length === 0;
+                }
+
+                function isFilesEmptyOrSharing() {
+                    return Object.keys($scope.files).length === 0 || accountInfo.getSharedGroupsLength() > 0;
                 }
 
                 $scope.$on('onRepeatLast', function () {
@@ -789,7 +871,107 @@ var shared = false;
     });
     //--------------------------------------------------------//
 
+
+    //Tags directive
+    //--------------------------------------------------------//
+    app.directive('tags', function() {
+        return {
+            restrict: 'E',
+            controller: ['$scope', 'accountInfo', '$http', 'notifications', function($scope, accountInfo, $http, notifications) {
+                $scope.newTagCreation = false;
+                $scope.newTag = {
+                    tagName: '',
+                    description: '',
+                    color: ''
+                };
+
+                $scope.tagging = false;
+                $scope.tag = {};
+                $scope.selectedFiles = [];
+                $scope.tags = accountInfo.getTags();
+
+
+                $scope.selectFile_Tags = function(file) {
+                    var index = $scope.selectedFiles.indexOf(file.fileName);
+                    if (index < 0) {
+                        $scope.selectedFiles.push(file.fileName);
+                    } else {
+                        $scope.selectedFiles.splice(index, 1);
+                    }
+                };
+
+                $scope.isFileSelected_Tags = function(file) {
+                    return $scope.selectedFiles.indexOf(file.fileName) >= 0;
+                };
+
+                $scope.createNewTag = function() {
+                    $http.post('/' + api_url + '/api/createtag', $scope.newTag)
+                        .success(function(tag) {
+                            accountInfo.addTag(tag);
+                            $scope.newTagCreation = false;
+                        })
+                        .error(function(error) {
+                            notifications.addErrorNotification('Tags', error.message);
+                        })
+                };
+
+                $scope.tagFiles = function(tag) {
+                    $scope.tag = tag;
+                    angular.copy(tag.files, $scope.selectedFiles);
+                    $scope.tagging = true;
+                };
+
+                $scope.tagFilesConfirmButton = function() {
+                    $http.post('/' + api_url + '/api/tagfiles', {
+                        selectedFiles: $scope.selectedFiles,
+                        id: $scope.tag.id
+                    })
+                        .success(function(response) {
+                            accountInfo.clearTagFiles($scope.tag);
+                            $scope.tag.files = response.selectedFiles;
+                            angular.forEach(response.selectedFiles, function(fileName) {
+                                accountInfo.assignTagToFile(fileName, $scope.tag);
+                            });
+                            $scope.tagging = false;
+                        })
+                        .error(function(error) {
+                            notifications.addErrorNotification('Tags', error.message);
+                        });
+                };
+
+                $scope.closeNewTagCreation = function() {
+                    $scope.newTagCreation = false;
+                };
+
+                $scope.deleteTag = function(tag) {
+                    $scope.tagging = false;
+                    $http.post('/' + api_url + '/api/deletetag', {
+                        id: tag.id
+                    })
+                        .success(function() {
+                            accountInfo.deleteTag(tag);
+                            notifications.addSuccessNotification('Tags', 'Successfully deleted')
+                        })
+                        .error(function(error) {
+                            notifications.addErrorNotification('Tags', error.message);
+                        })
+                };
+
+                $scope.addNewTag = function() {
+                    $scope.newTag = {
+                        tagName: '',
+                        description: '',
+                        color: ''
+                    };
+                    $scope.newTagCreation = true;
+                }
+            }]
+        }
+    });
+    //--------------------------------------------------------//
+
     //File visualisation directive and factory
+    //--------------------------------------------------------//
     app.factory('mainVisualisationTabs', ['chartInfo', function(chartInfo) {
         var createTab = function (tabName, type, dataHandler, mainPlace, comparing, exportType, comparingPlace) {
             return {
@@ -904,7 +1086,8 @@ var shared = false;
                 $scope.aminoAcid = 'true';
                 $scope.filters = {
                     vFilter: '',
-                    jFilter: ''
+                    jFilter: '',
+                    dFilter: ''
                 };
 
                 $scope.searchSequence = function() {
@@ -921,7 +1104,10 @@ var shared = false;
                         sequence: $scope.sequenceString,
                         aminoAcid: $scope.aminoAcid,
                         vFilter: $scope.filters.vFilter.replace(/ /g,'') !== '' ? $scope.filters.vFilter.replace(/ /g,'').split(',') : [],
-                        jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : []
+                        jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : [],
+                        dFilter: $scope.filters.dFilter.replace(/ /g,'') !== '' ? $scope.filters.dFilter.replace(/ /g,'').split(',') : [],
+                        length: $scope.sequenceLength,
+                        lengthType: $scope.lengthType
                     })
                         .success(function(response) {
                             loading = false;
@@ -1138,8 +1324,9 @@ var shared = false;
     app.directive('summaryStats', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', 'summaryStatsFactory', function($scope, summaryStatsFactory) {
+            controller: ['$scope', 'summaryStatsFactory', 'accountInfo', function($scope, summaryStatsFactory, accountInfo) {
                 $scope.data = summaryStatsFactory.getData();
+                $scope.getFileByName = accountInfo.getFileByName;
 
             }]
         };
@@ -1890,7 +2077,10 @@ var shared = false;
                 aminoAcid: searchParameters.aminoAcid,
                 selectedFiles: searchParameters.selectedFiles,
                 vFilter: searchParameters.filters.vFilter.replace(/ /g,'') !== '' ? searchParameters.filters.vFilter.replace(/ /g,'').split(',') : [],
-                jFilter: searchParameters.filters.jFilter.replace(/ /g,'') !== '' ? searchParameters.filters.jFilter.replace(/ /g,'').split(',') : []
+                jFilter: searchParameters.filters.jFilter.replace(/ /g,'') !== '' ? searchParameters.filters.jFilter.replace(/ /g,'').split(',') : [],
+                dFilter: searchParameters.filters.dFilter.replace(/ /g,'') !== '' ? searchParameters.filters.dFilter.replace(/ /g,'').split(',') : [],
+                length: searchParameters.sequenceLength,
+                lengthType: searchParameters.lengthType
             })
                 .success(function(response) {
                     angular.forEach(response, function(result) {
@@ -1948,8 +2138,11 @@ var shared = false;
                     selectedFiles: [],
                     filters: {
                         vFilter: '',
-                        jFilter: ''
-                    }
+                        jFilter: '',
+                        dFilter: ''
+                    },
+                    sequenceLength: 0,
+                    lengthType: 'LESS'
                 };
 
                 $scope.selectFile_MultipleSearchClonotypes = function(file) {

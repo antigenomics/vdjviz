@@ -446,6 +446,12 @@ img.blur {
     text-align: right;
 }
 
+.tags-footer {
+    margin: 10px;
+    width: 98%;
+    text-align: right;
+}
+
 .comparing-table-footer {
     margin: 10px;
     width: 98%;

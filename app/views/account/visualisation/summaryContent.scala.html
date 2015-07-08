@@ -23,7 +23,9 @@
                         </thead>
                         <tbody>
                             <tr ng-repeat="row in data">
-                                <td>{{ ::row.Name }}</td>
+                                <td>{{ ::row.Name }}
+                                    <span ng-repeat="tag in getFileByName(row.Name).tags" class="label pull-right" style="background-color: {{ ::tag.color }}!important;">{{ ::tag.tagName }}</span>
+                                </td>
                                 <td>{{ ::row.count }}</td>
                                 <td>{{ ::row.diversity }}</td>
                                 <td>{{ ::row.mean_frequency }}</td>

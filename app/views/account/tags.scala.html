@@ -1,0 +1,76 @@
+<tags>
+    <div class="modal fade" id="tags-table" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="choose-files-button btn btn-info sharp" ng-click="addNewTag()">Add</div>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">
+                                Close</span></button>
+                </div>
+                <div class="modal-body">
+                    <div ng-show="tagging">
+                        <p>Select samples to be tagged</p>
+                        <div ng-repeat="file in files" style="float : left ; margin : 5px">
+                            <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected_Tags(file)}" ng-click="selectFile_Tags(file)">{{ ::file.fileName }}</button>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <button class="btn btn-info sharp" ng-click="tagFilesConfirmButton()">Tag this files</button>
+                        </div>
+                    </div>
+                <table class="table modal-file-table">
+                    <thead>
+                        <tr>
+                            <th>Tag name</th>
+                            <th>Description</th>
+                            <th>Color</th>
+                            <th>Samples</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-show="newTagCreation">
+                            <td>
+                                <div class="form-group">
+                                <input class="form-control" ng-model="newTag.tagName"
+                                    placeholder="Enter tag name"
+                                    type="text"
+                                    value="newTag.tagName"
+                                    data-toggle="popover"
+                                    data-html="true"
+                                    data-placement="top"
+                                    data-container="body"
+                                    data-content="@views.html.account.tooltips.tagNameCreationTooltip()"/>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Enter tag description" ng-model="newTag.description" type="text" value="newTag.description"/>
+                                </div>
+                            </td>
+                            <td><input colorpicker="hex" type="text" ng-model="newTag.color" /></td>
+                            <td></td>
+                            <td>
+                                <button class="btn btn-default sharp" ng-click="createNewTag()">Create</button>
+                                <button class="btn btn-default sharp" ng-click="closeNewTagCreation()">Close</button>
+                            </td>
+                        </tr>
+                        <tr ng-repeat="tag in tags">
+                            <td>{{ ::tag.tagName }}</td>
+                            <td>{{ ::tag.description }}</td>
+                            <td><span class="label" style="background-color: {{ ::tag.color }}!important;">Color</span></td>
+                            <td>{{ tag.files }}</td>
+                            <td>
+                                <button class="btn btn-default sharp" ng-click="tagFiles(tag)">Tag samples</button>
+                                <button class="btn btn-default sharp" ng-click="deleteTag(tag)">Delete tag</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="tags-footer">
+                    <button type="button" class="btn btn-info sharp footer-close-button" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</tags>

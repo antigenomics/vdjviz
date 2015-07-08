@@ -5,6 +5,11 @@
             <li class="li_pointer">
                 <a href="@routes.Application.index()">Close the browser</a>
             </li>
+            @if(shared) {
+                <li class="li_pointer">
+                    <a href="@routes.AccountAPI.account()">Account</a>
+                </li>
+            }
             <li>
                 <a></a>
             </li>
@@ -25,6 +30,7 @@
             <li sidebar-click="setActiveFile(file)" class="li_pointer sidebar_file" id="sidebar_file_{{ ::file.uid }}" ng-repeat="file in files" ng-class="{'disabled':isFileRendering(file)}" on-last-repeat>
                 <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text>
                     @if(!shared){<i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>}
+                    <span ng-repeat="tag in file.tags" class="label pull-right" style="background-color: {{ ::tag.color }}!important;">{{ ::tag.tagName }}</span>
                 </a>
             </li>
             <li ng-hide="isFilesEmpty()">
@@ -36,7 +42,8 @@
             <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Join samples</a></li>
             <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Search Clonotypes<i class="fa fa-search pull-right"></i></a></li>
             @if(!shared) {
-                <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Share<i class="fa fa-share-alt pull-right"></i></a></li>
+                <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmptyOrSharing()"><a>Share<i class="fa fa-share-alt pull-right"></i></a></li>
+                <li ng-click="openTags()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Tags</a></li>
                 <li>
                     <a></a>
                 </li>
@@ -48,6 +55,8 @@
         @if(!shared) {
             <a href="#new-files-table" role="button" class="btn ng-hide" data-toggle="modal" id="add-new-file">
                 Upload new samples</a>
+            <a href="#tags-table" role="button" class="btn ng-hide" data-toggle="modal" id="tags-table-button">
+                Tags</a>
         }
 </div>
 </files-sidebar>

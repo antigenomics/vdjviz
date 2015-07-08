@@ -50,55 +50,54 @@ public class Account extends Model {
         this.privelegies = false;
     }
 
-    public class AccountInformation {
-        public String email;
-        public String firstName;
-        public String lastName;
+    public static class AccountInformation {
         public String userName;
         public Integer filesCount;
         public FilesInformation filesInformation;
+        public List<Tag.TagInformation> tags;
 
-        public AccountInformation(String email, String firstName, String lastName, String userName, Integer filesCount) {
-            this.email = email;
-            this.firstName = firstName;
-            this.lastName = lastName;
-            this.userName = userName;
-            this.filesCount = filesCount;
-            this.filesInformation = getFilesInformation();
+        public AccountInformation(Account account) {
+            this.userName = account.userName;
+            this.filesCount = account.getFilesCount();
+            this.filesInformation = getFilesInformation(account);
+            this.tags = new ArrayList<>();
+            for (Tag tag : Tag.findByAccount(account)) {
+                tags.add(new Tag.TagInformation(tag));
+            }
         }
     }
 
-    public class FilesInformation {
+    public static class FilesInformation {
         public List<UserFile.FileInformation> files;
         public List<SharedGroup.GroupInformation> sharedGroups;
         public Integer maxFileSize;
         public Integer maxFilesCount;
         public Boolean rarefactionCache;
 
-        public FilesInformation(List<FileInformation> files, List<SharedGroup.GroupInformation> sharedGroups, Boolean rarefactionCache) {
+        public FilesInformation(Account account, List<FileInformation> files, List<SharedGroup.GroupInformation> sharedGroups, Boolean rarefactionCache) {
             this.files = files;
             this.sharedGroups = sharedGroups;
-            this.maxFileSize = getMaxFilesSize();
-            this.maxFilesCount = getMaxFilesCount();
+            this.maxFileSize = account.getMaxFilesSize();
+            this.maxFilesCount = account.getMaxFilesCount();
             this.rarefactionCache = rarefactionCache;
         }
     }
 
-    public FilesInformation getFilesInformation() {
+    public static FilesInformation getFilesInformation(Account account) {
         List<UserFile.FileInformation> files = new ArrayList<>();
-        for (UserFile userFile : getUserfiles()) {
+        for (UserFile userFile : account.getUserfiles()) {
             files.add(userFile.getFileInformation());
         }
 
         List<SharedGroup.GroupInformation> groups = new ArrayList<>();
-        for (SharedGroup sharedGroup : SharedGroup.findByAccount(this)) {
+        for (SharedGroup sharedGroup : SharedGroup.findByAccount(account)) {
             groups.add(sharedGroup.getGroupInformation());
         }
 
-        File jsonFile = new File(getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
+        File jsonFile = new File(account.getDirectoryPath() + "/" + CacheType.rarefaction.getCacheFileName() + ".cache");
         Boolean rarefactionCache = jsonFile.exists();
 
-        return new FilesInformation(files, groups, rarefactionCache);
+        return new FilesInformation(account, files, groups, rarefactionCache);
     }
 
     public Boolean isPrivilege() {
@@ -185,8 +184,8 @@ public class Account extends Model {
     }
 
 
-    public AccountInformation getAccountInformation() {
-        return new AccountInformation(this.user.email, this.user.firstName, this.user.lastName, this.userName, this.getFilesCount());
+    public static AccountInformation getAccountInformation(Account account) {
+        return new AccountInformation(account);
     }
 
     public List<UserFile> getUserfiles() {

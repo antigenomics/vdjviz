@@ -21,6 +21,7 @@ import play.mvc.Result;
 import play.mvc.WebSocket;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
+import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeFilters.BinaryClonotypeLengthFilter;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -211,7 +212,7 @@ public class AccountAPI extends Controller {
             @Override
             public Result apply() throws Throwable {
                 Account account = getCurrentAccount();
-                return ok(Json.toJson(account.getFilesInformation()));
+                return ok(Json.toJson(Account.getFilesInformation(account)));
             }
         });
     }
@@ -220,7 +221,7 @@ public class AccountAPI extends Controller {
         return F.Promise.promise(new F.Function0<Result>() {
             @Override
             public Result apply() throws Throwable {
-                return ok(Json.toJson(new CacheServerResponse("ok", getCurrentAccount().getAccountInformation())));
+                return ok(Json.toJson(new CacheServerResponse("ok", Account.getAccountInformation(getCurrentAccount()))));
             }
         });
     }
@@ -387,6 +388,10 @@ public class AccountAPI extends Controller {
         public boolean aminoAcid;
         public String[] vFilter;
         public String[] jFilter;
+        public String[] dFilter;
+        //Length filter parameters
+        public int length;
+        public String lengthType;
         //For one sample
         public String fileName;
         //For multiple samples
@@ -460,8 +465,12 @@ public class AccountAPI extends Controller {
                 UserFile userFile = UserFile.fyndByNameAndAccount(account, fileName);
                 if (userFile == null)
                     return badRequest(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
-
-                return ok(Json.toJson(SearchClonotypes.searchSingleSample(userFile, searchClonotypesRequest)));
+                try {
+                    SearchClonotypes.SingleSampleSearchResults singleSampleSearchResults = SearchClonotypes.searchSingleSample(userFile, searchClonotypesRequest);
+                    return ok(Json.toJson(singleSampleSearchResults));
+                } catch (Exception e) {
+                    return badRequest(Json.toJson(new ServerResponse("error", e.getMessage())));
+                }
             }
         });
     }
@@ -535,7 +544,12 @@ public class AccountAPI extends Controller {
                     files.add(userFile);
                 }
 
-                return ok(Json.toJson(SearchClonotypes.searchMultipleSample(files, searchClonotypesRequest)));
+                try {
+                    List<SearchClonotypes.SingleSampleSearchResults> multipleSampleSearchResults = SearchClonotypes.searchMultipleSample(files, searchClonotypesRequest);
+                    return ok(Json.toJson(multipleSampleSearchResults));
+                } catch (Exception e) {
+                    return badRequest(Json.toJson(new ServerResponse("error", e.getMessage())));
+                }
             }
         });
     }
@@ -610,6 +624,70 @@ public class AccountAPI extends Controller {
                 return out;
             }
         });
+    }
+
+    public static class TagCreationRequest {
+        public String description;
+        public String color;
+        public String tagName;
+
+        public TagCreationRequest() {}
+    }
+
+    public static Result createTag() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+
+        TagCreationRequest tagCreationRequest;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            tagCreationRequest = objectMapper.convertValue(request, TagCreationRequest.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        }
+        Tag tag = new Tag(account, tagCreationRequest.description, tagCreationRequest.color, tagCreationRequest.tagName);
+        tag.save();
+        return ok(Json.toJson(new Tag.TagInformation(tag)));
+    }
+
+    public static Result deleteTag() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+        if (!request.has("id"))
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        Long id = request.get("id").asLong();
+        Tag byId = Tag.findById(id, account);
+        if (byId == null)
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        byId.deleteTag();
+        return ok(Json.toJson(new ServerResponse("success", "Successfully deleted")));
+    }
+
+    public static class TagFilesRequest {
+        public Long id;
+        public String[] selectedFiles;
+    }
+
+    public static Result tagFiles() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+
+        TagFilesRequest tagFilesRequest;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            tagFilesRequest = objectMapper.convertValue(request, TagFilesRequest.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        }
+        if (tagFilesRequest.selectedFiles == null || tagFilesRequest.id == null)
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        Tag tag = Tag.findById(tagFilesRequest.id, account);
+        if (tag == null)
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        tag.tagFiles(tagFilesRequest.selectedFiles);
+        return ok(Json.toJson(tagFilesRequest));
     }
 
     public static WebSocket<JsonNode> render() {
