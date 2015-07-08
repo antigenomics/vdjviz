@@ -212,7 +212,7 @@ public class AccountAPI extends Controller {
             @Override
             public Result apply() throws Throwable {
                 Account account = getCurrentAccount();
-                return ok(Json.toJson(account.getFilesInformation()));
+                return ok(Json.toJson(Account.getFilesInformation(account)));
             }
         });
     }
@@ -221,7 +221,7 @@ public class AccountAPI extends Controller {
         return F.Promise.promise(new F.Function0<Result>() {
             @Override
             public Result apply() throws Throwable {
-                return ok(Json.toJson(new CacheServerResponse("ok", getCurrentAccount().getAccountInformation())));
+                return ok(Json.toJson(new CacheServerResponse("ok", Account.getAccountInformation(getCurrentAccount()))));
             }
         });
     }
@@ -624,6 +624,70 @@ public class AccountAPI extends Controller {
                 return out;
             }
         });
+    }
+
+    public static class TagCreationRequest {
+        public String description;
+        public String color;
+        public String tagName;
+
+        public TagCreationRequest() {}
+    }
+
+    public static Result createTag() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+
+        TagCreationRequest tagCreationRequest;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            tagCreationRequest = objectMapper.convertValue(request, TagCreationRequest.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        }
+        Tag tag = new Tag(account, tagCreationRequest.description, tagCreationRequest.color, tagCreationRequest.tagName);
+        tag.save();
+        return ok(Json.toJson(new Tag.TagInformation(tag)));
+    }
+
+    public static Result deleteTag() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+        if (!request.has("id"))
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        Long id = request.get("id").asLong();
+        Tag byId = Tag.findById(id, account);
+        if (byId == null)
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        byId.deleteTag();
+        return ok(Json.toJson(new ServerResponse("success", "Successfully deleted")));
+    }
+
+    public static class TagFilesRequest {
+        public Long id;
+        public String[] selectedFiles;
+    }
+
+    public static Result tagFiles() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+
+        TagFilesRequest tagFilesRequest;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            tagFilesRequest = objectMapper.convertValue(request, TagFilesRequest.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        }
+        if (tagFilesRequest.selectedFiles == null || tagFilesRequest.id == null)
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        Tag tag = Tag.findById(tagFilesRequest.id, account);
+        if (tag == null)
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        tag.tagFiles(tagFilesRequest.selectedFiles);
+        return ok(Json.toJson(tagFilesRequest));
     }
 
     public static WebSocket<JsonNode> render() {

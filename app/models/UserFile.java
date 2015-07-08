@@ -8,9 +8,7 @@ import org.joda.time.DateTime;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -41,6 +39,8 @@ public class UserFile extends Model {
     private String fileExtension;
     private RenderState renderState;
     private DateTime createdAt;
+    @ManyToMany(mappedBy = "fileList")
+    private List<Tag> tags;
 
     public UserFile(Account account, String fileName,
                     String uniqueName, String softwareTypeName,
@@ -99,6 +99,30 @@ public class UserFile extends Model {
     public void setSampleCount(int diversity, long count) {
         this.clonotypesCount = diversity;
         this.sampleCount = count;
+    }
+
+    public void clearTags() {
+        tags.clear();
+        this.update();
+    }
+
+    public void deleteTag(Tag tag) {
+        if (tags.contains(tag)) {
+            tags.remove(tag);
+            this.update();
+        }
+    }
+
+    public void addTag(Tag tag) {
+        if (!tags.contains(tag)) {
+            tags.add(tag);
+            this.saveManyToManyAssociations("tags");
+            this.update();
+        }
+    }
+
+    public List<Tag> getTags() {
+        return tags;
     }
 
     public Integer getClonotypesCount() {
@@ -178,6 +202,16 @@ public class UserFile extends Model {
 
     public static UserFile fyndByNameAndAccount(Account account, String fileName) {
         return find().where().eq("account", account).eq("fileName", fileName).findUnique();
+    }
+
+    public static List<UserFile> findByTag(Tag tag) {
+        List<UserFile> byAccount = findByAccount(tag.getAccount());
+        List<UserFile> byTag = new ArrayList<>();
+        for (UserFile userFile : byAccount) {
+            if (userFile.tags.contains(tag))
+                byTag.add(userFile);
+        }
+        return byTag;
     }
 
     public static Model.Finder<Long, UserFile> find() {
