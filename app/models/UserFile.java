@@ -219,6 +219,13 @@ public class UserFile extends Model {
     }
 
     public static void deleteFile(UserFile file) {
+        for (Tag tag : file.tags) {
+            if (tag.getFileList().contains(file)) {
+                tag.getFileList().remove(file);
+                tag.saveManyToManyAssociations("fileList");
+                tag.update();
+            }
+        }
         File fileDir = new File(file.fileDirPath);
         File[] files = fileDir.listFiles();
         if (files == null) {

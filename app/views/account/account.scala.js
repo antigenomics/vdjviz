@@ -238,7 +238,8 @@ var shared = false;
                                 cached: false,
                                 comparing: false
                             }
-                        }
+                        },
+                        tags: []
                     };
                 });
             }
@@ -288,6 +289,13 @@ var shared = false;
             }
         }
 
+        function unassignFileFromTag(fileName, tag) {
+            var index = tag.files.indexOf(fileName);
+            if (index >= 0) {
+                tag.files.splice(index, 1);
+            }
+        }
+
         function deleteTag(tag) {
             var index = tags.indexOf(tag);
             if (index >= 0) {
@@ -310,8 +318,11 @@ var shared = false;
             }
             $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
                 .success(function () {
+                    angular.forEach(files[file.fileName].tags, function(tag) {
+                        unassignFileFromTag(file.fileName, tag);
+                    });
                     delete files[file.fileName];
-                    if (stateInfo.isActiveFile(file) || Object.keys(files).length === 1) {
+                    if (stateInfo.isActiveFile(file) || Object.keys(files).length === 0) {
                         stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     } else if (Object.keys(files).length > 0) {
                         chartInfo.update_rarefaction(true);
@@ -410,7 +421,8 @@ var shared = false;
                         cached: false,
                         comparing: false
                     }
-                }
+                },
+                tags: []
             };
         }
 
@@ -433,6 +445,7 @@ var shared = false;
             clearTagFiles: clearTagFiles,
             assignTagToFile: assignTagToFile,
             unassignTagFromFile: unassignTagFromFile,
+            unassignFileFromTag: unassignFileFromTag,
             deleteFile: deleteFile,
             deleteFile_client: deleteFile_client,
             deleteAll: deleteAll,
