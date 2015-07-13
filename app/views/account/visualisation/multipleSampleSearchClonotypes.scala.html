@@ -112,7 +112,7 @@
                         <text ng-show="!hideTable">Hide</text>
                     </button>
                 </div>
-                <div class="panel-body text-center" ng-hide="::result.rows.length">
+                <div class="panel-body text-center" ng-hide="result.rows.length || hideTable">
                     <b>No matches found</b>
                 </div>
                 <div class="panel-body" id="clonotypes_table_scroll"  ng-show="result.rows.length && !hideTable">
