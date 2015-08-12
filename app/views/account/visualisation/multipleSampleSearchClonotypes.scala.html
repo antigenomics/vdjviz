@@ -70,7 +70,13 @@
                     </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
-                        <!-- empty field -->
+                    <div class="form-group">
+                        <label class="control-label">Show only non-coding clonotypes</label>
+                        <select class="form-control" ng-model="searchParameters.nonFunctional">
+                            <option value="false">No</option>
+                            <option value="true" >Yes</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-sm-6 col-md-6 col-lg-6">
                     <div class="form-group">

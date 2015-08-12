@@ -31,6 +31,9 @@ public class SearchClonotypes {
         ClonotypeBinaryContainer container = new ClonotypeBinaryContainer(file.getDirectoryPath() + "/clonotype.bin");
 
         List<BinaryClonotypeFilter> filters = new ArrayList<>();
+        if (searchClonotypesRequest.sequence == null) {
+            throw new RuntimeException("Empty sequence field");
+        }
         if (searchClonotypesRequest.vFilter.length > 0)
             filters.add(new BinaryClonotypeVFilter(searchClonotypesRequest.vFilter));
         if (searchClonotypesRequest.jFilter.length > 0)
@@ -40,6 +43,9 @@ public class SearchClonotypes {
         if (searchClonotypesRequest.length > 0) {
             if (searchClonotypesRequest.lengthType == null) throw new RuntimeException("Length type field is empty");
             filters.add(new BinaryClonotypeLengthFilter(searchClonotypesRequest.length, BinaryClonotypeLengthFilter.LengthType.valueOf(searchClonotypesRequest.lengthType), searchClonotypesRequest.aminoAcid));
+        }
+        if (searchClonotypesRequest.nonFunctional) {
+            filters.add(new BinaryClonotypeNonFunctionalFilter());
         }
         filters.add(new BinaryClonotypeSequenceFilter(searchClonotypesRequest.sequence, searchClonotypesRequest.aminoAcid));
 
@@ -58,6 +64,9 @@ public class SearchClonotypes {
         ClonotypeBinaryContainer container = new ClonotypeBinaryContainer(file.getFileDirPath() + "/clonotype.bin");
 
         List<BinaryClonotypeFilter> filters = new ArrayList<>();
+        if (searchClonotypesRequest.sequence == null) {
+            throw new RuntimeException("Empty sequence field");
+        }
         if (searchClonotypesRequest.vFilter.length > 0)
             filters.add(new BinaryClonotypeVFilter(searchClonotypesRequest.vFilter));
         if (searchClonotypesRequest.jFilter.length > 0)
@@ -67,6 +76,9 @@ public class SearchClonotypes {
         if (searchClonotypesRequest.length > 0) {
             if (searchClonotypesRequest.lengthType == null) throw new RuntimeException("Length type field is empty");
             filters.add(new BinaryClonotypeLengthFilter(searchClonotypesRequest.length, BinaryClonotypeLengthFilter.LengthType.valueOf(searchClonotypesRequest.lengthType), searchClonotypesRequest.aminoAcid));
+        }
+        if (searchClonotypesRequest.nonFunctional) {
+            filters.add(new BinaryClonotypeNonFunctionalFilter());
         }
         filters.add(new BinaryClonotypeSequenceFilter(searchClonotypesRequest.sequence, searchClonotypesRequest.aminoAcid));
 

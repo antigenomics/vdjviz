@@ -1089,6 +1089,7 @@ var shared = false;
                     jFilter: '',
                     dFilter: ''
                 };
+                $scope.nonFunctional = 'false';
 
                 $scope.searchSequence = function() {
                     if ($scope.sequenceString.length <= 0) {
@@ -1107,7 +1108,8 @@ var shared = false;
                         jFilter: $scope.filters.jFilter.replace(/ /g,'') !== '' ? $scope.filters.jFilter.replace(/ /g,'').split(',') : [],
                         dFilter: $scope.filters.dFilter.replace(/ /g,'') !== '' ? $scope.filters.dFilter.replace(/ /g,'').split(',') : [],
                         length: $scope.sequenceLength,
-                        lengthType: $scope.lengthType
+                        lengthType: $scope.lengthType,
+                        nonFunctional: $scope.nonFunctional
                     })
                         .success(function(response) {
                             loading = false;
@@ -2080,7 +2082,8 @@ var shared = false;
                 jFilter: searchParameters.filters.jFilter.replace(/ /g,'') !== '' ? searchParameters.filters.jFilter.replace(/ /g,'').split(',') : [],
                 dFilter: searchParameters.filters.dFilter.replace(/ /g,'') !== '' ? searchParameters.filters.dFilter.replace(/ /g,'').split(',') : [],
                 length: searchParameters.sequenceLength,
-                lengthType: searchParameters.lengthType
+                lengthType: searchParameters.lengthType,
+                nonFunctional: searchParameters.nonFunctional
             })
                 .success(function(response) {
                     angular.forEach(response, function(result) {
@@ -2142,7 +2145,8 @@ var shared = false;
                         dFilter: ''
                     },
                     sequenceLength: 0,
-                    lengthType: 'LESS'
+                    lengthType: 'LESS',
+                    nonFunctional: 'false'
                 };
 
                 $scope.selectFile_MultipleSearchClonotypes = function(file) {

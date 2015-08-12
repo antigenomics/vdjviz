@@ -386,6 +386,7 @@ public class AccountAPI extends Controller {
     public static class SearchClonotypesRequest {
         public String sequence;
         public boolean aminoAcid;
+        public boolean nonFunctional;
         public String[] vFilter;
         public String[] jFilter;
         public String[] dFilter;
