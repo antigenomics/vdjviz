@@ -17,9 +17,11 @@ GET         /account                                          controllers.Accoun
 GET         /account/js.shared                                controllers.Application.js(shared: Boolean = true)
 GET         /account/js                                       controllers.Application.js(shared: Boolean = false)
 GET         /account/api/rendering/ws                         controllers.AccountAPI.render()
+GET         /account/api/testws                               controllers.AccountAPI.wsTest()
 POST        /account/api/upload                               controllers.AccountAPI.upload()
 POST        /account/api/delete                               controllers.AccountAPI.delete()
 POST        /account/api/data                                 controllers.AccountAPI.data()
+POST        /account/api/log                                  controllers.AccountAPI.log()
 GET         /account/api/files                                controllers.AccountAPI.files()
 GET         /account/api/info                                 controllers.AccountAPI.accountInformation()
 POST        /account/api/annotation                           controllers.AccountAPI.annotationData()
@@ -34,6 +36,7 @@ POST        /account/api/tagfiles                             controllers.Accoun
 
 # Share api
 GET         /share/:link                                      controllers.ShareAPI.sharedAccount(link)
+POST        /share/api/log/:link                              controllers.ShareAPI.log(link)
 GET         /share/api/info/:link                             controllers.ShareAPI.info(link)
 POST        /share/api/data/:link                             controllers.ShareAPI.data(link)
 POST        /share/api/annotation/:link                       controllers.ShareAPI.annotationData(link)

@@ -16,6 +16,13 @@
         </encoder>
     </appender>
 
+    <appender name="CLIENTLOG" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/users/client.log</file>
+        <encoder>
+            <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="USERSERVICE" class="ch.qos.logback.core.FileAppender">
         <file>/tmp/userservice.log</file>
         <encoder>
@@ -41,6 +48,9 @@
     <logger name="controllers" level="INFO" />
     <logger name="user" level="INFO">
         <appender-ref ref="USERLOG"/>
+    </logger>
+    <logger name="client" level="INFO">
+        <appender-ref ref="CLIENTLOG"/>
     </logger>
     <logger name="UserService" level="INFO">
         <appender-ref ref="USERSERVICE"/>

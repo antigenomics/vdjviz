@@ -25,10 +25,7 @@ import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeFilters.BinaryClonotypeLe
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
-import utils.server.CacheServerResponse;
-import utils.server.Configuration;
-import utils.server.ServerResponse;
-import utils.server.WSResponse;
+import utils.server.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +47,17 @@ public class AccountAPI extends Controller {
 
     public static Result account() {
         return ok(views.html.account.accountMainPage.render(false, null));
+    }
+
+    public static Result log() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+        if (!request.has("message")) {
+            LogAggregator.logError("User: " + account.getUserName() + ": error while client logging");
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
+        }
+        LogAggregator.log(request.get("message").asText(), LogAggregator.LogType.CLIENT, account);
+        return ok();
     }
 
     public static F.Promise<Result> upload() {
@@ -762,6 +770,17 @@ public class AccountAPI extends Controller {
                         }
                     }
                 });
+            }
+        };
+    }
+
+    public static WebSocket<JsonNode> wsTest() {
+        LocalUser localUser = LocalUser.find.byId(SecureSocial.currentUser().identityId().userId());
+        final Account account = localUser.account;
+        return new WebSocket<JsonNode>() {
+            @Override
+            public void onReady(final WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out) {
+                out.close();
             }
         };
     }

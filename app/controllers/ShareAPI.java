@@ -19,6 +19,7 @@ import play.mvc.Controller;
 import play.mvc.Result;
 import utils.CacheType.CacheType;
 import utils.server.CacheServerResponse;
+import utils.server.LogAggregator;
 import utils.server.ServerResponse;
 
 import java.io.File;
@@ -34,6 +35,18 @@ public class ShareAPI extends Controller {
         if (byLink == null)
             return ok(views.html.commonPages.notFound.render("share/" + link));
         return ok(views.html.account.accountMainPage.render(true, link));
+    }
+
+    public static Result log(final String link) {
+        SharedGroup sharedGroup = SharedGroup.findByLink(link);
+        Account account = sharedGroup.getAccount();
+        JsonNode request = request().body().asJson();
+        if (!request.has("message")) {
+            LogAggregator.logError("Shared content of " + account.getUserName() + ": error while client logging");
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
+        }
+        LogAggregator.log(request.get("message").asText(), LogAggregator.LogType.CLIENT_SHARED, account);
+        return ok();
     }
 
     public static F.Promise<Result> info(final String link) {

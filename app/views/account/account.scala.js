@@ -40,6 +40,26 @@ var shared = false;
         };
     });
 
+    app.factory('serverLog', ['$http', '$log', function ($http, $log) {
+        function log(message) {
+            $http.post('/' + api_url + '/api/log'@if(shared){+'/'+link}, { message: message })
+                .success(function() {
+                    if (CONSOLE_INFO) {
+                        $log.info('Successfully logged');
+                    }
+                })
+                .error(function() {
+                    if (CONSOLE_INFO) {
+                        $log.error('Error while logging to server');
+                    }
+                })
+        }
+
+        return {
+            log: log
+        }
+    }]);
+
     //Notifications factory and directive
     app.factory('notifications', ['$log', '$timeout', function($log, $timeout) {
         var notifications = [];
@@ -125,13 +145,14 @@ var shared = false;
 
 
     //This factory handle account information and user's files
-    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', 'notifications', function($log, $http, stateInfo, chartInfo, notifications) {
+    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', 'notifications', '$websocket', 'serverLog', function($log, $http, stateInfo, chartInfo, notifications, $websocket, serverLog) {
         //Private variables
         var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
         var email = "", firstName = "", lastName = "", userName = "";
         var rarefactionCache = false;
         var initialized = false;
         var initializeError = false;
+        var initializeWSError = false;
         var files = {};
         var sharedGroups = [];
         var uid = 0;
@@ -245,8 +266,18 @@ var shared = false;
             }
             })
             .error(function() {
+                serverLog.log('Error while initializing');
                 initializeError = true;
             });
+
+        @if(!shared){
+            var wsError = false;
+            var ws = $websocket("ws://" + location.host + "/" + api_url + "/api/testws");
+            ws.onError(function() {
+                serverLog.log('Error while initializing WebSocket connection');
+                initializeWSError = true;
+            })
+        }
 
         //Public api
         //-----------------------------//
@@ -337,6 +368,7 @@ var shared = false;
                         $log.info('File ' + file.fileName + ' successfully deleted');
                     }
                 }).error(function(response) {
+                    serverLog.log('Error while deleting sample ' + file.fileName);
                     notifications.addErrorNotification('Deleting', 'Error while deleting sample ' + file.fileName);
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting file ' + file.fileName);
@@ -365,6 +397,7 @@ var shared = false;
                     }
                 })
                 .error(function() {
+                    serverLog.log('Error while deleting samples');
                     notifications.addErrorNotification('Deleting', 'Error while deleting samples');
                     if (CONSOLE_INFO) {
                         $log.error('Error while deleting files');
@@ -374,12 +407,16 @@ var shared = false;
 
         //Checking initializing
         function isInitialized() {
-            return initialized === true;
+            return initialized === true && initializeWSError === false;
         }
 
         //Checking initializing error
         function isInitializeError() {
             return initializeError === true;
+        }
+
+        function isInitializeWSError() {
+            return initializeWSError === true;
         }
 
         //Checking on unique name of file
@@ -456,6 +493,7 @@ var shared = false;
             deleteAll: deleteAll,
             isInitialized: isInitialized,
             isInitializeError: isInitializeError,
+            isInitializeWSError: isInitializeWSError,
             isFileAlreadyExist: isFileAlreadyExist,
             getMaxFilesCount: getMaxFilesCount,
             getMaxFileSize: getMaxFileSize,
@@ -525,7 +563,7 @@ var shared = false;
     //--------------------------------------------------------//
 
     //This factory requests data from server
-    app.factory('chartInfo', ['$log', '$http', 'notifications', 'summaryStatsFactory', 'clonotypesTableFactory', function($log, $http, notifications, summaryStatsFactory, clonotypesTableFactory) {
+    app.factory('chartInfo', ['$log', '$http', 'notifications', 'summaryStatsFactory', 'clonotypesTableFactory', 'serverLog', function($log, $http, notifications, summaryStatsFactory, clonotypesTableFactory, serverLog) {
 
         var oldFile = null;
 
@@ -572,6 +610,7 @@ var shared = false;
                             if (CONSOLE_INFO) {
                                 $log.error('Error while requesting data for file ' + parameters.file.fileName);
                             }
+                            serverLog.log('Error while requesting data for sample ' + parameters.file.fileName);
                             notifications.addErrorNotification(type, 'Error while requesting data for sample ' + parameters.file.fileName);
                             noDataAvailable(parameters, parameters.file);
                             loaded(parameters.place);
@@ -610,7 +649,7 @@ var shared = false;
                     loaded(parameters.place);
                 })
                 .error(function(error) {
-                    $log.info(error);
+                    serverLog.log('Error while loading rarefaction data');
                     notifications.addErrorNotification('Rarefaction', 'Error while loading rarefaction data');
                     loaded(parameters.place);
                 });
@@ -635,6 +674,7 @@ var shared = false;
                     loaded('.summary-visualisation-tab');
                 })
                 .error(function() {
+                    serverLog.log('Error while loading summary data');
                     notifications.addErrorNotification('Summary', 'Error while loading summary data');
                     loaded('.summary-visualisation-tab');
                 });
@@ -877,7 +917,7 @@ var shared = false;
     app.directive('tags', function() {
         return {
             restrict: 'E',
-            controller: ['$scope', 'accountInfo', '$http', 'notifications', function($scope, accountInfo, $http, notifications) {
+            controller: ['$scope', 'accountInfo', '$http', 'notifications', 'serverLog', function($scope, accountInfo, $http, notifications, serverLog) {
                 $scope.newTagCreation = false;
                 $scope.newTag = {
                     tagName: '',
@@ -911,6 +951,7 @@ var shared = false;
                             $scope.newTagCreation = false;
                         })
                         .error(function(error) {
+                            serverLog.log('Error while creating tag');
                             notifications.addErrorNotification('Tags', error.message);
                         })
                 };
@@ -935,6 +976,7 @@ var shared = false;
                             $scope.tagging = false;
                         })
                         .error(function(error) {
+                            serverLog.log('Error while tagging files');
                             notifications.addErrorNotification('Tags', error.message);
                         });
                 };
@@ -953,6 +995,7 @@ var shared = false;
                             notifications.addSuccessNotification('Tags', 'Successfully deleted')
                         })
                         .error(function(error) {
+                            serverLog.log('Error while deleting tag');
                             notifications.addErrorNotification('Tags', error.message);
                         })
                 };
@@ -1076,7 +1119,7 @@ var shared = false;
         return {
             restrict: 'E',
             scope: true,
-            controller: ['$scope', '$http', '$log', 'notifications', '$sce', function($scope, $http, $log, notifications, $sce) {
+            controller: ['$scope', '$http', '$log', 'notifications', '$sce', 'serverLog', function($scope, $http, $log, notifications, $sce, serverLog) {
                 var noMatchesFound = false;
                 var loading = false;
                 var init = false;
@@ -1130,6 +1173,7 @@ var shared = false;
                             if (CONSOLE_INFO) {
                                 $log.error(response.message);
                             }
+                            serverLog.log('Error while search sequence: ' + response.message);
                             notifications.addErrorNotification('Search clonotypes', response.message);
                         });
                 };
@@ -1154,7 +1198,7 @@ var shared = false;
 
 
     //Clonotypes table factory and directive
-    app.factory('clonotypesTableFactory', ['$sce', 'notifications', '$http', '$log', function($sce, notifications, $http, $log) {
+    app.factory('clonotypesTableFactory', ['$sce', 'notifications', '$http', '$log', 'serverLog', function($sce, notifications, $http, $log, serverLog) {
         var data = {};
 
         function getData(fileName) {
@@ -1205,6 +1249,7 @@ var shared = false;
                 .error(function() {
                     data[fileName].loading = false;
                     data[fileName].loadError = true;
+                    serverLog.log('Error while loading clonotypes table data');
                     notifications.addErrorNotification('Clonotypes table', 'Error while loading page ' + page);
                     if (CONSOLE_INFO) {
                         $log.error('Clonotypes table: Error while downloading page ' + page);
@@ -1340,7 +1385,7 @@ var shared = false;
     app.directive('fileUpload', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', '$http', 'accountInfo', 'chartInfo', 'notifications', function ($scope, $http, accountInfo, chartInfo, notifications) {
+            controller: ['$scope', '$http', 'accountInfo', 'chartInfo', 'notifications', 'serverLog', function ($scope, $http, accountInfo, chartInfo, notifications, serverLog) {
                 //Private var
                 var uid = 0;
                 var errors = Object.freeze({
@@ -1609,6 +1654,7 @@ var shared = false;
                                         case "error" :
                                             accountInfo.deleteFile_client(file);
                                             notifications.addErrorNotification('Rendering', 'Error while rendering sample ' + file.fileName);
+                                            serverLog.log('Error while rendering sample ' + file.fileName);
                                             $scope.$apply(function() {
                                                 updateResult(file, 'error');
                                                 updateResultTooltip(file, event.message);
@@ -1617,6 +1663,7 @@ var shared = false;
                                             break;
                                         default:
                                             accountInfo.deleteFile_client(file);
+                                            serverLog.log('rendering: server is unavailable');
                                             notifications.addErrorNotification('Rendering', 'Server is unavailable');
                                             $scope.$apply(function() {
                                                 updateTooltip(file, "Server is unavailable");
@@ -1635,16 +1682,22 @@ var shared = false;
                                     };
                                     socket.send(JSON.stringify(msg));
                                 };
+                                socket.onerror = function() {
+                                    serverLog.log('Error while opening websocket connection');
+                                    notifications.addErrorNotification('Rendering', 'Error while opening WebSocket. Please check your Internet connection.');
+                                };
                                 break;
                             case "error" :
                                 updateResult(file, 'error');
                                 updateResultTooltip(file, data.result.message);
                                 notifications.addErrorNotification('Rendering', 'Error while rendering sample ' + file.fileName);
+                                serverLog.log('Error while rendering sample ' + file.fileName);
                                 break;
                             default:
                                 updateResult(file, 'error');
                                 updateResultTooltip(file, "Server is unavailable");
                                 notifications.addErrorNotification('Rendering', 'Server is unavailable');
+                                serverLog.log('rendering: server is unavailable');
                         }
 
                     }
@@ -1783,7 +1836,7 @@ var shared = false;
 
     //Join samples factory and directive
     //--------------------------------------------------------//
-    app.factory('sampleCollectionFactory', ['$http', '$log', '$websocket', 'notifications', '$sce', function($http, $log, $websocket, notifications, $sce) {
+    app.factory('sampleCollectionFactory', ['$http', '$log', '$websocket', 'notifications', '$sce', 'serverLog', function($http, $log, $websocket, notifications, $sce, serverLog) {
 
         var steps = Object.freeze({
             FILES_SELECT: 0,
@@ -1821,6 +1874,7 @@ var shared = false;
         ws.onError(function() {
             connectionError = true;
             notifications.addErrorNotification('Join samples', 'Connection error');
+            serverLog.log('WebSocket for sample collection is down');
             if (CONSOLE_INFO) {
                 $log.error('Error: WebSocket for sample collection is down');
             }
@@ -1829,6 +1883,7 @@ var shared = false;
         ws.onClose(function() {
             connectionError = true;
             notifications.addErrorNotification('Join samples', 'Connection error');
+            serverLog.log('Join samples: connection error');
             if (CONSOLE_INFO) {
                 $log.error('Error: WebSocket for sample collection is down');
             }
@@ -1854,6 +1909,7 @@ var shared = false;
                     break;
                 case 'error':
                     notifications.addErrorNotification('Join samples', response.message);
+                    serverLog.log('Join samples: ' + response.message);
                     if (CONSOLE_INFO) {
                         $log.error('Error: ' + response.message);
                     }
@@ -2057,7 +2113,7 @@ var shared = false;
 
     //Multiple samples search factory and directive
     //--------------------------------------------------------//
-    app.factory('multipleSampleSearchFactory', ['$http', '$log', 'notifications', '$sce', function($http, $log, notifications, $sce) {
+    app.factory('multipleSampleSearchFactory', ['$http', '$log', 'notifications', '$sce', 'serverLog', function($http, $log, notifications, $sce, serverLog) {
         var initialized = false;
         var loading = false;
         var results = [];
@@ -2100,6 +2156,7 @@ var shared = false;
                         $log.info(response.message);
                     }
                     notifications.addErrorNotification('Multiple sample search', response.message);
+                    serverLog.log('Multiple sample search: ' + response.message);
                     loading = false;
                 });
         }
@@ -2197,7 +2254,7 @@ var shared = false;
         return {
             restrict: 'E',
             scope: false,
-            controller: ['$scope', '$http', '$log', 'notifications', 'accountInfo', function($scope, $http, $log, notifications, accountInfo) {
+            controller: ['$scope', '$http', '$log', 'notifications', 'accountInfo', 'serverLog', function($scope, $http, $log, notifications, accountInfo, serverLog) {
                 var isNew = false;
                 var selectedFiles = [];
 
@@ -2260,6 +2317,7 @@ var shared = false;
                             if (CONSOLE_INFO) {
                                 $log.error('Sharing', error.message);
                             }
+                            serverLog.log('Sharing: ' + error.message);
                             notifications.addErrorNotification('Sharing', error.message);
                         });
                 };
@@ -2286,6 +2344,7 @@ var shared = false;
                             if (CONSOLE_INFO) {
                                 $log.error('Sharing: ' + response.message);
                             }
+                            serverLog.log('Sharing: ' + response.message);
                             notifications.addErrorNotification('Sharing', response.message);
                         });
                 };
@@ -2316,6 +2375,7 @@ var shared = false;
                                 '<div class="text-info">' +
                                     '<text ng-hide="error()">Initializing...</text>' +
                                     '<text ng-show="error()">Error while initializing</text>' +
+                                    '<text ng-show="wsError()">Error while connecting to webserver using WebSockets protocol, make sure you are not using VPN.</text>' +
                                 '</div>' +
                                 '<div class="loading" ng-hide="error()">' +
                                     '<div class="wBall" id="wBall_1">' +
@@ -2337,6 +2397,7 @@ var shared = false;
                             '</div>' +
                         '</div>',
             controller: ['$scope', 'accountInfo', function($scope, accountInfo) {
+
                 $scope.blockPage = function() {
                     return !accountInfo.isInitialized();
                 };
@@ -2344,6 +2405,11 @@ var shared = false;
                 $scope.error = function() {
                     return accountInfo.isInitializeError();
                 };
+
+                $scope.wsError = function() {
+                    return accountInfo.isInitializeWSError();
+                }
+
 
             }]
         };

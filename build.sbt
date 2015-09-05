@@ -13,7 +13,7 @@ resolvers += (
   )
 
 libraryDependencies ++= Seq(
-  "com.antigenomics" % "vdjtools" % "1.0-SNAPSHOT",
+  "com.antigenomics" % "vdjtools" % "1.0.0",
   "com.antigenomics" % "vdjdb" % "1.0-SNAPSHOT",
   "com.milaboratory" % "milib" % "1.0.1",
   "ws.securesocial" %% "securesocial" % "2.1.4",
