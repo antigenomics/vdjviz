@@ -4,6 +4,10 @@ html, body {
     padding-top: 0;
 }
 
+#circle:hover path.fade {
+    display: none;
+}
+
 #clonotypes_table_wrapper {
     position: relative;
     padding-top: 20px;

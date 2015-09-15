@@ -737,7 +737,7 @@ public class AccountAPI extends Controller {
                                         if (account.getMaxClonotypesCount() > 0) {
                                             if (file.getClonotypesCount() > account.getMaxClonotypesCount()) {
                                                 UserFile.deleteFile(file);
-                                                out.write(Json.toJson(new WSResponse("error", "render", fileName, "Number of clonotypes in a sample should be less than " + Configuration.getMaxClonotypesCount())));
+                                                out.write(Json.toJson(new WSResponse("error", "render", fileName, "Number of clonotypes in a sample should be less than " + account.getMaxClonotypesCount())));
                                                 out.close();
                                                 return;
                                             }
