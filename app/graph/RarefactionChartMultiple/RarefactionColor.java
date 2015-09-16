@@ -54,5 +54,4 @@ public class RarefactionColor {
         }
         return strVal;
     }
-
 }

@@ -7,6 +7,7 @@ import models.UserFile;
 import play.Logger;
 import play.libs.Json;
 import utils.CacheType.CacheType;
+import utils.server.LogAggregator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -60,8 +61,7 @@ public class SpectratypeVChartCreator {
                 fileWriter.write(Json.stringify(Json.toJson(spectratypeVChart.getChart())));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
-                        ": save cache error [" + file.getFileName() + "," + cacheName + "]");
+                LogAggregator.logServerError("Error while saving cache file[" + file.getFileName() + "," + cacheName + "]", file.getAccount());
                 fnfe.printStackTrace();
             }
         } else {

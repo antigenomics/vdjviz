@@ -8,6 +8,7 @@ import play.libs.Json;
 import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinary;
 import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 import utils.CacheType.CacheType;
+import utils.server.LogAggregator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -82,8 +83,7 @@ public class AnnotationTable {
                 fileWriter.write(Json.stringify(Json.toJson(this)));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
-                Logger.of("user." + file.getAccount().getUserName()).error("User " + file.getAccount().getUserName() +
-                        ": save cache error [" + file.getFileName() + "," + cacheName + "]");
+                LogAggregator.logServerError("Error while saving cache file[" + file.getFileName() + "," + cacheName + "]", file.getAccount());
                 fnfe.printStackTrace();
             }
         } else {

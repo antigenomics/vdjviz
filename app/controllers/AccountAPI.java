@@ -53,10 +53,10 @@ public class AccountAPI extends Controller {
         Account account = getCurrentAccount();
         JsonNode request = request().body().asJson();
         if (!request.has("message")) {
-            LogAggregator.logError("User: " + account.getUserName() + ": error while client logging");
+            LogAggregator.logServerError("User: " + account.getUserName() + ": error while client logging", account);
             return badRequest(Json.toJson(new ServerResponse("error", "Invalid Action")));
         }
-        LogAggregator.log(request.get("message").asText(), LogAggregator.LogType.CLIENT, account);
+        LogAggregator.logClientError(request.get("message").asText(), account);
         return ok();
     }
 
@@ -73,7 +73,7 @@ public class AccountAPI extends Controller {
 
                 //Checking files count;
                 if (account.isMaxFilesCountExceeded()) {
-                    Logger.of("user." + account.getUserName()).info("User " + account.getUserName() + ": exceeded the limit of the number of files");
+                    LogAggregator.logServerError("Exceeded the limit of the number of files", account);
                     return ok(Json.toJson(new ServerResponse("error", "You have exceeded the allowed number of samples. Remove some files to continue")));
 
                 }
@@ -122,7 +122,7 @@ public class AccountAPI extends Controller {
                     if (!accountDir.exists()) {
                         Boolean accountDirCreated = accountDir.mkdir();
                         if (!accountDirCreated) {
-                            Logger.of("user." + account.getUserName()).error("Error creating main directory for user " + account.getUserName());
+                            LogAggregator.logServerError("Error creating main directory", account);
                             return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
                         }
                     }
@@ -135,7 +135,7 @@ public class AccountAPI extends Controller {
                     if (!fileDir.exists()) {
                         Boolean created = fileDir.mkdir();
                         if (!created) {
-                            Logger.of("user." + account.getUserName()).error("Error creating file directory for user " + account.getUserName());
+                            LogAggregator.logServerError("Error creating file directory", account);
                             return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
                         }
                     }
@@ -143,7 +143,7 @@ public class AccountAPI extends Controller {
                     String fileExtension = body.asFormUrlEncoded().get("fileExtension")[0].equals("") ? "txt" : body.asFormUrlEncoded().get("fileExtension")[0];
                     Boolean uploaded = uploadedFile.renameTo(new File(account.getDirectoryPath() + "/" + unique_name + "/" + fileName + "." + fileExtension));
                     if (!uploaded) {
-                        Logger.of("user." + account.getUserName()).error("Error upload file for user " + account.getUserName());
+                        LogAggregator.logServerError("Error while uploading new file", account);
                         return ok(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
                     }
 
@@ -158,8 +158,8 @@ public class AccountAPI extends Controller {
                     return ok(Json.toJson(new ServerResponse("success", "Successfully uploaded")));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Logger.of("user." + account.getUserName()).error("Error while uploading new file for user : " + account.getUserName());
-                    return ok(Json.toJson(new ServerResponse("error", "Error while uploading file")));
+                    LogAggregator.logServerError("Error while uploading new file", account);
+                    return ok(Json.toJson(new ServerResponse("error", "Error while uploading new file")));
                 }
             }
         });
@@ -182,21 +182,21 @@ public class AccountAPI extends Controller {
                         String fileName = request.findValue("fileName").asText();
                         UserFile file = UserFile.fyndByNameAndAccount(account, fileName);
                         if (file == null) {
-                            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() + " have no file named " + fileName);
-                            return forbidden(Json.toJson(new ServerResponse("error", "You have no file named " + fileName)));
+                            LogAggregator.logServerError("User have no sample named " + fileName, account);
+                            return forbidden(Json.toJson(new ServerResponse("error", "You have no sample named " + fileName)));
                         }
                         fileDir = new File(file.getDirectoryPath());
                         files = fileDir.listFiles();
                         if (files == null) {
-                            return ok(Json.toJson(new ServerResponse("error", "File does not exist")));
+                            return ok(Json.toJson(new ServerResponse("error", "Sample does not exist")));
                         }
                         try {
                             UserFile.deleteFile(file);
                             return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
                         } catch (Exception e) {
-                            Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + "Error while deleting file " + fileName);
                             e.printStackTrace();
-                            return ok(Json.toJson(new ServerResponse("error", "Error while deleteing file " + fileName)));
+                            LogAggregator.logServerError("Error while deleting sample " + fileName, account);
+                            return ok(Json.toJson(new ServerResponse("error", "Error while deleting sample " + fileName)));
                         }
                         //Delete all files
                     case "deleteAll":
@@ -204,8 +204,8 @@ public class AccountAPI extends Controller {
                             account.cleanAllFiles();
                             return ok(Json.toJson(new ServerResponse("ok", "Successfully deleted")));
                         } catch (Exception e) {
-                            Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while deleting files for  " + account.getUserName());
                             e.printStackTrace();
+                            LogAggregator.logServerError("Error while deleting all samples", account);
                             return ok(Json.toJson(new ServerResponse("error", "Error while deleting files")));
                         }
                     default:
@@ -267,8 +267,7 @@ public class AccountAPI extends Controller {
                     }
                 } catch (IllegalArgumentException | FileNotFoundException e) {
                     e.printStackTrace();
-                    Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                            ": error while requesting " + type + " data");
+                    LogAggregator.logServerError("Error while requesting " + type + " data", account);
                     return badRequest(Json.toJson(new ServerResponse("error", "Unknown type " + type)));
                 }
             }
@@ -299,8 +298,10 @@ public class AccountAPI extends Controller {
                 List<UserFile> files = new ArrayList<>();
                 for (String selectedFile : shareFilesRequest.selectedFiles) {
                     UserFile userFile = UserFile.fyndByNameAndAccount(account, selectedFile);
-                    if (userFile == null)
+                    if (userFile == null) {
+                        LogAggregator.logServerError("[Sharing]User have no sample named " + selectedFile, account);
                         return badRequest(Json.toJson(new ServerResponse("error", "You have no sample named " + selectedFile)));
+                    }
                     files.add(userFile);
                 }
 
@@ -310,8 +311,7 @@ public class AccountAPI extends Controller {
                 File groupFolder = new File(cachePath);
                 if (!groupFolder.exists()) {
                     if (!groupFolder.mkdir()) {
-                        Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                                " error while creating directory for sharing group");
+                        LogAggregator.logServerError("Error while creating directory for sharing group", account);
                         return badRequest(Json.toJson(new ServerResponse("error", "Server is unavailable")));
                     }
                 }
@@ -329,8 +329,7 @@ public class AccountAPI extends Controller {
                     if (!fileDir.exists()) {
                         if (!fileDir.mkdir()) {
                             sharedGroup.deleteGroup();
-                            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                                    " error while creating directory for file " + file.getFileName() + " in sharing group");
+                            LogAggregator.logServerError("Error while creating directory for file " + file.getFileName() + " in sharing group", account);
                             return badRequest(Json.toJson(new ServerResponse("error", "Server is currently unavailable")));
                         }
                     }
@@ -566,8 +565,7 @@ public class AccountAPI extends Controller {
     private static Result cache(UserFile file, String cacheName, Account account) {
         //Return cache file transformed into json format
         if (file == null) {
-            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                    " have no requested file");
+            LogAggregator.logServerError("User have no requested file", account);
             return badRequest(Json.toJson(new CacheServerResponse("error", "You have no requested file", null)));
         }
         if (file.isRendered()) {
@@ -578,13 +576,11 @@ public class AccountAPI extends Controller {
                 return ok(Json.toJson(new CacheServerResponse("success", jsonData)));
             } catch (Exception e) {
                 e.printStackTrace();
-                Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                        ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
+                LogAggregator.logServerError("Cache file does not exists [" + file.getFileName() + "," + cacheName + "]", account);
                 return ok(Json.toJson(new CacheServerResponse("error", "Cache file does not exist", null)));
             }
         } else {
-            Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " File: "
-                    + file.getFileName() + " did not rendered");
+            LogAggregator.logServerError("File: " + file.getFileName() + " did not rendered", account);
             return ok(Json.toJson(new CacheServerResponse("error", "The file has not been rendered yet")));
         }
     }
@@ -756,7 +752,7 @@ public class AccountAPI extends Controller {
                                     return;
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail
-                                    Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Error while rendering file " + file.getFileName());
+                                    LogAggregator.logServerError("Error while rendering file " + file.getFileName(), account);
                                     out.write(Json.toJson(new WSResponse("error", "render", fileName, "Error while rendering")));
                                     UserFile.deleteFile(file);
                                     e.printStackTrace();
@@ -764,7 +760,7 @@ public class AccountAPI extends Controller {
                                     return;
                                 }
                             default:
-                                Logger.of("user." + account.getUserName()).error("User: " + account.getUserName() + " Render: unknown type");
+                                LogAggregator.logServerError("Render: unknown type " + event.findValue("action").asText(), account);
                                 out.write(Json.toJson(new WSResponse("error", "render", "", "Unknown action")));
                                 out.close();
                         }

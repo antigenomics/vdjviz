@@ -16,6 +16,7 @@ import play.libs.Json;
 import play.mvc.WebSocket;
 import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 import utils.CacheType.CacheType;
+import utils.server.LogAggregator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -122,8 +123,7 @@ public class ComputationUtil {
             fileWriter.write(Json.stringify(Json.toJson(data)));
             fileWriter.close();
         } catch (FileNotFoundException fnfe) {
-            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                    ": save cache error [" + file.getFileName() + "," + cacheName + "]");
+            LogAggregator.logServerError("Error while saving cache file [" + file.getFileName() + "," + cacheName + "]", account);
             fnfe.printStackTrace();
         }
     }

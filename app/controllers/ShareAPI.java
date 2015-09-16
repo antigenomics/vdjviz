@@ -2,17 +2,12 @@ package controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import graph.AnnotationTable.AnnotationTable;
 import graph.AnnotationTable.AnnotationTableShared;
-import graph.RarefactionChartMultiple.RarefactionChart;
 import graph.RarefactionChartMultiple.RarefactionChartShared;
 import graph.SearchClonotypes.SearchClonotypes;
 import models.Account;
 import models.SharedFile;
 import models.SharedGroup;
-
-import models.UserFile;
-import play.Logger;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -98,8 +93,7 @@ public class ShareAPI extends Controller {
                     }
                 } catch (IllegalArgumentException | FileNotFoundException e) {
                     e.printStackTrace();
-                    Logger.of("user." + sharedGroup.getAccount().getUserName()).error("User " + sharedGroup.getAccount().getUserName() +
-                            ": error while requesting shared " + type + " data");
+                    LogAggregator.logServerError("Error while requesting shared " + type + " data", sharedGroup.getAccount());
                     return badRequest(Json.toJson(new ServerResponse("error", "Unknown type " + type)));
                 }
             }
@@ -109,8 +103,7 @@ public class ShareAPI extends Controller {
     private static Result cache(SharedFile file, String cacheName, Account account) {
         //Return cache file transformed into json format
         if (file == null) {
-            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                    " have no requested file");
+            LogAggregator.logServerError("[Shared]User have no requested file", account);
             return badRequest(Json.toJson(new CacheServerResponse("error", "You have no requested file", null)));
         }
         try {
@@ -120,8 +113,7 @@ public class ShareAPI extends Controller {
             return ok(Json.toJson(new CacheServerResponse("success", jsonData)));
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.of("user." + account.getUserName()).error("User " + account.getUserName() +
-                    ": cache file does not exists [" + file.getFileName() + "," + cacheName + "]");
+            LogAggregator.logServerError("[Shared]Cache file does not exists [" + file.getFileName() + "," + cacheName + "]", account);
             return ok(Json.toJson(new CacheServerResponse("error", "Cache file does not exist", null)));
         }
     }

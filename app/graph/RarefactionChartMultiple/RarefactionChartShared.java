@@ -14,6 +14,7 @@ import models.UserFile;
 import play.Logger;
 import play.libs.Json;
 import utils.CacheType.CacheType;
+import utils.server.LogAggregator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -154,8 +155,7 @@ public class RarefactionChartShared {
             fileWriter.write(Json.stringify(Json.toJson(this)));
             fileWriter.close();
         } catch (FileNotFoundException fnfe) {
-            Logger.of("user." + sharedGroup.getAccount().getUserName()).error("User " + sharedGroup.getAccount().getUserName() +
-                    ": save cache error [" + cacheName + "]:shared");
+            LogAggregator.logServerError("Error while saving cache file for shared rarefaction", sharedGroup.getAccount());
             fnfe.printStackTrace();
         }
     }
