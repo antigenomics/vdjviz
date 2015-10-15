@@ -2811,7 +2811,6 @@ function vjUsage(data, param) {
     var fill = function(i) {
         return data.colors[i % data.colors.length];
     };
-
     // Visualize
     var chord = d3.layout.chord()
         .padding(.03)
