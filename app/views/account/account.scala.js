@@ -145,7 +145,7 @@ var shared = false;
 
 
     //This factory handle account information and user's files
-    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', 'notifications', '$websocket', 'serverLog', function($log, $http, stateInfo, chartInfo, notifications, $websocket, serverLog) {
+    app.factory('accountInfo', ['$log', '$http', 'stateInfo', 'chartInfo', 'notifications', '$websocket', 'serverLog', 'comparingContent', function($log, $http, stateInfo, chartInfo, notifications, $websocket, serverLog, comparingContent) {
         //Private variables
         var maxFilesCount = 0, maxFileSize = 0, filesCount = 0;
         var email = "", firstName = "", lastName = "", userName = "";
@@ -304,6 +304,16 @@ var shared = false;
             tags.push(tag);
         }
 
+        function editTag(editedtag) {
+            tags.forEach(function(tag) {
+                if (tag.id === editedtag.id) {
+                    tag.tagName = editedtag.tagName;
+                    tag.color = editedtag.color;
+                    tag.description = editedtag.description;
+                }
+            })
+        }
+
         function clearTagFiles(tag) {
             angular.forEach(tag.files, function(fileName) {
                 unassignTagFromFile(fileName, tag);
@@ -353,10 +363,7 @@ var shared = false;
             }
             $http.post('/account/api/delete', { action: 'delete', fileName: file.fileName })
                 .success(function () {
-                    angular.forEach(files[file.fileName].tags, function(tag) {
-                        unassignFileFromTag(file.fileName, tag);
-                    });
-                    delete files[file.fileName];
+                    deleteFile_client(file);
                     if (stateInfo.isActiveFile(file) || Object.keys(files).length === 0) {
                         stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     } else if (Object.keys(files).length > 0) {
@@ -378,6 +385,10 @@ var shared = false;
 
         //Delete file only from client-side application
         function deleteFile_client(file) {
+            angular.forEach(files[file.fileName].tags, function(tag) {
+                unassignFileFromTag(file.fileName, tag);
+            });
+            comparingContent.deleteFile(file);
             delete files[file.fileName];
         }
 
@@ -389,7 +400,7 @@ var shared = false;
             $http.post('/account/api/delete', {action: 'deleteAll'})
                 .success(function () {
                     var file;
-                    for (file in files) { if (files.hasOwnProperty(file)) { delete files[file]; } }
+                    for (file in files) { if (files.hasOwnProperty(file)) { deleteFile_client(files[file]) } }
                     stateInfo.setActiveState(htmlState.ACCOUNT_INFORMATION);
                     notifications.addSuccessNotification('Deleting', 'All samples have been successfully deleted');
                     if (CONSOLE_INFO) {
@@ -483,6 +494,7 @@ var shared = false;
             getSharedGroupsLength: getSharedGroupsLength,
             getTags: getTags,
             addTag: addTag,
+            editTag: editTag,
             deleteTag: deleteTag,
             clearTagFiles: clearTagFiles,
             assignTagToFile: assignTagToFile,
@@ -924,6 +936,13 @@ var shared = false;
                     description: '',
                     color: ''
                 };
+                $scope.isEditTag = false;
+                $scope.editTag = {
+                    tagName: '',
+                    description: '',
+                    color: '',
+                    id: 0
+                };
 
                 $scope.tagging = false;
                 $scope.tag = {};
@@ -985,6 +1004,10 @@ var shared = false;
                     $scope.newTagCreation = false;
                 };
 
+                $scope.closeEditTag = function() {
+                    $scope.isEditTag = false;
+                };
+
                 $scope.deleteTag = function(tag) {
                     $scope.tagging = false;
                     $http.post('/' + api_url + '/api/deletetag', {
@@ -1007,7 +1030,32 @@ var shared = false;
                         color: ''
                     };
                     $scope.newTagCreation = true;
+                    $scope.isEditTag = false;
+                };
+
+                $scope.editOldTag = function(tag) {
+                    $scope.editTag = {
+                        tagName: tag.tagName,
+                        description: tag.description,
+                        color: tag.color,
+                        id: tag.id
+                    };
+                    $scope.isEditTag = true;
+                    $scope.newTagCreation = false;
+                };
+
+                $scope.editOldTagServerConfirm = function() {
+                    $http.post('/' + api_url + '/api/edittag', $scope.editTag)
+                        .success(function(tag) {
+                            accountInfo.editTag(tag);
+                            $scope.isEditTag = false;
+                        })
+                        .error(function(error) {
+                            serverLog.log('Error while changing tag');
+                            notifications.addErrorNotification('Tags', error.message);
+                        })
                 }
+
             }]
         }
     });
@@ -1320,13 +1368,15 @@ var shared = false;
     app.directive('rarefactionContent', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', function ($scope) {
+            controller: ['$scope', 'chartInfo', function ($scope, chartInfo) {
 
                 $scope.rarefactionExportTypes = ['JPEG'];
 
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
                 };
+
+                $scope.updateRarefaction = chartInfo.update_rarefaction;
             }]
         };
     });
@@ -1735,12 +1785,47 @@ var shared = false;
 
     //Comparing Directive
     //--------------------------------------------------------//
+    app.factory('comparingContent', ['mainVisualisationTabs', function(mainVisualisationTabs) {
+        var comparingItems = [];
+
+        function getComparingItems() {
+            return comparingItems;
+        }
+
+        function deleteFile(file) {
+            mainVisualisationTabs.getSortedTabs().forEach(function(tab) {
+                deleteItem(file, tab);
+            })
+        }
+
+        function deleteAll() {
+            comparingItems.splice(0, comparingItems.length);
+        }
+
+        function deleteItem(file, tab) {
+            for (var i = 0; i < comparingItems.length; ++i) {
+                if (comparingItems[i].fileName === file.fileName && comparingItems[i].tabName === tab.tabName) {
+                    comparingItems.splice(i, 1);
+                    file.meta[tab.type].comparing = false;
+                    break;
+                }
+            }
+        }
+
+        return {
+            getComparingItems: getComparingItems,
+            deleteFile: deleteFile,
+            deleteAll: deleteAll,
+            deleteItem: deleteItem
+        }
+    }]);
+
     app.directive('comparingContent', function () {
         return {
             restrict: 'E',
-            controller: ['$scope', 'accountInfo', function ($scope, accountInfo) {
+            controller: ['$scope', 'accountInfo', 'comparingContent', function ($scope, accountInfo, comparingContent) {
 
-                $scope.comparingItems = [];
+                $scope.comparingItems = comparingContent.getComparingItems();
                 $scope.files = accountInfo.getFiles();
                 $scope.isComparing = isComparing;
                 $scope.isRendered = isRendered;
@@ -2534,7 +2619,7 @@ function spectratype(data, param) {
 
 
         var xValues = [];
-        for (var i = 1; i < 100; i++) {
+        for (var i = data.xMin; i <= data.xMax; i++) {
             if (i % 3 === 0) {
                 xValues.push(i);
             }
@@ -2548,7 +2633,7 @@ function spectratype(data, param) {
         chart.yAxis
             .tickFormat(d3.format('%'));
 
-        svg.datum(data).call(chart);
+        svg.datum(data.chart).call(chart);
 
         nv.utils.windowResize(chart.update);
         return chart;
@@ -2556,6 +2641,7 @@ function spectratype(data, param) {
 }
 
 function spectratypeV(data, param) {
+    console.log(data);
     "use strict";
     nv.addGraph(function () {
         var place = d3.select(param.place);
@@ -2595,7 +2681,7 @@ function spectratypeV(data, param) {
             ;
 
         var xValues = [];
-        for (var i = 0; i < 100; i++) {
+        for (var i = data.xMin; i <= data.xMax; i++) {
             if (i % 3 === 0) {
                 xValues.push(i);
             }
@@ -2608,10 +2694,10 @@ function spectratypeV(data, param) {
 
         chart.yAxis
             .tickFormat(function (d) {
-                return Math.round(d * 10) + "%";
+                return Math.round(d * 100) / 10 + "%";
             });
 
-        svg.datum(data)
+        svg.datum(data.chart)
             .call(chart);
 
         nv.utils.windowResize(chart.update);
@@ -2910,6 +2996,7 @@ function rarefactionPlot(data, param) {
             .height(800);
 
         chart.xAxis
+            .showMaxMin(false)
             .axisLabel('Sample size')
             .tickFormat(d3.format(',r'));
 

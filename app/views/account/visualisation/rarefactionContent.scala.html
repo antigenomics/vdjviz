@@ -4,6 +4,7 @@
             <div class="well sharp">
                 @views.html.account.descriptions.rarefactionDescription()
                 <hr>
+                <button class="btn btn-default sharp" ng-click="updateRarefaction()">Update rarefaction chart</button>
                 <button ng-repeat="type in ::rarefactionExportTypes" class="btn btn-default sharp pull-right" ng-click="exportRarefaction(type)">Export to {{ ::type }}</button>
                 <div class="rarefaction-visualisation-tab"></div>
             </div>

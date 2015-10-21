@@ -36,8 +36,8 @@ public class QuantileStatsChartCreator {
     }
 
     public QuantileStatsChartCreator create() {
-        quantileStatsChart.addQuantile(new Quantile("Singleton", quantileStats.getSingletonFreq()));
         quantileStatsChart.addQuantile(new Quantile("Doubleton", quantileStats.getDoubletonFreq()));
+        quantileStatsChart.addQuantile(new Quantile("Singleton", quantileStats.getSingletonFreq()));
         QuantileStatsChart highOrder = new QuantileStatsChart();
 
         Integer topCount = 0;
@@ -62,6 +62,7 @@ public class QuantileStatsChartCreator {
             }
             highOrder.addQuantile(quantile);
         }
+        highOrder.inverse();
         quantileStatsChart.addQuantile(new Quantile("HighOrder", highOrder.getChart()));
 
         data.put("name", "data");

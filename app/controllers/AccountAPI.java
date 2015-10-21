@@ -12,7 +12,6 @@ import graph.SearchClonotypes.SearchClonotypes;
 import models.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import play.Logger;
 import play.libs.F;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -21,7 +20,6 @@ import play.mvc.Result;
 import play.mvc.WebSocket;
 import securesocial.core.Identity;
 import securesocial.core.java.SecureSocial;
-import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeFilters.BinaryClonotypeLengthFilter;
 import utils.CacheType.CacheType;
 import utils.CommonUtil;
 import utils.ComputationUtil;
@@ -31,7 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -631,28 +628,47 @@ public class AccountAPI extends Controller {
         });
     }
 
-    public static class TagCreationRequest {
+    public static class TagRequest {
         public String description;
         public String color;
         public String tagName;
+        public long id;
 
-        public TagCreationRequest() {}
+        public TagRequest() {}
     }
 
     public static Result createTag() {
         Account account = getCurrentAccount();
         JsonNode request = request().body().asJson();
 
-        TagCreationRequest tagCreationRequest;
+        TagRequest tagRequest;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            tagCreationRequest = objectMapper.convertValue(request, TagCreationRequest.class);
+            tagRequest = objectMapper.convertValue(request, TagRequest.class);
         } catch (Exception e) {
             e.printStackTrace();
             return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
         }
-        Tag tag = new Tag(account, tagCreationRequest.description, tagCreationRequest.color, tagCreationRequest.tagName);
+        Tag tag = new Tag(account, tagRequest.description, tagRequest.color, tagRequest.tagName);
         tag.save();
+        return ok(Json.toJson(new Tag.TagInformation(tag)));
+    }
+
+    public static Result editTag() {
+        Account account = getCurrentAccount();
+        JsonNode request = request().body().asJson();
+
+        TagRequest tagRequest;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            tagRequest = objectMapper.convertValue(request, TagRequest.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
+        }
+        Tag tag = Tag.findById(tagRequest.id, account);
+        if (tag == null) return badRequest(Json.toJson(new ServerResponse("error", "Invalid tag")));
+        tag.updateTag(tagRequest);
         return ok(Json.toJson(new Tag.TagInformation(tag)));
     }
 

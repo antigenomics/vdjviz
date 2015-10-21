@@ -18,4 +18,12 @@ public class QuantileStatsChart {
         return chart;
     }
 
+    public void inverse() {
+        List<Quantile> inverseChart = new ArrayList<>();
+        for (int i = chart.size() - 1; i >= 0; i--) {
+            inverseChart.add(chart.get(i));
+        }
+        chart = inverseChart;
+    }
+
 }

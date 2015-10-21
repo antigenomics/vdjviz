@@ -7,9 +7,28 @@ import java.util.List;
 
 public class SpectratypeChart {
     private List<SpectratypeBar> chart;
+    private int xMin;
+    private int xMax;
+
 
     public SpectratypeChart() {
         this.chart = new ArrayList<>();
+    }
+
+    public int getxMin() {
+        return xMin;
+    }
+
+    public int getxMax() {
+        return xMax;
+    }
+
+    public void setxMin(int xMin) {
+        this.xMin = xMin;
+    }
+
+    public void setxMax(int xMax) {
+        this.xMax = xMax;
     }
 
     public void addBar(SpectratypeBar bar) {
