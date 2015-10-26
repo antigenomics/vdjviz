@@ -1,5 +1,6 @@
 package models;
 
+import controllers.AccountAPI;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
@@ -63,6 +64,13 @@ public class Tag extends Model {
                 userFile.addTag(this);
             }
         }
+    }
+
+    public void updateTag(AccountAPI.TagRequest tagRequest) {
+        this.color = tagRequest.color;
+        this.description = tagRequest.description;
+        this.tagName = tagRequest.tagName;
+        this.update();
     }
 
     public Account getAccount() {

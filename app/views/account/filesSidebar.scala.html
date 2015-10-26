@@ -30,7 +30,8 @@
             <li sidebar-click="setActiveFile(file)" class="li_pointer sidebar_file" id="sidebar_file_{{ ::file.uid }}" ng-repeat="file in files" ng-class="{'disabled':isFileRendering(file)}" on-last-repeat>
                 <a>{{ ::file.fileName }} <text ng-show-rendering="isRendering(file)"> | Rendering</text>
                     @if(!shared){<i class="sidebar_file_trash_i fa fa-trash pull-right" ng-click="$event.stopPropagation(); deleteFile(file)" ng-hide="isRendering(file)"></i>}
-                    <span ng-repeat="tag in file.tags" class="label pull-right" style="background-color: {{ ::tag.color }}!important;">{{ ::tag.tagName }}</span>
+                    <span class="label">&#09;</span>
+                    <span ng-repeat="tag in file.tags" class="label" style="background-color: {{ tag.color }}!important;">{{ tag.tagName }}</span>
                 </a>
             </li>
             <li ng-hide="isFilesEmpty()">

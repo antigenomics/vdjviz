@@ -5,7 +5,7 @@ import java.awt.*;
 public class VColor {
 
     public static String getColor(String seed) {
-        if (seed.equals("other")) return "#dcdcdc";
+        if (seed.equals("other")) return "#666666";
         float goldenRationConjugate = 0.818033988749895f;
         int hash = hash(seed.getBytes());
         float h = (nextFloat(hash(seed.getBytes())) + goldenRationConjugate) % 1;

@@ -32,6 +32,7 @@ POST        /account/api/share                                controllers.Accoun
 POST        /account/api/deleteShared                         controllers.AccountAPI.deleteShared()
 POST        /account/api/createtag                            controllers.AccountAPI.createTag()
 POST        /account/api/deletetag                            controllers.AccountAPI.deleteTag()
+POST        /account/api/edittag                              controllers.AccountAPI.editTag()
 POST        /account/api/tagfiles                             controllers.AccountAPI.tagFiles()
 
 # Share api

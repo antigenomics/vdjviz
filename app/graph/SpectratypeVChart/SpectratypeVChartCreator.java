@@ -12,6 +12,7 @@ import utils.server.LogAggregator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -43,12 +44,15 @@ public class SpectratypeVChartCreator {
             Spectratype spectratype = collapsedSpectratypes.get(key);
             SpectratypeVBar spectratypeVBar = new SpectratypeVBar(key, VColor.getColor(key));
             int x_coordinates[] = spectratype.getLengths();
+            if (x_coordinates[0] < spectratypeVChart.getxMin()) spectratypeVChart.setxMin(x_coordinates[0]);
+            if (x_coordinates[x_coordinates.length - 1] > spectratypeVChart.getxMax()) spectratypeVChart.setxMax(x_coordinates[x_coordinates.length - 1]);
             double y_coordinates[] = spectratype.getHistogram(false);
             for (int i = 0; i < x_coordinates.length; i++) {
                 spectratypeVBar.addPoint((double) x_coordinates[i], y_coordinates[i]);
             }
             spectratypeVChart.addBar(spectratypeVBar);
         }
+        spectratypeVChart.sort();
         created = true;
         return this;
     }
@@ -58,7 +62,7 @@ public class SpectratypeVChartCreator {
             try {
                 File cache = new File(file.getDirectoryPath() + "/" + cacheName + ".cache");
                 PrintWriter fileWriter = new PrintWriter(cache.getAbsoluteFile());
-                fileWriter.write(Json.stringify(Json.toJson(spectratypeVChart.getChart())));
+                fileWriter.write(Json.stringify(Json.toJson(spectratypeVChart)));
                 fileWriter.close();
             } catch (FileNotFoundException fnfe) {
                 LogAggregator.logServerError("Error while saving cache file[" + file.getFileName() + "," + cacheName + "]", file.getAccount());
