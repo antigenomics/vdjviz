@@ -36,8 +36,8 @@ public class QuantileStatsChartCreator {
     }
 
     public QuantileStatsChartCreator create() {
-        quantileStatsChart.addQuantile(new Quantile("Doubleton", quantileStats.getDoubletonFreq()));
         quantileStatsChart.addQuantile(new Quantile("Singleton", quantileStats.getSingletonFreq()));
+        quantileStatsChart.addQuantile(new Quantile("Doubleton", quantileStats.getDoubletonFreq()));
         QuantileStatsChart highOrder = new QuantileStatsChart();
 
         Integer topCount = 0;
@@ -47,18 +47,21 @@ public class QuantileStatsChartCreator {
         for (int i = 0; i < quantileStats.getNumberOfQuantiles(); i++) {
             Double frequency = quantileStats.getQuantileFrequency(i);
             Quantile quantile = new Quantile("Q" + (i + 1), frequency);
-            while (topCount < topMax) {
-                Clonotype clonotype = sample.getAt(topCount);
-                if (sumFreq + clonotype.getFreq() > frequency) {
-                    sumFreq = 0.0;
-                    break;
+            if (i == 0) {
+                while (topCount < topMax) {
+                    Clonotype clonotype = sample.getAt(topCount);
+                    if (sumFreq + clonotype.getFreq() > frequency) {
+                        sumFreq = 0.0;
+                        break;
+                    }
+                    sumFreq += clonotype.getFreq();
+                    quantile.addChildren(clonotype.getCdr3aa(), clonotype.getFreq(), true);
+                    topCount++;
+                    if (Objects.equals(topCount, topMax)) {
+                        quantile.addChildren("Other", frequency - sumFreq);
+                    }
                 }
-                sumFreq += clonotype.getFreq();
-                quantile.addChildren(clonotype.getCdr3aa(), clonotype.getFreq());
-                topCount++;
-                if (Objects.equals(topCount, topMax)) {
-                    quantile.addChildren("Other", frequency - sumFreq);
-                }
+                quantile.inverse();
             }
             highOrder.addQuantile(quantile);
         }

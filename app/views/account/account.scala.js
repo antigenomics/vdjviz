@@ -1076,10 +1076,10 @@ var shared = false;
             };
         };
         var visualisationTabs = {
-            vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, ['JPEG'], 'comparing-vjusage-tab'),
-            spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, ['PNG', 'JPEG'], 'comparing-spectratype-tab'),
-            spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, ['PNG', 'JPEG'], 'comparing-spectratypeV-tab'),
-            quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, ['PNG', 'JPEG'], 'comparing-quantileStats-tab'),
+            vjusage: createTab('V-J Usage', 'vjusage', vjUsage, 'visualisation-results-vjusage', true, ['PNG'], 'comparing-vjusage-tab'),
+            spectratype: createTab('Spectratype', 'spectratype', spectratype, 'visualisation-results-spectratype', true, ['PNG'], 'comparing-spectratype-tab'),
+            spectratypev: createTab('V Spectratype ', 'spectratypeV', spectratypeV, 'visualisation-results-spectratypeV', true, ['PNG'], 'comparing-spectratypeV-tab'),
+            quantilestats: createTab('Quantile Plot', 'quantileStats', quantileSunbirstChart, 'visualisation-results-quantileStats', true, ['PNG'], 'comparing-quantileStats-tab'),
             annotation: createTab('Clonotypes', 'annotation', null, 'visualisation-results-annotation', false, [], ''),
             searchclonotypes: createTab('Search clonotypes', 'searchclonotypes', null, 'visualisation-results-searchclonotypes', false, [], '')
         };
@@ -1370,7 +1370,8 @@ var shared = false;
             restrict: 'E',
             controller: ['$scope', 'chartInfo', function ($scope, chartInfo) {
 
-                $scope.rarefactionExportTypes = ['JPEG'];
+                //TODO add export option
+                $scope.rarefactionExportTypes = [];
 
                 $scope.exportRarefaction = function (type) {
                     saveSvgAsPng(document.getElementById('rarefaction-png-export'), 'rarefaction', 3, type);
@@ -2722,32 +2723,31 @@ function quantileSunbirstChart(data, param) {
         var place = d3.select(param.place);
             place.html("");
 
-        var legendSvg = place.append("svg")
-            .attr("width", "100%")
-            .attr("height", 20)
-            .style("overflow", "visible");
+        var legendSvg = place
+            .append("div")
+            .attr("class", "pull-right")
+            .style("position", "absolute")
+            .style("right", "0px")
+            .style("margin-top", "25px");
 
         var chart = nv.models.legend()
-            .width(100)
+            .width(300)
             .height(20)
             .key(function(d) {
                 return d.label;
             })
-            .margin({top: 0, left: 0, right: 0, bottom: 0});
+            .margin({top: 0, left: 0, right: 0, bottom: 0})
 
         var keys = [
-            {key: "data", "color": "#ffffff", label: ""},
             {key: "Singleton", color: "#9e9ac8", label: "Singleton"},
             {key: "Doubleton", color: "#bcbddc", label: "Doubleton"},
             {key: "HighOrder", color: "#9ebcda", label: "High Order"},
-            {key: "Q1", color: "#c6dbef", label: "Quantile #1"},
-            {key: "Q2", color: "#9ecae1", label: "Quantile #2"},
-            {key: "Q3", color: "#6baed6", label: "Quantile #3"},
+            {key: "Q5", color: "#2171b5", label: "Quantile #5"},
             {key: "Q4", color: "#4292c6", label: "Quantile #4"},
-            {key: "Q5", color: "#2171b5", label: "Quantile #5"}
+            {key: "Q3", color: "#6baed6", label: "Quantile #3"},
+            {key: "Q2", color: "#9ecae1", label: "Quantile #2"},
+            {key: "Q1", color: "#c6dbef", label: "Quantile #1"}
         ];
-
-        legendSvg.datum(keys).call(chart);
 
         var svg = place
             .append("svg")
@@ -2785,13 +2785,15 @@ function quantileSunbirstChart(data, param) {
             .attr("d", arc)
             .style("fill", function(d) {
                 var name = d.name;
+                if (name === 'data') return '#ffffff';
+                if (name === 'Other') return '#dcdcdc';
                 var found = false;
                 var color = "#ffffff";
                 keys.forEach(function(d) {
                     if (d.key === name) { color = d.color; found = true; }
                 });
                 if (found) return color;
-                return colors[topCount++ % colors.length];
+                return colors[colors.length - (topCount++ % colors.length) - 2];
             })
             .style("cursor", function(d) {
                 if (d.children !== null) {
@@ -2801,12 +2803,21 @@ function quantileSunbirstChart(data, param) {
             })
             .on("click", click);
 
+        var cloneCount = 10;
         var text = svg.selectAll("text").data(nodes);
         var textEnter = text.enter().append("text")
             .style("fill-opacity", 1)
             .style("fill", function() {
                 return "black";
                 //return brightness(d3.rgb(colour(d))) < 125 ? "#eee" : "#000";
+            })
+            .style("font-size", function(d) {
+                if (d.clonotype) {
+                    var fontSize = 15 - Math.round(cloneCount / 2);
+                    cloneCount--;
+                    return fontSize + "px"
+                }
+                return "12px";
             })
             .attr("text-anchor", function(d) {
                 return x(d.x + d.dx / 2) > Math.PI ? "end" : "start";
@@ -2829,6 +2840,14 @@ function quantileSunbirstChart(data, param) {
                 }
                 return label;
             });
+
+
+        legendSvg
+            .append("svg")
+            .attr("width", 300)
+            .attr("height", 20)
+            .style("overflow", "visible")
+            .datum(keys).call(chart);
 
         function click(d) {
             if (d.children) {
@@ -2853,9 +2872,9 @@ function quantileSunbirstChart(data, param) {
                             return "rotate(" + rotate + ")translate(" + (y(d.y) + padding) + ")rotate(" + (angle > 90 ? -180 : 0) + ")";
                         };
                     })
-                    .style("fill-opacity", function(e) { return isParentOf(d, e) ? 1 : 1e-6; })
+                    .style("fill-opacity", function(e) { return isParentOf(d, e) ? 1 : 0; })
                     .each("end", function(e) {
-                        d3.select(this).style("visibility", isParentOf(d, e) ? null : "hidden");
+                        d3.select(this).style("visibility", isParentOf(d, e) ? "visible" : "hidden");
                     });
             }
         }

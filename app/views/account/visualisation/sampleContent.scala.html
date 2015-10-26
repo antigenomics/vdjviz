@@ -49,11 +49,11 @@
 
                     <div ng-repeat="file in files" id="id{{ ::file.uid }}" ng-show="showFile(file)" class="visualisation-results">
                         <div ng-repeat="tab in ::visualisationTabs" ng-show="isActiveTab(tab)">
-                            <p>
+                            <div class="col-lg-12 col-md-12 col-sm-12">
                                 <button ng-repeat="type in ::tab.exportType" class="btn btn-default sharp pull-right" ng-click="exportChartPng(file, tab, type)">Export to {{ ::type }}</button>
-                            </p>
+                            </div>
                             <hr>
-                            <div class="viusalisation-results {{ ::tab.mainPlace }}"></div>
+                            <div class="viusalisation-results {{ ::tab.mainPlace }} col-md-12 col-lg-12 col-sm-12"></div>
                         </div>
 
                             <!-- Search clonotypes table directive start -->
