@@ -14,6 +14,7 @@ import scala.Some;
 import securesocial.core.*;
 import securesocial.core.java.BaseUserService;
 import securesocial.core.java.Token;
+import utils.server.Configuration;
 
 import java.io.File;
 import java.text.ParseException;
@@ -84,7 +85,7 @@ public class UserService extends BaseUserService {
         LocalUser localUser;
         localUser = LocalUser.find.byId(user.identityId().userId());
         if (localUser == null) {
-            String usersDirPath = Play.application().configuration().getString("uploadPath") + "/users/";
+            String usersDirPath = Configuration.getUploadPath() + "/users/";
             File userDir = new File(usersDirPath + "/" + user.email().get() + "/");
             if (!userDir.exists()) {
                 Boolean created = userDir.mkdir();

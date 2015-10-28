@@ -46,6 +46,7 @@ function saveSvgAsPng(el, name, skaleFactor, type) {
         offset: {
             left: -50
         },
+        method: 'canvas'
     });
 }
 

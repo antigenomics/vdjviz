@@ -28,6 +28,9 @@ public class ClonotypeBinaryUtils {
             }
             FileOutputStream fileOutputStream = new FileOutputStream(cachefile, false);
             writeToStream(fileOutputStream, sample);
+            //Windows trick
+            fileOutputStream.close();
+            fileOutputStream = null;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -39,7 +42,10 @@ public class ClonotypeBinaryUtils {
             File cacheFile = new File(cacheName);
             if (!cacheFile.exists()) return null;
             FileInputStream fileInputStream = new FileInputStream(cacheFile);
-            return readFromStream(fileInputStream, shift * displayLength, displayLength);
+            List<ClonotypeBinary> clonotypeBinaries = readFromStream(fileInputStream, shift * displayLength, displayLength);
+            fileInputStream.close();
+            fileInputStream = null;
+            return clonotypeBinaries;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -51,7 +57,10 @@ public class ClonotypeBinaryUtils {
             File cacheFile = new File(cacheName);
             if (!cacheFile.exists()) return null;
             FileInputStream fileInputStream = new FileInputStream(cacheFile);
-            return readFromStream(fileInputStream, shift * displayLength, displayLength);
+            List<ClonotypeBinary> clonotypeBinaries = readFromStream(fileInputStream, shift * displayLength, displayLength);
+            fileInputStream.close();
+            fileInputStream = null;
+            return clonotypeBinaries;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -65,6 +74,8 @@ public class ClonotypeBinaryUtils {
             FileInputStream fileInputStream = new FileInputStream(cacheFile);
             byte[] diversityArray = new byte[4];
             fileInputStream.read(diversityArray, 0, 4);
+            fileInputStream.close();
+            fileInputStream = null;
             return ByteBuffer.wrap(diversityArray).getInt();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -79,6 +90,8 @@ public class ClonotypeBinaryUtils {
             FileInputStream fileInputStream = new FileInputStream(cacheFile);
             byte[] diversityArray = new byte[4];
             fileInputStream.read(diversityArray, 0, 4);
+            fileInputStream.close();
+            fileInputStream = null;
             return ByteBuffer.wrap(diversityArray).getInt();
         } catch (Exception e) {
             throw new RuntimeException(e);
