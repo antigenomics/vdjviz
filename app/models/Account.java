@@ -52,6 +52,7 @@ public class Account extends Model {
 
     public static class AccountInformation {
         public String userName;
+        public Boolean privelegies;
         public Integer filesCount;
         public FilesInformation filesInformation;
         public List<Tag.TagInformation> tags;
@@ -60,6 +61,7 @@ public class Account extends Model {
             this.userName = account.userName;
             this.filesCount = account.getFilesCount();
             this.filesInformation = getFilesInformation(account);
+            this.privelegies = account.isPrivilege();
             this.tags = new ArrayList<>();
             for (Tag tag : Tag.findByAccount(account)) {
                 tags.add(new Tag.TagInformation(tag));
@@ -72,6 +74,8 @@ public class Account extends Model {
         public List<SharedGroup.GroupInformation> sharedGroups;
         public Integer maxFileSize;
         public Integer maxFilesCount;
+        public Integer maxClonotypesCount;
+        public Integer deleteAfter;
         public Boolean rarefactionCache;
 
         public FilesInformation(Account account, List<FileInformation> files, List<SharedGroup.GroupInformation> sharedGroups, Boolean rarefactionCache) {
@@ -79,6 +83,7 @@ public class Account extends Model {
             this.sharedGroups = sharedGroups;
             this.maxFileSize = account.getMaxFilesSize();
             this.maxFilesCount = account.getMaxFilesCount();
+            this.maxClonotypesCount = account.getMaxClonotypesCount();
             this.rarefactionCache = rarefactionCache;
         }
     }

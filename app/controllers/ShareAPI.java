@@ -29,7 +29,7 @@ public class ShareAPI extends Controller {
         SharedGroup byLink = SharedGroup.findByLink(link);
         if (byLink == null)
             return ok(views.html.commonPages.notFound.render("share/" + link));
-        return ok(views.html.account.accountMainPage.render(true, link));
+        return ok(views.html.account.accountMainPage.render(true, link, null));
     }
 
     public static Result log(final String link) {

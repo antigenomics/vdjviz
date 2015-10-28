@@ -1,5 +1,6 @@
 package controllers;
 
+import models.Account;
 import play.mvc.Controller;
 import play.mvc.Result;
 import securesocial.core.java.SecureSocial;
@@ -8,7 +9,8 @@ import securesocial.core.java.SecureSocial;
 public class AngularTemplates extends Controller {
 
     public static Result accountInformation() {
-        return ok(views.html.account.accountInformation.render());
+        Account account = AccountAPI.getCurrentAccount();
+        return ok(views.html.account.accountInformation.render(Account.getAccountInformation(account)));
     }
 
 }

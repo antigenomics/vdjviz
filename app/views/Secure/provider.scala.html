@@ -1,5 +1,5 @@
 @(providerId: String, loginForm: Option[play.api.data.Form[(String, String)]] = None)(implicit request: play.api.mvc.RequestHeader)
-
+@import utils.server.Configuration
 @import play.api.Logger
 @import securesocial.core.AuthenticationMethod._
 @import securesocial.core.{IdentityProvider, Registry}
@@ -25,19 +25,19 @@
                 <div class="form-group">
                     <input class="form-control" placeholder="Password" name="password" type="password" value>
                 </div>
+                @if(Configuration.isChangePasswordsEnabled){
                 <div>
                     <a href="@securesocial.core.providers.utils.RoutesHelper.startResetPassword()"><p>
                         Forgot password?</a>
                 </div>
+                }
                 <button class="btn btn-info btn-lg btn-block sharp">Sign in<i class="fa fa-fw fa-sign-in"></i></button>
             </fieldset>
         </form>
-        <hr class="wide">
-        <p>Don't have an account? <a href="@securesocial.core.providers.utils.RoutesHelper.startSignUp()">Sign up </a> now!</p>
-        <p>
-            Back to <a href="@routes.Application.index()"> home</a>.
-        </p>
     }
+    <hr class="wide">
+    @if(Configuration.isRegistrationEnabled){<p>Don't have an account? <a href="@securesocial.core.providers.utils.RoutesHelper.startSignUp()">Sign up </a> now!</p>}
+    <p>Back to <a href="@routes.Application.index()"> home</a>.</p>
 }.getOrElse {
     @*****************************************
     * Todo: throw a runtime exception? this might need improvement

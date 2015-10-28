@@ -4,6 +4,7 @@ package models;
 import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
+import org.apache.commons.io.FileDeleteStrategy;
 import org.joda.time.DateTime;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
@@ -235,7 +236,8 @@ public class UserFile extends Model {
         }
         for (File cache : files) {
             try {
-                Files.deleteIfExists(cache.toPath());
+                FileDeleteStrategy.FORCE.delete(cache);
+                //Files.deleteIfExists(cache.toPath());
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -1,8 +1,11 @@
+import com.avaje.ebean.Ebean;
 import models.Account;
 import models.IPAddress;
+import models.LocalUser;
 import models.UserFile;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
+import org.mindrot.jbcrypt.BCrypt;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
@@ -14,7 +17,14 @@ import play.libs.F;
 import play.mvc.Action;
 import play.mvc.Http;
 import play.mvc.SimpleResult;
+import scala.Option;
+import scala.Some;
 import scala.concurrent.duration.Duration;
+import securesocial.core.*;
+import securesocial.core.providers.utils.BCryptPasswordHasher;
+import securesocial.core.providers.utils.PasswordHasher;
+import utils.UserService;
+import utils.server.Configuration;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -50,17 +60,63 @@ public class Global extends GlobalSettings {
     public void onStart(Application app) {
 
         Logger.info("Application started");
+        String uploadPath = Configuration.getUploadPath();
+        File file = new File(uploadPath);
+        if (!file.exists()) {
+            try {
+                if (!file.mkdir()) {
+                    System.out.println(file.getAbsolutePath());
+                };
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error while creating directory for server files, please check 'uploadPath' value in application.conf file");
+                System.exit(-1);
+            }
+        } else {
+            if (!file.canRead() || !file.canWrite()) {
+                System.out.println("Error: Server have no read and write access to " + uploadPath + ", please check 'uploadPath' value in application.conf file");
+                System.exit(-1);
+            }
+        }
+
         //Checking existence of main directory
-        String usersFilesDir = Play.application().configuration().getString("uploadPath");
+        String usersFilesDir = Configuration.getUploadPath();
         File applicationDir = new File(usersFilesDir + "/users/");
         if (!applicationDir.exists()) {
             Boolean createAppDir = applicationDir.mkdir();
             if (!createAppDir) {
                 Logger.warn("Error while creating users directory");
+                System.exit(-1);
             } else {
                 Logger.info("Users directory created");
             }
         }
+
+        if (Configuration.isCreateDefaultUsers()) {
+            UserService userService = new UserService(app);
+            try {
+                Integer nDefault = Configuration.getnDefaultUsers();
+                String nameDefault = Configuration.getNameDefaultUser();
+                for (int i = 1; i <= nDefault; i++) {
+                    String username = nameDefault + Integer.toString(i);
+                    String email = username + "@vdjviz.com";
+                    LocalUser localUser = LocalUser.find.byId(email);
+                    if (localUser == null) {
+                        Option<PasswordHasher> bcrypt = Registry.hashers().get("bcrypt");
+                        SocialUser socialUser = new SocialUser(new IdentityId(email, "userpass"),
+                                username, username, String.format("%s %s", username, username),
+                                Option.apply(email), null, AuthenticationMethod.UserPassword(),
+                                null, null, Some.apply(new PasswordInfo("bcrypt", BCrypt.hashpw(username, BCrypt.gensalt()), null))
+                        );
+                        userService.doSave(socialUser);
+                    }
+                }
+            } catch (RuntimeException e) {
+                Logger.error("Error while creating default users");
+                e.printStackTrace();
+            }
+        }
+
         //Deleting empty files
         for (Account account: Account.findAll()) {
             for (UserFile userFile: account.getUserfiles()) {
@@ -71,7 +127,7 @@ public class Global extends GlobalSettings {
                 }
             }
         }
-        final Integer deleteAfter = Play.application().configuration().getInt("deleteAfter");
+        final Integer deleteAfter = Configuration.getDeleteAfter();
         if (deleteAfter > 0) {
             Akka.system().scheduler().schedule(
                     Duration.create(nextExecutionInSeconds(1, 0), TimeUnit.SECONDS),

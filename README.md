@@ -22,6 +22,8 @@ Before using this application you will need to edit `application.conf` and `secu
 - `db.default.*`, database configuration
 - `smtp.*`, SMTP server configuration
 
+In fact the configuration file is used only when the application is creating user's account. After that server is guided by your account's limits for uploading files. This is done in order to be able to specify different limits for different accounts. So if you change the default configuration it will not affect already created accounts.
+
 *securesocial.conf*
 - `smtp`, set up the SMTP server to send registration confirmation e-mails
 

@@ -1,4 +1,4 @@
-@(shared: Boolean, link: String)
+@(shared: Boolean, link: String, accountInfo: models.Account.AccountInformation)
 @main("Account") {
     @if(shared){
         <script>
@@ -25,7 +25,9 @@
             @if(shared){
                 @views.html.account.sharedInformation(SharedGroup.findByLink(link).getDescription)
             }else{
-                @views.html.account.accountInformation()
+                @if(accountInfo != null) {
+                    @views.html.account.accountInformation(accountInfo)
+                }
             }
 
             @views.html.account.visualisation.rarefactionContent()

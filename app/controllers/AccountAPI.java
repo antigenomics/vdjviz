@@ -43,7 +43,9 @@ public class AccountAPI extends Controller {
     }
 
     public static Result account() {
-        return ok(views.html.account.accountMainPage.render(false, null));
+        Account account = getCurrentAccount();
+        Account.AccountInformation accountInformation = Account.getAccountInformation(account);
+        return ok(views.html.account.accountMainPage.render(false, null, accountInformation));
     }
 
     public static Result log() {
