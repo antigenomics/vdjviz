@@ -6,7 +6,7 @@
             <hr>
             </div>
             <div class="col-lg-12 col-md-12 col-sm-12">
-                <p>Select samples to be analyzed</p>
+                <p>Select samples to query</p>
                 <div ng-repeat="file in files" style="float : left ; margin : 5px">
                     <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected_MultipleSearchClonotypes(file)}" ng-click="selectFile_MultipleSearchClonotypes(file)">{{ ::file.fileName }}</button>
                 </div>

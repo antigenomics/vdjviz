@@ -10,7 +10,7 @@
                 <div class="modal-body">
                     <div ng-show="tagging">
                         <div class="col-lg-12 col-md-12 col-sm-12">
-                            <p>Select samples to be tagged</p>
+                            <p>Select samples to be attached with specified tag.</p>
                             <div ng-repeat="file in files" style="float : left ; margin: 5px">
                                 <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected_Tags(file)}" ng-click="selectFile_Tags(file)">{{ ::file.fileName }}</button>
                             </div>

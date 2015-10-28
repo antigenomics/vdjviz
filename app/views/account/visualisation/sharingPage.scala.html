@@ -10,7 +10,7 @@
                         <th>#</th>
                         <th>Shared samples</th>
                         <th>Description</th>
-                        <th>Shared at</th>
+                        <th>Date shared</th>
                         <th>Link</th>
                         <th></th>
                     </tr>
@@ -21,7 +21,7 @@
                         <td>{{ ::group.sharedFiles }}</td>
                         <td>{{ ::group.description }}</td>
                         <td>{{ ::group.createdAt }}</td>
-                        <td style="width: 150px"><a style="cursor: pointer" clip-copy="getTextToCopy(group.link)" clip-click="showClipNotification()"  clip-click-fallback="copyShareLinkToClip(group.link)">Click to copy</a></td>
+                        <td style="width: 150px"><a style="cursor: pointer" clip-copy="getTextToCopy(group.link)" clip-click="showClipNotification()"  clip-click-fallback="copyShareLinkToClip(group.link)">Copy URL to clipboard</a></td>
                         <td><button class="btn btn-default sharp" ng-click="deleteSharedGroup(group)">Delete</button></td>
                     </tr>
                 </tbody>
@@ -42,7 +42,7 @@
                             </div>
                         </div>
                         <div class="col-lg-12 col-md-12 col-sm-12">
-                            <p>Select samples to be shared</p>
+                            <p>Select samples to share</p>
                             <div ng-repeat="file in files" style="float : left ; margin : 5px">
                                 <button class="btn btn-default sharp" ng-class="{'btn-info':isFileSelected_Sharing(file)}" ng-click="selectFile_Sharing(file)">{{ ::file.fileName }}</button>
                             </div>
