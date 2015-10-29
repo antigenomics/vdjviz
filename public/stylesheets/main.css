@@ -502,6 +502,20 @@ img.blur {
     opacity: 1;
 }
 
+text.mono {
+    fill: black!important;
+}
+
+svg .cell_heat_map {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+svg .cell_heat_map::selection {
+    background: none;
+}
+
 .loading {
     position: relative;
     margin-left: auto;

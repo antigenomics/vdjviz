@@ -16,6 +16,9 @@ public class Configuration {
     private static final String uploadPath = Play.application().configuration().getString("uploadPath");
     private static final Boolean allowRegistration = Play.application().configuration().getBoolean("allowRegistration");
     private static final Boolean allowChangePasswords = Play.application().configuration().getBoolean("allowChangePasswords");
+    private static final Boolean allowSharing = Play.application().configuration().getBoolean("allowSharing");
+    private static final Boolean applyNewLimitsToOldUsers = Play.application().configuration().getBoolean("applyNewLimitsToOldUsers");
+
 
 
     public static Integer getMaxClonotypesCount() {
@@ -65,5 +68,13 @@ public class Configuration {
 
     public static Boolean isChangePasswordsEnabled() {
         return allowChangePasswords;
+    }
+
+    public static Boolean isSharingEnabled() {
+        return allowSharing;
+    }
+
+    public static Boolean isApplyNewLimits() {
+        return applyNewLimitsToOldUsers;
     }
 }

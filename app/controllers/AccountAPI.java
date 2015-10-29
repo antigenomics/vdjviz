@@ -282,6 +282,9 @@ public class AccountAPI extends Controller {
         return F.Promise.promise(new F.Function0<Result>() {
             @Override
             public Result apply() throws Throwable {
+                if (!Configuration.isSharingEnabled()) {
+                    return badRequest(Json.toJson(new ServerResponse("error", "Sharing feature is disabled")));
+                }
                 Account account = getCurrentAccount();
                 JsonNode request = request().body().asJson();
                 ShareFilesRequest shareFilesRequest;

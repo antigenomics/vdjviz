@@ -7,13 +7,20 @@ public class JointClonotypeHeatMapCell {
     private int col;
     private int value;
     private double frequency;
+    private int convergence;
 
     public JointClonotypeHeatMapCell(JointClonotype jointClonotype, int row, int col) {
         this.row = row;
         this.col = col + 1;
         double floor = Math.floor(Math.log10(jointClonotype.getFreq(col)));
-        this.value = Double.isInfinite(floor) ? -10 : (int) floor;
+        this.value = Double.isInfinite(floor) || Double.isNaN(floor) ? -10 : (int) floor;
+        if (jointClonotype.present(col)) {
+            this.convergence = jointClonotype.getNumberOfVariants(col);
+        } else {
+            this.convergence = 0;
+        }
         this.frequency = jointClonotype.getFreq(col);
+        frequency = Double.isNaN(frequency) ? 0.0 : frequency;
     }
 
     public double getFrequency() {
@@ -30,6 +37,10 @@ public class JointClonotypeHeatMapCell {
 
     public int getValue() {
         return value;
+    }
+
+    public int getConvergence() {
+        return convergence;
     }
 
     @Override

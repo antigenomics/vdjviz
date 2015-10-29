@@ -14,6 +14,7 @@ import play.mvc.Controller;
 import play.mvc.Result;
 import utils.CacheType.CacheType;
 import utils.server.CacheServerResponse;
+import utils.server.Configuration;
 import utils.server.LogAggregator;
 import utils.server.ServerResponse;
 
@@ -26,10 +27,14 @@ import java.util.List;
 public class ShareAPI extends Controller {
 
     public static Result sharedAccount(String link) {
-        SharedGroup byLink = SharedGroup.findByLink(link);
-        if (byLink == null)
-            return ok(views.html.commonPages.notFound.render("share/" + link));
-        return ok(views.html.account.accountMainPage.render(true, link, null));
+        if (Configuration.isSharingEnabled()) {
+            SharedGroup byLink = SharedGroup.findByLink(link);
+            if (byLink == null)
+                return ok(views.html.commonPages.notFound.render("share/" + link));
+            return ok(views.html.account.accountMainPage.render(true, link, null));
+        } else {
+            return redirect("/");
+        }
     }
 
     public static Result log(final String link) {

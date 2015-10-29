@@ -105,6 +105,14 @@ public class Account extends Model {
         return new FilesInformation(account, files, groups, rarefactionCache);
     }
 
+    public void setNewLimits() {
+        this.maxFilesSize = Configuration.getMaxFileSize();
+        this.maxFilesCount = Configuration.getMaxFilesCount();
+        this.maxClonotypesCount = Configuration.getMaxClonotypesCount();
+        this.maxSharedFiles = Configuration.getMaxSharedGroups();
+        this.update();
+    }
+
     public Boolean isPrivilege() {
         return privelegies;
     }

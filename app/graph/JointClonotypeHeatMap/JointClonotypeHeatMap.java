@@ -30,6 +30,7 @@ public class JointClonotypeHeatMap {
                 values.add(new JointClonotypeHeatMapCell(jointClonotype, row, i));
             }
             row++;
+            if (row == HEAT_MAP_ROWS_MAX) break;
         }
     }
 

@@ -8,6 +8,7 @@ import org.apache.commons.io.FileDeleteStrategy;
 import org.joda.time.DateTime;
 import play.data.validation.Constraints;
 import play.db.ebean.Model;
+import utils.server.Configuration;
 
 import javax.persistence.*;
 import java.io.File;
@@ -120,6 +121,11 @@ public class UserFile extends Model {
             this.saveManyToManyAssociations("tags");
             this.update();
         }
+    }
+
+    public Boolean checkExist() {
+        File file = new File(Configuration.getUploadPath() + "/users/" + account.getUserName() + "/" + uniqueName + "/" + fileName + "." + fileExtension);
+        return file.exists();
     }
 
     public List<Tag> getTags() {

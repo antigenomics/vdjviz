@@ -92,6 +92,12 @@ public class Global extends GlobalSettings {
             }
         }
 
+        if (Configuration.isApplyNewLimits()) {
+            for (Account account : Account.findAll()) {
+                account.setNewLimits();
+            }
+        }
+
         if (Configuration.isCreateDefaultUsers()) {
             UserService userService = new UserService(app);
             try {
@@ -121,7 +127,7 @@ public class Global extends GlobalSettings {
         for (Account account: Account.findAll()) {
             for (UserFile userFile: account.getUserfiles()) {
                 File fileDir = new File(userFile.getDirectoryPath());
-                if (!fileDir.exists()) {
+                if (!fileDir.exists() || !userFile.checkExist()) {
                     UserFile.deleteFile(userFile);
                     Logger.of("user." + account.getUserName()).warn("Deleted empty file " + userFile.getFileName() + " for user : " + account.getUserName());
                 }

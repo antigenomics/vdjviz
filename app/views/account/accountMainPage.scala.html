@@ -1,10 +1,12 @@
 @(shared: Boolean, link: String, accountInfo: models.Account.AccountInformation)
+@import utils.server.Configuration
 @main("Account") {
     @if(shared){
         <script>
             var link = '@link';
         </script>
     }
+    <script src="@routes.Assets.at("javascripts/visualisation.js")"></script>
     <script src="@routes.Application.js(shared)"></script>
     <account-page ng-app="accountPage">
         <block-page></block-page>
@@ -40,7 +42,7 @@
 
             @views.html.account.visualisation.multipleSampleSearchClonotypes()
 
-            @if(!shared) {
+            @if(!shared && Configuration.isSharingEnabled) {
                 @views.html.account.visualisation.sharingPage()
             }
 

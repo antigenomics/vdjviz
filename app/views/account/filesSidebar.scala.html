@@ -1,4 +1,5 @@
 @(shared: Boolean)
+@import utils.server.Configuration;
 <files-sidebar>
 <div class="navbar-default sidebar" role="navigation" style="height : 100% ;">
         <ul class="nav" id="side-menu">
@@ -43,8 +44,12 @@
             <li sidebar-click="setSampleCollectionState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Join samples</a></li>
             <li sidebar-click="setMultipleSampleSearchState()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Search Clonotypes<i class="fa fa-search pull-right"></i></a></li>
             @if(!shared) {
-                <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmptyOrSharing()"><a>Share<i class="fa fa-share-alt pull-right"></i></a></li>
+                @if(Configuration.isSharingEnabled) {
+                    <li sidebar-click="setSharingState()" class="li_pointer" ng-hide="isFilesEmptyOrSharing()"><a>
+                        Share<i class="fa fa-share-alt pull-right"></i></a></li>
+                }
                 <li ng-click="openTags()" class="li_pointer" ng-hide="isFilesEmpty()"><a>Tags</a></li>
+
                 <li>
                     <a></a>
                 </li>

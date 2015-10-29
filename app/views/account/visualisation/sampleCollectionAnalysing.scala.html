@@ -15,7 +15,7 @@
         <div ng-show="isJoinInformationStep()">
             <div class="panel panel-info separated">
                 <div class="panel-body">
-                    <button class="btn btn-default sharp" ng-click="openAnotherFiles()">Open another files</button>
+                    <button class="btn btn-default sharp" ng-click="openAnotherFiles()">Open other files</button>
                     <button class="btn btn-default sharp" ng-click="changeJoinParameters()">Change parameters</button>
                 </div>
             </div>
@@ -136,13 +136,13 @@
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12">
                             <div class="joinHeapMapParameters">
-                                <p>Heatmap displaying frequencies of intercepting clonotypes</p>
+                                <p>Heatmap of shared clonotypes. Top 1000 clonotypes by geometric mean frequency are shown.</p>
                                 <hr>
                                 <p><b>Join parameters used</b></p>
                                 <p><b>Overlap Type:</b> {{ overlapType }}</p>
                                 <p><b>Occurence treshold:</b> {{ occurenceTreshold }}</p>
                                 <p ng-show="selectedVGenes.length"><b>VFilter:</b> {{ selectedVGenes.join() }}</p>
-                                <p ng-show="selectedJGenes.length"><b>JFilter:</b> {{ selectedJGenes.join()}}</p>
+                                <p ng-show="selectedJGenes.length"><b>JFilter:</b> {{ selectedJGenes.join() }}</p>
                             </div>
                         </div>
                     </div>
