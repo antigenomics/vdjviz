@@ -580,13 +580,23 @@ function joinHeapMap(data) {
         ;
 
 
-    var heatMap = svg.selectAll(".heatmap")
+    function stopEvent() {
+        d3.event.preventDefault();
+        d3.event.sourceEvent.stopPropagation();
+        d3.event.preventDefault();
+        d3.event.stopPropagation();
+        d3.event.stopImmediatePropagation();
+    }
+
+    var heatMap = svg
+        .append("g")
+        .attr("class", "cell_heat_map g3")
+        .selectAll(".heatmap")
         .data(data.values, function(d) {
             var row = d.row;
             if (d.value != -10) {
                 numLabel[row - 1] += 1;
             }
-            if (d.value == -10) return null;
             return d.row + ':' + d.col;
         })
         .enter()
@@ -597,6 +607,8 @@ function joinHeapMap(data) {
         .attr("width", function(d) { return cellSize; })
         .attr("height", function(d) { return cellSize; })
         .style("fill", function(d) { return colorScale(d.value); })
+        .on("mousedown", stopEvent)
+        .on("click", stopEvent)
         .on("mouseover", function(d){
             //highlight text
             d3.select(this).classed("cell-hover",true);
@@ -654,6 +666,21 @@ function joinHeapMap(data) {
             .style("text-anchor", "end")
             .attr("transform", "translate(-6," + cellSize / 1.5 + ")")
             .attr("class", function (d,i) { return "numLabel mono r"+i;} )
+        ;
+
+    var sa=d3.select(".g3")
+            .on("mousedown", function() {
+                return null;
+            })
+            .on("mousemove", function() {
+                return null;
+            })
+            .on("mouseup", function() {
+                return null;
+            })
+            .on("mouseout", function() {
+                return null;
+            })
         ;
 
     function cdrTransform(cdr) {
