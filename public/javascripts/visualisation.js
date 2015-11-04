@@ -473,6 +473,8 @@ function rarefactionPlot(data, param) {
 
 function joinHeapMap(data) {
     "use strict";
+    var heatMap;
+    var blockPage;
     var margin = { top: 0, right: 10, bottom: 50, left: 170 },
         col_number = data.colLabel.length,
         row_number = data.rowLabel.length,
@@ -514,6 +516,19 @@ function joinHeapMap(data) {
     }
 
     var svg = place.append("svg")
+            .on("selectstart", function() {
+                blockPage.style('visibility', 'visible');
+                //heatMap.style("visibility", "hidden");
+            })
+            .on("click", function() {
+                blockPage.style('visibility', 'hidden');
+                //heatMap.style("visibility", "visible");
+            })
+            .on("mouseup", function() {
+                blockPage.style('visibility', 'hidden');
+                //heatMap.style("visibility", "visible");
+            })
+            .attr("class", "noselection")
             .attr("width", "100%")
             .attr("height", height + margin.top + margin.bottom + 300)
             .append("g")
@@ -550,45 +565,13 @@ function joinHeapMap(data) {
         .attr("x", function(d, i) { return legendElementWidth * i; })
         .attr("y", (cellSize*2));
 
-    var rowLabels = svg.append("g")
-            .selectAll(".rowLabelg")
-            .data(rowLabel)
-            .enter()
-            .append("text")
-            .html(function (d) {
-                return d.cdr3aa_tspan;
-            })
-            .attr("x", 0)
-            .attr("y", function (d, i) { return i * cellSize + 200; })
-            .style("text-anchor", "end")
-            .attr("transform", "translate(-6," + cellSize / 1.5 + ")")
-            .attr("class", function (d,i) { return "rowLabel mono r"+i;} )
-        ;
-
-
-    var colLabels = svg.append("g")
-            .selectAll(".colLabelg")
-            .data(colLabel)
-            .enter()
-            .append("text")
-            .text(function (d) { return d; })
-            .attr("x", -200)
-            .attr("y", function (d, i) { return i * cellSize; })
-            .style("text-anchor", "left")
-            .attr("transform", "translate("+cellSize/2 + ",-6) rotate(-90)")
-            .attr("class",  function (d,i) { return "colLabel mono c"+i;} )
-        ;
-
 
     function stopEvent() {
         d3.event.preventDefault();
-        d3.event.sourceEvent.stopPropagation();
-        d3.event.preventDefault();
         d3.event.stopPropagation();
-        d3.event.stopImmediatePropagation();
     }
 
-    var heatMap = svg
+    heatMap = svg
         .append("g")
         .attr("class", "cell_heat_map g3")
         .selectAll(".heatmap")
@@ -637,6 +620,34 @@ function joinHeapMap(data) {
             d3.select("#heatmap_tooltip").classed("hidden", true);
         });
 
+    var rowLabels = svg.append("g")
+            .selectAll(".rowLabelg")
+            .data(rowLabel)
+            .enter()
+            .append("text")
+            .html(function (d) {
+                return d.cdr3aa_tspan;
+            })
+            .attr("x", 0)
+            .attr("y", function (d, i) { return i * cellSize + 200; })
+            .style("text-anchor", "end")
+            .attr("transform", "translate(-6," + cellSize / 1.5 + ")")
+            .attr("class", function (d,i) { return "rowLabel mono r"+i;} )
+        ;
+
+
+    var colLabels = svg.append("g")
+            .selectAll(".colLabelg")
+            .data(colLabel)
+            .enter()
+            .append("text")
+            .text(function (d) { return d; })
+            .attr("x", -200)
+            .attr("y", function (d, i) { return i * cellSize; })
+            .style("text-anchor", "left")
+            .attr("transform", "translate("+cellSize/2 + ",-6) rotate(-90)")
+            .attr("class",  function (d,i) { return "colLabel mono c"+i;} )
+        ;
 
     var numCol = (colLabel.length + 2) * cellSize;
 
@@ -668,20 +679,24 @@ function joinHeapMap(data) {
             .attr("class", function (d,i) { return "numLabel mono r"+i;} )
         ;
 
-    var sa=d3.select(".g3")
-            .on("mousedown", function() {
-                return null;
-            })
-            .on("mousemove", function() {
-                return null;
-            })
-            .on("mouseup", function() {
-                return null;
-            })
-            .on("mouseout", function() {
-                return null;
-            })
-        ;
+    d3.select('.heatMapBlockSelection').remove();
+
+    setTimeout(function() {
+        var st = d3.select('.g3').node().getBoundingClientRect();
+
+        blockPage = d3.select('body')
+            .append('div')
+            .attr('class', 'heatMapBlockSelection')
+            .style('visibility', 'hidden')
+            .style('left', st.left + 'px')
+            .style('top', st.top + 'px')
+            .style('height', st.height + 'px')
+            .style('width', st.width + 'px')
+            .style('position', 'absolute')
+            .style('opacity', '0.2');
+    }, 10);
+
+
 
     function cdrTransform(cdr) {
         var cdr3aa = cdr.cdr3aa,

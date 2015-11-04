@@ -2046,14 +2046,18 @@ var shared = false;
         }
 
         function openAnotherFiles() {
+            d3.select('.g3').remove();
+            d3.select('.heatMapBlockSelection').remove();
             openProgress = 0;
             step = steps.FILES_SELECT;
-            angular.copy(treshData, data);
+            //angular.copy(treshData, data);
         }
 
         function changeJoinParameters() {
+            d3.select('.g3').remove();
+            d3.select('.heatMapBlockSelection').remove();
             step = steps.JOIN_RENDERING;
-            angular.copy(treshData, data);
+            //angular.copy(treshData, data);
         }
 
         function isJointRendering() {
@@ -2143,7 +2147,7 @@ var shared = false;
                 $scope.isJoinInformationStep = sampleCollectionFactory.isJoinInformationStep;
                 $scope.changeJoinParameters = sampleCollectionFactory.changeJoinParameters;
                 $scope.openAnotherFiles = function() {
-                    $scope.selectedFiles.splice(0, $scope.selectedFiles.length);
+                    //$scope.selectedFiles.splice(0, $scope.selectedFiles.length);
                     $scope.occurenceTreshold = 2;
                     sampleCollectionFactory.openAnotherFiles();
                 };

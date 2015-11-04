@@ -15,8 +15,8 @@
         <div ng-show="isJoinInformationStep()">
             <div class="panel panel-info separated">
                 <div class="panel-body">
-                    <button class="btn btn-default sharp" ng-click="openAnotherFiles()">Open other files</button>
-                    <button class="btn btn-default sharp" ng-click="changeJoinParameters()">Change parameters</button>
+                    <button class="btn btn-default sharp" ng-click="$event.stopPropagation(); openAnotherFiles()">Open other files</button>
+                    <button class="btn btn-default sharp" ng-click="$event.stopPropagation(); changeJoinParameters()">Change parameters</button>
                 </div>
             </div>
         </div>
