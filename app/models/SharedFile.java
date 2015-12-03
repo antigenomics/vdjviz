@@ -1,6 +1,6 @@
 package models;
 
-import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.misc.Software;
 import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
 import play.Logger;

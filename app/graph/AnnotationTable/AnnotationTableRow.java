@@ -7,7 +7,7 @@ import utils.BinaryUtils.ClonotypeBinaryUtils.ClonotypeBinaryUtils;
 public class AnnotationTableRow {
     public Integer index;
     public Double freq;
-    public Integer count;
+    public long count;
     public AnnotationTableCdr cdr;
     public String v;
     public String j;

@@ -1,7 +1,7 @@
 package models;
 
 
-import com.antigenomics.vdjtools.Software;
+import com.antigenomics.vdjtools.misc.Software;
 import com.antigenomics.vdjtools.sample.SampleCollection;
 import com.avaje.ebean.Ebean;
 import org.apache.commons.io.FileDeleteStrategy;
@@ -93,7 +93,7 @@ public class UserFile extends Model {
     public void setSampleCount() {
         List<String> sampleFileNames = new ArrayList<>();
         sampleFileNames.add(getPath());
-        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, softwareType, false);
+        SampleCollection sampleCollection = new SampleCollection(sampleFileNames, softwareType);
         this.clonotypesCount = sampleCollection.getAt(0).getDiversity();
         this.sampleCount = sampleCollection.getAt(0).getCount();
     }

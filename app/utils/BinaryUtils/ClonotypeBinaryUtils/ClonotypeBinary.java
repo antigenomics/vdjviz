@@ -87,7 +87,7 @@ public class ClonotypeBinary implements Serializable {
         sizeJ = j.length;
         d = clonotype.getD().getBytes();
         sizeD = d.length;
-        count = clonotype.getCount();
+        count = (int) clonotype.getCount();
         freq = clonotype.getFreq();
         size = (
                 cdr3aa.length +
