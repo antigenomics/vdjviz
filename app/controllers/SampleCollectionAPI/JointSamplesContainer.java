@@ -1,7 +1,7 @@
 package controllers.SampleCollectionAPI;
 
 import com.antigenomics.vdjtools.join.JointSample;
-import com.antigenomics.vdjtools.join.OccurenceJoinFilter;
+import com.antigenomics.vdjtools.join.OccurrenceJoinFilter;
 import com.antigenomics.vdjtools.overlap.OverlapType;
 import com.antigenomics.vdjtools.sample.*;
 import graph.SearchClonotypes.JFilterRegex;
@@ -42,7 +42,7 @@ public class JointSamplesContainer {
             }
         }
         OverlapType overlapType = OverlapType.valueOf(joinParameters.overlapType);
-        OccurenceJoinFilter occurenceJoinFilter = new OccurenceJoinFilter(joinParameters.occurenceTreshold);
+        OccurrenceJoinFilter occurenceJoinFilter = new OccurrenceJoinFilter(joinParameters.occurenceTreshold);
         jointClonotypes = new JointSample(overlapType, array, occurenceJoinFilter);
     }
 
@@ -68,7 +68,7 @@ public class JointSamplesContainer {
             }
         }
         OverlapType overlapType = OverlapType.valueOf(joinParameters.overlapType);
-        OccurenceJoinFilter occurenceJoinFilter = new OccurenceJoinFilter(joinParameters.occurenceTreshold);
+        OccurrenceJoinFilter occurenceJoinFilter = new OccurrenceJoinFilter(joinParameters.occurenceTreshold);
         jointClonotypes = new JointSample(overlapType, array, occurenceJoinFilter);
     }
 }
