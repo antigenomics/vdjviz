@@ -1,6 +1,6 @@
 
-import com.antigenomics.vdjtools.Software;
 import com.antigenomics.vdjtools.io.SampleFileConnection;
+import com.antigenomics.vdjtools.misc.Software;
 import com.antigenomics.vdjtools.sample.Clonotype;
 import com.antigenomics.vdjtools.sample.CompositeClonotypeFilter;
 import com.antigenomics.vdjtools.sample.Sample;

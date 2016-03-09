@@ -616,23 +616,6 @@ public class AccountAPI extends Controller {
         return ok(Json.toJson(new CacheServerResponse("success", rarefactionChart.create(needToCreateNew))));
     }
 
-    private static F.Promise<WebSocket.Out<JsonNode>> asyncCompute(final ComputationUtil computationUtil, final WebSocket.Out<JsonNode> out) {
-        F.Promise<ComputationUtil> promise = F.Promise.promise(new F.Function0<ComputationUtil>() {
-            @Override
-            public ComputationUtil apply() throws Throwable {
-                computationUtil.createSampleCache();
-                return computationUtil;
-            }
-        });
-        return promise.map(new F.Function<ComputationUtil, WebSocket.Out<JsonNode>>() {
-            @Override
-            public WebSocket.Out<JsonNode> apply(ComputationUtil computationUtil) throws Throwable {
-                out.close();
-                return out;
-            }
-        });
-    }
-
     public static class TagRequest {
         public String description;
         public String color;
@@ -769,7 +752,7 @@ public class AccountAPI extends Controller {
 
                                     //Trying to render cache files for sample
                                     ComputationUtil computationUtil = new ComputationUtil(file, sample, out);
-                                    asyncCompute(computationUtil, out);
+                                    computationUtil.createSampleCache();
                                     return;
                                 } catch (Exception e) {
                                     //On exception delete file and inform user about fail

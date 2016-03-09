@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,6 +36,9 @@ public class VJUsageChartCreator {
         SegmentUsage segmentUsage = new SegmentUsage(sampleArray, false);
         List<String> labels = new ArrayList<>();
         String sampleId = sample.getSampleMetadata().getSampleId();
+        if (segmentUsage.vjUsageMatrix(sampleId).length == 0) {
+            throw new RuntimeException("Empty segment usage data");
+        }
         MatrixMath matrixMath = new MatrixMath(segmentUsage.vjUsageMatrix(sampleId),
                                                 segmentUsage.jUsageHeader(),
                                                 segmentUsage.vUsageHeader(),
