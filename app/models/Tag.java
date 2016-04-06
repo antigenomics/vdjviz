@@ -66,10 +66,10 @@ public class Tag extends Model {
         }
     }
 
-    public void updateTag(AccountAPI.TagRequest tagRequest) {
-        this.color = tagRequest.color;
-        this.description = tagRequest.description;
-        this.tagName = tagRequest.tagName;
+    public void updateTag(String description, String color, String tagName) {
+        this.color = color;
+        this.description = description;
+        this.tagName = tagName;
         this.update();
     }
 

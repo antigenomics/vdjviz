@@ -803,6 +803,11 @@ var shared = false;
                 $scope.setSharingState = setSharingState;
                 $scope.showCompareModal = showCompareModal;
                 $scope.openTags = openTags;
+                $scope.administratorPanel = administratorPanel;
+
+                function administratorPanel() {
+                    window.location.replace('/account/administrator')
+                }
 
                 function showCompareModal() {
                     $('#comparingAddButton').click();

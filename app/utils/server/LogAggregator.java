@@ -36,8 +36,12 @@ public class LogAggregator {
         log(message, LogType.CLIENT_SHARED, account);
     }
 
-    public static void logError(String message) {
+    public static void logWarning(String message) {
         Logger.warn(message);
+    }
+
+    public static void logError(String message) {
+        Logger.error(message);
     }
 
 }

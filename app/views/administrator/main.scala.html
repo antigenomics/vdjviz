@@ -1,0 +1,31 @@
+@(title: String)(content: Html)
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>@title</title>
+        <noscript>
+            <meta http-equiv="refresh" content="0;url=/badbrowser">
+        </noscript>
+        <script>
+                if (navigator.userAgent.search(/MSIE/) > 0) {
+                    window.location.replace("/badbrowser")
+                }
+        </script>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link crossorigin="anonymous" href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,700' rel='stylesheet' type='text/css'>
+        <link crossorigin="anonymous" href='http://fonts.googleapis.com/css?family=Raleway:200,300,400' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/x-icon" href="@routes.Assets.at("images/favicon.ico")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/css/bootstrap.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/bootstrap/theme/styleo.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("lib/FontAwesome/css/font-awesome.min.css")" >
+        <script src="@routes.Assets.at("javascripts/jquery-2.1.1.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("lib/bootstrap/js/bootstrap.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("lib/angular/angular.min.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/administrator.js")" type="text/javascript"></script>
+    </head>
+    <body>
+    @content
+
+    </body>
+</html>

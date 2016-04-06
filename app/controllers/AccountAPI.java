@@ -84,7 +84,7 @@ public class AccountAPI extends Controller {
                 if (file == null) {
                     return ok(Json.toJson(new ServerResponse("error", "You should upload the file first")));
                 }
-                if (account.getMaxFilesSize() > 0) {
+                if (account.getMaxFilesSize() != 0) {
                     Long sizeMB = file.getFile().length() / 1024;
                     if (sizeMB > account.getMaxFilesSize()) {
                         return ok(Json.toJson(new ServerResponse("error", "File is too large")));
@@ -616,23 +616,23 @@ public class AccountAPI extends Controller {
         return ok(Json.toJson(new CacheServerResponse("success", rarefactionChart.create(needToCreateNew))));
     }
 
-    public static class TagRequest {
+    public static class TagRequestClient {
         public String description;
         public String color;
         public String tagName;
         public long id;
 
-        public TagRequest() {}
+        public TagRequestClient() {}
     }
 
     public static Result createTag() {
         Account account = getCurrentAccount();
         JsonNode request = request().body().asJson();
 
-        TagRequest tagRequest;
+        TagRequestClient tagRequest;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            tagRequest = objectMapper.convertValue(request, TagRequest.class);
+            tagRequest = objectMapper.convertValue(request, TagRequestClient.class);
         } catch (Exception e) {
             e.printStackTrace();
             return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
@@ -646,17 +646,17 @@ public class AccountAPI extends Controller {
         Account account = getCurrentAccount();
         JsonNode request = request().body().asJson();
 
-        TagRequest tagRequest;
+        TagRequestClient tagRequest;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            tagRequest = objectMapper.convertValue(request, TagRequest.class);
+            tagRequest = objectMapper.convertValue(request, TagRequestClient.class);
         } catch (Exception e) {
             e.printStackTrace();
             return badRequest(Json.toJson(new ServerResponse("error", "Invalid request")));
         }
         Tag tag = Tag.findById(tagRequest.id, account);
         if (tag == null) return badRequest(Json.toJson(new ServerResponse("error", "Invalid tag")));
-        tag.updateTag(tagRequest);
+        tag.updateTag(tagRequest.description, tagRequest.color, tagRequest.tagName);
         return ok(Json.toJson(new Tag.TagInformation(tag)));
     }
 
@@ -734,7 +734,7 @@ public class AccountAPI extends Controller {
                                         sample = sampleFileConnection.getSample();
                                         file.setSampleCount(sample.getDiversity(), sample.getCount());
 
-                                        if (account.getMaxClonotypesCount() > 0) {
+                                        if (account.getMaxClonotypesCount() != 0) {
                                             if (file.getClonotypesCount() > account.getMaxClonotypesCount()) {
                                                 UserFile.deleteFile(file);
                                                 out.write(Json.toJson(new WSResponse("error", "render", fileName, "Number of clonotypes in a sample should be less than " + account.getMaxClonotypesCount())));

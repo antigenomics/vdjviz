@@ -35,6 +35,12 @@ POST        /account/api/deletetag                            controllers.Accoun
 POST        /account/api/edittag                              controllers.AccountAPI.editTag()
 POST        /account/api/tagfiles                             controllers.AccountAPI.tagFiles()
 
+GET         /account/administrator                            controllers.AdministratorAPI.index()
+GET         /account/administrator/accounts                   controllers.AdministratorAPI.getAllAccounts()
+POST        /account/administrator/delete                     controllers.AdministratorAPI.deleteUser()
+POST        /account/administrator/create                     controllers.AdministratorAPI.createUser()
+POST        /account/administrator/edit                       controllers.AdministratorAPI.editUser()
+
 # Share api
 GET         /share/:link                                      controllers.ShareAPI.sharedAccount(link)
 POST        /share/api/log/:link                              controllers.ShareAPI.log(link)

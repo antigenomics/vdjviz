@@ -1,8 +1,13 @@
 package utils.server;
 
 import play.Play;
+import securesocial.core.java.SecureSocial;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Configuration {
     private static final Integer maxClonotypesCount = Play.application().configuration().getInt("maxClonotypesCount");
@@ -18,7 +23,8 @@ public class Configuration {
     private static final Boolean allowChangePasswords = Play.application().configuration().getBoolean("allowChangePasswords");
     private static final Boolean allowSharing = Play.application().configuration().getBoolean("allowSharing");
     private static final Boolean applyNewLimitsToOldUsers = Play.application().configuration().getBoolean("applyNewLimitsToOldUsers");
-
+    private static final Boolean allowUserManagmentSystem = Play.application().configuration().getBoolean("userManagementSystem");
+    private static final List<play.Configuration> userManagmentSystemAccounts = Play.application().configuration().getConfigList("userManagementSystemAccounts");
 
 
     public static Integer getMaxClonotypesCount() {
@@ -61,6 +67,33 @@ public class Configuration {
             return uploadPath;
         }
     }
+
+    public static List<Map<String, String>> getUserManagementSystemAccounts() {
+        List<Map<String, String>> accounts = new ArrayList<>();
+        //Integer minimalPasswordLength = Play.application().configuration().getConfig("securesocial").getConfig("userpass").getInt("minimumPasswordLength");
+        for (play.Configuration userManagmentSystemAccount : userManagmentSystemAccounts) {
+            Map<String, String> account = new HashMap<>();
+            if (!userManagmentSystemAccount.keys().contains("email") || !userManagmentSystemAccount.keys().contains("password")) {
+                LogAggregator.logWarning("Configuration warning: wrong user management account entry, " +
+                        "please specify valid email and password, skipping..");
+                continue;
+            }
+            String accountEmail = userManagmentSystemAccount.getString("email");
+            String password = userManagmentSystemAccount.getString("password");
+            /*if (password.length() < minimalPasswordLength) {
+                //TODO?
+                LogAggregator.logWarning("Configuration warning: invalid password for account " + accountEmail +
+                    ", you can specify minimal password length in securesocial.conf file, skipping..");
+                continue;
+            }*/
+            account.put("email", accountEmail);
+            account.put("password", password);
+            accounts.add(account);
+        }
+        return accounts;
+    }
+
+    public static Boolean isUserManagementSystemEnabled() { return allowUserManagmentSystem; }
 
     public static Boolean isRegistrationEnabled() {
         return allowRegistration;

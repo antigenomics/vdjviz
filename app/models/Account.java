@@ -54,12 +54,16 @@ public class Account extends Model {
         public String userName;
         public Boolean privelegies;
         public Integer filesCount;
+        public Integer sharedGroupsCount;
+        public Integer maxSharedGroupsCount;
         public FilesInformation filesInformation;
         public List<Tag.TagInformation> tags;
 
         public AccountInformation(Account account) {
             this.userName = account.userName;
             this.filesCount = account.getFilesCount();
+            this.maxSharedGroupsCount = account.getMaxSharedFiles();
+            this.sharedGroupsCount = SharedGroup.findByAccount(account).size();
             this.filesInformation = getFilesInformation(account);
             this.privelegies = account.isPrivilege();
             this.tags = new ArrayList<>();
@@ -134,7 +138,7 @@ public class Account extends Model {
     }
 
     public Boolean isMaxSharedGroupsCountExceeded() {
-        if (getMaxSharedFiles() > 0) {
+        if (getMaxSharedFiles() != 0) {
             List<SharedGroup> byAccount = SharedGroup.findByAccount(this);
             if (byAccount.size() >= getMaxSharedFiles()) return true;
         }
@@ -142,7 +146,7 @@ public class Account extends Model {
     }
 
     public Boolean isMaxFilesCountExceeded() {
-        if (getMaxFilesCount() > 0) {
+        if (getMaxFilesCount() != 0) {
             if (getFilesCount() > getMaxFilesCount()) {
                 return true;
             }
@@ -214,11 +218,37 @@ public class Account extends Model {
     }
 
     public long getMaxSampleCount() {
-        long max = 0l;
+        long max = 0L;
         for (UserFile userFile : getRenderedUserFiles()) {
             max = userFile.getSampleCount() > max ? userFile.getSampleCount() : max;
         }
         return max;
+    }
+
+
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setMaxFilesSize(Integer maxFilesSize) {
+        this.maxFilesSize = maxFilesSize;
+    }
+
+    public void setMaxFilesCount(Integer maxFilesCount) {
+        this.maxFilesCount = maxFilesCount;
+    }
+
+    public void setMaxClonotypesCount(Integer maxClonotypesCount) {
+        this.maxClonotypesCount = maxClonotypesCount;
+    }
+
+    public void setMaxSharedFiles(Integer maxSharedFiles) {
+        this.maxSharedFiles = maxSharedFiles;
+    }
+
+    public void setPrivelegies(Boolean privelegies) {
+        this.privelegies = privelegies;
     }
 
     public String getUserName() {
@@ -243,6 +273,24 @@ public class Account extends Model {
 
     public String toString() {
         return String.format("%s", userName);
+    }
+
+    public void deleteAccount() {
+        for (UserFile userfile : userfiles) {
+            UserFile.deleteFile(userfile);
+        }
+        for (Tag tag : Tag.findByAccount(this)) {
+            tag.deleteTag();
+        }
+        for (SharedGroup sharedGroup : SharedGroup.findByAccount(this)) {
+            sharedGroup.deleteGroup();
+        }
+        File userDirectory = new File(userDirPath);
+        userDirectory.delete();
+        user.account = null;
+        user.update();
+        this.delete();
+        user.delete();
     }
 
     public static List<Account> findAll() {

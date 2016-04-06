@@ -1,4 +1,4 @@
-@(shared: Boolean)
+@(shared: Boolean, accountInfo: models.Account.AccountInformation)
 @import utils.server.Configuration;
 <files-sidebar>
 <div class="navbar-default sidebar" role="navigation" style="height : 100% ;">
@@ -56,6 +56,14 @@
                 <li ng-click="deleteAll()" class="sidebar_block_red li_pointer" ng-hide="isFilesEmpty()">
                     <a>Delete all</a>
                 </li>
+                @if(accountInfo.privelegies) {
+                    <li>
+                        <a></a>
+                    </li>
+                    <li ng-click="administratorPanel()" class="sidebar_block_blue li_pointer">
+                        <a>Administrator panel</a>
+                    </li>
+                }
             }
         </ul>
         @if(!shared) {

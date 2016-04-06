@@ -1,6 +1,6 @@
 name := "vdjviz"
 
-version := "1.0.1"
+version := "1.0.3"
 
 resolvers += Resolver.sonatypeRepo("releases")
 

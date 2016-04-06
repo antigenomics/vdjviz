@@ -1,0 +1,120 @@
+@(administratorName: String)
+@views.html.administrator.main("VDJviz: user management system") {
+    <script>
+        var administratorName = '@administratorName';
+    </script>
+    <div id="administrator_wrapper" ng-app="administratorPanel">
+        @views.html.account.notifications()
+        <administrator class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="panel panel-info separated sharp">
+                    <div class="panel-body">
+                        <a href="@routes.AccountAPI.account()">Close administrator panel</a>
+                    </div>
+                </div>
+                <div class="panel panel-info separated sharp">
+                    <div class="panel-heading">
+                        Users
+                    </div>
+                    <div class="panel-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User name</th> 
+                                    <th>Number of files</th>
+                                     <th>Number of shares</th> 
+                                    <th>Share limit</th> 
+                                    <th>File size limit</th>
+                                     <th>File count limit</th>
+                                     <th>Clonotypes per file limit</th> 
+                                    <th>Admin rights</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="account in accounts()">
+                                    <td>{{ account.userName }}</td>
+                                    <td>{{ account.filesCount }}</td>
+                                    <td>{{ account.sharedGroupsCount }}</td>
+                                    <td>{{ account.maxSharedGroupsCount }}</td>
+                                    <td>{{ account.filesInformation.maxFileSize }}</td>
+                                    <td>{{ account.filesInformation.maxFilesCount }}</td>
+                                    <td>{{ account.filesInformation.maxClonotypesCount }}</td>
+                                    <td>{{ account.privelegies }}</td>
+                                    <td style="cursor: pointer">
+                                        <a ng-click="editInit(account)">Edit user</a>
+                                    </td>
+                                    <td style="cursor: pointer">
+                                        <a ng-click="deleteAccount(account)" ng-hide="isActiveAccount(account)">Delete user</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel panel-info separated sharp" ng-show="isEditAccount()">
+                    <div class="panel-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User name</th>
+                                    <th>File size limit</th>
+                                     <th>File count limit</th>
+                                     <th>Clonotypes per file limit</th> 
+                                    <th>Share limit</th> 
+                                    <th>Admin rights</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ editAccount.userName }}</td>
+                                    <td><input ng-model="editAccount.maxFileSize" type="number"></td>
+                                    <td><input ng-model="editAccount.maxFilesCount" type="number"></td>
+                                    <td><input ng-model="editAccount.maxClonotypesCount" type="number"></td>
+                                    <td><input ng-model="editAccount.maxSharedFiles" type="number"></td>
+                                    <td><input ng-model="editAccount.privelegies" type="checkbox"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button ng-show="isEditAccount()" class="btn btn-default sharp" ng-click="editSubmit()">Submit</button>
+                        <button ng-show="isEditAccount()" class="btn btn-default sharp" ng-click="editCancel()">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="panel panel-info separated sharp">
+                    <div class="panel-body">
+                        <table class="table" ng-show="isNewAccountCreating()">
+                            <thead>
+                                <tr>
+                                    <th>User name</th>
+                                    <th>Password</th>
+                                    <th>File size limit</th>
+                                     <th>File count limit</th>
+                                     <th>Clonotypes per file limit</th> 
+                                    <th>Share limit</th> 
+                                    <th>Admin rights</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input ng-model="newAccount.userName" type="text"></td>
+                                    <td><input ng-model="newAccount.password" type="text"></td>
+                                    <td><input ng-model="newAccount.maxFileSize" type="number"></td>
+                                    <td><input ng-model="newAccount.maxFilesCount" type="number"></td>
+                                    <td><input ng-model="newAccount.maxClonotypesCount" type="number"></td>
+                                    <td><input ng-model="newAccount.maxSharedFiles" type="number"></td>
+                                    <td><input ng-model="newAccount.privelegies" type="checkbox"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button ng-hide="isNewAccountCreating()" class="btn btn-default sharp" ng-click="createInit()">Create new user</button>
+                        <button ng-show="isNewAccountCreating()" class="btn btn-default sharp" ng-click="createAccount()">Submit</button>
+                        <button ng-show="isNewAccountCreating()" class="btn btn-default sharp" ng-click="createCancel()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </administrator>
+    </div>
+}

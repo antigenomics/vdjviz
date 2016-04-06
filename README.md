@@ -79,6 +79,13 @@ Default: ``1``
 Default user name prefix.
 Default: `vdjviz`
 
+- ``userManagementSystem``
+Enable user management (admin) panel for users with admin rights
+Default: `true`
+
+- ``userManagementSystemAccounts``
+Specifies the list of user accounts with predefined emails and passwords that will be granted admin rights. The ``email`` and ``password`` properties in ``application.conf`` should be used to specify their credentials.
+
 - ``db.default.url``
 Points to the path that will be used to store H2 database file.
 Default value: ``~/vdjviz/h2.db``

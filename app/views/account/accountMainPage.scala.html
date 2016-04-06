@@ -13,7 +13,7 @@
 
         @views.html.account.notifications()
 
-        @views.html.account.filesSidebar(shared)
+        @views.html.account.filesSidebar(shared, accountInfo)
 
         @if(!shared) {
             @views.html.account.fileUpload()

@@ -28,6 +28,8 @@ import utils.server.Configuration;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
@@ -119,6 +121,40 @@ public class Global extends GlobalSettings {
                 }
             } catch (RuntimeException e) {
                 Logger.error("Error while creating default users");
+                e.printStackTrace();
+            }
+        }
+
+        if (Configuration.isUserManagementSystemEnabled()) {
+            UserService userService = new UserService(app);
+            String username = "administrator";
+            try {
+                List<Map<String, String>> userManagementSystemAccounts = Configuration.getUserManagementSystemAccounts();
+                for (Map<String, String> userManagementSystemAccount : userManagementSystemAccounts) {
+                    String email = userManagementSystemAccount.get("email");
+                    String password = userManagementSystemAccount.get("password");
+                    LocalUser localUser = LocalUser.find.byId(email);
+                    if (localUser != null) {
+                        localUser.account.setPrivelegies(true);
+                        localUser.account.update();
+                        localUser.update();
+                    } else {
+                        Option<PasswordHasher> bcrypt = Registry.hashers().get("bcrypt");
+                        SocialUser socialUser = new SocialUser(new IdentityId(email, "userpass"),
+                                username, username, String.format("%s %s", username, username),
+                                Option.apply(email), null, AuthenticationMethod.UserPassword(),
+                                null, null, Some.apply(new PasswordInfo("bcrypt", BCrypt.hashpw(password, BCrypt.gensalt()), null))
+                        );
+                        userService.doSave(socialUser);
+                        LocalUser localUser1 = LocalUser.find.byId(email);
+                        localUser1.account.setPrivelegies(true);
+                        localUser1.account.update();
+                        localUser1.update();
+                    }
+                    Logger.info("Administrator user: " + email + " created.");
+                }
+            } catch (RuntimeException e) {
+                Logger.error("Error while creating admin users");
                 e.printStackTrace();
             }
         }

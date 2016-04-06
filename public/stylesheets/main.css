@@ -72,7 +72,7 @@ html, body {
 
 .notification.ng-enter,
 .notification.ng-leave,
-.notification.ng-move, {
+.notification.ng-move {
     -webkit-transition: all linear 0.3s;
     -moz-transition: all linear 0.3s;
     -o-transition: all linear 0.3s;
@@ -407,6 +407,11 @@ img.blur {
     padding-left: 20px;
     padding-right: 20px;
     border-left: 1px solid #e7e7e7;
+}
+
+#administrator_wrapper {
+    position: inherit;
+    margin: 100px 100px 100px 100px;
 }
 
 .visualisation-results {
