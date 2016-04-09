@@ -27,6 +27,9 @@ The user generator is enabled in the config by default, so you can login with `v
 
 To stop application just press `Ctrl-C` at any time in console.
 
+> **Troubleshooting**. Note that an exception will be thrown in case the ``9000`` port is busy: ``org.jboss.netty.channel.ChannelException: Failed to bind to: /0.0.0.0:9000``. In order to fix it, either close the application that is using this port (in UNIX the 
+``lsof -i:9000`` will give the processes that are using the port) or pass the ``-Dhttp.port=XXXX`` (where ``XXXX`` is new port id) argument to ``vdjviz`` shell script (UNIX) / ``vdjviz.bat`` (Windows)
+
 ## Server configuration
 
 VDJviz server configuration can be performed by manually editing ``application.conf`` file in the ``bin/`` directory. The configuration file has the following fields:
