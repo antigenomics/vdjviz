@@ -25,7 +25,8 @@ public class Configuration {
     private static final Boolean applyNewLimitsToOldUsers = Play.application().configuration().getBoolean("applyNewLimitsToOldUsers");
     private static final Boolean allowUserManagmentSystem = Play.application().configuration().getBoolean("userManagementSystem");
     private static final List<play.Configuration> userManagmentSystemAccounts = Play.application().configuration().getConfigList("userManagementSystemAccounts");
-
+    private static final String vidjilUser = Play.application().configuration().getString("vidjilUser");
+    private static final Boolean vidjilSharingEnabled = Play.application().configuration().getBoolean("vidjilSharingEnabled");
 
     public static Integer getMaxClonotypesCount() {
         return maxClonotypesCount;
@@ -91,6 +92,14 @@ public class Configuration {
             accounts.add(account);
         }
         return accounts;
+    }
+
+    public static Boolean isVidjilSharingEnabled() {
+        return vidjilSharingEnabled;
+    }
+
+    public static String getVidjilUser() {
+        return vidjilUser;
     }
 
     public static Boolean isUserManagementSystemEnabled() { return allowUserManagmentSystem; }

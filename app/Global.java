@@ -23,6 +23,7 @@ import scala.concurrent.duration.Duration;
 import securesocial.core.*;
 import securesocial.core.providers.utils.BCryptPasswordHasher;
 import securesocial.core.providers.utils.PasswordHasher;
+import utils.CommonUtil;
 import utils.UserService;
 import utils.server.Configuration;
 
@@ -125,8 +126,8 @@ public class Global extends GlobalSettings {
             }
         }
 
+        UserService userService = new UserService(app);
         if (Configuration.isUserManagementSystemEnabled()) {
-            UserService userService = new UserService(app);
             String username = "administrator";
             try {
                 List<Map<String, String>> userManagementSystemAccounts = Configuration.getUserManagementSystemAccounts();
@@ -151,10 +152,37 @@ public class Global extends GlobalSettings {
                         localUser1.account.update();
                         localUser1.update();
                     }
-                    Logger.info("Administrator user: " + email + " created.");
                 }
             } catch (RuntimeException e) {
                 Logger.error("Error while creating admin users");
+                e.printStackTrace();
+            }
+        }
+
+        if (Configuration.isVidjilSharingEnabled()) {
+            String username = Configuration.getVidjilUser();
+            LocalUser localUser = LocalUser.find.byId(username);
+            try {
+                if (localUser != null) {
+                    localUser.account.setPrivelegies(true);
+                    localUser.account.update();
+                    localUser.update();
+                } else {
+                    Option<PasswordHasher> bcrypt = Registry.hashers().get("bcrypt");
+                    SocialUser socialUser = new SocialUser(new IdentityId(username, "userpass"),
+                            username, username, String.format("%s %s", username, username),
+                            Option.apply(username), null, AuthenticationMethod.UserPassword(),
+                            null, null, Some.apply(new PasswordInfo("bcrypt", BCrypt.hashpw(CommonUtil.RandomStringGenerator.generateRandomString(20, CommonUtil.RandomStringGenerator.Mode.ALPHANUMERIC),
+                            BCrypt.gensalt()), null))
+                    );
+                    userService.doSave(socialUser);
+                    LocalUser localUser1 = LocalUser.find.byId(username);
+                    localUser1.account.setPrivelegies(true);
+                    localUser1.account.update();
+                    localUser1.update();
+                }
+            } catch (Exception e) {
+                Logger.error("Vidjil user not created.");
                 e.printStackTrace();
             }
         }
