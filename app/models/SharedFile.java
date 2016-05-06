@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.joda.time.DateTime;
 import play.Logger;
 import play.db.ebean.Model;
+import org.apache.commons.io.FileDeleteStrategy;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -47,14 +48,22 @@ public class SharedFile extends Model {
     }
 
     public void deleteFile() {
-        try {
-            File dir = new File(fileDirPath);
-            FileUtils.cleanDirectory(dir);
-            FileUtils.deleteDirectory(dir);
-        } catch (IOException e) {
-            Logger.error("Error while deleting shared directory");
-            e.printStackTrace();
+        File fileDir = new File(fileDirPath);
+        File[] files = fileDir.listFiles();
+        if (files == null) {
+            fileDir.delete();
+            this.delete();
+            return;
         }
+        for (File cache : files) {
+            try {
+                FileDeleteStrategy.FORCE.delete(cache);
+                //Files.deleteIfExists(cache.toPath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        fileDir.delete();
         this.delete();
     }
 

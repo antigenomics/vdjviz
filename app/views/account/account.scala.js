@@ -1,4 +1,6 @@
 @(shared: Boolean)
+@import utils.server.Configuration
+
 
 var CONSOLE_INFO = false;
 var api_url = 'account';
@@ -272,7 +274,11 @@ var shared = false;
 
         @if(!shared){
             var wsError = false;
-            var ws = $websocket("ws://" + location.host + "/" + api_url + "/api/testws");
+            var wsProtocol = 'ws';
+            @if(Configuration.isWebSocketSecure){
+                wsProtocol = 'wss';
+            }
+            var ws = $websocket(wsProtocol + "://" + location.host + "/" + api_url + "/api/testws");
             ws.onError(function() {
                 serverLog.log('Error while initializing WebSocket connection');
                 initializeWSError = true;
@@ -1673,7 +1679,11 @@ var shared = false;
                         var file = $scope.newFiles[data.formData.uid];
                         switch (data.result.result) {
                             case "success" :
-                                var socket = new WebSocket("ws://" + location.host + "/account/api/rendering/ws");
+                                var wsProtocol = 'ws';
+                                @if(Configuration.isWebSocketSecure){
+                                    wsProtocol = 'wss';
+                                }
+                                var socket = new WebSocket(wsProtocol + "://" + location.host + "/account/api/rendering/ws");
                                 socket.onmessage = function (message) {
                                     var event = JSON.parse(message.data);
                                     switch (event.result) {
@@ -1952,8 +1962,11 @@ var shared = false;
         var jGenes = '';
 
         angular.copy(treshData, data);
-
-        var ws = $websocket("ws://" + location.host + "/" + api_url + "/api/samplecollection/ws"@if(shared){+"/"+link});
+        var wsProtocol = 'ws';
+        @if(Configuration.isWebSocketSecure){
+            wsProtocol = 'wss';
+        }
+        var ws = $websocket(wsProtocol + "://" + location.host + "/" + api_url + "/api/samplecollection/ws"@if(shared){+"/"+link});
 
         ws.onOpen(function() {
             initialized = true;

@@ -51,6 +51,9 @@ POST        /share/api/annotation/search/:link                controllers.ShareA
 POST        /share/api/annotation/multipleSearch/:link        controllers.ShareAPI.multipleSearchClonotypes(link)
 GET         /share/api/samplecollection/ws/:link              controllers.SampleCollectionAPI.SampleCollectionAPI.openShared(link)
 
+GET         /vidjil                                           controllers.VidjilAPI.index()
+POST        /vidjil/api/share                                 controllers.VidjilAPI.share()
+
 # Robots.txt route
 
 GET         /robots.txt                                       controllers.Assets.at(path="/public", file="robots.txt")

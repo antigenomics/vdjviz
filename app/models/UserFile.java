@@ -211,6 +211,10 @@ public class UserFile extends Model {
         return find().where().eq("account", account).eq("fileName", fileName).findUnique();
     }
 
+    public static UserFile findByUniqueNameAndAccount(Account account, String uniqueName) {
+        return find().where().eq("account", account).eq("uniqueName", uniqueName).findUnique();
+    }
+
     public static List<UserFile> findByTag(Tag tag) {
         List<UserFile> byAccount = findByAccount(tag.getAccount());
         List<UserFile> byTag = new ArrayList<>();

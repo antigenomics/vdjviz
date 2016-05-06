@@ -51,7 +51,7 @@ public class ComputationUtil {
         }
 
         public void sendMessage() {
-            out.write(Json.toJson(this));
+            if (out != null) out.write(Json.toJson(this));
         }
 
     }
