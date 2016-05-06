@@ -34,7 +34,7 @@ public class Vidjil {
 
         String pattern = "^[a-zA-Z0-9_.+-]{1,40}$";
         if (name == null || !name.matches(pattern)) {
-            throw new Exception("Invalid sample name");
+            name = "Generated_" + CommonUtil.RandomStringGenerator.generateRandomString(7, CommonUtil.RandomStringGenerator.Mode.ALPHA);
         }
 
         File accountDir = new File(vidjilAccount.getDirectoryPath());
@@ -79,7 +79,6 @@ public class Vidjil {
 
     public static String shareSamples(List<String> uniqueNames) throws Exception {
         Account account = getVidjilAccount();
-
         String groupUniqueName = CommonUtil.RandomStringGenerator.generateRandomString(10, CommonUtil.RandomStringGenerator.Mode.ALPHANUMERIC);
         String cachePath = account.getDirectoryPath() + "/" + groupUniqueName + "/";
         File groupFolder = new File(cachePath);
@@ -94,8 +93,8 @@ public class Vidjil {
             link = CommonUtil.RandomStringGenerator.generateRandomString(40, CommonUtil.RandomStringGenerator.Mode.ALPHA);
         }
         List<SharedFile> sharedFiles = new ArrayList<>();
-        //TODO
-        SharedGroup sharedGroup = new SharedGroup(account, groupUniqueName, cachePath, link, sharedFiles, "Vidjil description");
+        //TODO vidjil description
+        SharedGroup sharedGroup = new SharedGroup(account, groupUniqueName, cachePath, link, sharedFiles, "Samples shared from Vidjil");
         sharedGroup.save();
         List<UserFile> files = new ArrayList<>();
         for (String uniqueName : uniqueNames) {
@@ -117,8 +116,10 @@ public class Vidjil {
             SharedFile sharedFile = new SharedFile(file, sharedGroup, sharedFileUniqueName, fileDirPath + file.getFileName() + "." + file.getFileExtension(), fileDirPath);
             sharedFile.save();
             sharedGroup.addFile(sharedFile);
+            UserFile.deleteFile(file);
         }
         sharedGroup.update();
         return link;
     }
+
 }

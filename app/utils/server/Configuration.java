@@ -27,6 +27,7 @@ public class Configuration {
     private static final List<play.Configuration> userManagmentSystemAccounts = Play.application().configuration().getConfigList("userManagementSystemAccounts");
     private static final String vidjilUser = Play.application().configuration().getString("vidjilUser");
     private static final Boolean vidjilSharingEnabled = Play.application().configuration().getBoolean("vidjilSharingEnabled");
+    private static final Boolean webSocketSecure = Play.application().configuration().getBoolean("webSocketSecure");
 
     public static Integer getMaxClonotypesCount() {
         return maxClonotypesCount;
@@ -92,6 +93,10 @@ public class Configuration {
             accounts.add(account);
         }
         return accounts;
+    }
+
+    public static Boolean isWebSocketSecure() {
+        return webSocketSecure;
     }
 
     public static Boolean isVidjilSharingEnabled() {

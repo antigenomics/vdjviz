@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "com.milaboratory" % "milib" % "1.0.1",
   "ws.securesocial" %% "securesocial" % "2.1.4",
   "com.typesafe.play.plugins" %% "play-plugins-mailer" % "2.3.0",
+  "mysql" % "mysql-connector-java" % "5.1.18",
   filters,
   javaJdbc,
   javaEbean,

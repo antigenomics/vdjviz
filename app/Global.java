@@ -1,8 +1,12 @@
+
+
 import com.avaje.ebean.Ebean;
 import models.Account;
 import models.IPAddress;
 import models.LocalUser;
 import models.UserFile;
+import models.SharedGroup;
+import models.SharedFile;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
 import org.mindrot.jbcrypt.BCrypt;
@@ -20,6 +24,7 @@ import play.mvc.SimpleResult;
 import scala.Option;
 import scala.Some;
 import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 import securesocial.core.*;
 import securesocial.core.providers.utils.BCryptPasswordHasher;
 import securesocial.core.providers.utils.PasswordHasher;
@@ -32,6 +37,9 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static utils.server.JobSheduler.nextExecutionInSeconds;
+import static utils.server.JobSheduler.sheduleJob;
 
 
 public class Global extends GlobalSettings {
@@ -197,50 +205,45 @@ public class Global extends GlobalSettings {
                 }
             }
         }
+
+        //Deleting broken shared links
+        for (Account account: Account.findAll()) {
+            for (SharedGroup sharedGroup: SharedGroup.findByAccount(account)) {
+                Boolean groupBroken = false;
+                for (SharedFile sharedFile: sharedGroup.getFiles()) {
+                    File tmp = new File(sharedFile.getFilePath());
+                    if (!tmp.exists()) {
+                        groupBroken = true;
+                        break;
+                    }
+                }
+                if (groupBroken) {
+                    sharedGroup.deleteGroup();
+                    Logger.of("user." + account.getUserName()).warn("Deleted broken shared link: " + sharedGroup.getLink());
+                }
+            }
+        }
+
         final Integer deleteAfter = Configuration.getDeleteAfter();
         if (deleteAfter > 0) {
-            Akka.system().scheduler().schedule(
-                    Duration.create(nextExecutionInSeconds(1, 0), TimeUnit.SECONDS),
-                    Duration.create(24, TimeUnit.HOURS),
-                    new Runnable() {
-                        public void run() {
-                            Long currentTime = new DateTime().getMillis();
-                            for (Account account : Account.findAll()) {
-                                if (!account.isPrivilege()) {
-                                    for (UserFile userFile : account.getUserfiles()) {
-                                        Long hours = (currentTime - userFile.getCreatedAtTimeInMillis()) / (60 * 60 * 1000);
-                                        if (hours > deleteAfter) {
-                                            UserFile.asyncDeleteFile(userFile);
-                                            Logger.of("user." + account.getUserName()).info("File " + userFile.getFileName() + " was deleted");
-                                        }
-                                    }
+            sheduleJob(new Runnable() {
+                public void run() {
+                    Long currentTime = new DateTime().getMillis();
+                    for (Account account : Account.findAll()) {
+                        if (!account.isPrivilege()) {
+                            for (UserFile userFile : account.getUserfiles()) {
+                                Long hours = (currentTime - userFile.getCreatedAtTimeInMillis()) / (60 * 60 * 1000);
+                                if (hours > deleteAfter) {
+                                    UserFile.asyncDeleteFile(userFile);
+                                    Logger.of("user." + account.getUserName()).info("File " + userFile.getFileName() + " was deleted");
                                 }
                             }
                         }
-                    },
-                    Akka.system().dispatcher()
-            );
+                    }
+                }
+            }, Duration.create(nextExecutionInSeconds(1, 0), TimeUnit.SECONDS), Duration.create(24, TimeUnit.HOURS));
         }
 
-    }
-
-    public static int nextExecutionInSeconds(int hour, int minute){
-        return Seconds.secondsBetween(
-                new DateTime(),
-                nextExecution(hour, minute)
-        ).getSeconds();
-    }
-
-    public static DateTime nextExecution(int hour, int minute){
-        DateTime next = new DateTime()
-                .withHourOfDay(hour)
-                .withMinuteOfHour(minute)
-                .withSecondOfMinute(0)
-                .withMillisOfSecond(0);
-
-        return (next.isBeforeNow())
-                ? next.plusHours(24)
-                : next;
     }
 
     public void onStop(Application app) {
