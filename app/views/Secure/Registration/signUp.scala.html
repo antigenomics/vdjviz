@@ -25,6 +25,11 @@
                         >
                             <fieldset>
                                 <div class="form-group">
+                                    <input class="form-control" placeholder="User name" name="userName" type="text" autofocus=""
+                                    value="@signUpForm("userName").value"
+                                    >
+                                </div>
+                                <div class="form-group">
                                     <input class="form-control" placeholder="First name" name="firstName" type="text" autofocus=""
                                     value="@signUpForm("firstName").value"
                                     >
@@ -35,10 +40,10 @@
                                     >
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="password.password1" type="text">
+                                    <input class="form-control" placeholder="Password" name="password.password1" type="password">
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Repeat your password" name="password.password2" type="text">
+                                    <input class="form-control" placeholder="Repeat your password" name="password.password2" type="password">
                                 </div>
                                 @if(signUpForm("password.password1").hasErrors || signUpForm("password.password2").hasErrors) {
                                     <div class="alert alert-danger alert-xs sharp">
@@ -47,6 +52,21 @@
                                             <li>The password field is required</li>
                                             <li>Password sholud contain at least 8 characters</li>
                                         </ol>
+                                    </div>
+                                }
+                                @if(signUpForm("userName").hasErrors){
+                                    <div class="alert alert-danger alert-xs sharp">
+                                        <strong>The user name field is required</strong>
+                                    </div>
+                                }
+                                @if(signUpForm("firstName").hasErrors){
+                                    <div class="alert alert-danger alert-xs sharp">
+                                        <strong>The first name field is required</strong>
+                                    </div>
+                                }
+                                @if(signUpForm("lastName").hasErrors){
+                                    <div class="alert alert-danger alert-xs sharp">
+                                        <strong>The last name field is required</strong>
                                     </div>
                                 }
                                 <button type="submit" class="btn btn-info btn-lg btn-block sharp">Done!</button>
