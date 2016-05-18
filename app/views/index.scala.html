@@ -1,82 +1,47 @@
 @(username: String)
 
-@main("VDJviz - home") {
-    <script>
-        $(document).ready(function () {
-            $('.bxslider').bxSlider({
-                mode: 'horizontal',
-                adaptiveHeight: true,
-                randomStart: false,
-                startSlide: 0,
-                auto: true,
-                autoHover: false,
-                speed: 3000,
-                pause: 7000,
-                captions: true
-            });
-        });
-    </script>
+@main("VDJviz: home") {
     @views.html.navbar(username)
-    <div id="slider_page_wrapper">
-        <ul class="bxslider">
-            <li>
-                <img src="@routes.Assets.at("images/slider1.png")"/>
-            </li>
-            <li>
-                <img src="@routes.Assets.at("images/slider2.png")" />
-            </li>
-            <li>
-                <img src="@routes.Assets.at("images/slider3.png")" />
-            </li>
-        </ul>
-    </div>
-    <div id="index_page_wrapper">
+    <div id="common_page_wrapper">
         <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="col-lg-8 col-md-8 col-sm-8 col-lg-offset-2 col-md-offset-2 col-sm-offset-2">
                 <div class="panel panel-info separated">
+                    <div class="panel-heading text-center">
+                        <h3>VDJviz browser</h3>
+                    </div>
                     <div class="panel-body">
-                        <div class="col-lg-8 col-md-8 col-sm-8 col-lg-offset-2 col-md-offset-2 col-sm-offset-2">
-                            <h2>Features</h2>
-                            <div class="col-lg-12 col-md-12 col-sm-12"><hr></div>
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <h3>Browse the clonotype composition of sample</h3>
-                                    <p>Table of annotated immune receptor sequences</p>
-                                </div>
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <img src="@routes.Assets.at("images/features_1.png")" class="feature-img">
-                                </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <h3>Browse the clonotype composition</h3>
+                                <p>Table of annotated immune receptor sequences and flexible search options</p>
                             </div>
-                            <div class="col-lg-12 col-md-12 col-sm-12"><hr></div>
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <img src="@routes.Assets.at("images/features_3.png")" class="feature-img">
-                                </div>
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <h3>View interactive graphs of key repertoire characteristics</h3>
-                                    <p>Repertoire clonality, spectratype and Variable-Joining segment usage</p>
-                                </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <img src="@routes.Assets.at("images/features_1.png")" class="feature-img">
                             </div>
-                            <div class="col-lg-12 col-md-12 col-sm-12"><hr></div>
-                            <div class="col-lg-12 col-md-12 col-sm-12">
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <h3>Explore and compare sample diversity</h3>
-                                    <p>Rarefaction analysis and summary statistics</p>
-                                </div>
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <img src="@routes.Assets.at("images/features_2.png")" class="feature-img">
-                                </div>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12"><hr></div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <img src="@routes.Assets.at("images/features_3.png")" class="feature-img">
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <h3>View interactive graphs of key repertoire characteristics</h3>
+                                <p>Repertoire clonality, spectratype and Variable-Joining segment usage</p>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12"><hr></div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <h3>Explore and compare sample diversity</h3>
+                                <p>Rarefaction analysis and summary statistics</p>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <img src="@routes.Assets.at("images/features_2.png")" class="feature-img">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="footer_page_wrapper">
-        <footer>
-            <p>&copy; 2014-2015 <a href="http://milaboratory.com/">MiLaboratory.com</a></p>
-        </footer>
     </div>
 }

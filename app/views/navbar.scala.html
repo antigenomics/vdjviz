@@ -2,11 +2,8 @@
 
 <div class="index_navbar_background"></div>
 <div class="index_navbar">
-    <div class="brand_cell">
-        <div>VDJviz<text style="font-size: x-small">beta</text></div>
-    </div>
     <div class="navbar_cell">
-        <a href="@routes.Application.index()">Main</a>
+        <a href="@routes.Application.index()">Home</a>
     </div>
     <div class="navbar_cell" id="browser-link"
     data-container="body"
@@ -15,17 +12,6 @@
     data-content="Click me to start!">
         <a href="/account">Browser</a>
     </div>
-    <div class="navbar_cell">
-        <a href="@routes.Application.contacts()">Contacts</a>
-    </div>
-    <div class="navbar_cell">
-        <a href="@routes.Application.about()">About</a>
-    </div>
-    @if(username == null) {
-        <div class="navbar_cell cell_right">
-            <a href="/signin">Sign in</a>
-        </div>
-    }
     @if(username != null) {
         <div class="navbar_cell cell_right">
             <a href="/logout">Logout</a>
@@ -34,6 +20,9 @@
             <a href="/account">Logged as @username</a>
         </div>
     }
+    <div class="navbar_cell cell_right">
+        <a href="@routes.Application.about()">About</a>
+    </div>
 </div>
 <style>
     .popover {

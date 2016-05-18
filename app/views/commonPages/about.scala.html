@@ -1,20 +1,25 @@
 @(username: String)
-@main("About") {
+@main("VDJviz: about") {
     @navbar(username)
     <div id="common_page_wrapper">
         <div class="row">
             <div class="col-lg-8 col-md-8 col-sm-8 col-lg-offset-2 col-md-offset-2 col-sm-offset-2">
                 <div class="panel panel-info separated">
-                    <div class="panel-heading">
-                        About
+                    <div class="panel-heading text-center">
+                        <h3>About</h3>
                     </div>
                     <div class="panel-body">
                         <div class="about_description">
-                            <p>VDJviz is a lightweight immune repertoire browser. After registering and signing in, users can upload clonotype tables that were produced using <a href="http://mitcr.milaboratory.com/">MiTCR</a>, <a href="http://mixcr.milaboratory.com/">MiXCR</a>, <a href="https://github.com/mikessh/migec">MiGEC</a>, <a href="https://github.com/mikessh/igblastwrp">IgBlast</a>, <a href="http://www.imgt.org/IMGTindex/IMGTHighV-QUEST.html">IMGT</a> and <a href="http://marketing.adaptivebiotech.com/content/immunoseq-0">ImmunoSEQ</a> Rep-Seq processing software. VDJviz server will compute a set of key repertoire statistics and display them as interactive graphics.</p>
+                            <p>VDJviz is a lightweight immune repertoire browser. After registering and signing in, users can upload clonotype tables that were generated using <a href="https://github.com/milaboratory/mitcr">MiTCR</a>, <a href="https://github.com/milaboratory/mixcr">MiXCR</a>, <a href="https://github.com/mikessh/migmap">MIGMAP</a>, <a href="https://github.com/mikessh/migec">MiGEC</a>, <a href="http://www.imgt.org/IMGTindex/IMGTHighV-QUEST.html">IMGT</a>, <a href="http://www.vidjil.org">Vidjil</a> and <a href="http://marketing.adaptivebiotech.com/content/immunoseq-0">ImmunoSEQ</a> Rep-Seq processing software. VDJviz server can be used to navigate and search clonotype tables and will compute a set of basic repertoire statistics and display them as interactive graphics. Users can also share read-only links to their datasets.</p>
                             <p>This is a Play Framework application that uses VDJtools API as a back-end. VDJviz can also be run as a local server, check out the link to source code below.</p>
+                            <p>You might be also interested in our T-cell repertoire functional annotation framework, <a href="https://github.com/antigenomics/vdjdb-db">VDJdb</a>.</p>
+                            <hr class="wide">     
+                            <h4>Credits</h4>                   
+                            <p>VDJviz web browser application is developed and maintained by <b>Dmitry Bagaev</b> (<a href="https://github.com/bvdmitri">@@bvdmitri</a>).</p>
+                            <p>VDJtools, a standalone software and API for post-analysis of immune repertoire sequencing data is developed and maintained by <b>Mikhail Shugay</b> (<a href="https://github.com/mikessh">@@mikessh</a>).</p>
+                            <hr class="wide">         
                             <div class="about_links">
-                                <h3>Some useful links:</h3>
-                                <hr class="wide">
+                                <h4>Some useful links</h4>
                                 <p><a href="https://github.com/mikessh/vdjviz">https://github.com/mikessh/vdjviz</a> - VDJviz source code</p>
                                 <p><a href="https://github.com/mikessh/vdjtools">https://github.com/mikessh/vdjtools</a> - VDJtools source code</p>
                                 <p><a href="http://vdjtools-doc.readthedocs.org/en/latest/input.html">http://vdjtools-doc.readthedocs.org/en/latest/input.html</a> - detailed description of input formats</p>
@@ -26,10 +31,5 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div id="footer_page_wrapper">
-        <footer>
-            <p>&copy; 2014-2015 <a href="http://milaboratory.com/">MiLaboratory.com</a></p>
-        </footer>
     </div>
 }
