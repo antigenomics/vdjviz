@@ -13,7 +13,7 @@ resolvers += (
   )
 
 libraryDependencies ++= Seq(
-  "com.antigenomics" % "vdjtools" % "1.0.9-SNAPSHOT",
+  "com.antigenomics" % "vdjtools" % "1.1.0",
   "com.milaboratory" % "milib" % "1.0.1",
   "ws.securesocial" %% "securesocial" % "2.1.4",
   "com.typesafe.play.plugins" %% "play-plugins-mailer" % "2.3.0",
